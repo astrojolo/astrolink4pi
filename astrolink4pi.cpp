@@ -463,3 +463,14 @@ int AstroLink4Pi::savePosition(int pos)
 
 	return pos;
 }
+
+bool AstroLink4Pi::SyncFocuser(uint32_t ticks)
+{
+    FocusAbsPosN[0].value = ticks;
+    IDSetNumber(&FocusAbsPosNP, nullptr);
+    savePosition(ticks);
+
+    DEBUGF(INDI::Logger::DBG_SESSION, "Absolute Position reset to %0.0f", FocusAbsPosN[0].value);
+
+    return true;
+}
