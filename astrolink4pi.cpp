@@ -15,6 +15,8 @@
  the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  Boston, MA 02110-1301, USA.
 *******************************************************************************/
+
+
 #include <stdio.h>
 #include <dirent.h>
 #include <fcntl.h>
@@ -27,69 +29,69 @@
 
 #include <gpiod.h>
 
-#include "astrolink4pi.h"
+#include "astroberry_focuser.h"
 
-//////////////////////////////////////////////////////////////////////
-/// Delegates
-//////////////////////////////////////////////////////////////////////
-std::unique_ptr<IndiAstrolink4Pi> indiIndiAstrolink4Pi(new IndiAstrolink4Pi());
+// We declare an auto pointer to AstroberryFocuser.
+std::unique_ptr<AstroberryFocuser> astroberryFocuser(new AstroberryFocuser());
 
-#define TIMER_POLL                          1000        // ms
-#define MAX_RESOLUTION                      2           // the highest resolution supported is 1/2 step
-#define TEMPERATURE_UPDATE_TIMEOUT          (3 * 1000)  // 3 sec
-#define STEPPER_STANDBY_TIMEOUT             (2 * 1000)  // 2 sec
-#define TEMPERATURE_COMPENSATION_TIMEOUT    (30 * 1000) // 30 sec
-#define STEPPER_CYCLE                       5           // ms
+// create millisecond sleep macro
+#define msleep(milliseconds) usleep(milliseconds * 1000)
 
-#define PIN_SYS_FAN		9
-#define PIN_STP_A1      10
-#define PIN_STP_A2      11
-#define PIN_STP_B1      12
-#define PIN_STP_B2      13
+#define MAX_RESOLUTION 2 // the highest resolution supported is 1/2 step
+#define TEMPERATURE_UPDATE_TIMEOUT (3 * 1000) // 60 sec
+#define STEPPER_STANDBY_TIMEOUT (3 * 1000) // 3 sec
+#define TEMPERATURE_COMPENSATION_TIMEOUT (30 * 1000) // 60 sec
+
+#define A1_PIN	23
+#define A2_PIN	24
+#define B1_PIN	18
+#define B2_PIN	17
+#define MOTOR_BOARD	"ULN2003"
 
 int halfStep[8][4] = { {1,0,0,0}, {1,0,1,0}, {0,0,1,0}, {0,1,1,0}, {0,1,0,0}, {0,1,0,1}, {0,0,0,1}, {1,0,0,1} };
 int fullStep[8][4] = { {1,0,0,0}, {0,0,1,0}, {0,1,0,0}, {0,0,0,1}, {1,0,0,0}, {0,0,1,0}, {0,1,0,0}, {0,0,0,1} };
 
 void ISPoll(void *p);
 
+
 void ISInit()
 {
 	static int isInit = 0;
 
 	if (isInit == 1)
-		return;
-	if(indiIndiAstrolink4Pi.get() == 0)
+	return;
+	if(astroberryFocuser.get() == 0)
 	{
-		isInit = 1;
-		indiIndiAstrolink4Pi.reset(new IndiAstrolink4Pi());
+	isInit = 1;
+	astroberryFocuser.reset(new AstroberryFocuser());
 	}
 }
 
 void ISGetProperties(const char *dev)
 {
         ISInit();
-        indiIndiAstrolink4Pi->ISGetProperties(dev);
+        astroberryFocuser->ISGetProperties(dev);
 }
 
 void ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int num)
 {
         ISInit();
-        indiIndiAstrolink4Pi->ISNewSwitch(dev, name, states, names, num);
+        astroberryFocuser->ISNewSwitch(dev, name, states, names, num);
 }
 
 void ISNewText(	const char *dev, const char *name, char *texts[], char *names[], int num)
 {
         ISInit();
-        indiIndiAstrolink4Pi->ISNewText(dev, name, texts, names, num);
+        astroberryFocuser->ISNewText(dev, name, texts, names, num);
 }
 
 void ISNewNumber(const char *dev, const char *name, double values[], char *names[], int num)
 {
         ISInit();
-        indiIndiAstrolink4Pi->ISNewNumber(dev, name, values, names, num);
+        astroberryFocuser->ISNewNumber(dev, name, values, names, num);
 }
 
-void ISNewBLOB (const char *dev, const char *name, int sizes[], int blobsizes[], char *blobs[], char *formats[], char *names[], int num)
+void ISNewBLOB (const char *dev, const char *name, int sizes[], int blobsizes[], char *blobs[], char *formats[], char *names[], int n)
 {
 	INDI_UNUSED(dev);
 	INDI_UNUSED(name);
@@ -98,89 +100,43 @@ void ISNewBLOB (const char *dev, const char *name, int sizes[], int blobsizes[],
 	INDI_UNUSED(blobs);
 	INDI_UNUSED(formats);
 	INDI_UNUSED(names);
-	INDI_UNUSED(num);
+	INDI_UNUSED(n);
 }
 
+void ISSnoopDevice (XMLEle *root)
+{
+	astroberryFocuser->ISSnoopDevice(root);
+}
 
-//////////////////////////////////////////////////////////////////////
-///Constructor
-//////////////////////////////////////////////////////////////////////
-
-IndiAstrolink4Pi::IndiAstrolink4Pi() : FI(this)
+AstroberryFocuser::AstroberryFocuser()
 {
 	setVersion(VERSION_MAJOR,VERSION_MINOR);
+	FI::SetCapability(FOCUSER_CAN_ABS_MOVE | FOCUSER_CAN_REL_MOVE | FOCUSER_CAN_REVERSE | FOCUSER_CAN_SYNC | FOCUSER_CAN_ABORT); 
+	Focuser::setSupportedConnections(CONNECTION_NONE);
 }
 
-IndiAstrolink4Pi::~IndiAstrolink4Pi()
+AstroberryFocuser::~AstroberryFocuser()
 {
-	// Delete controls on options tab
+	// delete properties independent of connection status
 }
 
-const char * IndiAstrolink4Pi::getDefaultName()
+const char * AstroberryFocuser::getDefaultName()
 {
-    return (char *)"AstroLink 4 Pi";
+        return (char *)"Astroberry Focuser";
 }
 
-//////////////////////////////////////////////////////////////////////
-/// Communication
-//////////////////////////////////////////////////////////////////////
-void IndiAstrolink4Pi::TimerHit()
+bool AstroberryFocuser::Connect()
 {
-    if(isConnected())
-    {
-		// update time
-		struct tm *local_timeinfo;
-		static char ts[32];
-		time_t rawtime;
-		time(&rawtime);
-		local_timeinfo = localtime (&rawtime);
-		strftime(ts, 20, "%Y-%m-%dT%H:%M:%S", local_timeinfo);
-		IUSaveText(&SysTimeT[0], ts);
-		snprintf(ts, sizeof(ts), "%4.2f", (local_timeinfo->tm_gmtoff/3600.0));
-		IUSaveText(&SysTimeT[1], ts);
-		SysTimeTP.s = IPS_OK;
-		IDSetText(&SysTimeTP, NULL);
-
-		SysInfoTP.s = IPS_BUSY;
-		IDSetText(&SysInfoTP, NULL);
-
-		FILE* pipe;
-		char buffer[128];
-
-		//update CPU temp
-		pipe = popen("echo $(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))", "r");
-		if(fgets(buffer, 128, pipe) != NULL) IUSaveText(&SysInfoT[1], buffer);
-		pclose(pipe);
-		
-		//update uptime
-		pipe = popen("uptime|awk -F, '{print $1}'|awk -Fup '{print $2}'|xargs", "r");
-		if(fgets(buffer, 128, pipe) != NULL) IUSaveText(&SysInfoT[2], buffer);
-		pclose(pipe);
-		
-		//update load
-		pipe = popen("uptime|awk -F, '{print $3\" /\"$4\" /\"$5}'|awk -F: '{print $2}'|xargs", "r");
-		if(fgets(buffer, 128, pipe) != NULL) IUSaveText(&SysInfoT[3], buffer);
-		pclose(pipe);
-		
-		SysInfoTP.s = IPS_OK;
-		IDSetText(&SysInfoTP, NULL);        
-        SetTimer(TIMER_POLL);
-    }
-}
-
-bool IndiAstrolink4Pi::Connect()
-{
-	// Init GPIO
-	chip = gpiod_chip_open(gpio_chip_path);
+	chip = gpiod_chip_open("/dev/gpiochip0");
 	if (!chip)
 	{
-		DEBUG(INDI::Logger::DBG_SESSION, "Problem initiating AstroLink 4 Pi GPIO chip.");
+		DEBUG(INDI::Logger::DBG_ERROR, "Problem initiating Astroberry Focuser.");
 		return false;
 	}
 
-	// verify BCM fan pin is not used by other consumers
-    int pins[] = {PIN_SYS_FAN, PIN_STP_A1, PIN_STP_A2, PIN_STP_B1, PIN_STP_B2};
-	for (unsigned int pin = 0; pin < 5; pin++)
+	// verify BCM Pins are not used by other consumers
+	int pins[] = {A1_PIN, A2_PIN, B1_PIN, B2_PIN};
+	for (unsigned int pin = 0; pin < 4; pin++)
 	{
 		if (gpiod_line_is_used(gpiod_chip_get_line(chip, pins[pin])))
 		{
@@ -191,14 +147,14 @@ bool IndiAstrolink4Pi::Connect()
 	}
 
 	// Select gpios
-	gpio_sysfan = gpiod_chip_get_line(chip, PIN_SYS_FAN);
-    gpio_a1 = gpiod_chip_get_line(chip, PIN_STP_A1);
-	gpio_a2 = gpiod_chip_get_line(chip, PIN_STP_A2);
-	gpio_b1 = gpiod_chip_get_line(chip, PIN_STP_B1);
-	gpio_b2 = gpiod_chip_get_line(chip, PIN_STP_B2);
-	// Set initial gpios direction and states
-	gpiod_line_request_output(gpio_sysfan, "astroberry_sysfan", 0);
-    gpiod_line_request_output(gpio_a1, "a1@astroberry_focuser", 0);
+	gpio_a1 = gpiod_chip_get_line(chip, A1_PIN);
+	gpio_a2 = gpiod_chip_get_line(chip, A2_PIN);
+	gpio_b1 = gpiod_chip_get_line(chip, B1_PIN);
+	gpio_b2 = gpiod_chip_get_line(chip, B2_PIN);
+
+
+	// Set initial state for gpios
+	gpiod_line_request_output(gpio_a1, "a1@astroberry_focuser", 0);
 	gpiod_line_request_output(gpio_a2, "a2@astroberry_focuser", 0);
 	gpiod_line_request_output(gpio_b1, "b1@astroberry_focuser", 0); 
 	gpiod_line_request_output(gpio_b2, "b2@astroberry_focuser", 0);
@@ -211,47 +167,18 @@ bool IndiAstrolink4Pi::Connect()
 
 	// Update focuser parameters
 	getFocuserInfo();
-    
+
 	// set motor standby timer
-	stepperStandbyID = IEAddTimer(STEPPER_STANDBY_TIMEOUT, stepperStandbyHelper, this);    
+	stepperStandbyID = IEAddTimer(STEPPER_STANDBY_TIMEOUT, stepperStandbyHelper, this);
 
-	SetTimer(TIMER_POLL);
-	IDMessage(getDeviceName(), "AstroLink 4 Pi System connected successfully.");
-
-	// Get basic system info
-	FILE* pipe;
-	char buffer[128];
-
-	//update Hardware
-	//https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
-	pipe = popen("cat /sys/firmware/devicetree/base/model", "r");
-	if(fgets(buffer, 128, pipe) != NULL) IUSaveText(&SysInfoT[0], buffer);
-	pclose(pipe);
-
-	//update Hostname
-	pipe = popen("hostname", "r");
-	if(fgets(buffer, 128, pipe) != NULL) IUSaveText(&SysInfoT[4], buffer);
-	pclose(pipe);
-
-	//update Local IP
-	pipe = popen("hostname -I|awk -F' '  '{print $1}'|xargs", "r");
-	if(fgets(buffer, 128, pipe) != NULL) IUSaveText(&SysInfoT[5], buffer);
-	pclose(pipe);
-
-	//update Public IP
-	pipe = popen("wget -qO- http://ipecho.net/plain|xargs", "r");
-	if(fgets(buffer, 128, pipe) != NULL) IUSaveText(&SysInfoT[6], buffer);
-	pclose(pipe);
-
-	// Update client
-	IDSetText(&SysInfoTP, NULL);
+	DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Focuser connected successfully.");
 
 	return true;
 }
 
-bool IndiAstrolink4Pi::Disconnect()
+bool AstroberryFocuser::Disconnect()
 {
-	// Close GPIO
+	// Close device
 	gpiod_chip_close(chip);
 
 	// Stop timers
@@ -259,53 +186,21 @@ bool IndiAstrolink4Pi::Disconnect()
 	IERmTimer(updateTemperatureID);
 	IERmTimer(temperatureCompensationID);
 
-	IDMessage(getDeviceName(), "AstroLink 4 Pi disconnected successfully.");
+	DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Focuser disconnected successfully.");
+
 	return true;
 }
 
-//////////////////////////////////////////////////////////////////////
-/// Overrides
-//////////////////////////////////////////////////////////////////////
-bool IndiAstrolink4Pi::initProperties()
+bool AstroberryFocuser::initProperties()
 {
-    INDI::DefaultDevice::initProperties();
+	INDI::Focuser::initProperties();
 
-    setDriverInterface(AUX_INTERFACE | FOCUSER_INTERFACE);
-    FI::SetCapability(FOCUSER_CAN_ABS_MOVE | FOCUSER_CAN_REL_MOVE | FOCUSER_CAN_REVERSE | FOCUSER_CAN_SYNC | FOCUSER_CAN_ABORT); 
-    FI::initProperties(FOCUS_TAB);
-
-    addDebugControl();
-    addSimulationControl();
-    addConfigurationControl();
-
-    IUFillText(&SysTimeT[0],"LOCAL_TIME","Local Time",NULL);
-	IUFillText(&SysTimeT[1],"UTC_OFFSET","UTC Offset",NULL);
-	IUFillTextVector(&SysTimeTP,SysTimeT,2,getDeviceName(),"SYSTEM_TIME","System Time",MAIN_CONTROL_TAB,IP_RO,60,IPS_IDLE);
-
-	IUFillText(&SysInfoT[0],"HARDWARE","Hardware",NULL);
-	IUFillText(&SysInfoT[1],"CPU TEMP","CPU Temp (°C)",NULL);
-	IUFillText(&SysInfoT[2],"UPTIME","Uptime (hh:mm)",NULL);
-	IUFillText(&SysInfoT[3],"LOAD","Load (1 / 5 / 15 min.)",NULL);
-	IUFillText(&SysInfoT[4],"HOSTNAME","Hostname",NULL);
-	IUFillText(&SysInfoT[5],"LOCAL_IP","Local IP",NULL);
-	IUFillText(&SysInfoT[6],"PUBLIC_IP","Public IP",NULL);
-	IUFillText(&SysInfoT[7],"SYS_FAN","System fan [%]",NULL);
-	IUFillTextVector(&SysInfoTP,SysInfoT,8,getDeviceName(),"SYSTEM_INFO","System Info",MAIN_CONTROL_TAB,IP_RO,60,IPS_IDLE);
-
-    IUFillSwitch(&SysControlS[0], "SYSCTRL_REBOOT", "Reboot", ISS_OFF);
-	IUFillSwitch(&SysControlS[1], "SYSCTRL_SHUTDOWN", "Shutdown", ISS_OFF);
-	IUFillSwitchVector(&SysControlSP, SysControlS, 2, getDeviceName(), "SYSCTRL", "System Ctrl", MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
-
-	IUFillSwitch(&SysOpConfirmS[0], "SYSOPCONFIRM_CONFIRM", "Yes", ISS_OFF);
-	IUFillSwitch(&SysOpConfirmS[1], "SYSOPCONFIRM_CANCEL", "No", ISS_OFF);
-	IUFillSwitchVector(&SysOpConfirmSP, SysOpConfirmS, 2, getDeviceName(), "SYSOPCONFIRM", "Continue?", MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
-
-    // Focuser Resolution
+	// Focuser Resolution
 	IUFillSwitch(&FocusResolutionS[0],"FOCUS_RESOLUTION_1","Full Step",ISS_ON);
 	IUFillSwitch(&FocusResolutionS[1],"FOCUS_RESOLUTION_2","Half Step",ISS_OFF);
 	IUFillSwitchVector(&FocusResolutionSP,FocusResolutionS,2,getDeviceName(),"FOCUS_RESOLUTION","Resolution",MAIN_CONTROL_TAB,IP_RW,ISR_1OFMANY,0,IPS_IDLE);
 
-    // Focuser Info
+	// Focuser Info
 	IUFillNumber(&FocuserInfoN[0], "CFZ_STEP_ACT", "Step Size (μm)", "%0.2f", 0, 1000, 1, 0);
 	IUFillNumber(&FocuserInfoN[1], "CFZ", "Critical Focus Zone (μm)", "%0.2f", 0, 1000, 1, 0);
 	IUFillNumber(&FocuserInfoN[2], "STEPS_PER_CFZ", "Steps / Critical Focus Zone", "%0.0f", 0, 1000, 1, 0);
@@ -368,38 +263,43 @@ bool IndiAstrolink4Pi::initProperties()
 	FocusMotionS[FOCUS_INWARD].s = ISS_OFF;
 	IDSetSwitch(&FocusMotionSP, nullptr);
 
-	removeProperty("POLLING_PERIOD", nullptr);        
+	// Add default properties
+	// addAuxControls(); // use instead if simulation mode is added to code
+	addDebugControl ();
+	addConfigurationControl();
+	removeProperty("POLLING_PERIOD", nullptr);
 
-    return true;
+	return true;
 }
 
-bool IndiAstrolink4Pi::updateProperties()
+void AstroberryFocuser::ISGetProperties (const char *dev)
 {
-	// Call parent update properties first
-	INDI::DefaultDevice::updateProperties();
+	INDI::Focuser::ISGetProperties(dev);
+	return;
+}
+
+bool AstroberryFocuser::updateProperties()
+{
+	INDI::Focuser::updateProperties();
 
 	if (isConnected())
 	{
-		defineProperty(&SysTimeTP);
-		defineProperty(&SysInfoTP);
-		defineProperty(&SysControlSP);
+		defineText(&ActiveTelescopeTP);
+		defineNumber(&FocuserTravelNP);
+		defineSwitch(&FocusMotionSP);
+		defineSwitch(&FocusResolutionSP);
+		defineNumber(&FocuserInfoNP);
+		defineNumber(&FocusStepDelayNP);
+		defineNumber(&FocusBacklashNP);
+		defineSwitch(&ResetAbsPosSP);
 
-		defineProperty(&ActiveTelescopeTP);
-		defineProperty(&FocuserTravelNP);
-		defineProperty(&FocusMotionSP);
-		defineProperty(&FocusResolutionSP);
-		defineProperty(&FocuserInfoNP);
-		defineProperty(&FocusStepDelayNP);
-		defineProperty(&FocusBacklashNP);
-		defineProperty(&ResetAbsPosSP);
-
-		IDSnoopDevice(ActiveTelescopeT[0].text, "TELESCOPE_INFO");        
+		IDSnoopDevice(ActiveTelescopeT[0].text, "TELESCOPE_INFO");
 
 		if (readDS18B20())
 		{
-			defineProperty(&FocusTemperatureNP);
-			defineProperty(&TemperatureCoefNP);
-			defineProperty(&TemperatureCompensateSP);
+			defineNumber(&FocusTemperatureNP);
+			defineNumber(&TemperatureCoefNP);
+			defineSwitch(&TemperatureCompensateSP);
 			readDS18B20(); // update immediately
 			lastTemperature = FocusTemperatureN[0].value; // init last temperature
 			IERmTimer(updateTemperatureID);
@@ -407,14 +307,9 @@ bool IndiAstrolink4Pi::updateProperties()
 			IERmTimer(temperatureCompensationID);
 			temperatureCompensationID = IEAddTimer(TEMPERATURE_COMPENSATION_TIMEOUT, temperatureCompensationHelper, this); // set temperature compensation timer
 			DEBUGF(INDI::Logger::DBG_WARNING, "Comp timer %i", temperatureCompensationID);
-		}        
-	}
-	else
-	{
-		// We're disconnected
-		deleteProperty(SysTimeTP.name);
-		deleteProperty(SysInfoTP.name);
-		deleteProperty(SysControlSP.name);
+		}
+
+	} else {
 		deleteProperty(ActiveTelescopeTP.name);
 		deleteProperty(FocuserTravelNP.name);
 		deleteProperty(FocusMotionSP.name);
@@ -425,17 +320,13 @@ bool IndiAstrolink4Pi::updateProperties()
 		deleteProperty(ResetAbsPosSP.name);
 		deleteProperty(FocusTemperatureNP.name);
 		deleteProperty(TemperatureCoefNP.name);
-		deleteProperty(TemperatureCompensateSP.name);        
+		deleteProperty(TemperatureCompensateSP.name);
 	}
+
 	return true;
 }
 
-void IndiAstrolink4Pi::ISGetProperties(const char *dev)
-{
-	INDI::DefaultDevice::ISGetProperties(dev);
-}
-
-bool IndiAstrolink4Pi::ISNewNumber (const char *dev, const char *name, double values[], char *names[], int n)
+bool AstroberryFocuser::ISNewNumber (const char *dev, const char *name, double values[], char *names[], int n)
 {
 	// first we check if it's for our device
 	if(!strcmp(dev,getDeviceName()))
@@ -533,123 +424,46 @@ bool IndiAstrolink4Pi::ISNewNumber (const char *dev, const char *name, double va
 		}
 	}
 
-	return INDI::DefaultDevice::ISNewNumber(dev,name,values,names,n);
+	return INDI::Focuser::ISNewNumber(dev,name,values,names,n);
 }
 
-bool IndiAstrolink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *states, char *names[], int n)
+bool AstroberryFocuser::ISNewSwitch (const char *dev, const char *name, ISState *states, char *names[], int n)
 {
 	// first we check if it's for our device
 	if (!strcmp(dev, getDeviceName()))
 	{
-		// handle system control
-		if (!strcmp(name, SysControlSP.name))
-		{
-			IUUpdateSwitch(&SysControlSP, states, names, n);
+	    // handle focus presets
+		if (!strcmp(name, PresetGotoSP.name))
+	        {
+			IUUpdateSwitch(&PresetGotoSP, states, names, n);
+			PresetGotoSP.s = IPS_BUSY;
+			IDSetSwitch(&PresetGotoSP, nullptr);
 
-			if ( SysControlS[0].s == ISS_ON )
-			{
-				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi device is set to REBOOT. Confirm or Cancel operation.");
-				SysControlSP.s = IPS_BUSY;
-				IDSetSwitch(&SysControlSP, NULL);
-				
-				// confirm switch
-				defineProperty(&SysOpConfirmSP);
+			//Preset 1
+			if ( PresetGotoS[0].s == ISS_ON )
+				MoveAbsFocuser(PresetN[0].value);
 
-				return true;
-			}
-			if ( SysControlS[1].s == ISS_ON )
-			{
-				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi device is set to SHUT DOWN. Confirm or Cancel operation.");
-				SysControlSP.s = IPS_BUSY;
-				IDSetSwitch(&SysControlSP, NULL);
+			//Preset 2
+			if ( PresetGotoS[1].s == ISS_ON )
+				MoveAbsFocuser(PresetN[1].value);
 
-				// confirm switch
-				defineProperty(&SysOpConfirmSP);
+			//Preset 3
+			if ( PresetGotoS[2].s == ISS_ON )
+				MoveAbsFocuser(PresetN[2].value);
 
-				return true;
-			}
-		}
+			PresetGotoS[0].s = ISS_OFF;
+			PresetGotoS[1].s = ISS_OFF;
+			PresetGotoS[2].s = ISS_OFF;
+			PresetGotoSP.s = IPS_OK;
 
-		// handle system control confirmation
-		if (!strcmp(name, SysOpConfirmSP.name))
-		{
-			IUUpdateSwitch(&SysOpConfirmSP, states, names, n);
+			IDSetSwitch(&PresetGotoSP, nullptr);
 
-			if ( SysOpConfirmS[0].s == ISS_ON )
-			{
-				SysOpConfirmSP.s = IPS_IDLE;
-				IDSetSwitch(&SysOpConfirmSP, NULL);
-				SysOpConfirmS[0].s = ISS_OFF;
-				IDSetSwitch(&SysOpConfirmSP, NULL);
+			return true;
+	        }
 
-				// execute system operation
-				if (SysControlS[0].s == ISS_ON)
-				{
-					DEBUG(INDI::Logger::DBG_SESSION, "System operation confirmed. System is going to REBOOT now");
-					FILE* pipe;
-					char buffer[512];
-					pipe = popen("sudo reboot", "r");
-					if(fgets(buffer, 512, pipe) == NULL)
-					{
-						DEBUGF(INDI::Logger::DBG_SESSION, "Failed open sudo reboot", buffer);
-					}
-					else
-					{
-						DEBUGF(INDI::Logger::DBG_SESSION, "System output: %s", buffer);
-					}
-					pclose(pipe);
-				}
-				if (SysControlS[1].s == ISS_ON)
-				{
-					DEBUG(INDI::Logger::DBG_SESSION, "System operation confirmed. System is going to SHUT DOWN now");
-					FILE* pipe;
-					char buffer[512];
-					pipe = popen("sudo poweroff", "r");
-					if(fgets(buffer, 512, pipe) == NULL)
-					{
-						DEBUGF(INDI::Logger::DBG_SESSION, "Failed open sudo poweroff", buffer);
-					}
-					else
-					{
-						DEBUGF(INDI::Logger::DBG_SESSION, "System output: %s", buffer);
-					}
-					pclose(pipe);					
-				}
-
-				// reset system control buttons
-				SysControlSP.s = IPS_IDLE;
-				IDSetSwitch(&SysControlSP, NULL);
-				SysControlS[0].s = ISS_OFF;
-				SysControlS[1].s = ISS_OFF;
-				IDSetSwitch(&SysControlSP, NULL);
-
-				deleteProperty(SysOpConfirmSP.name);
-				return true;
-			}
-
-			if ( SysOpConfirmS[1].s == ISS_ON )
-			{
-				DEBUG(INDI::Logger::DBG_SESSION, "System operation canceled.");
-				SysOpConfirmSP.s = IPS_IDLE;
-				IDSetSwitch(&SysOpConfirmSP, NULL);
-				SysOpConfirmS[1].s = ISS_OFF;
-				IDSetSwitch(&SysOpConfirmSP, NULL);
-
-				// reset system control buttons
-				SysControlSP.s = IPS_IDLE;
-				IDSetSwitch(&SysControlSP, NULL);
-				SysControlS[0].s = ISS_OFF;
-				SysControlS[1].s = ISS_OFF;
-				IDSetSwitch(&SysControlSP, NULL);
-
-				deleteProperty(SysOpConfirmSP.name);
-				return true;
-			}
-		}
-	
-	    // handle focus resolution
-	    if(!strcmp(name, FocusResolutionSP.name))
-	    {
+	        // handle focus resolution
+	        if(!strcmp(name, FocusResolutionSP.name))
+	        {
 			int last_resolution = resolution;
 			IUFindOnSwitchIndex(&FocusResolutionSP);
 
@@ -700,6 +514,11 @@ bool IndiAstrolink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *
 			IDSetNumber(&FocusMaxPosNP, nullptr);
 			IUUpdateMinMax(&FocusMaxPosNP);
 
+			PresetN[0].value = (int) PresetN[0].value * resolution / last_resolution;
+			PresetN[1].value = (int) PresetN[1].value * resolution / last_resolution;
+			PresetN[2].value = (int) PresetN[2].value * resolution / last_resolution;
+			IDSetNumber(&PresetNP, nullptr);
+
 			getFocuserInfo();
 
 			FocusResolutionSP.s = IPS_OK;
@@ -710,7 +529,7 @@ bool IndiAstrolink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *
 
 	    // handle reset absolute position
 	    if(!strcmp(name, ResetAbsPosSP.name))
-	    {
+	        {
 			IUResetSwitch(&ResetAbsPosSP);
 
 			//set absolute position to zero and save to file
@@ -727,7 +546,7 @@ bool IndiAstrolink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *
 
 	    // handle temperature compensation
 	    if(!strcmp(name, TemperatureCompensateSP.name))
-	    {
+	        {
 			IUUpdateSwitch(&TemperatureCompensateSP, states, names, n);
 
 			if ( TemperatureCompensateS[0].s == ISS_ON)
@@ -746,12 +565,13 @@ bool IndiAstrolink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *
 
 			IDSetSwitch(&TemperatureCompensateSP, nullptr);
 			return true;
-		}    
-    }
-	return INDI::DefaultDevice::ISNewSwitch (dev, name, states, names, n);
+		}
+	}
+
+	return INDI::Focuser::ISNewSwitch(dev,name,states,names,n);
 }
 
-bool IndiAstrolink4Pi::ISNewText (const char *dev, const char *name, char *texts[], char *names[], int n)
+bool AstroberryFocuser::ISNewText (const char *dev, const char *name, char *texts[], char *names[], int n)
 {
 	// first we check if it's for our device
 	if (!strcmp(dev, getDeviceName()))
@@ -769,16 +589,12 @@ bool IndiAstrolink4Pi::ISNewText (const char *dev, const char *name, char *texts
 				DEBUGF(INDI::Logger::DBG_SESSION, "Active telescope set to %s.", ActiveTelescopeT[0].text);
 				return true;
 		}
-	}    
-	return INDI::DefaultDevice::ISNewText (dev, name, texts, names, n);
+	}
+
+	return INDI::Focuser::ISNewText(dev,name,texts,names,n);
 }
 
-bool IndiAstrolink4Pi::ISNewBLOB (const char *dev, const char *name, int sizes[], int blobsizes[], char *blobs[], char *formats[], char *names[], int n)
-{
-	return INDI::DefaultDevice::ISNewBLOB (dev, name, sizes, blobsizes, blobs, formats, names, n);
-}
-
-bool IndiAstrolink4Pi::ISSnoopDevice (XMLEle *root)
+bool AstroberryFocuser::ISSnoopDevice (XMLEle *root)
 {
 	if (IUSnoopNumber(root, &ScopeParametersNP) == 0)
 	{
@@ -787,10 +603,10 @@ bool IndiAstrolink4Pi::ISSnoopDevice (XMLEle *root)
 		return true;
 	}
 
-	return INDI::DefaultDevice::ISSnoopDevice(root);
+	return INDI::Focuser::ISSnoopDevice(root);
 }
 
-bool IndiAstrolink4Pi::saveConfigItems(FILE *fp)
+bool AstroberryFocuser::saveConfigItems(FILE *fp)
 {
 	IUSaveConfigSwitch(fp, &FocusResolutionSP);
 	IUSaveConfigSwitch(fp, &FocusReverseSP);
@@ -799,12 +615,13 @@ bool IndiAstrolink4Pi::saveConfigItems(FILE *fp)
 	IUSaveConfigNumber(fp, &FocusStepDelayNP);
 	IUSaveConfigNumber(fp, &FocusBacklashNP);
 	IUSaveConfigNumber(fp, &FocuserTravelNP);
+	IUSaveConfigNumber(fp, &PresetNP);
 	IUSaveConfigNumber(fp, &TemperatureCoefNP);
 	IUSaveConfigText(fp, &ActiveTelescopeTP);
 	return true;
 }
 
-void IndiAstrolink4Pi::stepperRun()
+void AstroberryFocuser::TimerHit()
 {
 	if(backlashTicksRemaining <= 0 && ticksRemaining <= 0)
 	{
@@ -866,10 +683,11 @@ void IndiAstrolink4Pi::stepperRun()
 		backlashTicksRemaining -= 1;
 	}
 
-	stepperRunID = IEAddTimer(STEPPER_CYCLE, stepperRunHelper, this);
+	SetTimer(FocusStepDelayN[0].value);
 }
 
-bool IndiAstrolink4Pi::AbortFocuser()
+
+bool AstroberryFocuser::AbortFocuser()
 {
 	DEBUG(INDI::Logger::DBG_SESSION, "Focuser motion aborted.");
 	backlashTicksRemaining = 0;
@@ -877,7 +695,7 @@ bool IndiAstrolink4Pi::AbortFocuser()
 	return true;
 }
 
-void IndiAstrolink4Pi::stepMotor(int direction)
+void AstroberryFocuser::stepMotor(int direction)
 {
 	currentStep = currentStep + direction;
 
@@ -907,13 +725,13 @@ void IndiAstrolink4Pi::stepMotor(int direction)
 	}
 }
 
-IPState IndiAstrolink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
+IPState AstroberryFocuser::MoveRelFocuser(FocusDirection dir, int ticks)
 {
 	int targetTicks = FocusAbsPosN[0].value + ((int32_t)ticks * (dir == FOCUS_INWARD ? -1 : 1));
 	return MoveAbsFocuser(targetTicks);
 }
 
-IPState IndiAstrolink4Pi::MoveAbsFocuser(uint32_t targetTicks)
+IPState AstroberryFocuser::MoveAbsFocuser(int targetTicks)
 {
 	if(backlashTicksRemaining > 0 || ticksRemaining > 0)
     {
@@ -977,12 +795,12 @@ IPState IndiAstrolink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	return IPS_BUSY;
 }
 
-void IndiAstrolink4Pi::SetResolution(int res)
+void AstroberryFocuser::SetResolution(int res)
 {
 	DEBUGF(INDI::Logger::DBG_SESSION, "Resolution set to 1 / %0.0f.", res);
 }
 
-bool IndiAstrolink4Pi::ReverseFocuser(bool enabled)
+bool AstroberryFocuser::ReverseFocuser(bool enabled)
 {
 	if (enabled)
 	{
@@ -993,7 +811,7 @@ bool IndiAstrolink4Pi::ReverseFocuser(bool enabled)
 	return true;
 }
 
-int IndiAstrolink4Pi::savePosition(int pos)
+int AstroberryFocuser::savePosition(int pos)
 {
 	FILE * pFile;
 	char posFileName[MAXRBUF];
@@ -1046,7 +864,7 @@ int IndiAstrolink4Pi::savePosition(int pos)
 	return pos;
 }
 
-bool IndiAstrolink4Pi::readDS18B20()
+bool AstroberryFocuser::readDS18B20()
 {
 	DIR *dir;
 	struct dirent *dirent;
@@ -1122,7 +940,7 @@ bool IndiAstrolink4Pi::readDS18B20()
 	return true;
 }
 
-bool IndiAstrolink4Pi::SyncFocuser(uint32_t ticks)
+bool AstroberryFocuser::SyncFocuser(uint32_t ticks)
 {
     FocusAbsPosN[0].value = ticks;
     IDSetNumber(&FocusAbsPosNP, nullptr);
@@ -1133,7 +951,7 @@ bool IndiAstrolink4Pi::SyncFocuser(uint32_t ticks)
     return true;
 }
 
-void IndiAstrolink4Pi::getFocuserInfo()
+void AstroberryFocuser::getFocuserInfo()
 {
 	// https://www.innovationsforesight.com/education/how-much-focus-error-is-too-much/
 	float travel_mm = (float) FocuserTravelN[0].value;
@@ -1173,27 +991,22 @@ void IndiAstrolink4Pi::getFocuserInfo()
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Focuser Info: %0.2f %0.2f %0.2f.", FocuserInfoN[0].value, FocuserInfoN[1].value, FocuserInfoN[2].value);
 }
 
-void IndiAstrolink4Pi::stepperStandbyHelper(void *context)
+void AstroberryFocuser::stepperStandbyHelper(void *context)
 {
-	static_cast<IndiAstrolink4Pi*>(context)->stepperStandby();
+	static_cast<AstroberryFocuser*>(context)->stepperStandby();
 }
 
-void IndiAstrolink4Pi::updateTemperatureHelper(void *context)
+void AstroberryFocuser::updateTemperatureHelper(void *context)
 {
-	static_cast<IndiAstrolink4Pi*>(context)->updateTemperature();
+	static_cast<AstroberryFocuser*>(context)->updateTemperature();
 }
 
-void IndiAstrolink4Pi::temperatureCompensationHelper(void *context)
+void AstroberryFocuser::temperatureCompensationHelper(void *context)
 {
-	static_cast<IndiAstrolink4Pi*>(context)->temperatureCompensation();
+	static_cast<AstroberryFocuser*>(context)->temperatureCompensation();
 }
 
-void IndiAstrolink4Pi::stepperRunHelper(void *context)
-{
-	static_cast<IndiAstrolink4Pi*>(context)->stepperRun();
-}
-
-void IndiAstrolink4Pi::stepperStandby()
+void AstroberryFocuser::stepperStandby()
 {
 	if (!isConnected())
 		return;
@@ -1206,7 +1019,7 @@ void IndiAstrolink4Pi::stepperStandby()
 	DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor going standby.");
 }
 
-void IndiAstrolink4Pi::updateTemperature()
+void AstroberryFocuser::updateTemperature()
 {
 	if (!isConnected())
 		return;
@@ -1215,7 +1028,7 @@ void IndiAstrolink4Pi::updateTemperature()
 	updateTemperatureID = IEAddTimer(TEMPERATURE_UPDATE_TIMEOUT, updateTemperatureHelper, this);
 }
 
-void IndiAstrolink4Pi::temperatureCompensation()
+void AstroberryFocuser::temperatureCompensation()
 {
 	if (!isConnected())
 		return;
