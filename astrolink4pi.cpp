@@ -107,7 +107,7 @@ AstroLink4Pi::AstroLink4Pi() : FI(this)
 {
 	setVersion(VERSION_MAJOR,VERSION_MINOR);
 	FI::SetCapability(FOCUSER_CAN_ABS_MOVE | FOCUSER_CAN_REL_MOVE | FOCUSER_CAN_REVERSE | FOCUSER_CAN_SYNC | FOCUSER_CAN_ABORT); 
-	FI::setActiveConnection(CONNECTION_NONE);
+	DefaultDevice::setActiveConnection(CONNECTION_NONE);
 }
 
 AstroLink4Pi::~AstroLink4Pi()
@@ -188,7 +188,7 @@ bool AstroLink4Pi::Disconnect()
 
 bool AstroLink4Pi::initProperties()
 {
-	INDI::Focuser::initProperties();
+	INDI::DefaultDevice::initProperties();
     FI::initProperties(OPTIONS_TAB);
 
 	// Focuser Resolution
@@ -276,7 +276,7 @@ void AstroLink4Pi::ISGetProperties (const char *dev)
 
 bool AstroLink4Pi::updateProperties()
 {
-	INDI::Focuser::updateProperties();
+	INDI::DefaultDevice::updateProperties();
 
 	if (isConnected())
 	{
