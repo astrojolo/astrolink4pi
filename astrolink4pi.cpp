@@ -275,9 +275,9 @@ bool IndiAstrolink4Pi::updateProperties()
 
 	if (isConnected())
 	{
-		defineText(&SysTimeTP);
-		defineText(&SysInfoTP);
-		defineSwitch(&SysControlSP);
+		defineProperty(&SysTimeTP);
+		defineProperty(&SysInfoTP);
+		defineProperty(&SysControlSP);
 	}
 	else
 	{
