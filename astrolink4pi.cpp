@@ -390,7 +390,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "Focuser is moving %s to position %d.", direction, targetTicks);
 
-	SetTimer(FocusStepDelayN[0].value);
+	SetTimer(5);
 
 	return IPS_BUSY;
 }
