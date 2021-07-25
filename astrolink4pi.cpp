@@ -24,7 +24,6 @@
 #include <fstream>
 #include <math.h>
 #include <memory>
-#include <connectioninterface.h>
 #include "config.h"
 
 
@@ -109,7 +108,7 @@ AstroLink4Pi::AstroLink4Pi() : FI(this)
 {
 	setVersion(VERSION_MAJOR,VERSION_MINOR);
 	FI::SetCapability(FOCUSER_CAN_ABS_MOVE | FOCUSER_CAN_REL_MOVE | FOCUSER_CAN_REVERSE | FOCUSER_CAN_SYNC | FOCUSER_CAN_ABORT); 
-	INDI::DefaultDevice::setActiveConnection(CONNECTION_NONE);
+	INDI::DefaultDevice::setActiveConnection(1);
 }
 
 AstroLink4Pi::~AstroLink4Pi()
