@@ -47,6 +47,21 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 int halfStep[8][4] = { {1,0,0,0}, {1,0,1,0}, {0,0,1,0}, {0,1,1,0}, {0,1,0,0}, {0,1,0,1}, {0,0,0,1}, {1,0,0,1} };
 int fullStep[8][4] = { {1,0,0,0}, {0,0,1,0}, {0,1,0,0}, {0,0,0,1}, {1,0,0,0}, {0,0,1,0}, {0,1,0,0}, {0,0,0,1} };
 
+void ISPoll(void *p);
+
+void ISInit()
+{
+	static int isInit = 0;
+
+	if (isInit == 1)
+	return;
+	if(astroLink4Pi.get() == 0)
+	{
+	isInit = 1;
+	astroLink4Pi.reset(new AstroLink4Pi());
+	}
+}
+
 void ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int num)
 {
         ISInit();
@@ -61,7 +76,6 @@ void ISNewText(	const char *dev, const char *name, char *texts[], char *names[],
 
 void ISNewNumber(const char *dev, const char *name, double values[], char *names[], int num)
 {
-        ISInit();
         astroLink4Pi->ISNewNumber(dev, name, values, names, num);
 }
 
