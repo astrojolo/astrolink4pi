@@ -98,6 +98,50 @@ const char * AstroLink4Pi::getDefaultName()
 
 bool AstroLink4Pi::Connect()
 {
+	chip = gpiod_chip_open("/dev/gpiochip0");
+	if (!chip)
+	{
+		DEBUG(INDI::Logger::DBG_ERROR, "Problem initiating Astroberry Focuser.");
+		return false;
+	}
+
+	// verify BCM Pins are not used by other consumers
+	int pins[] = {A1_PIN, A2_PIN, B1_PIN, B2_PIN};
+	for (unsigned int pin = 0; pin < 4; pin++)
+	{
+		if (gpiod_line_is_used(gpiod_chip_get_line(chip, pins[pin])))
+		{
+			DEBUGF(INDI::Logger::DBG_ERROR, "BCM Pin %0.0f already used", pins[pin]);
+			gpiod_chip_close(chip);
+			return false;
+		}
+	}
+
+	// Select gpios
+	gpio_a1 = gpiod_chip_get_line(chip, A1_PIN);
+	gpio_a2 = gpiod_chip_get_line(chip, A2_PIN);
+	gpio_b1 = gpiod_chip_get_line(chip, B1_PIN);
+	gpio_b2 = gpiod_chip_get_line(chip, B2_PIN);
+
+
+	// Set initial state for gpios
+	gpiod_line_request_output(gpio_a1, "a1@astroberry_focuser", 0);
+	gpiod_line_request_output(gpio_a2, "a2@astroberry_focuser", 0);
+	gpiod_line_request_output(gpio_b1, "b1@astroberry_focuser", 0); 
+	gpiod_line_request_output(gpio_b2, "b2@astroberry_focuser", 0);
+
+	//read last position from file & convert from MAX_RESOLUTION to current resolution
+	FocusAbsPosN[0].value = savePosition(-1) != -1 ? (int) savePosition(-1) * resolution / MAX_RESOLUTION : 0;
+
+	// preset resolution
+	// SetResolution(resolution);
+
+	// Update focuser parameters
+	// getFocuserInfo();
+
+	// set motor standby timer
+	// stepperStandbyID = IEAddTimer(STEPPER_STANDBY_TIMEOUT, stepperStandbyHelper, this);
+
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
 
 	return true;
@@ -105,6 +149,14 @@ bool AstroLink4Pi::Connect()
 
 bool AstroLink4Pi::Disconnect()
 {
+	// Close device
+	gpiod_chip_close(chip);
+
+	// Stop timers
+	// IERmTimer(stepperStandbyID);
+	// IERmTimer(updateTemperatureID);
+	// IERmTimer(temperatureCompensationID);
+  
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi disconnected successfully.");
 
 	return true;
@@ -164,4 +216,250 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 bool AstroLink4Pi::ISNewText (const char *dev, const char *name, char *texts[], char *names[], int n)
 {
 	return INDI::DefaultDevice::ISNewText(dev,name,texts,names,n);
+}
+
+bool AstroLink4Pi::saveConfigItems(FILE *fp)
+{
+	return true;
+}
+
+void AstroLink4Pi::TimerHit()
+{
+	if(backlashTicksRemaining <= 0 && ticksRemaining <= 0)
+	{
+		//All movement completed/aborted
+		//save position to file
+		savePosition((int) FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
+
+		// update abspos value and status
+		DEBUGF(INDI::Logger::DBG_SESSION, "Focuser at the position %0.0f.", FocusAbsPosN[0].value);
+
+		FocusAbsPosNP.s = IPS_OK;
+		IDSetNumber(&FocusAbsPosNP, nullptr);
+
+		// reset last temperature
+		// lastTemperature = FocusTemperatureN[0].value; // register last temperature
+
+		// set motor standby timer
+		// IERmTimer(stepperStandbyID);
+		// stepperStandbyID = IEAddTimer(STEPPER_STANDBY_TIMEOUT, stepperStandbyHelper, this);
+
+		return;
+	}
+
+	int motorDirection = lastDirection;
+
+	// handle Reverse Motion
+	if (FocusReverseS[INDI_ENABLED].s == ISS_ON) 
+	{
+		motorDirection = -1 * motorDirection;
+	}
+
+	bool isBacklash = false;
+	if(backlashTicksRemaining > 0)
+	{
+		isBacklash = true;
+	}
+
+	//Move the actual motor
+	stepMotor(motorDirection);
+
+	if(isBacklash == false)
+	{   //Only Count the position change if it is not due to backlash
+		// INWARD - count down
+		if ( lastDirection == -1 )
+			FocusAbsPosN[0].value -= 1;
+
+		// OUTWARD - count up
+		if ( lastDirection == 1 )
+			FocusAbsPosN[0].value += 1;
+
+		IDSetNumber(&FocusAbsPosNP, nullptr);
+
+		//decrement counter
+		ticksRemaining -= 1;
+	}
+	else
+	{   //Don't count the backlash position change, just decrement the counter
+		backlashTicksRemaining -= 1;
+	}
+
+	SetTimer(5);
+}
+
+bool AstroLink4Pi::AbortFocuser()
+{
+	DEBUG(INDI::Logger::DBG_SESSION, "Focuser motion aborted.");
+	backlashTicksRemaining = 0;
+	ticksRemaining = 0;
+	return true;
+}
+
+void AstroLink4Pi::stepMotor(int direction)
+{
+	currentStep = currentStep + direction;
+
+	if (currentStep < 0)
+	{
+		currentStep = 7;
+	}
+
+	if (currentStep > 7)
+	{
+		currentStep = 0;
+	}
+
+	if (resolution == 1)
+	{	//Full Step
+		gpiod_line_set_value(gpio_a1, fullStep[currentStep][0]);
+        gpiod_line_set_value(gpio_a2, fullStep[currentStep][1]);
+        gpiod_line_set_value(gpio_b1, fullStep[currentStep][2]);
+        gpiod_line_set_value(gpio_b2, fullStep[currentStep][3]);
+	}
+	else if (resolution == 2)
+	{	//Half Step
+		gpiod_line_set_value(gpio_a1, halfStep[currentStep][0]);
+        gpiod_line_set_value(gpio_a2, halfStep[currentStep][1]);
+        gpiod_line_set_value(gpio_b1, halfStep[currentStep][2]);
+        gpiod_line_set_value(gpio_b2, halfStep[currentStep][3]);
+	}
+}
+
+IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
+{
+	uint32_t targetTicks = FocusAbsPosN[0].value + ((int32_t)ticks * (dir == FOCUS_INWARD ? -1 : 1));
+	return MoveAbsFocuser(targetTicks);
+}
+
+IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
+{
+	if(backlashTicksRemaining > 0 || ticksRemaining > 0)
+    {
+        DEBUG(INDI::Logger::DBG_WARNING, "Focuser movement still in progress.");
+        return IPS_BUSY;
+	}
+
+	if (targetTicks < FocusAbsPosN[0].min || targetTicks > FocusAbsPosN[0].max)
+	{
+		DEBUG(INDI::Logger::DBG_WARNING, "Requested position is out of range.");
+		return IPS_ALERT;
+	}
+
+	if (targetTicks == FocusAbsPosN[0].value)
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Already at the requested position.");
+		return IPS_OK;
+	}
+
+	// set focuser busy
+	FocusAbsPosNP.s = IPS_BUSY;
+	IDSetNumber(&FocusAbsPosNP, nullptr);
+
+	// check last motion direction for backlash triggering
+	int lastdir = lastDirection;
+
+	// set direction
+	const char* direction;
+	int newDirection;
+	if (targetTicks > FocusAbsPosN[0].value)
+	{
+		// OUTWARD
+		direction = "OUTWARD";
+		newDirection = 1;
+	} else {
+		// INWARD
+		direction = "INWARD";
+		newDirection = -1;
+	}
+
+	lastDirection = newDirection;
+
+	// if direction changed do backlash adjustment
+	if ( lastdir != 0 && newDirection != lastdir && FocusBacklashN[0].value != 0)
+	{
+		DEBUGF(INDI::Logger::DBG_SESSION, "Backlash compensation by %0.0f steps.", FocusBacklashN[0].value);
+		backlashTicksRemaining = FocusBacklashN[0].value;
+	}
+	else
+	{
+		backlashTicksRemaining = 0;
+	}
+
+	// process targetTicks
+	ticksRemaining = abs(targetTicks - FocusAbsPosN[0].value);
+
+	DEBUGF(INDI::Logger::DBG_SESSION, "Focuser is moving %s to position %d.", direction, targetTicks);
+
+	SetTimer(FocusStepDelayN[0].value);
+
+	return IPS_BUSY;
+}
+
+void AstroLink4Pi::SetResolution(int res)
+{
+	DEBUGF(INDI::Logger::DBG_SESSION, "Resolution set to 1 / %0.0f.", res);
+}
+
+bool AstroLink4Pi::ReverseFocuser(bool enabled)
+{
+	if (enabled)
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Reverse direction ENABLED.");
+	} else {
+		DEBUG(INDI::Logger::DBG_SESSION, "Reverse direction DISABLED.");
+	}
+	return true;
+}
+
+int AstroLink4Pi::savePosition(int pos)
+{
+	FILE * pFile;
+	char posFileName[MAXRBUF];
+	char buf [100];
+
+	if (getenv("INDICONFIG"))
+	{
+		snprintf(posFileName, MAXRBUF, "%s.position", getenv("INDICONFIG"));
+	} else {
+		snprintf(posFileName, MAXRBUF, "%s/.indi/%s.position", getenv("HOME"), getDeviceName());
+	}
+
+
+	if (pos == -1)
+	{
+		pFile = fopen (posFileName,"r");
+		if (pFile == NULL)
+		{
+			DEBUGF(INDI::Logger::DBG_ERROR, "Failed to open file %s.", posFileName);
+			return -1;
+		}
+
+		if(fgets (buf , 100, pFile) == NULL)
+		{
+			DEBUGF(INDI::Logger::DBG_ERROR, "Failed to read file %s.", posFileName);
+			return -1;
+
+		}
+		else
+		{
+			pos = atoi (buf);
+			DEBUGF(INDI::Logger::DBG_DEBUG, "Reading position %d from %s.", pos, posFileName);
+		}
+		
+	} else {
+		pFile = fopen (posFileName,"w");
+		if (pFile == NULL)
+		{
+			DEBUGF(INDI::Logger::DBG_ERROR, "Failed to open file %s.", posFileName);
+			return -1;
+		}
+
+		sprintf(buf, "%d", pos);
+		fputs (buf, pFile);
+		DEBUGF(INDI::Logger::DBG_DEBUG, "Writing position %s to %s.", buf, posFileName);
+	}
+
+	fclose (pFile);
+
+	return pos;
 }

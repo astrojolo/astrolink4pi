@@ -41,9 +41,37 @@ public:
 protected:
 	const char *getDefaultName();
 
+	// Focuser Overrides
+    virtual IPState MoveAbsFocuser(uint32_t targetTicks) override;
+    virtual IPState MoveRelFocuser(FocusDirection dir, uint32_t ticks) override;
+	virtual bool ReverseFocuser(bool enabled);
+	virtual bool AbortFocuser();
+	virtual bool SyncFocuser(uint32_t ticks) override;	
+
+	virtual bool saveConfigItems(FILE *fp);
+	virtual void TimerHit();
+
 private:
 	virtual bool Connect();
 	virtual bool Disconnect();
+	virtual void SetResolution(int res);
+	virtual int savePosition(int pos);
+	virtual void stepMotor(int direction);
+
+	struct gpiod_chip *chip;
+	struct gpiod_line *gpio_a1;
+	struct gpiod_line *gpio_a2;
+	struct gpiod_line *gpio_b1;
+	struct gpiod_line *gpio_b2;
+
+	int resolution = 1;
+	float lastTemperature;
+
+	int backlashTicksRemaining;
+	int ticksRemaining;
+	int lastDirection = 0;
+	int currentStep = -1;
+	bool abortStep = false;		
 
 };
 
