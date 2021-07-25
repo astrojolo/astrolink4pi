@@ -165,8 +165,3 @@ bool AstroLink4Pi::ISNewText (const char *dev, const char *name, char *texts[], 
 {
 	return INDI::DefaultDevice::ISNewText(dev,name,texts,names,n);
 }
-
-bool AstroLink4Pi::saveConfigItems(FILE *fp)
-{
-	return true;
-}
