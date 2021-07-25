@@ -279,22 +279,22 @@ bool AstroLink4Pi::updateProperties()
 
 	if (isConnected())
 	{
-		defineText(&ActiveTelescopeTP);
-		defineNumber(&FocuserTravelNP);
-		defineSwitch(&FocusMotionSP);
-		defineSwitch(&FocusResolutionSP);
-		defineNumber(&FocuserInfoNP);
-		defineNumber(&FocusStepDelayNP);
-		defineNumber(&FocusBacklashNP);
-		defineSwitch(&ResetAbsPosSP);
+		defineProperty(&ActiveTelescopeTP);
+		defineProperty(&FocuserTravelNP);
+		defineProperty(&FocusMotionSP);
+		defineProperty(&FocusResolutionSP);
+		defineProperty(&FocuserInfoNP);
+		defineProperty(&FocusStepDelayNP);
+		defineProperty(&FocusBacklashNP);
+		defineProperty(&ResetAbsPosSP);
 
 		IDSnoopDevice(ActiveTelescopeT[0].text, "TELESCOPE_INFO");
 
 		if (readDS18B20())
 		{
-			defineNumber(&FocusTemperatureNP);
-			defineNumber(&TemperatureCoefNP);
-			defineSwitch(&TemperatureCompensateSP);
+			defineProperty(&FocusTemperatureNP);
+			defineProperty(&TemperatureCoefNP);
+			defineProperty(&TemperatureCompensateSP);
 			readDS18B20(); // update immediately
 			lastTemperature = FocusTemperatureN[0].value; // init last temperature
 			IERmTimer(updateTemperatureID);
@@ -987,17 +987,17 @@ void AstroLink4Pi::getFocuserInfo()
 
 void AstroLink4Pi::stepperStandbyHelper(void *context)
 {
-	static_cast<AstroberryFocuser*>(context)->stepperStandby();
+	static_cast<AstroLink4Pi*>(context)->stepperStandby();
 }
 
 void AstroLink4Pi::updateTemperatureHelper(void *context)
 {
-	static_cast<AstroberryFocuser*>(context)->updateTemperature();
+	static_cast<AstroLink4Pi*>(context)->updateTemperature();
 }
 
 void AstroLink4Pi::temperatureCompensationHelper(void *context)
 {
-	static_cast<AstroberryFocuser*>(context)->temperatureCompensation();
+	static_cast<AstroLink4Pi*>(context)->temperatureCompensation();
 }
 
 void AstroLink4Pi::stepperStandby()
