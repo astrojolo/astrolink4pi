@@ -16,9 +16,13 @@
  Boston, MA 02110-1301, USA.
 *******************************************************************************/
 #include <stdio.h>
-#include <memory>
-#include <numeric>
+#include <dirent.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <string.h>
+#include <fstream>
+#include <math.h>
+#include <memory>
 #include "config.h"
 
 #include <gpiod.h>
@@ -525,7 +529,7 @@ bool IndiAstrolink4Pi::ISNewNumber (const char *dev, const char *name, double va
 		}
 	}
 
-	return INDI::Focuser::ISNewNumber(dev,name,values,names,n);
+	return INDI::DefaultDevice::ISNewNumber(dev,name,values,names,n);
 }
 
 bool IndiAstrolink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *states, char *names[], int n)
@@ -691,11 +695,6 @@ bool IndiAstrolink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *
 			FocusMaxPosN[0].value = (int) FocusMaxPosN[0].value * resolution / last_resolution;
 			IDSetNumber(&FocusMaxPosNP, nullptr);
 			IUUpdateMinMax(&FocusMaxPosNP);
-
-			PresetN[0].value = (int) PresetN[0].value * resolution / last_resolution;
-			PresetN[1].value = (int) PresetN[1].value * resolution / last_resolution;
-			PresetN[2].value = (int) PresetN[2].value * resolution / last_resolution;
-			IDSetNumber(&PresetNP, nullptr);
 
 			getFocuserInfo();
 
@@ -905,13 +904,13 @@ void IndiAstrolink4Pi::stepMotor(int direction)
 	}
 }
 
-IPState IndiAstrolink4Pi::MoveRelFocuser(FocusDirection dir, int ticks)
+IPState IndiAstrolink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
 {
 	int targetTicks = FocusAbsPosN[0].value + ((int32_t)ticks * (dir == FOCUS_INWARD ? -1 : 1));
 	return MoveAbsFocuser(targetTicks);
 }
 
-IPState IndiAstrolink4Pi::MoveAbsFocuser(int targetTicks)
+IPState IndiAstrolink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 {
 	if(backlashTicksRemaining > 0 || ticksRemaining > 0)
     {
