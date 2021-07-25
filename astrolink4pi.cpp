@@ -165,7 +165,7 @@ bool AstroLink4Pi::Disconnect()
 bool AstroLink4Pi::initProperties()
 {
 	INDI::DefaultDevice::initProperties();
-    FI::initProperties(OPTIONS_TAB);
+    FI::initProperties(FOCUS_TAB);
 
 	// Add default properties
 	// addAuxControls(); // use instead if simulation mode is added to code

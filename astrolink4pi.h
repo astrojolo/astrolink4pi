@@ -73,6 +73,7 @@ private:
 	int currentStep = -1;
 	bool abortStep = false;		
 
+	static constexpr const char *SETTINGS_TAB {"Settings"};
 };
 
 #endif
