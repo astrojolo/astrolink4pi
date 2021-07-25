@@ -107,7 +107,7 @@ AstroLink4Pi::AstroLink4Pi() : FI(this)
 {
 	setVersion(VERSION_MAJOR,VERSION_MINOR);
 	FI::SetCapability(FOCUSER_CAN_ABS_MOVE | FOCUSER_CAN_REL_MOVE | FOCUSER_CAN_REVERSE | FOCUSER_CAN_SYNC | FOCUSER_CAN_ABORT); 
-	Focuser::setSupportedConnections(CONNECTION_NONE);
+	FI::setActiveConnection(CONNECTION_NONE);
 }
 
 AstroLink4Pi::~AstroLink4Pi()
@@ -420,6 +420,9 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 			DEBUGF(INDI::Logger::DBG_SESSION, "Temperature coefficient set to %0.1f steps/°C", TemperatureCoefN[0].value);
 			return true;
 		}
+
+        if (strstr(name, "FOCUS_"))
+            return FI::processNumber(dev, name, values, names, n);        
 	}
 
 	return INDI::DefaultDevice::ISNewNumber(dev,name,values,names,n);
@@ -430,101 +433,6 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 	// first we check if it's for our device
 	if (!strcmp(dev, getDeviceName()))
 	{
-	    // handle focus presets
-		if (!strcmp(name, PresetGotoSP.name))
-	        {
-			IUUpdateSwitch(&PresetGotoSP, states, names, n);
-			PresetGotoSP.s = IPS_BUSY;
-			IDSetSwitch(&PresetGotoSP, nullptr);
-
-			//Preset 1
-			if ( PresetGotoS[0].s == ISS_ON )
-				MoveAbsFocuser(PresetN[0].value);
-
-			//Preset 2
-			if ( PresetGotoS[1].s == ISS_ON )
-				MoveAbsFocuser(PresetN[1].value);
-
-			//Preset 3
-			if ( PresetGotoS[2].s == ISS_ON )
-				MoveAbsFocuser(PresetN[2].value);
-
-			PresetGotoS[0].s = ISS_OFF;
-			PresetGotoS[1].s = ISS_OFF;
-			PresetGotoS[2].s = ISS_OFF;
-			PresetGotoSP.s = IPS_OK;
-
-			IDSetSwitch(&PresetGotoSP, nullptr);
-
-			return true;
-	        }
-
-	        // handle focus resolution
-	        if(!strcmp(name, FocusResolutionSP.name))
-	        {
-			int last_resolution = resolution;
-			IUFindOnSwitchIndex(&FocusResolutionSP);
-
-			IUUpdateSwitch(&FocusResolutionSP, states, names, n);
-
-			//Resolution 1/1
-			if ( FocusResolutionS[0].s == ISS_ON )
-				resolution = 1;
-
-			//Resolution 1/2
-			if ( FocusResolutionS[1].s == ISS_ON )
-				resolution = 2;
-
-			// Adjust position to a step in lower resolution
-			int position_adjustment = last_resolution * (FocusAbsPosN[0].value / last_resolution - (int) FocusAbsPosN[0].value / last_resolution);
-			if ( resolution < last_resolution && position_adjustment > 0 )
-			{
-				if ( (float) position_adjustment / last_resolution < 0.5)
-				{
-					position_adjustment *= -1;
-				} else {
-					position_adjustment = last_resolution - position_adjustment;
-				}
-				DEBUGF(INDI::Logger::DBG_SESSION, "Focuser position adjusted by %d steps at 1/%d resolution to sync with 1/%d resolution.", position_adjustment, last_resolution, resolution);
-				MoveAbsFocuser(FocusAbsPosN[0].value + position_adjustment);
-			}
-
-			SetResolution(resolution);
-
-			// update values based on resolution
-			FocusRelPosN[0].min = (int) FocusRelPosN[0].min * resolution / last_resolution;
-			FocusRelPosN[0].max = (int) FocusRelPosN[0].max * resolution / last_resolution;
-			FocusRelPosN[0].step = (int) FocusRelPosN[0].step * resolution / last_resolution;
-			FocusRelPosN[0].value = (int) FocusRelPosN[0].value * resolution / last_resolution;
-			IDSetNumber(&FocusRelPosNP, nullptr);
-			IUUpdateMinMax(&FocusRelPosNP);
-
-			FocusAbsPosN[0].max = (int) FocusAbsPosN[0].max * resolution / last_resolution;
-			FocusAbsPosN[0].step = (int) FocusAbsPosN[0].step * resolution / last_resolution;
-			FocusAbsPosN[0].value = (int) FocusAbsPosN[0].value * resolution / last_resolution;
-			IDSetNumber(&FocusAbsPosNP, nullptr);
-			IUUpdateMinMax(&FocusAbsPosNP);
-
-			FocusMaxPosN[0].min = (int) FocusMaxPosN[0].min * resolution / last_resolution;
-			FocusMaxPosN[0].max = (int) FocusMaxPosN[0].max * resolution / last_resolution;
-			FocusMaxPosN[0].step = (int) FocusMaxPosN[0].step * resolution / last_resolution;
-			FocusMaxPosN[0].value = (int) FocusMaxPosN[0].value * resolution / last_resolution;
-			IDSetNumber(&FocusMaxPosNP, nullptr);
-			IUUpdateMinMax(&FocusMaxPosNP);
-
-			PresetN[0].value = (int) PresetN[0].value * resolution / last_resolution;
-			PresetN[1].value = (int) PresetN[1].value * resolution / last_resolution;
-			PresetN[2].value = (int) PresetN[2].value * resolution / last_resolution;
-			IDSetNumber(&PresetNP, nullptr);
-
-			getFocuserInfo();
-
-			FocusResolutionSP.s = IPS_OK;
-			IDSetSwitch(&FocusResolutionSP, nullptr);
-			DEBUGF(INDI::Logger::DBG_SESSION, "Focuser resolution set to 1/%d.", resolution);
-			return true;
-		}
-
 	    // handle reset absolute position
 	    if(!strcmp(name, ResetAbsPosSP.name))
 	        {
@@ -564,6 +472,9 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 			IDSetSwitch(&TemperatureCompensateSP, nullptr);
 			return true;
 		}
+
+        if (strstr(name, "FOCUS"))
+            return FI::processSwitch(dev, name, states, names, n);        
 	}
 
 	return INDI::DefaultDevice::ISNewSwitch(dev,name,states,names,n);
@@ -613,7 +524,6 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 	IUSaveConfigNumber(fp, &FocusStepDelayNP);
 	IUSaveConfigNumber(fp, &FocusBacklashNP);
 	IUSaveConfigNumber(fp, &FocuserTravelNP);
-	IUSaveConfigNumber(fp, &PresetNP);
 	IUSaveConfigNumber(fp, &TemperatureCoefNP);
 	IUSaveConfigText(fp, &ActiveTelescopeTP);
 	return true;
