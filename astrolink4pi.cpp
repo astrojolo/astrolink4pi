@@ -33,10 +33,10 @@
 
 std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 
-#define MAX_RESOLUTION 2 // the highest resolution supported is 1/2 step
-#define TEMPERATURE_UPDATE_TIMEOUT (3 * 1000) // 60 sec
-#define STEPPER_STANDBY_TIMEOUT (2 * 1000) // 2 sec
-#define TEMPERATURE_COMPENSATION_TIMEOUT (30 * 1000) // 60 sec
+#define MAX_RESOLUTION                      2 // the highest resolution supported is 1/2 step
+#define TEMPERATURE_UPDATE_TIMEOUT          (3 * 1000) // 3 sec
+#define STEPPER_STANDBY_TIMEOUT             (2 * 1000) // 2 sec
+#define TEMPERATURE_COMPENSATION_TIMEOUT    (30 * 1000) // 60 sec
 
 #define A1_PIN	23
 #define A2_PIN	24
@@ -103,7 +103,7 @@ void ISSnoopDevice (XMLEle *root)
 	astroLink4Pi->ISSnoopDevice(root);
 }
 
-AstroLink4Pi::AstroLink4Pi()
+AstroLink4Pi::AstroLink4Pi() : FI(this)
 {
 	setVersion(VERSION_MAJOR,VERSION_MINOR);
 	FI::SetCapability(FOCUSER_CAN_ABS_MOVE | FOCUSER_CAN_REL_MOVE | FOCUSER_CAN_REVERSE | FOCUSER_CAN_SYNC | FOCUSER_CAN_ABORT); 
@@ -189,6 +189,7 @@ bool AstroLink4Pi::Disconnect()
 bool AstroLink4Pi::initProperties()
 {
 	INDI::Focuser::initProperties();
+    FI::initProperties(OPTIONS_TAB);
 
 	// Focuser Resolution
 	IUFillSwitch(&FocusResolutionS[0],"FOCUS_RESOLUTION_1","Full Step",ISS_ON);
@@ -269,7 +270,7 @@ bool AstroLink4Pi::initProperties()
 
 void AstroLink4Pi::ISGetProperties (const char *dev)
 {
-	INDI::Focuser::ISGetProperties(dev);
+	INDI::DefaultDevice::ISGetProperties(dev);
 	return;
 }
 
@@ -279,6 +280,7 @@ bool AstroLink4Pi::updateProperties()
 
 	if (isConnected())
 	{
+        FI::updateProperties();
 		defineProperty(&ActiveTelescopeTP);
 		defineProperty(&FocuserTravelNP);
 		defineProperty(&FocusMotionSP);
@@ -316,6 +318,7 @@ bool AstroLink4Pi::updateProperties()
 		deleteProperty(FocusTemperatureNP.name);
 		deleteProperty(TemperatureCoefNP.name);
 		deleteProperty(TemperatureCompensateSP.name);
+        FI::updateProperties();
 	}
 
 	return true;
@@ -419,7 +422,7 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 		}
 	}
 
-	return INDI::Focuser::ISNewNumber(dev,name,values,names,n);
+	return INDI::DefaultDevice::ISNewNumber(dev,name,values,names,n);
 }
 
 bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *states, char *names[], int n)
@@ -563,7 +566,7 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 		}
 	}
 
-	return INDI::Focuser::ISNewSwitch(dev,name,states,names,n);
+	return INDI::DefaultDevice::ISNewSwitch(dev,name,states,names,n);
 }
 
 bool AstroLink4Pi::ISNewText (const char *dev, const char *name, char *texts[], char *names[], int n)
@@ -586,7 +589,7 @@ bool AstroLink4Pi::ISNewText (const char *dev, const char *name, char *texts[], 
 		}
 	}
 
-	return INDI::Focuser::ISNewText(dev,name,texts,names,n);
+	return INDI::DefaultDevice::ISNewText(dev,name,texts,names,n);
 }
 
 bool AstroLink4Pi::ISSnoopDevice (XMLEle *root)
@@ -598,7 +601,7 @@ bool AstroLink4Pi::ISSnoopDevice (XMLEle *root)
 		return true;
 	}
 
-	return INDI::Focuser::ISSnoopDevice(root);
+	return INDI::DefaultDevice::ISSnoopDevice(root);
 }
 
 bool AstroLink4Pi::saveConfigItems(FILE *fp)
@@ -719,13 +722,13 @@ void AstroLink4Pi::stepMotor(int direction)
 	}
 }
 
-IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, int ticks)
+IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
 {
 	int targetTicks = FocusAbsPosN[0].value + ((int32_t)ticks * (dir == FOCUS_INWARD ? -1 : 1));
 	return MoveAbsFocuser(targetTicks);
 }
 
-IPState AstroLink4Pi::MoveAbsFocuser(int targetTicks)
+IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 {
 	if(backlashTicksRemaining > 0 || ticksRemaining > 0)
     {

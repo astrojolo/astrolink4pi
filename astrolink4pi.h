@@ -20,32 +20,41 @@
 #ifndef ASTROLINK4PI_H
 #define ASTROLINK4PI_H
 
-#include <indifocuser.h>
 
-class AstroLink4Pi : public INDI::Focuser
+#include <defaultdevice.h>
+#include <indifocuserinterface.h>
+
+
+class AstroLink4Pi : public INDI::DefaultDevice, public INDI::FocuserInterface
 {
 public:
 	AstroLink4Pi();
 	virtual ~AstroLink4Pi();
-	const char *getDefaultName();
+
 	virtual bool initProperties();
 	virtual bool updateProperties();
+
 	virtual void ISGetProperties (const char *dev);
 	virtual bool ISNewNumber (const char *dev, const char *name, double values[], char *names[], int n);
 	virtual bool ISNewSwitch (const char *dev, const char *name, ISState *states, char *names[], int n);
 	virtual bool ISNewText (const char *dev, const char *name, char *texts[], char *names[], int n);
 	virtual bool ISSnoopDevice(XMLEle *root);
+
 	static void stepperStandbyHelper(void *context);
 	static void updateTemperatureHelper(void *context);
 	static void temperatureCompensationHelper(void *context);
+
 protected:
-	virtual IPState MoveAbsFocuser(int ticks);
-	virtual IPState MoveRelFocuser(FocusDirection dir, int ticks);
+	const char *getDefaultName();
 	virtual bool saveConfigItems(FILE *fp);
+	virtual void TimerHit();
+
+	virtual IPState MoveAbsFocuser(uint32_t ticks);
+	virtual IPState MoveRelFocuser(FocusDirection dir, uint32_t ticks);
 	virtual bool ReverseFocuser(bool enabled);
 	virtual bool AbortFocuser();
-	virtual void TimerHit();
 	virtual bool SyncFocuser(uint32_t ticks) override;
+
 private:
 	virtual bool Connect();
 	virtual bool Disconnect();
