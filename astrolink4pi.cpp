@@ -24,7 +24,9 @@
 #include <fstream>
 #include <math.h>
 #include <memory>
+#include <connectioninterface.h>
 #include "config.h"
+
 
 #include <gpiod.h>
 
