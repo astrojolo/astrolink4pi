@@ -24,7 +24,7 @@
 
 #include <gpiod.h>
 
-#include "astroberry4pi.h"
+#include "astrolink4pi.h"
 
 //////////////////////////////////////////////////////////////////////
 /// Delegates
