@@ -109,8 +109,6 @@ void ISNewBLOB (const char *dev, const char *name, int sizes[], int blobsizes[],
 IndiAstrolink4Pi::IndiAstrolink4Pi() : FI(this)
 {
 	setVersion(VERSION_MAJOR,VERSION_MINOR);
-    FI::SetCapability(FOCUSER_CAN_ABS_MOVE | FOCUSER_CAN_REL_MOVE | FOCUSER_CAN_REVERSE | FOCUSER_CAN_SYNC | FOCUSER_CAN_ABORT); 
-	Focuser::setSupportedConnections(CONNECTION_NONE);
 }
 
 IndiAstrolink4Pi::~IndiAstrolink4Pi()
@@ -272,6 +270,14 @@ bool IndiAstrolink4Pi::initProperties()
 {
     INDI::DefaultDevice::initProperties();
 
+    setDriverInterface(AUX_INTERFACE | FOCUSER_INTERFACE);
+    FI::SetCapability(FOCUSER_CAN_ABS_MOVE | FOCUSER_CAN_REL_MOVE | FOCUSER_CAN_REVERSE | FOCUSER_CAN_SYNC | FOCUSER_CAN_ABORT); 
+    FI::initProperties(FOCUS_TAB);
+
+    addDebugControl();
+    addSimulationControl();
+    addConfigurationControl();
+
     IUFillText(&SysTimeT[0],"LOCAL_TIME","Local Time",NULL);
 	IUFillText(&SysTimeT[1],"UTC_OFFSET","UTC Offset",NULL);
 	IUFillTextVector(&SysTimeTP,SysTimeT,2,getDeviceName(),"SYSTEM_TIME","System Time",MAIN_CONTROL_TAB,IP_RO,60,IPS_IDLE);
@@ -362,8 +368,6 @@ bool IndiAstrolink4Pi::initProperties()
 	FocusMotionS[FOCUS_INWARD].s = ISS_OFF;
 	IDSetSwitch(&FocusMotionSP, nullptr);
 
-	addDebugControl ();
-	addConfigurationControl();
 	removeProperty("POLLING_PERIOD", nullptr);        
 
     return true;
