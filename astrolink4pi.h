@@ -86,4 +86,6 @@ private:
 	int fanControlID { -1 };
 	void fanControl();    
 
+};
+
 #endif
