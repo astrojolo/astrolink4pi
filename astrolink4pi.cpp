@@ -102,7 +102,7 @@ void ISNewBLOB (const char *dev, const char *name, int sizes[], int blobsizes[],
 ///Constructor
 //////////////////////////////////////////////////////////////////////
 
-IndiAstrolink4Pi::IndiAstrolink4Pi()
+IndiAstrolink4Pi::IndiAstrolink4Pi() : FI(this)
 {
 	setVersion(VERSION_MAJOR,VERSION_MINOR);
     FI::SetCapability(FOCUSER_CAN_ABS_MOVE | FOCUSER_CAN_REL_MOVE | FOCUSER_CAN_REVERSE | FOCUSER_CAN_SYNC | FOCUSER_CAN_ABORT); 
@@ -260,7 +260,6 @@ bool IndiAstrolink4Pi::Disconnect()
 	IDMessage(getDeviceName(), "AstroLink 4 Pi disconnected successfully.");
 	return true;
 }
-
 
 //////////////////////////////////////////////////////////////////////
 /// Overrides
@@ -640,35 +639,6 @@ bool IndiAstrolink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *
 			}
 		}
 	
-        // handle focus presets
-		if (!strcmp(name, PresetGotoSP.name))
-	    {
-			IUUpdateSwitch(&PresetGotoSP, states, names, n);
-			PresetGotoSP.s = IPS_BUSY;
-			IDSetSwitch(&PresetGotoSP, nullptr);
-
-			//Preset 1
-			if ( PresetGotoS[0].s == ISS_ON )
-				MoveAbsFocuser(PresetN[0].value);
-
-			//Preset 2
-			if ( PresetGotoS[1].s == ISS_ON )
-				MoveAbsFocuser(PresetN[1].value);
-
-			//Preset 3
-			if ( PresetGotoS[2].s == ISS_ON )
-				MoveAbsFocuser(PresetN[2].value);
-
-			PresetGotoS[0].s = ISS_OFF;
-			PresetGotoS[1].s = ISS_OFF;
-			PresetGotoS[2].s = ISS_OFF;
-			PresetGotoSP.s = IPS_OK;
-
-			IDSetSwitch(&PresetGotoSP, nullptr);
-
-			return true;
-	        }
-
 	    // handle focus resolution
 	    if(!strcmp(name, FocusResolutionSP.name))
 	    {

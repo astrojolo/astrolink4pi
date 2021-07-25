@@ -69,6 +69,11 @@ protected:
 private:
 	virtual bool Connect();
 	virtual bool Disconnect();
+	virtual void SetResolution(int res);
+	virtual int savePosition(int pos);
+	virtual bool readDS18B20();
+	virtual void stepMotor(int direction);
+	virtual void stepperRun();	
 
 	IText SysTimeT[2];
 	ITextVectorProperty SysTimeTP;
