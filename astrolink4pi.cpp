@@ -787,7 +787,7 @@ bool IndiAstrolink4Pi::ISSnoopDevice (XMLEle *root)
 		return true;
 	}
 
-	return INDI::Focuser::ISSnoopDevice(root);
+	return INDI::DefaultDevice::ISSnoopDevice(root);
 }
 
 bool IndiAstrolink4Pi::saveConfigItems(FILE *fp)
@@ -799,7 +799,6 @@ bool IndiAstrolink4Pi::saveConfigItems(FILE *fp)
 	IUSaveConfigNumber(fp, &FocusStepDelayNP);
 	IUSaveConfigNumber(fp, &FocusBacklashNP);
 	IUSaveConfigNumber(fp, &FocuserTravelNP);
-	IUSaveConfigNumber(fp, &PresetNP);
 	IUSaveConfigNumber(fp, &TemperatureCoefNP);
 	IUSaveConfigText(fp, &ActiveTelescopeTP);
 	return true;
@@ -1189,7 +1188,7 @@ void IndiAstrolink4Pi::temperatureCompensationHelper(void *context)
 	static_cast<IndiAstrolink4Pi*>(context)->temperatureCompensation();
 }
 
-void IndiAstrolink4Pi::stepperRunnHelper(void *context)
+void IndiAstrolink4Pi::stepperRunHelper(void *context)
 {
 	static_cast<IndiAstrolink4Pi*>(context)->stepperRun();
 }
