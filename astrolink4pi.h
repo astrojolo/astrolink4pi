@@ -34,12 +34,8 @@
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
 
-#define TIMER_POLL		1000
-#define PIN_SYS_FAN		9
-#define PIN_STP_A1      6
 
-
-class IndiAstrolink4Pi : public INDI::DefaultDevice, public INDI::FocuserInterface
+class IndiAstrolink4Pi : public INDI::DefaultDevice
 {
 
 public:

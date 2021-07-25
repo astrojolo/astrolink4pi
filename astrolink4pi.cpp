@@ -30,6 +30,10 @@
 //////////////////////////////////////////////////////////////////////
 std::unique_ptr<IndiAstrolink4Pi> indiIndiAstrolink4Pi(new IndiAstrolink4Pi());
 
+#define TIMER_POLL		1000
+#define PIN_SYS_FAN		9
+#define PIN_STP_A1      6
+
 void ISPoll(void *p);
 
 void ISInit()
