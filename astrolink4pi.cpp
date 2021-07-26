@@ -704,7 +704,7 @@ void AstroLink4Pi::temperatureCompensation()
 bool AstroLink4Pi::readDS18B20()
 {
     if (!isConnected())
-		return;
+		return false;
 
 	DIR *dir;
 	struct dirent *dirent;
@@ -835,10 +835,10 @@ void AstroLink4Pi::getFocuserInfo()
 
 void AstroLink4Pi::innerTimerHit()
 {
-    timespec clock;
-    if(clock_gettime(CLOCK_MONOTONIC, clock) == 0)
+    struct timespec clock;
+    if(clock_gettime(CLOCK_MONOTONIC, &clock) == 0)
     {
-        uin32_t timeMillis = 1000 * clock.tv_sec + clock.tv_nsec / 1000000;
+        uint32_t timeMillis = 1000 * clock.tv_sec + clock.tv_nsec / 1000000;
         DEBUGF(INDI::Logger::DBG_SESSION, "Timer hit millis %i", timeMillis);
     }
     innerTimerID = IEAddTimer(INNER_TIMER_POLL, innerTimerHelper, this);
