@@ -620,3 +620,80 @@ void AstroLink4Pi::temperatureCompensation()
 
 	temperatureCompensationID = IEAddTimer(TEMPERATURE_COMPENSATION_TIMEOUT, temperatureCompensationHelper, this);
 }
+
+bool AstroLink4Pi::readDS18B20()
+{
+	DIR *dir;
+	struct dirent *dirent;
+	char dev[16];      // Dev ID
+	char devPath[128]; // Path to device
+	char buf[256]; // Data from device
+	char temperatureData[6]; // Temp C * 1000 reported by device
+	char path[] = "/sys/bus/w1/devices";
+	ssize_t numRead;
+	float tempC;
+
+	dir = opendir (path);
+
+	// search for --the first-- DS18B20 device
+	if (dir != NULL)
+	{
+		while ((dirent = readdir (dir)))
+		{
+			// DS18B20 device is family code beginning with 28-
+			if (dirent->d_type == DT_LNK && strstr(dirent->d_name, "28-") != NULL)
+			{
+				strcpy(dev, dirent->d_name);
+				break;
+			}
+		}
+		(void) closedir (dir);
+	} else {
+		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor disabled. 1-Wire interface is not available.");
+		return false;
+	}
+
+	// Assemble path to --the first-- DS18B20 device
+	sprintf(devPath, "%s/%s/w1_slave", path, dev);
+
+	// Opening the device's file triggers new reading
+	int fd = open(devPath, O_RDONLY);
+	if(fd == -1)
+	{
+		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available.");
+		return false;
+	}
+
+	// set busy
+	FocusTemperatureNP.s=IPS_BUSY;
+	IDSetNumber(&FocusTemperatureNP, nullptr);
+
+	// read sensor output
+	while((numRead = read(fd, buf, 256)) > 0);
+	close(fd);
+
+	// parse temperature value from sensor output
+	strncpy(temperatureData, strstr(buf, "t=") + 2, 5);
+	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature sensor raw output: %s", buf);
+	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature string: %s", temperatureData);
+
+	tempC = strtof(temperatureData, NULL) / 1000;
+	// tempF = (tempC / 1000) * 9 / 5 + 32;
+
+	// check if temperature is reasonable
+	if(abs(tempC) > 100)
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "Temperature reading out of range.");
+		return false;
+	}
+
+	FocusTemperatureN[0].value = tempC;
+
+	// set OK
+	FocusTemperatureNP.s=IPS_OK;
+	IDSetNumber(&FocusTemperatureNP, nullptr);
+	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature: %.2f°C", tempC);
+
+	return true;
+}
+
