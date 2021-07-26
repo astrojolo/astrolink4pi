@@ -404,7 +404,7 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 		// handle focuser travel
 		if (!strcmp(name, CpuFanTempNP.name))
 		{
-			IUUpdateNumber(&CpuFanTempN,values,names,n);
+			IUUpdateNumber(&CpuFanTempNP,values,names,n);
 			CpuFanTempNP.s=IPS_OK;
 			IDSetNumber(&CpuFanTempNP, nullptr);
 			DEBUGF(INDI::Logger::DBG_SESSION, "System fan temperature se to %0.0f °C", CpuFanTempN[0].value);
