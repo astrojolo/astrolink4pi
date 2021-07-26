@@ -205,7 +205,7 @@ bool AstroLink4Pi::updateProperties()
 	if (isConnected())
 	{
         FI::updateProperties();
-        defineNumber(&FocusStepDelayNP);
+        defineProperty(&FocusStepDelayNP);
 	} else {
         deleteProperty(FocusStepDelayNP.name);
         FI::updateProperties();
@@ -257,7 +257,14 @@ bool AstroLink4Pi::ISNewText (const char *dev, const char *name, char *texts[], 
 
 bool AstroLink4Pi::saveConfigItems(FILE *fp)
 {
-   	IUSaveConfigNumber(fp, &FocusStepDelayNP);
+	// IUSaveConfigSwitch(fp, &FocusResolutionSP);
+	// IUSaveConfigSwitch(fp, &FocusReverseSP);
+	// IUSaveConfigSwitch(fp, &TemperatureCompensateSP);
+	IUSaveConfigNumber(fp, &FocusMaxPosNP);
+	IUSaveConfigNumber(fp, &FocusStepDelayNP);
+	// IUSaveConfigNumber(fp, &FocusBacklashNP);
+	// IUSaveConfigNumber(fp, &FocuserTravelNP);
+	// IUSaveConfigNumber(fp, &TemperatureCoefNP);
 
 	return true;
 }
