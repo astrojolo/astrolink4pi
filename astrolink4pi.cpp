@@ -219,6 +219,9 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "milliseconds", "%0.0f", 2, 50, 1, 5);
 	IUFillNumberVector(&FocusStepDelayNP, FocusStepDelayN, 1, getDeviceName(), "FOCUS_STEPDELAY", "Step Delay", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
+	IUFillNumber(&FanTempN[0], "FAN_TEMP", "Fan temp. threshold (°C)", "%0.0f", 0, 80, 1, 50);
+	IUFillNumberVector(&FanTempNP, FanTempN, 1, getDeviceName(), "FOCUSER_PARAMETERS", "Fan threshold", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);	
+
 	// Focuser temperature
 	IUFillNumber(&FocusTemperatureN[0], "FOCUS_TEMPERATURE_VALUE", "°C", "%0.2f", -50, 50, 1, 0);
 	IUFillNumberVector(&FocusTemperatureNP, FocusTemperatureN, 1, getDeviceName(), "FOCUS_TEMPERATURE", "Temperature", MAIN_CONTROL_TAB, IP_RO, 0, IPS_IDLE);
@@ -250,9 +253,6 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&ScopeParametersN[0], "TELESCOPE_APERTURE", "Aperture (mm)", "%g", 10, 5000, 0, 0.0);
 	IUFillNumber(&ScopeParametersN[1], "TELESCOPE_FOCAL_LENGTH", "Focal Length (mm)", "%g", 10, 10000, 0, 0.0);
 	IUFillNumberVector(&ScopeParametersNP, ScopeParametersN, 2, ActiveTelescopeT[0].text, "TELESCOPE_INFO", "Scope Properties", OPTIONS_TAB, IP_RW, 60, IPS_OK);    
-
-	IUFillNumber(&FanTempN[0], "FAN_TEMP", "Fan temp. threshold (°C)", "%0.0f", 0, 80, 1, 50);
-	IUFillNumberVector(&FanTempNP, FanTempN, 1, getDeviceName(), "FOCUSER_PARAMETERS", "Fan threshold", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);	
 	
 	IUFillText(&SysTimeT[0],"LOCAL_TIME","Local Time",NULL);
 	IUFillText(&SysTimeT[1],"UTC_OFFSET","UTC Offset",NULL);
@@ -307,7 +307,6 @@ bool AstroLink4Pi::updateProperties()
 	if (isConnected())
 	{
         FI::updateProperties();
-        defineProperty(&FocusStepDelayNP);
 		defineProperty(&ActiveTelescopeTP);
 		defineProperty(&FocuserTravelNP);
 		// defineProperty(&FocusResolutionSP);
