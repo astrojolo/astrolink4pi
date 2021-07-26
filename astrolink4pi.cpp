@@ -463,7 +463,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 {
 	if(backlashTicksRemaining > 0 || ticksRemaining > 0)
     {
-        DEBUG(INDI::Logger::DBG_WARNING, "Focuser movement still in progress.");
+        DEBUGF(INDI::Logger::DBG_WARNING, "Focuser movement still in progress. %i %i", backlashTicksRemaining, ticksRemaining);
         return IPS_BUSY;
 	}
 
