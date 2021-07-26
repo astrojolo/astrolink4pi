@@ -1091,7 +1091,7 @@ void AstroLink4Pi::innerTimerHit()
 {
     uint32_t timeMillis = millis();
     
-    fanControl();
+    //fanControl();
 
     if(nextTemperatureRead < timeMillis) 
     {
