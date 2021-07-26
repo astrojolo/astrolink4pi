@@ -135,6 +135,7 @@ bool AstroLink4Pi::Connect()
 	// preset resolution
 	// SetResolution(resolution);
 
+    getFocuserInfo();
 	stepperStandbyID = IEAddTimer(STEPPER_STANDBY_TIMEOUT, stepperStandbyHelper, this);
 
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
@@ -193,6 +194,24 @@ bool AstroLink4Pi::initProperties()
 	IUFillSwitch(&TemperatureCompensateS[1], "Disable", "", ISS_ON);
 	IUFillSwitchVector(&TemperatureCompensateSP, TemperatureCompensateS, 2, getDeviceName(), "Temperature Compensate", "", MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
+	// Focuser Info
+	IUFillNumber(&FocuserInfoN[0], "CFZ_STEP_ACT", "Step Size (μm)", "%0.2f", 0, 1000, 1, 0);
+	IUFillNumber(&FocuserInfoN[1], "CFZ", "Critical Focus Zone (μm)", "%0.2f", 0, 1000, 1, 0);
+	IUFillNumber(&FocuserInfoN[2], "STEPS_PER_CFZ", "Steps / Critical Focus Zone", "%0.0f", 0, 1000, 1, 0);
+	IUFillNumberVector(&FocuserInfoNP, FocuserInfoN, 3, getDeviceName(), "FOCUSER_PARAMETERS", "Focuser Info", MAIN_CONTROL_TAB, IP_RO, 0, IPS_IDLE);
+
+	// Maximum focuser travel
+	IUFillNumber(&FocuserTravelN[0], "FOCUSER_TRAVEL_VALUE", "mm", "%0.0f", 10, 200, 10, 10);
+	IUFillNumberVector(&FocuserTravelNP, FocuserTravelN, 1, getDeviceName(), "FOCUSER_TRAVEL", "Max Travel", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);    
+
+	// Active telescope setting
+	IUFillText(&ActiveTelescopeT[0], "ACTIVE_TELESCOPE_NAME", "Telescope", "Telescope Simulator");
+	IUFillTextVector(&ActiveTelescopeTP, ActiveTelescopeT, 1, getDeviceName(), "ACTIVE_TELESCOPE", "Snoop devices", OPTIONS_TAB,IP_RW, 0, IPS_IDLE);
+
+	// Snooping params
+	IUFillNumber(&ScopeParametersN[0], "TELESCOPE_APERTURE", "Aperture (mm)", "%g", 10, 5000, 0, 0.0);
+	IUFillNumber(&ScopeParametersN[1], "TELESCOPE_FOCAL_LENGTH", "Focal Length (mm)", "%g", 10, 10000, 0, 0.0);
+	IUFillNumberVector(&ScopeParametersNP, ScopeParametersN, 2, ActiveTelescopeT[0].text, "TELESCOPE_INFO", "Scope Properties", OPTIONS_TAB, IP_RW, 60, IPS_OK);    
 
     // initial values at resolution 1/1
 	FocusMaxPosN[0].min = 1000;
@@ -274,6 +293,7 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 
 			FocusAbsPosNP.s=IPS_OK;
 			IDSetNumber(&FocusMaxPosNP, nullptr);
+            getFocuserInfo();
 			return true;
 		}        
 
@@ -286,6 +306,17 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 			DEBUGF(INDI::Logger::DBG_SESSION, "Temperature coefficient set to %0.1f steps/°C", TemperatureCoefN[0].value);
 			return true;
 		}
+
+		// handle focuser travel
+		if (!strcmp(name, FocuserTravelNP.name))
+		{
+			IUUpdateNumber(&FocuserTravelNP,values,names,n);
+			getFocuserInfo();
+			FocuserTravelNP.s=IPS_OK;
+			IDSetNumber(&FocuserTravelNP, nullptr);
+			DEBUGF(INDI::Logger::DBG_SESSION, "Maximum focuser travel set to %0.0f mm", FocuserTravelN[0].value);
+			return true;
+		}        
 
         if (strstr(name, "FOCUS_"))
             return FI::processNumber(dev, name, values, names, n);        
@@ -333,17 +364,30 @@ bool AstroLink4Pi::ISNewText (const char *dev, const char *name, char *texts[], 
 	return INDI::DefaultDevice::ISNewText(dev,name,texts,names,n);
 }
 
+bool AstroLink4Pi::ISSnoopDevice (XMLEle *root)
+{
+	if (IUSnoopNumber(root, &ScopeParametersNP) == 0)
+	{
+		getFocuserInfo();
+		DEBUGF(INDI::Logger::DBG_DEBUG, "Telescope parameters: %0.0f, %0.0f.", ScopeParametersN[0].value, ScopeParametersN[1].value);
+		return true;
+	}
+
+	return INDI::DefaultDevice::ISSnoopDevice(root);
+}
+
 bool AstroLink4Pi::saveConfigItems(FILE *fp)
 {
     FI::saveConfigItems(fp);
+   	IUSaveConfigText(fp, &ActiveTelescopeTP);
 	// IUSaveConfigSwitch(fp, &FocusResolutionSP);
-	// IUSaveConfigSwitch(fp, &FocusReverseSP);
-	// IUSaveConfigSwitch(fp, &TemperatureCompensateSP);
-	// IUSaveConfigNumber(fp, &FocusMaxPosNP);
-	// IUSaveConfigNumber(fp, &FocusStepDelayNP);
-	// IUSaveConfigNumber(fp, &FocusBacklashNP);
-	// IUSaveConfigNumber(fp, &FocuserTravelNP);
-	// IUSaveConfigNumber(fp, &TemperatureCoefNP);
+	IUSaveConfigSwitch(fp, &FocusReverseSP);
+	IUSaveConfigSwitch(fp, &TemperatureCompensateSP);
+	IUSaveConfigNumber(fp, &FocusMaxPosNP);
+	IUSaveConfigNumber(fp, &FocusStepDelayNP);
+	IUSaveConfigNumber(fp, &FocusBacklashNP);
+	IUSaveConfigNumber(fp, &FocuserTravelNP);
+	IUSaveConfigNumber(fp, &TemperatureCoefNP);
 
 	return true;
 }
@@ -740,3 +784,44 @@ void AstroLink4Pi::stepperStandby()
 
 	DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor going standby.");
 }
+
+void AstroLink4Pi::getFocuserInfo()
+{
+	// https://www.innovationsforesight.com/education/how-much-focus-error-is-too-much/
+	float travel_mm = (float) FocuserTravelN[0].value;
+	float aperture = (float) ScopeParametersN[0].value;
+	float focal = (float) ScopeParametersN[1].value;
+	float f_ratio;
+
+	// handle no snooping data from telescope
+	if ( aperture * focal != 0 )
+	{
+		f_ratio = focal / aperture;
+	} else {
+		f_ratio =  0;
+		DEBUG(INDI::Logger::DBG_DEBUG, "No telescope focal length and/or aperture info available.");
+	}
+
+	float cfz = 4.88 * 0.520 * pow(f_ratio, 2); // CFZ = 4.88 · λ · f^2
+	float step_size = 1000.0 * travel_mm / FocusMaxPosN[0].value;
+	float steps_per_cfz = (int) cfz / step_size;
+
+	if ( steps_per_cfz >= 4  )
+	{
+		FocuserInfoNP.s = IPS_OK;
+	}
+	else if ( steps_per_cfz > 2 && steps_per_cfz < 4 )
+	{
+		FocuserInfoNP.s = IPS_BUSY;
+	} else {
+		FocuserInfoNP.s = IPS_ALERT;
+	}
+
+	FocuserInfoN[0].value = step_size;
+	FocuserInfoN[1].value = cfz;
+	FocuserInfoN[2].value = steps_per_cfz;
+	IDSetNumber(&FocuserInfoNP, nullptr);
+
+	DEBUGF(INDI::Logger::DBG_DEBUG, "Focuser Info: %0.2f %0.2f %0.2f.", FocuserInfoN[0].value, FocuserInfoN[1].value, FocuserInfoN[2].value);
+}
+

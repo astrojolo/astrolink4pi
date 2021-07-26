@@ -72,6 +72,14 @@ private:
 	INumberVectorProperty TemperatureCoefNP;
 	ISwitch TemperatureCompensateS[2];
 	ISwitchVectorProperty TemperatureCompensateSP;	
+	INumber FocuserInfoN[3];
+	INumberVectorProperty FocuserInfoNP;
+	INumber FocuserTravelN[1];
+	INumberVectorProperty FocuserTravelNP;		
+	INumber ScopeParametersN[2];
+	INumberVectorProperty ScopeParametersNP;
+	IText ActiveTelescopeT[1];
+	ITextVectorProperty ActiveTelescopeTP;		
 
 	struct gpiod_chip *chip;
 	struct gpiod_line *gpio_a1;
@@ -88,6 +96,7 @@ private:
 	int currentStep = -1;
 	bool abortStep = false;		
 
+	void getFocuserInfo();
 	int stepperStandbyID { -1 };
 	void stepperStandby();
 	int updateTemperatureID { -1 };
