@@ -119,6 +119,7 @@ private:
 	void stepperStandby();
 	void systemUpdate();
 	void fanControl();
+	void millis();
 
 	static constexpr const char *SETTINGS_TAB {"Settings"};
 };
