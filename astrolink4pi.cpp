@@ -167,6 +167,29 @@ bool AstroLink4Pi::initProperties()
 	INDI::DefaultDevice::initProperties();
     FI::initProperties(FOCUS_TAB);
 
+    // Step delay setting
+	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "milliseconds", "%0.0f", 2, 50, 1, 5);
+	IUFillNumberVector(&FocusStepDelayNP, FocusStepDelayN, 1, getDeviceName(), "FOCUS_STEPDELAY", "Step Delay", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
+
+    // initial values at resolution 1/1
+	FocusMaxPosN[0].min = 1000;
+	FocusMaxPosN[0].max = 100000;
+	FocusMaxPosN[0].step = 1000;
+	FocusMaxPosN[0].value = 10000;
+
+	FocusRelPosN[0].min = 0;
+	FocusRelPosN[0].max = 1000;
+	FocusRelPosN[0].step = 100;
+	FocusRelPosN[0].value = 100;
+
+	FocusAbsPosN[0].min = 0;
+	FocusAbsPosN[0].max = FocusMaxPosN[0].value;
+	FocusAbsPosN[0].step = (int) FocusAbsPosN[0].max / 100;
+
+	FocusMotionS[FOCUS_OUTWARD].s = ISS_ON;
+	FocusMotionS[FOCUS_INWARD].s = ISS_OFF;
+	IDSetSwitch(&FocusMotionSP, nullptr);
+
 	// Add default properties
 	// addAuxControls(); // use instead if simulation mode is added to code
 	addDebugControl ();
@@ -182,7 +205,9 @@ bool AstroLink4Pi::updateProperties()
 	if (isConnected())
 	{
         FI::updateProperties();
+        defineNumber(&FocusStepDelayNP);
 	} else {
+        deleteProperty(FocusStepDelayNP.name);
         FI::updateProperties();
 	}
 
@@ -194,6 +219,18 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 	// first we check if it's for our device
 	if(!strcmp(dev,getDeviceName()))
 	{
+		// handle focus step delay
+		if (!strcmp(name, FocusStepDelayNP.name))
+		{
+			IUUpdateNumber(&FocusStepDelayNP,values,names,n);
+			FocusStepDelayNP.s=IPS_BUSY;
+			IDSetNumber(&FocusStepDelayNP, nullptr);
+			FocusStepDelayNP.s=IPS_OK;
+			IDSetNumber(&FocusStepDelayNP, nullptr);
+			DEBUGF(INDI::Logger::DBG_SESSION, "Step delay set to %0.0f ms.", FocusStepDelayN[0].value);
+			return true;
+		}
+
         if (strstr(name, "FOCUS_"))
             return FI::processNumber(dev, name, values, names, n);        
 	}
@@ -220,6 +257,8 @@ bool AstroLink4Pi::ISNewText (const char *dev, const char *name, char *texts[], 
 
 bool AstroLink4Pi::saveConfigItems(FILE *fp)
 {
+   	IUSaveConfigNumber(fp, &FocusStepDelayNP);
+
 	return true;
 }
 
@@ -284,7 +323,7 @@ void AstroLink4Pi::TimerHit()
 		backlashTicksRemaining -= 1;
 	}
 
-	SetTimer(5);
+	SetTimer(FocusStepDelayN[0].value);
 }
 
 bool AstroLink4Pi::AbortFocuser()
@@ -390,7 +429,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "Focuser is moving %s to position %d.", direction, targetTicks);
 
-	SetTimer(5);
+	SetTimer(FocusStepDelayN[0].value);
 
 	return IPS_BUSY;
 }

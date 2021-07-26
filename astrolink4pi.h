@@ -58,6 +58,9 @@ private:
 	virtual int savePosition(int pos);
 	virtual void stepMotor(int direction);
 
+	INumber FocusStepDelayN[1];
+	INumberVectorProperty FocusStepDelayNP;
+
 	struct gpiod_chip *chip;
 	struct gpiod_line *gpio_a1;
 	struct gpiod_line *gpio_a2;
