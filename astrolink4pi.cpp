@@ -24,6 +24,7 @@
 #include <fstream>
 #include <math.h>
 #include <memory>
+#include <time.h>
 #include "config.h"
 
 
@@ -34,7 +35,8 @@
 
 std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 
-#define MAX_RESOLUTION                      2 // the highest resolution supported is 1/2 step
+#define MAX_RESOLUTION                      2   // the highest resolution supported is 1/2 step
+#define INNER_TIMER_POLL                    10  // ms
 #define TEMPERATURE_UPDATE_TIMEOUT          (5 * 1000) // 3 sec
 #define STEPPER_STANDBY_TIMEOUT             (2 * 1000) // 2 sec
 #define TEMPERATURE_COMPENSATION_TIMEOUT    (30 * 1000) // 60 sec
@@ -140,7 +142,7 @@ bool AstroLink4Pi::Connect()
 	// SetResolution(resolution);
 
     getFocuserInfo();
-	stepperStandbyID = IEAddTimer(STEPPER_STANDBY_TIMEOUT, stepperStandbyHelper, this);
+    innerTimerID = IEAddTimer(INNER_TIMER_POLL, innerTimerHelper, this);
 
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
 
@@ -153,9 +155,7 @@ bool AstroLink4Pi::Disconnect()
 	gpiod_chip_close(chip);
 
 	// Stop timers
-	IERmTimer(stepperStandbyID);
-	IERmTimer(updateTemperatureID);
-	IERmTimer(temperatureCompensationID);
+	IERmTimer(innerTimerID);
   
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi disconnected successfully.");
 
@@ -178,7 +178,7 @@ bool AstroLink4Pi::initProperties()
     FI::initProperties(FOCUS_TAB);
 
     addDebugControl();
-    addSimulationControl();
+    // addSimulationControl();
     addConfigurationControl();
 
     // Step delay setting
@@ -263,10 +263,6 @@ bool AstroLink4Pi::updateProperties()
 			defineProperty(&TemperatureCompensateSP);
 			readDS18B20(); // update immediately
 			lastTemperature = FocusTemperatureN[0].value; // init last temperature
-			IERmTimer(updateTemperatureID);
-			updateTemperatureID = IEAddTimer(TEMPERATURE_UPDATE_TIMEOUT, updateTemperatureHelper, this); // set temperature update timer
-			IERmTimer(temperatureCompensationID);
-			temperatureCompensationID = IEAddTimer(TEMPERATURE_COMPENSATION_TIMEOUT, temperatureCompensationHelper, this); // set temperature compensation timer
         }
 	} else {
 		deleteProperty(ActiveTelescopeTP.name);
@@ -355,14 +351,12 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 
 			if ( TemperatureCompensateS[0].s == ISS_ON)
 			{
-				temperatureCompensationID = IEAddTimer(TEMPERATURE_COMPENSATION_TIMEOUT, temperatureCompensationHelper, this);
 				TemperatureCompensateSP.s = IPS_OK;
 				DEBUG(INDI::Logger::DBG_SESSION, "Temperature compensation ENABLED.");
 			}
 
 			if ( TemperatureCompensateS[1].s == ISS_ON)
 			{
-				IERmTimer(temperatureCompensationID);
 				TemperatureCompensateSP.s = IPS_IDLE;
 				DEBUG(INDI::Logger::DBG_SESSION, "Temperature compensation DISABLED.");
 			}
@@ -443,9 +437,6 @@ void AstroLink4Pi::TimerHit()
 		IDSetNumber(&FocusAbsPosNP, nullptr);
 
 		lastTemperature = FocusTemperatureN[0].value; // register last temperature
-
-		IERmTimer(stepperStandbyID);
-		stepperStandbyID = IEAddTimer(STEPPER_STANDBY_TIMEOUT, stepperStandbyHelper, this);
 
 		return;
 	}
@@ -684,28 +675,9 @@ bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
      return true;
  }
 
-void AstroLink4Pi::updateTemperatureHelper(void *context)
+void AstroLink4Pi::innerTimerHelper(void *context)
 {
-	static_cast<AstroLink4Pi*>(context)->updateTemperature();
-}
-
-void AstroLink4Pi::temperatureCompensationHelper(void *context)
-{
-	static_cast<AstroLink4Pi*>(context)->temperatureCompensation();
-}
-
-void AstroLink4Pi::stepperStandbyHelper(void *context)
-{
-	static_cast<AstroLink4Pi*>(context)->stepperStandby();
-}
-
-void AstroLink4Pi::updateTemperature()
-{
-	if (!isConnected())
-		return;
-
-	readDS18B20();
-	updateTemperatureID = IEAddTimer(TEMPERATURE_UPDATE_TIMEOUT, updateTemperatureHelper, this);
+	static_cast<AstroLink4Pi*>(context)->innerTimerHit();
 }
 
 void AstroLink4Pi::temperatureCompensation()
@@ -719,8 +691,7 @@ void AstroLink4Pi::temperatureCompensation()
 		float deltaPos = TemperatureCoefN[0].value * deltaTemperature;
 
 		// Move focuser once the compensation is larger than 1/2 CFZ
-		// if ( abs(deltaPos) > (FocuserInfoN[2].value / 2))
-        if ( abs(deltaPos) > 20)
+		if ( abs(deltaPos) > (FocuserInfoN[2].value / 2))
 		{
 			int thermalAdjustment = round(deltaPos); // adjust focuser by half number of steps to keep it in the center of cfz
 			MoveAbsFocuser(FocusAbsPosN[0].value + thermalAdjustment); // adjust focuser position
@@ -728,12 +699,13 @@ void AstroLink4Pi::temperatureCompensation()
 			DEBUGF(INDI::Logger::DBG_SESSION, "Focuser adjusted by %d steps due to temperature change by %0.2f°C", thermalAdjustment, deltaTemperature);
 		}
 	}
-
-	temperatureCompensationID = IEAddTimer(TEMPERATURE_COMPENSATION_TIMEOUT, temperatureCompensationHelper, this);
 }
 
 bool AstroLink4Pi::readDS18B20()
 {
+    if (!isConnected())
+		return;
+
 	DIR *dir;
 	struct dirent *dirent;
 	char dev[16];      // Dev ID
@@ -861,3 +833,13 @@ void AstroLink4Pi::getFocuserInfo()
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Focuser Info: %0.2f %0.2f %0.2f.", FocuserInfoN[0].value, FocuserInfoN[1].value, FocuserInfoN[2].value);
 }
 
+void AstroLink4Pi::innerTimerHit()
+{
+    timespec clock;
+    if(clock_gettime(CLOCK_MONOTONIC, clock) == 0)
+    {
+        uin32_t timeMillis = 1000 * clock.tv_sec + clock.tv_nsec / 1000000;
+        DEBUGF(INDI::Logger::DBG_SESSION, "Timer hit millis %i", timeMillis);
+    }
+    innerTimerID = IEAddTimer(INNER_TIMER_POLL, innerTimerHelper, this);
+}

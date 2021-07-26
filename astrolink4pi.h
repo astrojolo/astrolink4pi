@@ -39,9 +39,7 @@ public:
 	virtual bool ISNewText (const char *dev, const char *name, char *texts[], char *names[], int n);
 	virtual bool ISSnoopDevice(XMLEle *root);
 
-	static void stepperStandbyHelper(void *context);
-	static void updateTemperatureHelper(void *context);
-	static void temperatureCompensationHelper(void *context);	
+	static void innerTimerHelper(void *context);
 
 protected:
 	const char *getDefaultName();
@@ -98,12 +96,10 @@ private:
 	bool abortStep = false;		
 
 	void getFocuserInfo();
-	int stepperStandbyID { -1 };
-	void stepperStandby();
-	int updateTemperatureID { -1 };
-	void updateTemperature();
-	int temperatureCompensationID { -1 };
+	int innerTimerID { -1 };
+	void innerTimerHit();
 	void temperatureCompensation();
+	void stepperStandby();
 
 	static constexpr const char *SETTINGS_TAB {"Settings"};
 };
