@@ -646,7 +646,7 @@ void AstroLink4Pi::temperatureCompensation()
 			int thermalAdjustment = round(deltaPos); // adjust focuser by half number of steps to keep it in the center of cfz
 			MoveAbsFocuser(FocusAbsPosN[0].value + thermalAdjustment); // adjust focuser position
 			lastTemperature = FocusTemperatureN[0].value; // register last temperature
-			DEBUGF(INDI::Logger::DBG_SESSION, "Focuser adjusted by %d steps due to temperature change by %0.2f°C", thermalAdjustment, deltaTemperature);
+			DEBUGF(INDI::Logger::DBG_SESSION, "Focuser adjusted by %d steps due to temperature change by %0.2f°C , timerID %i", thermalAdjustment, deltaTemperature, temperatureCompensationID);
 		}
 	}
 
