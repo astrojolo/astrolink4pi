@@ -231,6 +231,19 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 			return true;
 		}
 
+		// handle focus maximum position
+		if (!strcmp(name, FocusMaxPosNP.name))
+		{
+			IUUpdateNumber(&FocusMaxPosNP,values,names,n);
+
+			FocusAbsPosN[0].max = FocusMaxPosN[0].value;
+			IUUpdateMinMax(&FocusAbsPosNP); // This call is not INDI protocol compliant
+
+			FocusAbsPosNP.s=IPS_OK;
+			IDSetNumber(&FocusMaxPosNP, nullptr);
+			return true;
+		}        
+
         if (strstr(name, "FOCUS_"))
             return FI::processNumber(dev, name, values, names, n);        
 	}
