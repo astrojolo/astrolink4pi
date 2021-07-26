@@ -483,6 +483,7 @@ void AstroLink4Pi::TimerHit()
 	}
 
     nextStepperStandby = millis() + STEPPER_STANDBY_TIMEOUT;
+    nextTemperatureRead = millis() + TEMPERATURE_UPDATE_TIMEOUT;
 	SetTimer(FocusStepDelayN[0].value);
 }
 
@@ -754,7 +755,6 @@ bool AstroLink4Pi::readDS18B20()
 
 	// set busy
 	FocusTemperatureNP.s=IPS_BUSY;
-    DEBUGF(INDI::Logger::DBG_SESSION, "Temperature sensor start %i", millis());
 	IDSetNumber(&FocusTemperatureNP, nullptr);
 
 	// read sensor output
@@ -778,8 +778,6 @@ bool AstroLink4Pi::readDS18B20()
 
 	FocusTemperatureN[0].value = tempC;
 
-    DEBUGF(INDI::Logger::DBG_SESSION, "Temperature sensor end %i", millis());
-
 	// set OK
 	FocusTemperatureNP.s=IPS_OK;
 	IDSetNumber(&FocusTemperatureNP, nullptr);
@@ -793,8 +791,10 @@ void AstroLink4Pi::stepperStandby()
 	if (!isConnected())
 		return;
 
-    if(ticksRemaining == 0)
+    if(gpiod_line_get_value(gpio_a1) == 1 || gpiod_line_get_value(gpio_a2) == 1 ||
+        gpiod_line_get_value(gpio_b1) == 1 || gpiod_line_get_value(gpio_b2) == 1)
     {
+
         gpiod_line_set_value(gpio_a1, 0); 
         gpiod_line_set_value(gpio_a2, 0);
         gpiod_line_set_value(gpio_b1, 0);
