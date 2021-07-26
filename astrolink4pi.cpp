@@ -237,7 +237,8 @@ bool AstroLink4Pi::updateProperties()
 			lastTemperature = FocusTemperatureN[0].value; // init last temperature
 			IERmTimer(updateTemperatureID);
 			updateTemperatureID = IEAddTimer(TEMPERATURE_UPDATE_TIMEOUT, updateTemperatureHelper, this); // set temperature update timer
-            temperatureCompensation();
+			IERmTimer(temperatureCompensationID);
+			temperatureCompensationID = IEAddTimer(TEMPERATURE_COMPENSATION_TIMEOUT, temperatureCompensationHelper, this); // set temperature compensation timer
         }
 	} else {
 		deleteProperty(FocusTemperatureNP.name);
@@ -309,7 +310,7 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 
 			if ( TemperatureCompensateS[0].s == ISS_ON)
 			{
-                temperatureCompensation();
+				temperatureCompensationID = IEAddTimer(TEMPERATURE_COMPENSATION_TIMEOUT, temperatureCompensationHelper, this);
 				TemperatureCompensateSP.s = IPS_OK;
 				DEBUG(INDI::Logger::DBG_SESSION, "Temperature compensation ENABLED.");
 			}
@@ -341,12 +342,12 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
     FI::saveConfigItems(fp);
 	// IUSaveConfigSwitch(fp, &FocusResolutionSP);
 	// IUSaveConfigSwitch(fp, &FocusReverseSP);
-	 IUSaveConfigSwitch(fp, &TemperatureCompensateSP);
+	// IUSaveConfigSwitch(fp, &TemperatureCompensateSP);
 	// IUSaveConfigNumber(fp, &FocusMaxPosNP);
 	// IUSaveConfigNumber(fp, &FocusStepDelayNP);
 	// IUSaveConfigNumber(fp, &FocusBacklashNP);
 	// IUSaveConfigNumber(fp, &FocuserTravelNP);
-	 IUSaveConfigNumber(fp, &TemperatureCoefNP);
+	// IUSaveConfigNumber(fp, &TemperatureCoefNP);
 
 	return true;
 }
@@ -463,7 +464,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 {
 	if(backlashTicksRemaining > 0 || ticksRemaining > 0)
     {
-        DEBUGF(INDI::Logger::DBG_WARNING, "Focuser movement still in progress. %i %i", backlashTicksRemaining, ticksRemaining);
+        DEBUG(INDI::Logger::DBG_WARNING, "Focuser movement still in progress.");
         return IPS_BUSY;
 	}
 
@@ -633,7 +634,6 @@ void AstroLink4Pi::temperatureCompensation()
 	if (!isConnected())
 		return;
 
-    IERmTimer(temperatureCompensationID);
 	if ( TemperatureCompensateS[0].s == ISS_ON && FocusTemperatureN[0].value != lastTemperature )
 	{
 		float deltaTemperature = FocusTemperatureN[0].value - lastTemperature; // change of temperature from last focuser movement
@@ -649,6 +649,7 @@ void AstroLink4Pi::temperatureCompensation()
 			DEBUGF(INDI::Logger::DBG_SESSION, "Focuser adjusted by %d steps due to temperature change by %0.2f°C", thermalAdjustment, deltaTemperature);
 		}
 	}
+
 	temperatureCompensationID = IEAddTimer(TEMPERATURE_COMPENSATION_TIMEOUT, temperatureCompensationHelper, this);
 }
 
