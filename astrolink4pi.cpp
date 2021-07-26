@@ -79,6 +79,10 @@ void ISNewNumber(const char *dev, const char *name, double values[], char *names
         astroLink4Pi->ISNewNumber(dev, name, values, names, num);
 }
 
+void ISSnoopDevice (XMLEle *root)
+{
+	astroLink4Pi->ISSnoopDevice(root);
+}
 
 AstroLink4Pi::AstroLink4Pi() : FI(this)
 {
@@ -249,6 +253,9 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&FocuserInfoNP);
 		defineProperty(&FocusStepDelayNP);
 		defineProperty(&FocusBacklashNP);
+
+        IDSnoopDevice(ActiveTelescopeT[0].text, "TELESCOPE_INFO");
+
         if (readDS18B20())
 		{
 			defineProperty(&FocusTemperatureNP);
@@ -372,6 +379,24 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 
 bool AstroLink4Pi::ISNewText (const char *dev, const char *name, char *texts[], char *names[], int n)
 {
+    // first we check if it's for our device
+	if (!strcmp(dev, getDeviceName()))
+	{
+		// handle active devices
+		if (!strcmp(name, ActiveTelescopeTP.name))
+		{
+				IUUpdateText(&ActiveTelescopeTP,texts,names,n);
+
+				IUFillNumberVector(&ScopeParametersNP, ScopeParametersN, 2, ActiveTelescopeT[0].text, "TELESCOPE_INFO", "Scope Properties", OPTIONS_TAB, IP_RW, 60, IPS_OK);
+				IDSnoopDevice(ActiveTelescopeT[0].text, "TELESCOPE_INFO");
+
+				ActiveTelescopeTP.s=IPS_OK;
+				IDSetText(&ActiveTelescopeTP, nullptr);
+				DEBUGF(INDI::Logger::DBG_SESSION, "Active telescope set to %s.", ActiveTelescopeT[0].text);
+				return true;
+		}
+	}
+
 	return INDI::DefaultDevice::ISNewText(dev,name,texts,names,n);
 }
 
