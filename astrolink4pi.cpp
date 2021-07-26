@@ -35,7 +35,7 @@
 std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 
 #define MAX_RESOLUTION                      2 // the highest resolution supported is 1/2 step
-#define TEMPERATURE_UPDATE_TIMEOUT          (3 * 1000) // 3 sec
+#define TEMPERATURE_UPDATE_TIMEOUT          (5 * 1000) // 3 sec
 #define STEPPER_STANDBY_TIMEOUT             (2 * 1000) // 2 sec
 #define TEMPERATURE_COMPENSATION_TIMEOUT    (30 * 1000) // 60 sec
 
@@ -280,6 +280,16 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 			IDSetNumber(&FocusMaxPosNP, nullptr);
 			return true;
 		}        
+
+		// handle temperature coefficient
+		if (!strcmp(name, TemperatureCoefNP.name))
+		{
+			IUUpdateNumber(&TemperatureCoefNP,values,names,n);
+			TemperatureCoefNP.s=IPS_OK;
+			IDSetNumber(&TemperatureCoefNP, nullptr);
+			DEBUGF(INDI::Logger::DBG_SESSION, "Temperature coefficient set to %0.1f steps/°C", TemperatureCoefN[0].value);
+			return true;
+		}
 
         if (strstr(name, "FOCUS_"))
             return FI::processNumber(dev, name, values, names, n);        
