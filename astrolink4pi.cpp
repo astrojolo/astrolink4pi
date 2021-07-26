@@ -220,7 +220,7 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumberVector(&FocusStepDelayNP, FocusStepDelayN, 1, getDeviceName(), "FOCUS_STEPDELAY", "Step Delay", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	IUFillNumber(&CpuFanTempN[0], "CPU_FAN_TEMP", "°C", "%0.0f", 0, 80, 1, 50);
-	IUFillNumberVector(&CpuFanTempNP, CpuFanTempN, 1, getDeviceName(), "CPU_FANTEMP", "System fan temp.", MAIN_CONTROL_TAB, IP_RW, 0, IPS_IDLE);
+	IUFillNumberVector(&CpuFanTempNP, CpuFanTempN, 1, getDeviceName(), "CPU_FANTEMP", "System fan temp.", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	// Focuser temperature
 	IUFillNumber(&FocusTemperatureN[0], "FOCUS_TEMPERATURE_VALUE", "°C", "%0.2f", -50, 50, 1, 0);
