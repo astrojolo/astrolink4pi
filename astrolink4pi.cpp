@@ -840,12 +840,13 @@ void AstroLink4Pi::getFocuserInfo()
 void AstroLink4Pi::innerTimerHit()
 {
     uint32_t timeMillis = millis();
-    /*
+    
     if(nextTemperatureRead > timeMillis) 
     {
         readDS18B20();
         nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
     }
+    /*
     if(nextTemperatureCompensation > timeMillis)
     {
         temperatureCompensation();
