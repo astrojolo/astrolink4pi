@@ -173,7 +173,6 @@ bool AstroLink4Pi::Connect()
 	// SetResolution(resolution);
 
     getFocuserInfo();
-    innerTimerID = IEAddTimer(INNER_TIMER_POLL, innerTimerHelper, this);
     uint32_t currentTime = millis();
     nextTemperatureRead = currentTime + TEMPERATURE_UPDATE_TIMEOUT;
     nextStepperStandby = currentTime + STEPPER_STANDBY_TIMEOUT;
