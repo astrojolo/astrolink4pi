@@ -608,7 +608,8 @@ void AstroLink4Pi::temperatureCompensation()
 		float deltaPos = TemperatureCoefN[0].value * deltaTemperature;
 
 		// Move focuser once the compensation is larger than 1/2 CFZ
-		if ( abs(deltaPos) > (FocuserInfoN[2].value / 2))
+		// if ( abs(deltaPos) > (FocuserInfoN[2].value / 2))
+        if ( abs(deltaPos) > 20)
 		{
 			int thermalAdjustment = round(deltaPos); // adjust focuser by half number of steps to keep it in the center of cfz
 			MoveAbsFocuser(FocusAbsPosN[0].value + thermalAdjustment); // adjust focuser position
