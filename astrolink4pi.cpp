@@ -482,6 +482,7 @@ void AstroLink4Pi::TimerHit()
 		backlashTicksRemaining -= 1;
 	}
 
+    nextStepperStandby = millis() + STEPPER_STANDBY_TIMEOUT;
 	SetTimer(FocusStepDelayN[0].value);
 }
 
@@ -841,23 +842,22 @@ void AstroLink4Pi::innerTimerHit()
 {
     uint32_t timeMillis = millis();
     
-    if(nextTemperatureRead > timeMillis) 
+    if(nextTemperatureRead < timeMillis) 
     {
         readDS18B20();
         nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
     }
-    /*
-    if(nextTemperatureCompensation > timeMillis)
+    if(nextTemperatureCompensation <>> timeMillis)
     {
         temperatureCompensation();
         nextTemperatureCompensation = timeMillis + TEMPERATURE_COMPENSATION_TIMEOUT;
     }
-    if(nextStepperStandby > timeMillis)
+    if(nextStepperStandby < timeMillis)
     {
         stepperStandby();
         nextStepperStandby = timeMillis + STEPPER_STANDBY_TIMEOUT;
     }
-*/
+
     innerTimerID = IEAddTimer(INNER_TIMER_POLL, innerTimerHelper, this);
 }
 
