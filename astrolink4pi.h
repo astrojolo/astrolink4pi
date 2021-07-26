@@ -39,8 +39,6 @@ public:
 	virtual bool ISNewText (const char *dev, const char *name, char *texts[], char *names[], int n);
 	virtual bool ISSnoopDevice(XMLEle *root);
 
-	static void innerTimerHelper(void *context);
-
 protected:
 	const char *getDefaultName();
 
@@ -111,15 +109,12 @@ private:
 	int cpuTemps[15];
 	int cpuTempsIndex = 0;	
 
-	uint32_t millis();
 	uint32_t nextStepperStandby = 0;
 	uint32_t nextTemperatureRead = 0;
 	uint32_t nextTemperatureCompensation = 0;
 	uint32_t nextSystemRead = 0;
 
 	void getFocuserInfo();
-	int innerTimerID { -1 };
-	void innerTimerHit();
 	void temperatureCompensation();
 	void stepperStandby();
 	void systemUpdate();

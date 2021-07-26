@@ -36,7 +36,6 @@
 std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 
 #define MAX_RESOLUTION                      2   // the highest resolution supported is 1/2 step
-#define INNER_TIMER_POLL                    10  // ms
 #define TEMPERATURE_UPDATE_TIMEOUT          (5 * 1000) // 3 sec
 #define STEPPER_STANDBY_TIMEOUT             (2 * 1000) // 2 sec
 #define TEMPERATURE_COMPENSATION_TIMEOUT    (30 * 1000) // 60 sec
@@ -174,12 +173,6 @@ bool AstroLink4Pi::Connect()
 	// SetResolution(resolution);
 
     getFocuserInfo();
-    innerTimerID = IEAddTimer(INNER_TIMER_POLL, innerTimerHelper, this);
-    uint32_t currentTime = millis();
-    nextTemperatureRead = currentTime + TEMPERATURE_UPDATE_TIMEOUT;
-    nextStepperStandby = currentTime + STEPPER_STANDBY_TIMEOUT;
-    nextTemperatureCompensation = currentTime + TEMPERATURE_COMPENSATION_TIMEOUT;
-    nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;
 
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
 
@@ -614,6 +607,29 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 
 void AstroLink4Pi::TimerHit()
 {
+    //fanControl();
+
+    if(nextTemperatureRead < timeMillis) 
+    {
+        readDS18B20();
+        nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
+    }
+    if(nextTemperatureCompensation < timeMillis)
+    {
+        temperatureCompensation();
+        nextTemperatureCompensation = timeMillis + TEMPERATURE_COMPENSATION_TIMEOUT;
+    }
+    if(nextStepperStandby < timeMillis)
+    {
+        stepperStandby();
+        nextStepperStandby = timeMillis + STEPPER_STANDBY_TIMEOUT;
+    }
+    if(nextSystemRead < timeMillis)
+    {
+        systemUpdate();
+        nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
+    }
+
 	if(backlashTicksRemaining <= 0 && ticksRemaining <= 0)
 	{
 		//All movement completed/aborted
@@ -867,11 +883,6 @@ bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
      return true;
  }
 
-void AstroLink4Pi::innerTimerHelper(void *context)
-{
-	static_cast<AstroLink4Pi*>(context)->innerTimerHit();
-}
-
 void AstroLink4Pi::temperatureCompensation()
 {
 	if (!isConnected())
@@ -1085,50 +1096,6 @@ void AstroLink4Pi::getFocuserInfo()
 	IDSetNumber(&FocuserInfoNP, nullptr);
 
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Focuser Info: %0.2f %0.2f %0.2f.", FocuserInfoN[0].value, FocuserInfoN[1].value, FocuserInfoN[2].value);
-}
-
-void AstroLink4Pi::innerTimerHit()
-{
-    uint32_t timeMillis = millis();
-    
-    //fanControl();
-
-    if(nextTemperatureRead < timeMillis) 
-    {
-        readDS18B20();
-        nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
-    }
-    if(nextTemperatureCompensation < timeMillis)
-    {
-        temperatureCompensation();
-        nextTemperatureCompensation = timeMillis + TEMPERATURE_COMPENSATION_TIMEOUT;
-    }
-    if(nextStepperStandby < timeMillis)
-    {
-        stepperStandby();
-        nextStepperStandby = timeMillis + STEPPER_STANDBY_TIMEOUT;
-    }
-    if(nextSystemRead < timeMillis)
-    {
-        systemUpdate();
-        nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
-    }
-
-    innerTimerID = IEAddTimer(INNER_TIMER_POLL, innerTimerHelper, this);
-}
-
-uint32_t AstroLink4Pi::millis()
-{
-    struct timespec clock;
-    if(clock_gettime(CLOCK_MONOTONIC, &clock) == 0)
-    {
-       return 1000 * clock.tv_sec + clock.tv_nsec / 1000000;
-    }    
-    else
-    {
-        DEBUG(INDI::Logger::DBG_ERROR, "CLOCK_MONOTONIC not available.");
-        return 0;
-    }    
 }
 
 void AstroLink4Pi::fanControl()
