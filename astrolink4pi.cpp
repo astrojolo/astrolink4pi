@@ -459,7 +459,7 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 				IDSetSwitch(&SysControlSP, NULL);
 				
 				// confirm switch
-				defineSwitch(&SysOpConfirmSP);
+				defineProperty(&SysOpConfirmSP);
 
 				return true;
 			}
@@ -470,7 +470,7 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 				IDSetSwitch(&SysControlSP, NULL);
 
 				// confirm switch
-				defineSwitch(&SysOpConfirmSP);
+				defineProperty(&SysOpConfirmSP);
 
 				return true;
 			}
@@ -1092,7 +1092,7 @@ void AstroLink4Pi::innerTimerHit()
     uint32_t timeMillis = millis();
     
     fanControl();
-    
+
     if(nextTemperatureRead < timeMillis) 
     {
         readDS18B20();
@@ -1139,5 +1139,4 @@ void AstroLink4Pi::fanControl()
 	fanCycle++;
 	if(fanCycle > 10) fanCycle = 0;
 	gpiod_line_set_value(gpio_sysfan, (fanPWM >= fanCycle));
-	fanControlID = IEAddTimer(FAN_PWM_PERIOD, fanControlHelper, this);
 }
