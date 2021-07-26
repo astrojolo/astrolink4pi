@@ -95,6 +95,11 @@ private:
 	int currentStep = -1;
 	bool abortStep = false;		
 
+	uint32_t millis();
+	uint32_t nextStepperStandby = 0;
+	uint32_t nextTemperatureRead = 0;
+	uint32_t nextTemperatureCompensation = 0;
+
 	void getFocuserInfo();
 	int innerTimerID { -1 };
 	void innerTimerHit();

@@ -143,6 +143,10 @@ bool AstroLink4Pi::Connect()
 
     getFocuserInfo();
     innerTimerID = IEAddTimer(INNER_TIMER_POLL, innerTimerHelper, this);
+    uint32_t currentTime = millis();
+    nextTemperatureRead = currentTime + TEMPERATURE_UPDATE_TIMEOUT;
+    nextStepperStandby = currentTime + STEPPER_STANDBY_TIMEOUT;
+    nextTemperatureCompensation = currentTime + TEMPERATURE_COMPENSATION_TIMEOUT;
 
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
 
@@ -835,11 +839,36 @@ void AstroLink4Pi::getFocuserInfo()
 
 void AstroLink4Pi::innerTimerHit()
 {
+    uint32_t timeMillis = millis();
+    if(nextTemperatureRead > timeMillis) 
+    {
+        readDS18B20();
+        nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
+    }
+    if(nextTemperatureCompensation > timeMillis)
+    {
+        temperatureCompensation();
+        nextTemperatureCompensation = timeMillis + TEMPERATURE_COMPENSATION_TIMEOUT;
+    }
+    if(nextStepperStandby > timeMillis)
+    {
+        stepperStandby();
+        nextStepperStandby = timeMillis + STEPPER_STANDBY_TIMEOUT;
+    }
+
+    innerTimerID = IEAddTimer(INNER_TIMER_POLL, innerTimerHelper, this);
+}
+
+uint32_t AstroLink4Pi::millis()
+{
     struct timespec clock;
     if(clock_gettime(CLOCK_MONOTONIC, &clock) == 0)
     {
-        uint32_t timeMillis = 1000 * clock.tv_sec + clock.tv_nsec / 1000000;
-        DEBUGF(INDI::Logger::DBG_SESSION, "Timer hit millis %i", timeMillis);
-    }
-    innerTimerID = IEAddTimer(INNER_TIMER_POLL, innerTimerHelper, this);
+       return 1000 * clock.tv_sec + clock.tv_nsec / 1000000;
+    }    
+    else
+    {
+        DEBUG(INDI::Logger::DBG_ERROR, "CLOCK_MONOTONIC not available.");
+        return 0;
+    }    
 }
