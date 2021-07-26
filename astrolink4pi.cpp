@@ -303,6 +303,28 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 	// first we check if it's for our device
 	if (!strcmp(dev, getDeviceName()))
 	{
+	    // handle temperature compensation
+	    if(!strcmp(name, TemperatureCompensateSP.name))
+	    {
+			IUUpdateSwitch(&TemperatureCompensateSP, states, names, n);
+
+			if ( TemperatureCompensateS[0].s == ISS_ON)
+			{
+				temperatureCompensationID = IEAddTimer(TEMPERATURE_COMPENSATION_TIMEOUT, temperatureCompensationHelper, this);
+				TemperatureCompensateSP.s = IPS_OK;
+				DEBUG(INDI::Logger::DBG_SESSION, "Temperature compensation ENABLED.");
+			}
+
+			if ( TemperatureCompensateS[1].s == ISS_ON)
+			{
+				IERmTimer(temperatureCompensationID);
+				TemperatureCompensateSP.s = IPS_IDLE;
+				DEBUG(INDI::Logger::DBG_SESSION, "Temperature compensation DISABLED.");
+			}
+
+			IDSetSwitch(&TemperatureCompensateSP, nullptr);
+			return true;
+		}        
         if (strstr(name, "FOCUS"))
             return FI::processSwitch(dev, name, states, names, n);        
 	}
