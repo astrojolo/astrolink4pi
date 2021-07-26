@@ -278,11 +278,12 @@ bool AstroLink4Pi::ISNewText (const char *dev, const char *name, char *texts[], 
 
 bool AstroLink4Pi::saveConfigItems(FILE *fp)
 {
+    FI::saveConfigItems(fp);
 	// IUSaveConfigSwitch(fp, &FocusResolutionSP);
 	// IUSaveConfigSwitch(fp, &FocusReverseSP);
 	// IUSaveConfigSwitch(fp, &TemperatureCompensateSP);
-	IUSaveConfigNumber(fp, &FocusMaxPosNP);
-	IUSaveConfigNumber(fp, &FocusStepDelayNP);
+	// IUSaveConfigNumber(fp, &FocusMaxPosNP);
+	// IUSaveConfigNumber(fp, &FocusStepDelayNP);
 	// IUSaveConfigNumber(fp, &FocusBacklashNP);
 	// IUSaveConfigNumber(fp, &FocuserTravelNP);
 	// IUSaveConfigNumber(fp, &TemperatureCoefNP);
@@ -541,3 +542,10 @@ bool AstroLink4Pi::SyncFocuser(uint32_t ticks)
 
     return true;
 }
+
+ bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
+ {
+     DEBUGF(INDI::Logger::DBG_SESSION, "Backlash set to %i steps", steps);
+     return false;
+ }
+  
