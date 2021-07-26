@@ -239,7 +239,6 @@ bool AstroLink4Pi::updateProperties()
 			updateTemperatureID = IEAddTimer(TEMPERATURE_UPDATE_TIMEOUT, updateTemperatureHelper, this); // set temperature update timer
 			IERmTimer(temperatureCompensationID);
 			temperatureCompensationID = IEAddTimer(TEMPERATURE_COMPENSATION_TIMEOUT, temperatureCompensationHelper, this); // set temperature compensation timer
-            DEBUGF(INDI::Logger::DBG_SESSION, "Timer created in updateProperties() %i", temperatureCompensationID);
         }
 	} else {
 		deleteProperty(FocusTemperatureNP.name);
@@ -311,8 +310,8 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 
 			if ( TemperatureCompensateS[0].s == ISS_ON)
 			{
+                IERmTimer(temperatureCompensationID);
 				temperatureCompensationID = IEAddTimer(TEMPERATURE_COMPENSATION_TIMEOUT, temperatureCompensationHelper, this);
-                DEBUGF(INDI::Logger::DBG_SESSION, "Timer created in ISNewSwitch() %i", temperatureCompensationID);
 				TemperatureCompensateSP.s = IPS_OK;
 				DEBUG(INDI::Logger::DBG_SESSION, "Temperature compensation ENABLED.");
 			}
@@ -344,12 +343,12 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
     FI::saveConfigItems(fp);
 	// IUSaveConfigSwitch(fp, &FocusResolutionSP);
 	// IUSaveConfigSwitch(fp, &FocusReverseSP);
-	// IUSaveConfigSwitch(fp, &TemperatureCompensateSP);
+	 IUSaveConfigSwitch(fp, &TemperatureCompensateSP);
 	// IUSaveConfigNumber(fp, &FocusMaxPosNP);
 	// IUSaveConfigNumber(fp, &FocusStepDelayNP);
 	// IUSaveConfigNumber(fp, &FocusBacklashNP);
 	// IUSaveConfigNumber(fp, &FocuserTravelNP);
-	// IUSaveConfigNumber(fp, &TemperatureCoefNP);
+	 IUSaveConfigNumber(fp, &TemperatureCoefNP);
 
 	return true;
 }
@@ -651,9 +650,8 @@ void AstroLink4Pi::temperatureCompensation()
 			DEBUGF(INDI::Logger::DBG_SESSION, "Focuser adjusted by %d steps due to temperature change by %0.2f°C", thermalAdjustment, deltaTemperature);
 		}
 	}
-
+    IERmTimer(temperatureCompensationID);
 	temperatureCompensationID = IEAddTimer(TEMPERATURE_COMPENSATION_TIMEOUT, temperatureCompensationHelper, this);
-    DEBUGF(INDI::Logger::DBG_SESSION, "Timer created in temperatureCompensation() %i", temperatureCompensationID);
 }
 
 bool AstroLink4Pi::readDS18B20()
