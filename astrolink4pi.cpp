@@ -847,7 +847,7 @@ void AstroLink4Pi::innerTimerHit()
         readDS18B20();
         nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
     }
-    if(nextTemperatureCompensation <>> timeMillis)
+    if(nextTemperatureCompensation < timeMillis)
     {
         temperatureCompensation();
         nextTemperatureCompensation = timeMillis + TEMPERATURE_COMPENSATION_TIMEOUT;
