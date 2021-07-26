@@ -38,6 +38,9 @@ public:
 	virtual bool ISNewSwitch (const char *dev, const char *name, ISState *states, char *names[], int n);
 	virtual bool ISNewText (const char *dev, const char *name, char *texts[], char *names[], int n);
 
+	static void updateTemperatureHelper(void *context);
+	static void temperatureCompensationHelper(void *context);	
+
 protected:
 	const char *getDefaultName();
 
@@ -58,9 +61,16 @@ private:
 	virtual void SetResolution(int res);
 	virtual int savePosition(int pos);
 	virtual void stepMotor(int direction);
+	virtual bool readDS18B20();
 
 	INumber FocusStepDelayN[1];
 	INumberVectorProperty FocusStepDelayNP;
+	INumber FocusTemperatureN[1];
+	INumberVectorProperty FocusTemperatureNP;
+	INumber TemperatureCoefN[1];
+	INumberVectorProperty TemperatureCoefNP;
+	ISwitch TemperatureCompensateS[2];
+	ISwitchVectorProperty TemperatureCompensateSP;	
 
 	struct gpiod_chip *chip;
 	struct gpiod_line *gpio_a1;
@@ -76,6 +86,11 @@ private:
 	int lastDirection = 0;
 	int currentStep = -1;
 	bool abortStep = false;		
+
+	int updateTemperatureID { -1 };
+	void updateTemperature();
+	int temperatureCompensationID { -1 };
+	void temperatureCompensation();
 
 	static constexpr const char *SETTINGS_TAB {"Settings"};
 };

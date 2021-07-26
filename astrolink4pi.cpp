@@ -153,8 +153,8 @@ bool AstroLink4Pi::Disconnect()
 
 	// Stop timers
 	// IERmTimer(stepperStandbyID);
-	// IERmTimer(updateTemperatureID);
-	// IERmTimer(temperatureCompensationID);
+	IERmTimer(updateTemperatureID);
+	IERmTimer(temperatureCompensationID);
   
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi disconnected successfully.");
 
@@ -183,6 +183,20 @@ bool AstroLink4Pi::initProperties()
     // Step delay setting
 	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "milliseconds", "%0.0f", 2, 50, 1, 5);
 	IUFillNumberVector(&FocusStepDelayNP, FocusStepDelayN, 1, getDeviceName(), "FOCUS_STEPDELAY", "Step Delay", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
+
+	// Focuser temperature
+	IUFillNumber(&FocusTemperatureN[0], "FOCUS_TEMPERATURE_VALUE", "°C", "%0.2f", -50, 50, 1, 0);
+	IUFillNumberVector(&FocusTemperatureNP, FocusTemperatureN, 1, getDeviceName(), "FOCUS_TEMPERATURE", "Temperature", MAIN_CONTROL_TAB, IP_RO, 0, IPS_IDLE);
+
+	// Temperature Coefficient
+	IUFillNumber(&TemperatureCoefN[0], "steps/°C", "", "%.1f", -1000, 1000, 1, 0);
+	IUFillNumberVector(&TemperatureCoefNP, TemperatureCoefN, 1, getDeviceName(), "Temperature Coefficient", "", MAIN_CONTROL_TAB, IP_RW, 0, IPS_IDLE);
+
+	// Compensate for temperature
+	IUFillSwitch(&TemperatureCompensateS[0], "Enable", "", ISS_OFF);
+	IUFillSwitch(&TemperatureCompensateS[1], "Disable", "", ISS_ON);
+	IUFillSwitchVector(&TemperatureCompensateSP, TemperatureCompensateS, 2, getDeviceName(), "Temperature Compensate", "", MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
+
 
     // initial values at resolution 1/1
 	FocusMaxPosN[0].min = 1000;
@@ -214,7 +228,22 @@ bool AstroLink4Pi::updateProperties()
 	{
         FI::updateProperties();
         defineProperty(&FocusStepDelayNP);
+        if (readDS18B20())
+		{
+			defineProperty(&FocusTemperatureNP);
+			defineProperty(&TemperatureCoefNP);
+			defineProperty(&TemperatureCompensateSP);
+			readDS18B20(); // update immediately
+			lastTemperature = FocusTemperatureN[0].value; // init last temperature
+			IERmTimer(updateTemperatureID);
+			updateTemperatureID = IEAddTimer(TEMPERATURE_UPDATE_TIMEOUT, updateTemperatureHelper, this); // set temperature update timer
+			IERmTimer(temperatureCompensationID);
+			temperatureCompensationID = IEAddTimer(TEMPERATURE_COMPENSATION_TIMEOUT, temperatureCompensationHelper, this); // set temperature compensation timer
+        }
 	} else {
+		deleteProperty(FocusTemperatureNP.name);
+		deleteProperty(TemperatureCoefNP.name);
+		deleteProperty(TemperatureCompensateSP.name);        
         deleteProperty(FocusStepDelayNP.name);
         FI::updateProperties();
 	}
@@ -548,4 +577,45 @@ bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
      DEBUGF(INDI::Logger::DBG_SESSION, "Backlash set to %i steps", steps);
      return true;
  }
-  
+
+void AstroLink4Pi::updateTemperatureHelper(void *context)
+{
+	static_cast<AstroLink4Pi*>(context)->updateTemperature();
+}
+
+void AstroLink4Pi::temperatureCompensationHelper(void *context)
+{
+	static_cast<AstroLink4Pi*>(context)->temperatureCompensation();
+}
+
+void AstroLink4Pi::updateTemperature()
+{
+	if (!isConnected())
+		return;
+
+	readDS18B20();
+	updateTemperatureID = IEAddTimer(TEMPERATURE_UPDATE_TIMEOUT, updateTemperatureHelper, this);
+}
+
+void AstroLink4Pi::temperatureCompensation()
+{
+	if (!isConnected())
+		return;
+
+	if ( TemperatureCompensateS[0].s == ISS_ON && FocusTemperatureN[0].value != lastTemperature )
+	{
+		float deltaTemperature = FocusTemperatureN[0].value - lastTemperature; // change of temperature from last focuser movement
+		float deltaPos = TemperatureCoefN[0].value * deltaTemperature;
+
+		// Move focuser once the compensation is larger than 1/2 CFZ
+		if ( abs(deltaPos) > (FocuserInfoN[2].value / 2))
+		{
+			int thermalAdjustment = round(deltaPos); // adjust focuser by half number of steps to keep it in the center of cfz
+			MoveAbsFocuser(FocusAbsPosN[0].value + thermalAdjustment); // adjust focuser position
+			lastTemperature = FocusTemperatureN[0].value; // register last temperature
+			DEBUGF(INDI::Logger::DBG_SESSION, "Focuser adjusted by %d steps due to temperature change by %0.2f°C", thermalAdjustment, deltaTemperature);
+		}
+	}
+
+	temperatureCompensationID = IEAddTimer(TEMPERATURE_COMPENSATION_TIMEOUT, temperatureCompensationHelper, this);
+}
