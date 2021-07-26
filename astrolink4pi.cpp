@@ -243,6 +243,12 @@ bool AstroLink4Pi::updateProperties()
 	{
         FI::updateProperties();
         defineProperty(&FocusStepDelayNP);
+		defineProperty(&ActiveTelescopeTP);
+		defineProperty(&FocuserTravelNP);
+		defineProperty(&FocusResolutionSP);
+		defineProperty(&FocuserInfoNP);
+		defineProperty(&FocusStepDelayNP);
+		defineProperty(&FocusBacklashNP);
         if (readDS18B20())
 		{
 			defineProperty(&FocusTemperatureNP);
@@ -256,10 +262,15 @@ bool AstroLink4Pi::updateProperties()
 			temperatureCompensationID = IEAddTimer(TEMPERATURE_COMPENSATION_TIMEOUT, temperatureCompensationHelper, this); // set temperature compensation timer
         }
 	} else {
+		deleteProperty(ActiveTelescopeTP.name);
+		deleteProperty(FocuserTravelNP.name);
+		deleteProperty(FocusResolutionSP.name);
+		deleteProperty(FocuserInfoNP.name);
+		deleteProperty(FocusStepDelayNP.name);
+		deleteProperty(FocusBacklashNP.name);
 		deleteProperty(FocusTemperatureNP.name);
 		deleteProperty(TemperatureCoefNP.name);
 		deleteProperty(TemperatureCompensateSP.name);        
-        deleteProperty(FocusStepDelayNP.name);
         FI::updateProperties();
 	}
 
