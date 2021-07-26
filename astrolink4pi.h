@@ -38,6 +38,7 @@ public:
 	virtual bool ISNewSwitch (const char *dev, const char *name, ISState *states, char *names[], int n);
 	virtual bool ISNewText (const char *dev, const char *name, char *texts[], char *names[], int n);
 
+	static void stepperStandbyHelper(void *context);
 	static void updateTemperatureHelper(void *context);
 	static void temperatureCompensationHelper(void *context);	
 
@@ -87,6 +88,8 @@ private:
 	int currentStep = -1;
 	bool abortStep = false;		
 
+	int stepperStandbyID { -1 };
+	void stepperStandby();
 	int updateTemperatureID { -1 };
 	void updateTemperature();
 	int temperatureCompensationID { -1 };

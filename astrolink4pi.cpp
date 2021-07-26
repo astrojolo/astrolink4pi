@@ -135,11 +135,7 @@ bool AstroLink4Pi::Connect()
 	// preset resolution
 	// SetResolution(resolution);
 
-	// Update focuser parameters
-	// getFocuserInfo();
-
-	// set motor standby timer
-	// stepperStandbyID = IEAddTimer(STEPPER_STANDBY_TIMEOUT, stepperStandbyHelper, this);
+	stepperStandbyID = IEAddTimer(STEPPER_STANDBY_TIMEOUT, stepperStandbyHelper, this);
 
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
 
@@ -152,7 +148,7 @@ bool AstroLink4Pi::Disconnect()
 	gpiod_chip_close(chip);
 
 	// Stop timers
-	// IERmTimer(stepperStandbyID);
+	IERmTimer(stepperStandbyID);
 	IERmTimer(updateTemperatureID);
 	IERmTimer(temperatureCompensationID);
   
@@ -366,12 +362,10 @@ void AstroLink4Pi::TimerHit()
 		FocusAbsPosNP.s = IPS_OK;
 		IDSetNumber(&FocusAbsPosNP, nullptr);
 
-		// reset last temperature
-		// lastTemperature = FocusTemperatureN[0].value; // register last temperature
+		lastTemperature = FocusTemperatureN[0].value; // register last temperature
 
-		// set motor standby timer
-		// IERmTimer(stepperStandbyID);
-		// stepperStandbyID = IEAddTimer(STEPPER_STANDBY_TIMEOUT, stepperStandbyHelper, this);
+		IERmTimer(stepperStandbyID);
+		stepperStandbyID = IEAddTimer(STEPPER_STANDBY_TIMEOUT, stepperStandbyHelper, this);
 
 		return;
 	}
@@ -620,6 +614,11 @@ void AstroLink4Pi::temperatureCompensationHelper(void *context)
 	static_cast<AstroLink4Pi*>(context)->temperatureCompensation();
 }
 
+void AstroLink4Pi::stepperStandbyHelper(void *context)
+{
+	static_cast<AstroLink4Pi*>(context)->stepperStandby();
+}
+
 void AstroLink4Pi::updateTemperature()
 {
 	if (!isConnected())
@@ -729,3 +728,15 @@ bool AstroLink4Pi::readDS18B20()
 	return true;
 }
 
+void AstroLink4Pi::stepperStandby()
+{
+	if (!isConnected())
+		return;
+
+	gpiod_line_set_value(gpio_a1, 0); 
+    gpiod_line_set_value(gpio_a2, 0);
+    gpiod_line_set_value(gpio_b1, 0);
+    gpiod_line_set_value(gpio_b2, 0);
+
+	DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor going standby.");
+}
