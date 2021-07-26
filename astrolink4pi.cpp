@@ -95,7 +95,7 @@ AstroLink4Pi::AstroLink4Pi() : FI(this)
 
 AstroLink4Pi::~AstroLink4Pi()
 {
-	// delete properties independent of connection status
+	deleteProperty(FanTempNP.name);
 }
 
 const char * AstroLink4Pi::getDefaultName()
@@ -228,12 +228,12 @@ bool AstroLink4Pi::initProperties()
 
 	// Temperature Coefficient
 	IUFillNumber(&TemperatureCoefN[0], "steps/°C", "", "%.1f", -1000, 1000, 1, 0);
-	IUFillNumberVector(&TemperatureCoefNP, TemperatureCoefN, 1, getDeviceName(), "Temperature Coefficient", "", MAIN_CONTROL_TAB, IP_RW, 0, IPS_IDLE);
+	IUFillNumberVector(&TemperatureCoefNP, TemperatureCoefN, 1, getDeviceName(), "Temperature Coefficient", "", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	// Compensate for temperature
 	IUFillSwitch(&TemperatureCompensateS[0], "Enable", "", ISS_OFF);
 	IUFillSwitch(&TemperatureCompensateS[1], "Disable", "", ISS_ON);
-	IUFillSwitchVector(&TemperatureCompensateSP, TemperatureCompensateS, 2, getDeviceName(), "Temperature Compensate", "", MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
+	IUFillSwitchVector(&TemperatureCompensateSP, TemperatureCompensateS, 2, getDeviceName(), "Temperature Compensate", "", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	// Focuser Info
 	IUFillNumber(&FocuserInfoN[0], "CFZ_STEP_ACT", "Step Size (μm)", "%0.2f", 0, 1000, 1, 0);
