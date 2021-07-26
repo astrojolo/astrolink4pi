@@ -840,6 +840,7 @@ void AstroLink4Pi::getFocuserInfo()
 void AstroLink4Pi::innerTimerHit()
 {
     uint32_t timeMillis = millis();
+    /*
     if(nextTemperatureRead > timeMillis) 
     {
         readDS18B20();
@@ -855,7 +856,7 @@ void AstroLink4Pi::innerTimerHit()
         stepperStandby();
         nextStepperStandby = timeMillis + STEPPER_STANDBY_TIMEOUT;
     }
-
+*/
     innerTimerID = IEAddTimer(INNER_TIMER_POLL, innerTimerHelper, this);
 }
 
