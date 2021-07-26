@@ -612,7 +612,7 @@ void AstroLink4Pi::TimerHit()
     uint32_t timeMillis = millis();
     
     //fanControl();
-
+/*
     if(nextTemperatureRead < timeMillis) 
     {
         readDS18B20();
@@ -633,7 +633,7 @@ void AstroLink4Pi::TimerHit()
         systemUpdate();
         nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
     }
-
+*/
 	if(backlashTicksRemaining <= 0 && ticksRemaining <= 0)
 	{
 		//All movement completed/aborted
