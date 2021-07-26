@@ -543,9 +543,9 @@ bool AstroLink4Pi::SyncFocuser(uint32_t ticks)
     return true;
 }
 
- bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
+bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
  {
      DEBUGF(INDI::Logger::DBG_SESSION, "Backlash set to %i steps", steps);
-     return false;
+     return true;
  }
   
