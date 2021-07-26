@@ -163,10 +163,22 @@ bool AstroLink4Pi::Disconnect()
 
 bool AstroLink4Pi::initProperties()
 {
-	INDI::DefaultDevice::initProperties();
+    INDI::DefaultDevice::initProperties();
+
     setDriverInterface(AUX_INTERFACE | FOCUSER_INTERFACE);
-    FI::SetCapability(FOCUSER_CAN_ABS_MOVE | FOCUSER_CAN_REL_MOVE | FOCUSER_CAN_REVERSE | FOCUSER_CAN_SYNC | FOCUSER_CAN_ABORT); 
+
+    FI::SetCapability(FOCUSER_CAN_ABS_MOVE |
+                      FOCUSER_CAN_REL_MOVE |
+                      FOCUSER_CAN_REVERSE  |
+                      FOCUSER_CAN_SYNC     |
+                      FOCUSER_CAN_ABORT    |
+                      FOCUSER_HAS_BACKLASH);
+
     FI::initProperties(FOCUS_TAB);
+
+    addDebugControl();
+    addSimulationControl();
+    addConfigurationControl();
 
     // Step delay setting
 	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "milliseconds", "%0.0f", 2, 50, 1, 5);
@@ -190,11 +202,6 @@ bool AstroLink4Pi::initProperties()
 	FocusMotionS[FOCUS_OUTWARD].s = ISS_ON;
 	FocusMotionS[FOCUS_INWARD].s = ISS_OFF;
 	IDSetSwitch(&FocusMotionSP, nullptr);
-
-	// Add default properties
-	// addAuxControls(); // use instead if simulation mode is added to code
-	addDebugControl ();
-	addConfigurationControl();
 
 	return true;
 }
