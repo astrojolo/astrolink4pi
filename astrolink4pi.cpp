@@ -94,7 +94,7 @@ AstroLink4Pi::AstroLink4Pi() : FI(this)
 
 AstroLink4Pi::~AstroLink4Pi()
 {
-	//deleteProperty(FanTempNP.name);
+	//
 }
 
 const char * AstroLink4Pi::getDefaultName()
@@ -219,8 +219,8 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "milliseconds", "%0.0f", 2, 50, 1, 5);
 	IUFillNumberVector(&FocusStepDelayNP, FocusStepDelayN, 1, getDeviceName(), "FOCUS_STEPDELAY", "Step Delay", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
-	IUFillNumber(&FanTempN[0], "FAN_TEMP", "Fan temp. threshold (°C)", "%0.0f", 0, 80, 1, 50);
-	IUFillNumberVector(&FanTempNP, FanTempN, 1, getDeviceName(), "FOCUSER_PARAMETERS", "Fan threshold", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);	
+	IUFillNumber(&CpuFanTempN[0], "CPU_FAN_TEMP", "°C", "%0.0f", 0, 80, 1, 50);
+	IUFillNumberVector(&FocusStepDelayNP, FocusStepDelayN, 1, getDeviceName(), "CPU_FANTEMP", "System fan temp.", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	// Focuser temperature
 	IUFillNumber(&FocusTemperatureN[0], "FOCUS_TEMPERATURE_VALUE", "°C", "%0.2f", -50, 50, 1, 0);
@@ -316,8 +316,8 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&FocusBacklashNP);
 		defineProperty(&SysTimeTP);
 		defineProperty(&SysInfoTP);
-		defineProperty(&FanTempNP);
 		defineProperty(&SysControlSP);        
+        defineProperty(&CpuFanTempNP);
 
         IDSnoopDevice(ActiveTelescopeT[0].text, "TELESCOPE_INFO");
 
@@ -341,8 +341,8 @@ bool AstroLink4Pi::updateProperties()
 		deleteProperty(TemperatureCompensateSP.name);     
 		deleteProperty(SysTimeTP.name);
 		deleteProperty(SysInfoTP.name);
-		deleteProperty(FanTempNP.name);
-		deleteProperty(SysControlSP.name);           
+		deleteProperty(SysControlSP.name);    
+        deleteProperty(CpuFanTempNP.name);       
         FI::updateProperties();
 	}
 
@@ -401,15 +401,15 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 			return true;
 		}  
 
-		// handle fan temperature threshold
-		if (!strcmp(name, FanTempNP.name))
+		// handle focuser travel
+		if (!strcmp(name, CpuFanTempNP.name))
 		{
-			IUUpdateNumber(&FanTempNP,values,names,n);
-			FanTempNP.s=IPS_OK;
-			IDSetNumber(&FanTempNP, nullptr);
-			DEBUGF(INDI::Logger::DBG_SESSION, "Temperature fan threshold set to %0.0f °C", FanTempN[0].value);
+			IUUpdateNumber(&CpuFanTempN,values,names,n);
+			CpuFanTempNP.s=IPS_OK;
+			IDSetNumber(&CpuFanTempNP, nullptr);
+			DEBUGF(INDI::Logger::DBG_SESSION, "System fan temperature se to %0.0f °C", CpuFanTempN[0].value);
 			return true;
-		}              
+		}  
 
         if (strstr(name, "FOCUS_"))
             return FI::processNumber(dev, name, values, names, n);        
@@ -604,7 +604,7 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 	IUSaveConfigNumber(fp, &FocusBacklashNP);
 	IUSaveConfigNumber(fp, &FocuserTravelNP);
 	IUSaveConfigNumber(fp, &TemperatureCoefNP);
-    IUSaveConfigNumber(fp, &FanTempNP);
+    IUSaveConfigNumber(fp, &CpuFanTempNP);
 
 	return true;
 }
@@ -1045,7 +1045,7 @@ void AstroLink4Pi::systemUpdate()
 		int sum = 0;
 		for(int i = 0; i < 15; i++) sum += cpuTemps[i];
 
-		int newFanPWM = ((sum / 15 - FanTempN[0].value) / 2);
+		int newFanPWM = ((sum / 15 - 50) / 2);
 		if(newFanPWM < 0) newFanPWM = 0;
 		if(newFanPWM > 10) newFanPWM = 10;
 		if(newFanPWM != fanPWM)

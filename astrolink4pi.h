@@ -83,10 +83,11 @@ private:
 	ITextVectorProperty SysInfoTP;
 	ISwitch SysControlS[2];
 	ISwitchVectorProperty SysControlSP;
-	INumber FanTempN[1];
-	INumberVectorProperty FanTempNP;
 	ISwitch SysOpConfirmS[2];
 	ISwitchVectorProperty SysOpConfirmSP;	
+	INumber CpuFanTempN[1];
+	INumberVectorProperty CpuFanTempNP;
+
 
 	struct gpiod_chip *chip;
 	struct gpiod_line *gpio_a1;
