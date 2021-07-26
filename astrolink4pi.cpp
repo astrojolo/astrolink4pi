@@ -94,7 +94,7 @@ AstroLink4Pi::AstroLink4Pi() : FI(this)
 
 AstroLink4Pi::~AstroLink4Pi()
 {
-	deleteProperty(FanTempNP.name);
+	//deleteProperty(FanTempNP.name);
 }
 
 const char * AstroLink4Pi::getDefaultName()
@@ -307,6 +307,7 @@ bool AstroLink4Pi::updateProperties()
 	if (isConnected())
 	{
         FI::updateProperties();
+        defineProperty(&FocusStepDelayNP);
 		defineProperty(&ActiveTelescopeTP);
 		defineProperty(&FocuserTravelNP);
 		// defineProperty(&FocusResolutionSP);
