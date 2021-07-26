@@ -188,9 +188,6 @@ bool AstroLink4Pi::Disconnect()
 {
 	// Close device
 	gpiod_chip_close(chip);
-
-	// Stop timers
-	IERmTimer(innerTimerID);
   
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi disconnected successfully.");
 
