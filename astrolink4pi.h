@@ -58,8 +58,6 @@ private:
 	virtual int savePosition(int pos);
 	virtual void stepMotor(int direction);
 
-	ISwitch MotorDirS[2];
-	ISwitchVectorProperty MotorDirSP;
 	INumber FocusStepDelayN[1];
 	INumberVectorProperty FocusStepDelayNP;
 
