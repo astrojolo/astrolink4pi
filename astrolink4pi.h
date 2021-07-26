@@ -79,12 +79,23 @@ private:
 	INumberVectorProperty ScopeParametersNP;
 	IText ActiveTelescopeT[1];
 	ITextVectorProperty ActiveTelescopeTP;		
+	IText SysTimeT[2];
+	ITextVectorProperty SysTimeTP;
+	IText SysInfoT[8];
+	ITextVectorProperty SysInfoTP;
+	ISwitch SysControlS[2];
+	ISwitchVectorProperty SysControlSP;
+	INumber FanTempN[1];
+	INumberVectorProperty FanTempNP;
+	ISwitch SysOpConfirmS[2];
+	ISwitchVectorProperty SysOpConfirmSP;	
 
 	struct gpiod_chip *chip;
 	struct gpiod_line *gpio_a1;
 	struct gpiod_line *gpio_a2;
 	struct gpiod_line *gpio_b1;
 	struct gpiod_line *gpio_b2;
+	struct gpiod_line *gpio_sysfan;
 
 	int resolution = 1;
 	float lastTemperature;
@@ -95,16 +106,24 @@ private:
 	int currentStep = -1;
 	bool abortStep = false;		
 
+	int fanPWM = 0;			// 0 to 10
+	int fanCycle = 0;
+	int cpuTemps[15];
+	int cpuTempsIndex = 0;	
+
 	uint32_t millis();
 	uint32_t nextStepperStandby = 0;
 	uint32_t nextTemperatureRead = 0;
 	uint32_t nextTemperatureCompensation = 0;
+	uint32_t nextSystemRead = 0;
 
 	void getFocuserInfo();
 	int innerTimerID { -1 };
 	void innerTimerHit();
 	void temperatureCompensation();
 	void stepperStandby();
+	void systemUpdate();
+	void fanControl();
 
 	static constexpr const char *SETTINGS_TAB {"Settings"};
 };

@@ -40,11 +40,13 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define TEMPERATURE_UPDATE_TIMEOUT          (5 * 1000) // 3 sec
 #define STEPPER_STANDBY_TIMEOUT             (2 * 1000) // 2 sec
 #define TEMPERATURE_COMPENSATION_TIMEOUT    (30 * 1000) // 60 sec
+#define SYSTEM_UPDATE_PERIOD                1000
 
 #define A1_PIN	23
 #define A2_PIN	24
 #define B1_PIN	18
 #define B2_PIN	17
+#define FAN_PIN 14
 
 int halfStep[8][4] = { {1,0,0,0}, {1,0,1,0}, {0,0,1,0}, {0,1,1,0}, {0,1,0,0}, {0,1,0,1}, {0,0,0,1}, {1,0,0,1} };
 int fullStep[8][4] = { {1,0,0,0}, {0,0,1,0}, {0,1,0,0}, {0,0,0,1}, {1,0,0,0}, {0,0,1,0}, {0,1,0,0}, {0,0,0,1} };
@@ -111,8 +113,8 @@ bool AstroLink4Pi::Connect()
 	}
 
 	// verify BCM Pins are not used by other consumers
-	int pins[] = {A1_PIN, A2_PIN, B1_PIN, B2_PIN};
-	for (unsigned int pin = 0; pin < 4; pin++)
+	int pins[] = {A1_PIN, A2_PIN, B1_PIN, B2_PIN, FAN_PIN};
+	for (unsigned int pin = 0; pin < 5; pin++)
 	{
 		if (gpiod_line_is_used(gpiod_chip_get_line(chip, pins[pin])))
 		{
@@ -127,13 +129,43 @@ bool AstroLink4Pi::Connect()
 	gpio_a2 = gpiod_chip_get_line(chip, A2_PIN);
 	gpio_b1 = gpiod_chip_get_line(chip, B1_PIN);
 	gpio_b2 = gpiod_chip_get_line(chip, B2_PIN);
+	gpio_sysfan = gpiod_chip_get_line(chip, FAN_PIN);
 
 
 	// Set initial state for gpios
-	gpiod_line_request_output(gpio_a1, "a1@astroberry_focuser", 0);
-	gpiod_line_request_output(gpio_a2, "a2@astroberry_focuser", 0);
-	gpiod_line_request_output(gpio_b1, "b1@astroberry_focuser", 0); 
-	gpiod_line_request_output(gpio_b2, "b2@astroberry_focuser", 0);
+	gpiod_line_request_output(gpio_a1, "a1@astrolink4pi_focuser", 0);
+	gpiod_line_request_output(gpio_a2, "a2@astrolink4pi_focuser", 0);
+	gpiod_line_request_output(gpio_b1, "b1@astrolink4pi_focuser", 0); 
+	gpiod_line_request_output(gpio_b2, "b2@astrolink4pi_focuser", 0);
+	gpiod_line_request_output(gpio_sysfan, "astrolink4pi_sysfan", 0);    
+
+    // Get basic system info
+	FILE* pipe;
+	char buffer[128];
+
+	//update Hardware
+	//https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
+	pipe = popen("cat /sys/firmware/devicetree/base/model", "r");
+	if(fgets(buffer, 128, pipe) != NULL) IUSaveText(&SysInfoT[0], buffer);
+	pclose(pipe);
+
+	//update Hostname
+	pipe = popen("hostname", "r");
+	if(fgets(buffer, 128, pipe) != NULL) IUSaveText(&SysInfoT[4], buffer);
+	pclose(pipe);
+
+	//update Local IP
+	pipe = popen("hostname -I|awk -F' '  '{print $1}'|xargs", "r");
+	if(fgets(buffer, 128, pipe) != NULL) IUSaveText(&SysInfoT[5], buffer);
+	pclose(pipe);
+
+	//update Public IP
+	pipe = popen("wget -qO- http://ipecho.net/plain|xargs", "r");
+	if(fgets(buffer, 128, pipe) != NULL) IUSaveText(&SysInfoT[6], buffer);
+	pclose(pipe);
+
+	// Update client
+	IDSetText(&SysInfoTP, NULL);
 
 	//read last position from file & convert from MAX_RESOLUTION to current resolution
 	FocusAbsPosN[0].value = savePosition(-1) != -1 ? (int) savePosition(-1) * resolution / MAX_RESOLUTION : 0;
@@ -147,6 +179,7 @@ bool AstroLink4Pi::Connect()
     nextTemperatureRead = currentTime + TEMPERATURE_UPDATE_TIMEOUT;
     nextStepperStandby = currentTime + STEPPER_STANDBY_TIMEOUT;
     nextTemperatureCompensation = currentTime + TEMPERATURE_COMPENSATION_TIMEOUT;
+    nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;
 
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
 
@@ -221,6 +254,31 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&ScopeParametersN[1], "TELESCOPE_FOCAL_LENGTH", "Focal Length (mm)", "%g", 10, 10000, 0, 0.0);
 	IUFillNumberVector(&ScopeParametersNP, ScopeParametersN, 2, ActiveTelescopeT[0].text, "TELESCOPE_INFO", "Scope Properties", OPTIONS_TAB, IP_RW, 60, IPS_OK);    
 
+	IUFillNumber(&FanTempN[0], "FAN_TEMP", "Fan temp. threshold (°C)", "%0.0f", 0, 80, 1, 50);
+	IUFillNumberVector(&FanTempNP, FanTempN, 1, getDeviceName(), "FOCUSER_PARAMETERS", "Fan threshold", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);	
+	
+	IUFillText(&SysTimeT[0],"LOCAL_TIME","Local Time",NULL);
+	IUFillText(&SysTimeT[1],"UTC_OFFSET","UTC Offset",NULL);
+	IUFillTextVector(&SysTimeTP,SysTimeT,2,getDeviceName(),"SYSTEM_TIME","System Time",MAIN_CONTROL_TAB,IP_RO,60,IPS_IDLE);
+
+	IUFillText(&SysInfoT[0],"HARDWARE","Hardware",NULL);
+	IUFillText(&SysInfoT[1],"CPU TEMP","CPU Temp (°C)",NULL);
+	IUFillText(&SysInfoT[2],"UPTIME","Uptime (hh:mm)",NULL);
+	IUFillText(&SysInfoT[3],"LOAD","Load (1 / 5 / 15 min.)",NULL);
+	IUFillText(&SysInfoT[4],"HOSTNAME","Hostname",NULL);
+	IUFillText(&SysInfoT[5],"LOCAL_IP","Local IP",NULL);
+	IUFillText(&SysInfoT[6],"PUBLIC_IP","Public IP",NULL);
+	IUFillText(&SysInfoT[7],"SYS_FAN","System fan [%]",NULL);
+	IUFillTextVector(&SysInfoTP,SysInfoT,8,getDeviceName(),"SYSTEM_INFO","System Info",MAIN_CONTROL_TAB,IP_RO,60,IPS_IDLE);
+
+	IUFillSwitch(&SysControlS[0], "SYSCTRL_REBOOT", "Reboot", ISS_OFF);
+	IUFillSwitch(&SysControlS[1], "SYSCTRL_SHUTDOWN", "Shutdown", ISS_OFF);
+	IUFillSwitchVector(&SysControlSP, SysControlS, 2, getDeviceName(), "SYSCTRL", "System Ctrl", MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
+
+	IUFillSwitch(&SysOpConfirmS[0], "SYSOPCONFIRM_CONFIRM", "Yes", ISS_OFF);
+	IUFillSwitch(&SysOpConfirmS[1], "SYSOPCONFIRM_CANCEL", "No", ISS_OFF);
+	IUFillSwitchVector(&SysOpConfirmSP, SysOpConfirmS, 2, getDeviceName(), "SYSOPCONFIRM", "Continue?", MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);    
+
     // initial values at resolution 1/1
 	FocusMaxPosN[0].min = 1000;
 	FocusMaxPosN[0].max = 100000;
@@ -240,6 +298,8 @@ bool AstroLink4Pi::initProperties()
 	FocusMotionS[FOCUS_INWARD].s = ISS_OFF;
 	IDSetSwitch(&FocusMotionSP, nullptr);
 
+    for(int i = 0; i < 15; i++) cpuTemps[i] = 0;
+
 	return true;
 }
 
@@ -257,6 +317,10 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&FocuserInfoNP);
 		defineProperty(&FocusStepDelayNP);
 		defineProperty(&FocusBacklashNP);
+		defineProperty(&SysTimeTP);
+		defineProperty(&SysInfoTP);
+		defineProperty(&FanTempNP);
+		defineProperty(&SysControlSP);        
 
         IDSnoopDevice(ActiveTelescopeT[0].text, "TELESCOPE_INFO");
 
@@ -277,7 +341,11 @@ bool AstroLink4Pi::updateProperties()
 		deleteProperty(FocusBacklashNP.name);
 		deleteProperty(FocusTemperatureNP.name);
 		deleteProperty(TemperatureCoefNP.name);
-		deleteProperty(TemperatureCompensateSP.name);        
+		deleteProperty(TemperatureCompensateSP.name);     
+		deleteProperty(SysTimeTP.name);
+		deleteProperty(SysInfoTP.name);
+		deleteProperty(FanTempNP.name);
+		deleteProperty(SysControlSP.name);           
         FI::updateProperties();
 	}
 
@@ -334,7 +402,17 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 			IDSetNumber(&FocuserTravelNP, nullptr);
 			DEBUGF(INDI::Logger::DBG_SESSION, "Maximum focuser travel set to %0.0f mm", FocuserTravelN[0].value);
 			return true;
-		}        
+		}  
+
+		// handle fan temperature threshold
+		if (!strcmp(name, FanTempNP.name))
+		{
+			IUUpdateNumber(&FanTempNP,values,names,n);
+			FanTempNP.s=IPS_OK;
+			IDSetNumber(&FanTempNP, nullptr);
+			DEBUGF(INDI::Logger::DBG_SESSION, "Temperature fan threshold set to %0.0f °C", FanTempN[0].value);
+			return true;
+		}              
 
         if (strstr(name, "FOCUS_"))
             return FI::processNumber(dev, name, values, names, n);        
@@ -368,6 +446,113 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 			IDSetSwitch(&TemperatureCompensateSP, nullptr);
 			return true;
 		}        
+
+		// handle system control
+		if (!strcmp(name, SysControlSP.name))
+		{
+			IUUpdateSwitch(&SysControlSP, states, names, n);
+
+			if ( SysControlS[0].s == ISS_ON )
+			{
+				DEBUG(INDI::Logger::DBG_SESSION, "Astroberry device is set to REBOOT. Confirm or Cancel operation.");
+				SysControlSP.s = IPS_BUSY;
+				IDSetSwitch(&SysControlSP, NULL);
+				
+				// confirm switch
+				defineSwitch(&SysOpConfirmSP);
+
+				return true;
+			}
+			if ( SysControlS[1].s == ISS_ON )
+			{
+				DEBUG(INDI::Logger::DBG_SESSION, "Astroberry device is set to SHUT DOWN. Confirm or Cancel operation.");
+				SysControlSP.s = IPS_BUSY;
+				IDSetSwitch(&SysControlSP, NULL);
+
+				// confirm switch
+				defineSwitch(&SysOpConfirmSP);
+
+				return true;
+			}
+		}
+
+		// handle system control confirmation
+		if (!strcmp(name, SysOpConfirmSP.name))
+		{
+			IUUpdateSwitch(&SysOpConfirmSP, states, names, n);
+
+			if ( SysOpConfirmS[0].s == ISS_ON )
+			{
+				SysOpConfirmSP.s = IPS_IDLE;
+				IDSetSwitch(&SysOpConfirmSP, NULL);
+				SysOpConfirmS[0].s = ISS_OFF;
+				IDSetSwitch(&SysOpConfirmSP, NULL);
+
+				// execute system operation
+				if (SysControlS[0].s == ISS_ON)
+				{
+					DEBUG(INDI::Logger::DBG_SESSION, "System operation confirmed. System is going to REBOOT now");
+					FILE* pipe;
+					char buffer[512];
+					pipe = popen("sudo reboot", "r");
+					if(fgets(buffer, 512, pipe) == NULL)
+					{
+						DEBUGF(INDI::Logger::DBG_SESSION, "Failed open sudo reboot", buffer);
+					}
+					else
+					{
+						DEBUGF(INDI::Logger::DBG_SESSION, "System output: %s", buffer);
+					}
+					pclose(pipe);
+				}
+				if (SysControlS[1].s == ISS_ON)
+				{
+					DEBUG(INDI::Logger::DBG_SESSION, "System operation confirmed. System is going to SHUT DOWN now");
+					FILE* pipe;
+					char buffer[512];
+					pipe = popen("sudo poweroff", "r");
+					if(fgets(buffer, 512, pipe) == NULL)
+					{
+						DEBUGF(INDI::Logger::DBG_SESSION, "Failed open sudo poweroff", buffer);
+					}
+					else
+					{
+						DEBUGF(INDI::Logger::DBG_SESSION, "System output: %s", buffer);
+					}
+					pclose(pipe);					
+				}
+
+				// reset system control buttons
+				SysControlSP.s = IPS_IDLE;
+				IDSetSwitch(&SysControlSP, NULL);
+				SysControlS[0].s = ISS_OFF;
+				SysControlS[1].s = ISS_OFF;
+				IDSetSwitch(&SysControlSP, NULL);
+
+				deleteProperty(SysOpConfirmSP.name);
+				return true;
+			}
+
+			if ( SysOpConfirmS[1].s == ISS_ON )
+			{
+				DEBUG(INDI::Logger::DBG_SESSION, "System operation canceled.");
+				SysOpConfirmSP.s = IPS_IDLE;
+				IDSetSwitch(&SysOpConfirmSP, NULL);
+				SysOpConfirmS[1].s = ISS_OFF;
+				IDSetSwitch(&SysOpConfirmSP, NULL);
+
+				// reset system control buttons
+				SysControlSP.s = IPS_IDLE;
+				IDSetSwitch(&SysControlSP, NULL);
+				SysControlS[0].s = ISS_OFF;
+				SysControlS[1].s = ISS_OFF;
+				IDSetSwitch(&SysControlSP, NULL);
+
+				deleteProperty(SysOpConfirmSP.name);
+				return true;
+			}
+		}
+
         if (strstr(name, "FOCUS"))
             return FI::processSwitch(dev, name, states, names, n);        
 	}
@@ -422,6 +607,7 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 	IUSaveConfigNumber(fp, &FocusBacklashNP);
 	IUSaveConfigNumber(fp, &FocuserTravelNP);
 	IUSaveConfigNumber(fp, &TemperatureCoefNP);
+    IUSaveConfigNumber(fp, &FanTempNP);
 
 	return true;
 }
@@ -804,6 +990,63 @@ void AstroLink4Pi::stepperStandby()
     }
 }
 
+void AstroLink4Pi::systemUpdate()
+{
+		// update time
+		struct tm *local_timeinfo;
+		static char ts[32];
+		time_t rawtime;
+		time(&rawtime);
+		local_timeinfo = localtime (&rawtime);
+		strftime(ts, 20, "%Y-%m-%dT%H:%M:%S", local_timeinfo);
+		IUSaveText(&SysTimeT[0], ts);
+		snprintf(ts, sizeof(ts), "%4.2f", (local_timeinfo->tm_gmtoff/3600.0));
+		IUSaveText(&SysTimeT[1], ts);
+		SysTimeTP.s = IPS_OK;
+		IDSetText(&SysTimeTP, NULL);
+
+		SysInfoTP.s = IPS_BUSY;
+		IDSetText(&SysInfoTP, NULL);
+
+		FILE* pipe;
+		char buffer[128];
+
+		//update CPU temp
+		pipe = popen("echo $(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))", "r");
+		if(fgets(buffer, 128, pipe) != NULL) IUSaveText(&SysInfoT[1], buffer);
+		pclose(pipe);
+		
+		// average 15 measurements, so the fan will not overreact
+		cpuTemps[cpuTempsIndex] = atoi(buffer);
+		cpuTempsIndex++;
+		if(cpuTempsIndex > 14) cpuTempsIndex = 0;
+		int sum = 0;
+		for(int i = 0; i < 15; i++) sum += cpuTemps[i];
+
+		int newFanPWM = ((sum / 15 - FanTempN[0].value) / 2);
+		if(newFanPWM < 0) newFanPWM = 0;
+		if(newFanPWM > 10) newFanPWM = 10;
+		if(newFanPWM != fanPWM)
+		{
+			fanPWM = newFanPWM;
+			snprintf(ts, sizeof(ts), "%4.0f", (10.0*fanPWM));
+			IUSaveText(&SysInfoT[7], ts);			
+		}
+
+		//update uptime
+		pipe = popen("uptime|awk -F, '{print $1}'|awk -Fup '{print $2}'|xargs", "r");
+		if(fgets(buffer, 128, pipe) != NULL) IUSaveText(&SysInfoT[2], buffer);
+		pclose(pipe);
+		
+		//update load
+		pipe = popen("uptime|awk -F, '{print $3\" /\"$4\" /\"$5}'|awk -F: '{print $2}'|xargs", "r");
+		if(fgets(buffer, 128, pipe) != NULL) IUSaveText(&SysInfoT[3], buffer);
+		pclose(pipe);
+		
+		SysInfoTP.s = IPS_OK;
+		IDSetText(&SysInfoTP, NULL);
+}
+
 void AstroLink4Pi::getFocuserInfo()
 {
 	// https://www.innovationsforesight.com/education/how-much-focus-error-is-too-much/
@@ -848,6 +1091,8 @@ void AstroLink4Pi::innerTimerHit()
 {
     uint32_t timeMillis = millis();
     
+    fanControl();
+    
     if(nextTemperatureRead < timeMillis) 
     {
         readDS18B20();
@@ -862,6 +1107,11 @@ void AstroLink4Pi::innerTimerHit()
     {
         stepperStandby();
         nextStepperStandby = timeMillis + STEPPER_STANDBY_TIMEOUT;
+    }
+    if(nextSystemRead < timeMillis)
+    {
+        systemUpdate();
+        nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
     }
 
     innerTimerID = IEAddTimer(INNER_TIMER_POLL, innerTimerHelper, this);
@@ -879,4 +1129,15 @@ uint32_t AstroLink4Pi::millis()
         DEBUG(INDI::Logger::DBG_ERROR, "CLOCK_MONOTONIC not available.");
         return 0;
     }    
+}
+
+void AstroLink4Pi::fanControl()
+{
+	if (!isConnected())
+		return;
+
+	fanCycle++;
+	if(fanCycle > 10) fanCycle = 0;
+	gpiod_line_set_value(gpio_sysfan, (fanPWM >= fanCycle));
+	fanControlID = IEAddTimer(FAN_PWM_PERIOD, fanControlHelper, this);
 }
