@@ -179,6 +179,8 @@ bool AstroLink4Pi::Connect()
     nextTemperatureCompensation = currentTime + TEMPERATURE_COMPENSATION_TIMEOUT;
     nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;
 
+    SetTimer(FocusStepDelayN[0].value);
+
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
 
 	return true;
@@ -611,10 +613,6 @@ void AstroLink4Pi::TimerHit()
 {
     uint32_t timeMillis = millis();
     
-    //fanControl();
-/*
-
-*/
 	if(backlashTicksRemaining <= 0 && ticksRemaining <= 0)
 	{
         if(FocusAbsPosNP.s == IPS_BUSY)
@@ -634,6 +632,7 @@ void AstroLink4Pi::TimerHit()
         else
         {
             // Do other stuff only while the stepper is not moving
+            fanControl();
             if(nextTemperatureRead < timeMillis) 
             {
                 readDS18B20();
