@@ -245,7 +245,7 @@ bool AstroLink4Pi::updateProperties()
         defineProperty(&FocusStepDelayNP);
 		defineProperty(&ActiveTelescopeTP);
 		defineProperty(&FocuserTravelNP);
-		defineProperty(&FocusResolutionSP);
+		// defineProperty(&FocusResolutionSP);
 		defineProperty(&FocuserInfoNP);
 		defineProperty(&FocusStepDelayNP);
 		defineProperty(&FocusBacklashNP);
@@ -264,7 +264,7 @@ bool AstroLink4Pi::updateProperties()
 	} else {
 		deleteProperty(ActiveTelescopeTP.name);
 		deleteProperty(FocuserTravelNP.name);
-		deleteProperty(FocusResolutionSP.name);
+		// deleteProperty(FocusResolutionSP.name);
 		deleteProperty(FocuserInfoNP.name);
 		deleteProperty(FocusStepDelayNP.name);
 		deleteProperty(FocusBacklashNP.name);
