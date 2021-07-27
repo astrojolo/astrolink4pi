@@ -189,11 +189,11 @@ bool AstroLink4Pi::Connect()
 	// SetResolution(resolution);
 
     getFocuserInfo();
-    uint32_t currentTime = millis();
+    /*uint32_t currentTime = millis();
     nextTemperatureRead = currentTime + TEMPERATURE_UPDATE_TIMEOUT;
     nextStepperStandby = currentTime + STEPPER_STANDBY_TIMEOUT;
     nextTemperatureCompensation = currentTime + TEMPERATURE_COMPENSATION_TIMEOUT;
-    nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;
+    nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;*/
 
     SetTimer(FocusStepDelayN[0].value);
 
