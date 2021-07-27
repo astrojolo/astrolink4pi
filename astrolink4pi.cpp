@@ -814,6 +814,9 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 
 void AstroLink4Pi::TimerHit()
 {
+    if(!isConnected())
+        return;
+
     long int timeMillis = millis();
     
 	if(backlashTicksRemaining <= 0 && ticksRemaining <= 0)
@@ -856,12 +859,12 @@ void AstroLink4Pi::TimerHit()
                 systemUpdate();
                 updateSwitches();
                 nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
+                DEBUGF(INDI::Logger::DBG_SESSION, "System update %d %d", timeMillis, nextSystemRead);
             }    
             if(nextPwmCycle < timeMillis)
             {
-                systemUpdate();
+                pwmCycle();
                 nextPwmCycle = timeMillis + PWM_CYCLE_PERIOD;
-                DEBUGF(INDI::Logger::DBG_SESSION, "System update %d %d", timeMillis, nextPwmCycle);
             }     
         }
 	} 
