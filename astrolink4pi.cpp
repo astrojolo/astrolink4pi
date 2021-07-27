@@ -1320,13 +1320,13 @@ void AstroLink4Pi::getFocuserInfo()
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Focuser Info: %0.2f %0.2f %0.2f.", FocuserInfoN[0].value, FocuserInfoN[1].value, FocuserInfoN[2].value);
 }
 
-uint32_t AstroLink4Pi::millis()
+int32_t AstroLink4Pi::millis()
 {
     
     struct timespec clock;
     if(clock_gettime(CLOCK_REALTIME, &clock) == 0)
     {
-       DEBUGF(INDI::Logger::DBG_SESSION, "millis %l", 1000 * clock.tv_sec + clock.tv_nsec / 1000000);
+       DEBUGF(INDI::Logger::DBG_SESSION, "millis %d %d", clock.tv_sec, clock.tv_nsec);
        return 1000 * clock.tv_sec + clock.tv_nsec / 1000000;
     }    
     else
