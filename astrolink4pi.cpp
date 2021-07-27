@@ -236,7 +236,7 @@ bool AstroLink4Pi::initProperties()
     addConfigurationControl();
 
     // Step delay setting
-	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "milliseconds", "%0.0f", 2, 50, 1, 5);
+	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "milliseconds", "%0.0f", 2, 10, 1, 5);
 	IUFillNumberVector(&FocusStepDelayNP, FocusStepDelayN, 1, getDeviceName(), "FOCUS_STEPDELAY", "Step Delay", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	IUFillNumber(&CpuFanTempN[0], "CPU_FAN_TEMP", "°C", "%0.0f", 0, 80, 1, 50);
@@ -276,7 +276,7 @@ bool AstroLink4Pi::initProperties()
 	
 	IUFillText(&SysTimeT[0],"LOCAL_TIME","Local Time",NULL);
 	IUFillText(&SysTimeT[1],"UTC_OFFSET","UTC Offset",NULL);
-	IUFillTextVector(&SysTimeTP,SysTimeT,2,getDeviceName(),"SYSTEM_TIME","System Time",MAIN_CONTROL_TAB,IP_RO,60,IPS_IDLE);
+	IUFillTextVector(&SysTimeTP,SysTimeT,2,getDeviceName(),"SYSTEM_TIME","System Time",SYSTEM_TAB,IP_RO,60,IPS_IDLE);
 
 	IUFillText(&SysInfoT[0],"HARDWARE","Hardware",NULL);
 	IUFillText(&SysInfoT[1],"CPU TEMP","CPU Temp (°C)",NULL);
@@ -286,24 +286,24 @@ bool AstroLink4Pi::initProperties()
 	IUFillText(&SysInfoT[5],"LOCAL_IP","Local IP",NULL);
 	IUFillText(&SysInfoT[6],"PUBLIC_IP","Public IP",NULL);
 	IUFillText(&SysInfoT[7],"SYS_FAN","System fan [%]",NULL);
-	IUFillTextVector(&SysInfoTP,SysInfoT,8,getDeviceName(),"SYSTEM_INFO","System Info",MAIN_CONTROL_TAB,IP_RO,60,IPS_IDLE);
+	IUFillTextVector(&SysInfoTP,SysInfoT,8,getDeviceName(),"SYSTEM_INFO","System Info",SYSTEM_TAB,IP_RO,60,IPS_IDLE);
 
 	IUFillSwitch(&SysControlS[0], "SYSCTRL_REBOOT", "Reboot", ISS_OFF);
 	IUFillSwitch(&SysControlS[1], "SYSCTRL_SHUTDOWN", "Shutdown", ISS_OFF);
-	IUFillSwitchVector(&SysControlSP, SysControlS, 2, getDeviceName(), "SYSCTRL", "System Ctrl", MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
+	IUFillSwitchVector(&SysControlSP, SysControlS, 2, getDeviceName(), "SYSCTRL", "System Ctrl", SYSTEM_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	IUFillSwitch(&SysOpConfirmS[0], "SYSOPCONFIRM_CONFIRM", "Yes", ISS_OFF);
 	IUFillSwitch(&SysOpConfirmS[1], "SYSOPCONFIRM_CANCEL", "No", ISS_OFF);
-	IUFillSwitchVector(&SysOpConfirmSP, SysOpConfirmS, 2, getDeviceName(), "SYSOPCONFIRM", "Continue?", MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);    
+	IUFillSwitchVector(&SysOpConfirmSP, SysOpConfirmS, 2, getDeviceName(), "SYSOPCONFIRM", "Continue?", SYSTEM_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);    
 
-	IUFillNumber(&PWMcycleN[0], "PWMcycle", "PWM cycle [ms]", "%0.0f", 5, 1000, 5, 10); 
+	IUFillNumber(&PWMcycleN[0], "PWMcycle", "PWM cycle [ms]", "%0.0f", 50, 1000, 50, 100); 
 	IUFillNumberVector(&PWMcycleNP, PWMcycleN, 1, getDeviceName(), "PWMCYCLE", "PWM cycle", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	IUFillText(&RelayLabelsT[0], "RELAYLABEL01", "OUT 1", "OUT 1");
 	IUFillText(&RelayLabelsT[1], "RELAYLABEL02", "OUT 2", "OUT 2");
 	IUFillText(&RelayLabelsT[2], "RELAYLABEL03", "PWM 1", "PWM 1");
 	IUFillText(&RelayLabelsT[3], "RELAYLABEL04", "PWM 2", "PWM 2");
-	IUFillTextVector(&RelayLabelsTP, RelayLabelsT, 4, getDeviceName(), "RELAYLABELS", "Relay Labels", OPTIONS_TAB, IP_RW, 60, IPS_IDLE);    
+	IUFillTextVector(&RelayLabelsTP, RelayLabelsT, 4, getDeviceName(), "RELAYLABELS", "Relay Labels", OUTPUTS_TAB, IP_RW, 60, IPS_IDLE);    
 
 	// Load options before connecting
 	// load config before defining switches

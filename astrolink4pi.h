@@ -151,7 +151,8 @@ private:
 	void pwmCycle();
 	uint32_t millis();
 
-	static constexpr const char *SETTINGS_TAB {"Settings"};
+	static constexpr const char *SYSTEM_TAB {"System"};
+	static constexpr const char *OUTPUTS_TAB {"Outputs"};
 };
 
 #endif
