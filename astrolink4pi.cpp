@@ -1326,7 +1326,7 @@ long int AstroLink4Pi::millis()
     struct timespec clock;
     if(clock_gettime(CLOCK_REALTIME, &clock) == 0)
     {
-       DEBUGF(INDI::Logger::DBG_SESSION, "millis %d %d", clock.tv_sec, clock.tv_nsec);
+       DEBUGF(INDI::Logger::DBG_SESSION, "millis %d %d", 1000 * clock.tv_sec, clock.tv_nsec / 1000000);
        return 1000 * clock.tv_sec + clock.tv_nsec / 1000000;
     }    
     else
