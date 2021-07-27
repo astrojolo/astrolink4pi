@@ -135,6 +135,7 @@ private:
 	int pwmState[2];
 	int relayState[2];
 	int pwmCounter = 0;	
+	int pwmCycleTime = 100;
 
 	uint32_t nextStepperStandby = 0;
 	uint32_t nextTemperatureRead = 0;
