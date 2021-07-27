@@ -152,7 +152,7 @@ private:
 	void systemUpdate();
 	void fanControl();
 	void pwmCycle();
-	long millis();
+	long int millis();
 
 	static constexpr const char *SYSTEM_TAB {"System"};
 	static constexpr const char *OUTPUTS_TAB {"Outputs"};
