@@ -1323,7 +1323,7 @@ long int AstroLink4Pi::millis()
     if(clock_gettime(CLOCK_MONOTONIC, &clock) == 0)
     {
        static long int tv_sec_zero = clock.tv_sec;
-       return 1000 * (clock.tv_sec - tv_sec_zero) + clock.tv_nsec / 1000000);
+       return 1000 * (clock.tv_sec - tv_sec_zero) + clock.tv_nsec / 1000000;
     }    
     else
     {

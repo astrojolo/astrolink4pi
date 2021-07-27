@@ -140,11 +140,11 @@ private:
 	int pwmCounter = 0;	
 	int pwmCycleTime = 100;
 
-	uint32_t nextStepperStandby = 0;
-	uint32_t nextTemperatureRead = 0;
-	uint32_t nextTemperatureCompensation = 0;
-	uint32_t nextSystemRead = 0;
-	uint32_t nextPwmCycle = 0;
+	long int nextStepperStandby = 0;
+	long int nextTemperatureRead = 0;
+	long int nextTemperatureCompensation = 0;
+	long int nextSystemRead = 0;
+	long int nextPwmCycle = 0;
 
 	void getFocuserInfo();
 	void temperatureCompensation();
