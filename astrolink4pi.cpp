@@ -189,11 +189,11 @@ bool AstroLink4Pi::Connect()
 	// SetResolution(resolution);
 
     getFocuserInfo();
-    /*uint32_t currentTime = millis();
+    long int currentTime = millis();
     nextTemperatureRead = currentTime + TEMPERATURE_UPDATE_TIMEOUT;
     nextStepperStandby = currentTime + STEPPER_STANDBY_TIMEOUT;
     nextTemperatureCompensation = currentTime + TEMPERATURE_COMPENSATION_TIMEOUT;
-    nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;*/
+    nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;
 
     SetTimer(FocusStepDelayN[0].value);
 
@@ -814,7 +814,7 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 
 void AstroLink4Pi::TimerHit()
 {
-    //uint32_t timeMillis = millis();
+    long int timeMillis = millis();
     
 	if(backlashTicksRemaining <= 0 && ticksRemaining <= 0)
 	{
@@ -834,7 +834,6 @@ void AstroLink4Pi::TimerHit()
         }
         else
         {
-            /*
             // Do other stuff only while the stepper is not moving
             fanControl();
             if(nextTemperatureRead < timeMillis) 
@@ -863,9 +862,7 @@ void AstroLink4Pi::TimerHit()
                 systemUpdate();
                 nextPwmCycle = timeMillis + PWM_CYCLE_PERIOD;
             }     
-            */     
         }
-        
 	} 
     else
     {
@@ -1326,8 +1323,7 @@ long int AstroLink4Pi::millis()
     if(clock_gettime(CLOCK_MONOTONIC, &clock) == 0)
     {
        static long int tv_sec_zero = clock.tv_sec;
-       DEBUGF(INDI::Logger::DBG_SESSION, "millis %d %d", 1000 * (clock.tv_sec - tv_sec_zero), clock.tv_nsec / 1000000);
-       return 1000 * clock.tv_sec + clock.tv_nsec / 1000000;
+       return 1000 * (clock.tv_sec - tv_sec_zero) + clock.tv_nsec / 1000000);
     }    
     else
     {
