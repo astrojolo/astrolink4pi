@@ -1321,18 +1321,17 @@ void AstroLink4Pi::getFocuserInfo()
 }
 
 long int AstroLink4Pi::millis()
-{
-    
+{    
     struct timespec clock;
     if(clock_gettime(CLOCK_REALTIME, &clock) == 0)
     {
-       DEBUGF(INDI::Logger::DBG_SESSION, "millis %d %d", 1000 * clock.tv_sec, clock.tv_nsec / 1000000);
+       static long int tv_sec_zero = clock.tv_sec;
+       DEBUGF(INDI::Logger::CLOCK_MONOTONIC, "millis %d %d", 1000 * (clock.tv_sec - tv_sec_zero), clock.tv_nsec / 1000000);
        return 1000 * clock.tv_sec + clock.tv_nsec / 1000000;
     }    
     else
     {
         DEBUG(INDI::Logger::DBG_ERROR, "CLOCK_MONOTONIC not available.");
-        DEBUGF(INDI::Logger::DBG_SESSION, "CLOCK_MONOTONIC not available %0.0f", 0);
         return 0;
     }    
 }
