@@ -372,7 +372,8 @@ bool AstroLink4Pi::updateProperties()
         defineProperty(&CpuFanTempNP);
 		defineProperty(&Switch1SP);
 		defineProperty(&Switch2SP);
-		defineProperty(&PWMoutNP);        
+		defineProperty(&PWM1NP);        
+		defineProperty(&PWM2NP);        
 
         IDSnoopDevice(ActiveTelescopeT[0].text, "TELESCOPE_INFO");
 
@@ -400,7 +401,8 @@ bool AstroLink4Pi::updateProperties()
         deleteProperty(CpuFanTempNP.name);   
    		deleteProperty(Switch1SP.name);
 		deleteProperty(Switch2SP.name);
-		deleteProperty(PWMoutNP.name);    
+		deleteProperty(PWM1NP.name);    
+		deleteProperty(PWM2NP.name);    
         FI::updateProperties();
 	}
 
