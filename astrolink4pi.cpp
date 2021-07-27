@@ -814,6 +814,8 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 void AstroLink4Pi::TimerHit()
 {
     uint32_t timeMillis = millis();
+    DEBUGF(INDI::Logger::DBG_SESSION, "timeMillis %0.0f", timeMillis);
+
     
 	if(backlashTicksRemaining <= 0 && ticksRemaining <= 0)
 	{
@@ -855,7 +857,6 @@ void AstroLink4Pi::TimerHit()
                 systemUpdate();
                 updateSwitches();
                 nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
-                DEBUGF(INDI::Logger::DBG_SESSION, "System update %0.0f %0.0f", nextSystemRead, timeMillis);
             }    
             if(nextPwmCycle < timeMillis)
             {
@@ -1323,11 +1324,13 @@ uint32_t AstroLink4Pi::millis()
     struct timespec clock;
     if(clock_gettime(CLOCK_MONOTONIC, &clock) == 0)
     {
+       DEBUGF(INDI::Logger::DBG_SESSION, "millis %0.0f", clock.tv_nsec);
        return 1000 * clock.tv_sec + clock.tv_nsec / 1000000;
     }    
     else
     {
         DEBUG(INDI::Logger::DBG_ERROR, "CLOCK_MONOTONIC not available.");
+        DEBUGF(INDI::Logger::DBG_SESSION, "CLOCK_MONOTONIC not available %0.0f", 0);
         return 0;
     }    
 }
