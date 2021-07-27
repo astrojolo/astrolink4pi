@@ -40,12 +40,17 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define STEPPER_STANDBY_TIMEOUT             (2 * 1000) // 2 sec
 #define TEMPERATURE_COMPENSATION_TIMEOUT    (30 * 1000) // 60 sec
 #define SYSTEM_UPDATE_PERIOD                1000
+#define PWM_CYCLE_PERIOD                    100
 
-#define A1_PIN	23
-#define A2_PIN	24
-#define B1_PIN	18
-#define B2_PIN	17
-#define FAN_PIN 14
+#define A1_PIN	    23
+#define A2_PIN	    24
+#define B1_PIN	    18
+#define B2_PIN	    17
+#define FAN_PIN     14
+#define OUT1_PIN	5
+#define OUT2_PIN	6
+#define PWM1_PIN	13
+#define PWM2_PIN	19
 
 int halfStep[8][4] = { {1,0,0,0}, {1,0,1,0}, {0,0,1,0}, {0,1,1,0}, {0,1,0,0}, {0,1,0,1}, {0,0,0,1}, {1,0,0,1} };
 int fullStep[8][4] = { {1,0,0,0}, {0,0,1,0}, {0,1,0,0}, {0,0,0,1}, {1,0,0,0}, {0,0,1,0}, {0,1,0,0}, {0,0,0,1} };
@@ -112,8 +117,8 @@ bool AstroLink4Pi::Connect()
 	}
 
 	// verify BCM Pins are not used by other consumers
-	int pins[] = {A1_PIN, A2_PIN, B1_PIN, B2_PIN, FAN_PIN};
-	for (unsigned int pin = 0; pin < 5; pin++)
+	int pins[] = {A1_PIN, A2_PIN, B1_PIN, B2_PIN, FAN_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN};
+	for (unsigned int pin = 0; pin < 9; pin++)
 	{
 		if (gpiod_line_is_used(gpiod_chip_get_line(chip, pins[pin])))
 		{
@@ -129,7 +134,10 @@ bool AstroLink4Pi::Connect()
 	gpio_b1 = gpiod_chip_get_line(chip, B1_PIN);
 	gpio_b2 = gpiod_chip_get_line(chip, B2_PIN);
 	gpio_sysfan = gpiod_chip_get_line(chip, FAN_PIN);
-
+	gpio_out1 = gpiod_chip_get_line(chip, OUT1_PIN);
+	gpio_out2 = gpiod_chip_get_line(chip, OUT2_PIN);
+	gpio_pwm1 = gpiod_chip_get_line(chip, PWM1_PIN);
+	gpio_pwm2 = gpiod_chip_get_line(chip, PWM2_PIN);
 
 	// Set initial state for gpios
 	gpiod_line_request_output(gpio_a1, "a1@astrolink4pi_focuser", 0);
@@ -137,6 +145,14 @@ bool AstroLink4Pi::Connect()
 	gpiod_line_request_output(gpio_b1, "b1@astrolink4pi_focuser", 0); 
 	gpiod_line_request_output(gpio_b2, "b2@astrolink4pi_focuser", 0);
 	gpiod_line_request_output(gpio_sysfan, "astrolink4pi_sysfan", 0);    
+	gpiod_line_request_output(gpio_out1, "out1@astrolink4pi_relays", relayState[0]);
+	gpiod_line_request_output(gpio_out2, "out2@astrolink4pi_relays", relayState[1]);
+	gpiod_line_request_output(gpio_pwm1, "pwm1@astrolink4pi_relays", 0);
+	gpiod_line_request_output(gpio_pwm2, "pwm2@astrolink4pi_relays", 0);
+
+    // Lock Relay Labels setting
+	RelayLabelsTP.s = IPS_BUSY;
+	IDSetText(&RelayLabelsTP, nullptr);
 
     // Get basic system info
 	FILE* pipe;
@@ -190,6 +206,10 @@ bool AstroLink4Pi::Disconnect()
 {
 	// Close device
 	gpiod_chip_close(chip);
+
+	// Unlock Relay Labels setting
+	RelayLabelsTP.s = IPS_IDLE;
+	IDSetText(&RelayLabelsTP, nullptr);    
   
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi disconnected successfully.");
 
@@ -276,6 +296,36 @@ bool AstroLink4Pi::initProperties()
 	IUFillSwitch(&SysOpConfirmS[1], "SYSOPCONFIRM_CANCEL", "No", ISS_OFF);
 	IUFillSwitchVector(&SysOpConfirmSP, SysOpConfirmS, 2, getDeviceName(), "SYSOPCONFIRM", "Continue?", MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);    
 
+	IUFillNumber(&PWMcycleN[0], "PWMcycle", "PWM cycle [ms]", "%0.0f", 5, 1000, 5, 10); 
+	IUFillNumberVector(&PWMcycleNP, PWMcycleN, 1, getDeviceName(), "PWMCYCLE", "PWM cycle", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
+
+	IUFillText(&RelayLabelsT[0], "RELAYLABEL01", "OUT 1", "OUT 1");
+	IUFillText(&RelayLabelsT[1], "RELAYLABEL02", "OUT 2", "OUT 2");
+	IUFillText(&RelayLabelsT[2], "RELAYLABEL03", "PWM 1", "PWM 1");
+	IUFillText(&RelayLabelsT[3], "RELAYLABEL04", "PWM 2", "PWM 2");
+	IUFillTextVector(&RelayLabelsTP, RelayLabelsT, 4, getDeviceName(), "RELAYLABELS", "Relay Labels", OPTIONS_TAB, IP_RW, 60, IPS_IDLE);    
+
+	// Load options before connecting
+	// load config before defining switches
+    defineProperty(&PWMcycleNP);
+	defineProperty(&RelayLabelsTP);
+	loadConfig();
+
+	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", ISS_OFF);
+	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", ISS_ON);
+	IUFillSwitchVector(&Switch1SP, Switch1S, 2, getDeviceName(), "SWITCH_1", RelayLabelsT[0].text, MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
+
+	IUFillSwitch(&Switch2S[0], "SW2ON", "ON", ISS_OFF);
+	IUFillSwitch(&Switch2S[1], "SW2OFF", "OFF", ISS_ON);
+	IUFillSwitchVector(&Switch2SP, Switch2S, 2, getDeviceName(), "SWITCH_2", RelayLabelsT[1].text, MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
+
+	IUFillNumber(&PWMoutN[0], "PWMout1", "PWM out 1", "%0.0f", 0, 100, 10, 0); 
+	IUFillNumber(&PWMoutN[1], "PWMout2", "PWM out 2", "%0.0f", 0, 100, 10, 0); 
+	IUFillNumberVector(&PWMoutNP, PWMoutN, 2, getDeviceName(), "PWMOUTS", "PWM outputs", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);	
+
+	// Set initial relays states to OFF
+	for (int i=0; i < 2; i++) relayState[i] = pwmState[i] = 0;    
+
     // initial values at resolution 1/1
 	FocusMaxPosN[0].min = 1000;
 	FocusMaxPosN[0].max = 100000;
@@ -318,6 +368,9 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&SysInfoTP);
 		defineProperty(&SysControlSP);        
         defineProperty(&CpuFanTempNP);
+		defineProperty(&Switch1SP);
+		defineProperty(&Switch2SP);
+		defineProperty(&PWMoutNP);        
 
         IDSnoopDevice(ActiveTelescopeT[0].text, "TELESCOPE_INFO");
 
@@ -342,7 +395,10 @@ bool AstroLink4Pi::updateProperties()
 		deleteProperty(SysTimeTP.name);
 		deleteProperty(SysInfoTP.name);
 		deleteProperty(SysControlSP.name);    
-        deleteProperty(CpuFanTempNP.name);       
+        deleteProperty(CpuFanTempNP.name);   
+   		deleteProperty(Switch1SP.name);
+		deleteProperty(Switch2SP.name);
+		deleteProperty(PWMoutNP.name);    
         FI::updateProperties();
 	}
 
@@ -411,6 +467,35 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 			return true;
 		}  
 
+		// handle PWMouts
+		if (!strcmp(name, PWMoutNP.name))
+		{
+			if (!isConnected())
+			{
+				DEBUG(INDI::Logger::DBG_WARNING, "Cannot set PWM value while device is not connected.");
+				return false;
+			}
+
+			IUUpdateNumber(&PWMoutNP,values,names,n);
+			PWMoutNP.s=IPS_OK;
+			IDSetNumber(&PWMoutNP, nullptr);
+			pwmState[0] = PWMoutN[0].value;
+			pwmState[1] = PWMoutN[1].value;
+			DEBUGF(INDI::Logger::DBG_SESSION, "PWM set to %0.0f and %0.0f %", PWMoutN[0].value, PWMoutN[1].value);
+			return true;
+		}
+
+		// handle PWMcycle
+		if (!strcmp(name, PWMcycleNP.name))
+		{
+			IUUpdateNumber(&PWMcycleNP,values,names,n);
+			PWMcycleNP.s=IPS_OK;
+			IDSetNumber(&PWMcycleNP, nullptr);
+			pwmCycleTime = PWMcycleN[0].value;
+			DEBUGF(INDI::Logger::DBG_SESSION, "PWM cycle time set to %0.0f ms", PWMcycleN[0].value);
+			return true;
+		}	        
+
         if (strstr(name, "FOCUS_"))
             return FI::processNumber(dev, name, values, names, n);        
 	}
@@ -420,6 +505,8 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 
 bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *states, char *names[], int n)
 {
+    int rv;
+
 	// first we check if it's for our device
 	if (!strcmp(dev, getDeviceName()))
 	{
@@ -550,6 +637,92 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 			}
 		}
 
+		// handle relay 1
+		if (!strcmp(name, Switch1SP.name))
+		{
+			IUUpdateSwitch(&Switch1SP, states, names, n);
+
+			if ( Switch1S[0].s == ISS_ON )
+			{
+				rv = gpiod_line_set_value(gpio_out1, 1);
+				if (rv != 0)
+				{
+					DEBUG(INDI::Logger::DBG_ERROR, "Error setting Astroberry Relay #1");
+					Switch1SP.s = IPS_ALERT;
+					Switch1S[0].s = ISS_OFF;
+					IDSetSwitch(&Switch1SP, NULL);
+					return false;
+				}
+				relayState[0] =  1;
+				DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Relays #1 set to ON");
+				Switch1SP.s = IPS_OK;
+				Switch1S[1].s = ISS_OFF;
+				IDSetSwitch(&Switch1SP, NULL);
+				return true;
+			}
+			if ( Switch1S[1].s == ISS_ON )
+			{
+				rv = gpiod_line_set_value(gpio_out1, 0);
+				if (rv != 0)
+				{
+					DEBUG(INDI::Logger::DBG_ERROR, "Error setting Astroberry Relay #1");
+					Switch1SP.s = IPS_ALERT;
+					Switch1S[1].s = ISS_OFF;
+					IDSetSwitch(&Switch1SP, NULL);
+					return false;
+				}
+				relayState[0] =  0;
+				DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Relays #1 set to OFF");
+				Switch1SP.s = IPS_IDLE;
+				Switch1S[0].s = ISS_OFF;
+				IDSetSwitch(&Switch1SP, NULL);
+				return true;
+			}
+		}
+
+		// handle relay 2
+		if (!strcmp(name, Switch2SP.name))
+		{
+			IUUpdateSwitch(&Switch2SP, states, names, n);
+
+			if ( Switch2S[0].s == ISS_ON )
+			{
+				rv = gpiod_line_set_value(gpio_out2, 1);
+				if (rv != 0)
+				{
+					DEBUG(INDI::Logger::DBG_ERROR, "Error setting Astroberry Relay #2");
+					Switch2SP.s = IPS_ALERT;
+					Switch2S[0].s = ISS_OFF;
+					IDSetSwitch(&Switch2SP, NULL);
+					return false;
+				}
+				relayState[1] =  1;
+				DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Relays #2 set to ON");
+				Switch2SP.s = IPS_OK;
+				Switch2S[1].s = ISS_OFF;
+				IDSetSwitch(&Switch2SP, NULL);
+				return true;
+			}
+			if ( Switch2S[1].s == ISS_ON )
+			{
+				rv = gpiod_line_set_value(gpio_out2, 0);
+				if (rv != 0)
+				{
+					DEBUG(INDI::Logger::DBG_ERROR, "Error setting Astroberry Relay #2");
+					Switch2SP.s = IPS_ALERT;
+					Switch2S[1].s = ISS_OFF;
+					IDSetSwitch(&Switch2SP, NULL);
+					return false;
+				}
+				relayState[1] =  0;
+				DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Relays #2 set to OFF");
+				Switch2SP.s = IPS_IDLE;
+				Switch2S[0].s = ISS_OFF;
+				IDSetSwitch(&Switch2SP, NULL);
+				return true;
+			}
+		}        
+
         if (strstr(name, "FOCUS"))
             return FI::processSwitch(dev, name, states, names, n);        
 	}
@@ -575,6 +748,24 @@ bool AstroLink4Pi::ISNewText (const char *dev, const char *name, char *texts[], 
 				DEBUGF(INDI::Logger::DBG_SESSION, "Active telescope set to %s.", ActiveTelescopeT[0].text);
 				return true;
 		}
+
+		// handle relay labels
+		if (!strcmp(name, RelayLabelsTP.name))
+		{
+			if (isConnected())
+			{
+				DEBUG(INDI::Logger::DBG_WARNING, "Cannot set labels while device is connected.");
+				return false;
+			}
+
+			IUUpdateText(&RelayLabelsTP, texts, names, n);
+			RelayLabelsTP.s=IPS_OK;
+			IDSetText(&RelayLabelsTP, nullptr);
+			DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi labels set . You need to save configuration and restart driver to activate the changes.");
+			DEBUGF(INDI::Logger::DBG_DEBUG, "AstroLink 4 Pi labels set to OUT1: %s, OUT2: %s, PWM1: %s, PWM2: %s", RelayLabelsT[0].text, RelayLabelsT[1].text, RelayLabelsT[2].text, RelayLabelsT[3].text);
+
+			return true;
+		}        
 	}
 
 	return INDI::DefaultDevice::ISNewText(dev,name,texts,names,n);
@@ -605,6 +796,10 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 	IUSaveConfigNumber(fp, &FocuserTravelNP);
 	IUSaveConfigNumber(fp, &TemperatureCoefNP);
     IUSaveConfigNumber(fp, &CpuFanTempNP);
+	IUSaveConfigNumber(fp, &PWMcycleNP);
+	IUSaveConfigText(fp, &RelayLabelsTP);
+	IUSaveConfigSwitch(fp, &Switch1SP);
+	IUSaveConfigSwitch(fp, &Switch2SP);    
 
 	return true;
 }
@@ -651,8 +846,14 @@ void AstroLink4Pi::TimerHit()
             if(nextSystemRead < timeMillis)
             {
                 systemUpdate();
+                updateSwitches();
                 nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
-            }            
+            }    
+            if(nextPwmCycle < timeMillis)
+            {
+                systemUpdate();
+                nextPwmCycle = timeMillis + PWM_CYCLE_PERIOD;
+            }          
         }
         
 	} 
@@ -1131,4 +1332,61 @@ void AstroLink4Pi::fanControl()
 	fanCycle++;
 	if(fanCycle > 10) fanCycle = 0;
 	gpiod_line_set_value(gpio_sysfan, (fanPWM >= fanCycle));
+}
+
+void AstroLink4Pi::pwmCycle()
+{
+	if (!isConnected())
+		return;
+
+	pwmCounter++;
+	if(pwmCounter > 10) pwmCounter = 0;
+	gpiod_line_set_value(gpio_pwm1, pwmState[0] > 10*pwmCounter);
+	gpiod_line_set_value(gpio_pwm2, pwmState[1] > 10*((pwmCounter + 5) % 10));
+}
+
+void AstroLink4Pi::updateSwitches()
+{
+	int gpio_relay_status[4];
+	
+	gpio_relay_status[0] = gpiod_line_get_value(gpio_out1);
+	gpio_relay_status[1] = gpiod_line_get_value(gpio_out2);
+
+
+	// update relay switch #1
+	if ( Switch1S[0].s != gpio_relay_status[0])
+	{
+		if (gpio_relay_status[0] == 1)
+		{
+			Switch1SP.s = IPS_OK;
+			Switch1S[0].s = ISS_ON;
+			Switch1S[1].s = ISS_OFF;
+			IDSetSwitch(&Switch1SP, NULL);
+		} else {
+			Switch1SP.s = IPS_IDLE;
+			Switch1S[0].s = ISS_OFF;
+			Switch1S[1].s = ISS_ON;
+			IDSetSwitch(&Switch1SP, NULL);
+		}
+	}
+
+	// update relay switch #2
+	if ( Switch2S[0].s != gpio_relay_status[1])
+	{
+		if (gpio_relay_status[1] == 1)
+		{
+			Switch2SP.s = IPS_OK;
+			Switch2S[0].s = ISS_ON;
+			Switch2S[1].s = ISS_OFF;
+			IDSetSwitch(&Switch2SP, NULL);
+		} else {
+			Switch2SP.s = IPS_IDLE;
+			Switch2S[0].s = ISS_OFF;
+			Switch2S[1].s = ISS_ON;
+			IDSetSwitch(&Switch2SP, NULL);
+		}
+	}
+
+	DEBUGF(INDI::Logger::DBG_DEBUG, "OUT #1 status: %i - Switch #1 status: %i", gpio_relay_status[0], Switch1S[0].s);
+	DEBUGF(INDI::Logger::DBG_DEBUG, "OUT #2 status: %i - Switch #1 status: %i", gpio_relay_status[1], Switch2S[0].s);
 }

@@ -60,6 +60,7 @@ private:
 	virtual int savePosition(int pos);
 	virtual void stepMotor(int direction);
 	virtual bool readDS18B20();
+	virtual void updateSwitches();
 
 	INumber FocusStepDelayN[1];
 	INumberVectorProperty FocusStepDelayNP;
@@ -69,14 +70,17 @@ private:
 	INumberVectorProperty TemperatureCoefNP;
 	ISwitch TemperatureCompensateS[2];
 	ISwitchVectorProperty TemperatureCompensateSP;	
+
 	INumber FocuserInfoN[3];
 	INumberVectorProperty FocuserInfoNP;
 	INumber FocuserTravelN[1];
-	INumberVectorProperty FocuserTravelNP;		
+	INumberVectorProperty FocuserTravelNP;	
+
 	INumber ScopeParametersN[2];
 	INumberVectorProperty ScopeParametersNP;
 	IText ActiveTelescopeT[1];
-	ITextVectorProperty ActiveTelescopeTP;		
+	ITextVectorProperty ActiveTelescopeTP;	
+
 	IText SysTimeT[2];
 	ITextVectorProperty SysTimeTP;
 	IText SysInfoT[8];
@@ -85,8 +89,22 @@ private:
 	ISwitchVectorProperty SysControlSP;
 	ISwitch SysOpConfirmS[2];
 	ISwitchVectorProperty SysOpConfirmSP;	
+
 	INumber CpuFanTempN[1];
 	INumberVectorProperty CpuFanTempNP;
+
+	IText RelayLabelsT[4];
+	ITextVectorProperty RelayLabelsTP;
+
+	ISwitch Switch1S[2];
+	ISwitchVectorProperty Switch1SP;
+	ISwitch Switch2S[2];
+	ISwitchVectorProperty Switch2SP;
+
+	INumber PWMoutN[2];
+	INumberVectorProperty PWMoutNP;
+	INumber PWMcycleN[1];
+	INumberVectorProperty PWMcycleNP;	
 
 
 	struct gpiod_chip *chip;
@@ -95,6 +113,10 @@ private:
 	struct gpiod_line *gpio_b1;
 	struct gpiod_line *gpio_b2;
 	struct gpiod_line *gpio_sysfan;
+	struct gpiod_line *gpio_out1;
+	struct gpiod_line *gpio_out2;
+	struct gpiod_line *gpio_pwm1;
+	struct gpiod_line *gpio_pwm2;	
 
 	int resolution = 1;
 	float lastTemperature;
@@ -110,16 +132,22 @@ private:
 	int cpuTemps[15];
 	int cpuTempsIndex = 0;	
 
+	int pwmState[2];
+	int relayState[2];
+	int pwmCounter = 0;	
+
 	uint32_t nextStepperStandby = 0;
 	uint32_t nextTemperatureRead = 0;
 	uint32_t nextTemperatureCompensation = 0;
 	uint32_t nextSystemRead = 0;
+	uint32_t nextPwmCycle = 0;
 
 	void getFocuserInfo();
 	void temperatureCompensation();
 	void stepperStandby();
 	void systemUpdate();
 	void fanControl();
+	void pwmCycle();
 	uint32_t millis();
 
 	static constexpr const char *SETTINGS_TAB {"Settings"};
