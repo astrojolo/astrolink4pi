@@ -651,6 +651,7 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 
 			if ( Switch1S[0].s == ISS_ON )
 			{
+                millis();
 				rv = gpiod_line_set_value(gpio_out1, 1);
 				if (rv != 0)
 				{
@@ -813,9 +814,7 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 
 void AstroLink4Pi::TimerHit()
 {
-    uint32_t timeMillis = millis();
-    DEBUGF(INDI::Logger::DBG_SESSION, "timeMillis %0.0f", timeMillis);
-
+    //uint32_t timeMillis = millis();
     
 	if(backlashTicksRemaining <= 0 && ticksRemaining <= 0)
 	{
@@ -835,6 +834,7 @@ void AstroLink4Pi::TimerHit()
         }
         else
         {
+            /*
             // Do other stuff only while the stepper is not moving
             fanControl();
             if(nextTemperatureRead < timeMillis) 
@@ -862,7 +862,8 @@ void AstroLink4Pi::TimerHit()
             {
                 systemUpdate();
                 nextPwmCycle = timeMillis + PWM_CYCLE_PERIOD;
-            }          
+            }     
+            */     
         }
         
 	} 
@@ -1321,10 +1322,11 @@ void AstroLink4Pi::getFocuserInfo()
 
 uint32_t AstroLink4Pi::millis()
 {
+    
     struct timespec clock;
     if(clock_gettime(CLOCK_REALTIME, &clock) == 0)
     {
-       DEBUGF(INDI::Logger::DBG_SESSION, "millis %0.0f", clock.tv_nsec);
+       DEBUGF(INDI::Logger::DBG_SESSION, "millis %0.0f %0.0f", clock.tv_sec, clock.tv_nsec);
        return 1000 * clock.tv_sec + clock.tv_nsec / 1000000;
     }    
     else
