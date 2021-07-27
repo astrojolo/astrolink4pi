@@ -319,10 +319,10 @@ bool AstroLink4Pi::initProperties()
 	IUFillSwitch(&Switch2S[1], "SW2OFF", "OFF", ISS_ON);
 	IUFillSwitchVector(&Switch2SP, Switch2S, 2, getDeviceName(), "SWITCH_2", RelayLabelsT[1].text, OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
-	IUFillNumber(&PWM1N[0], "PWMout1", "PWM out 1", "%0.0f", 0, 100, 10, 0); 
+	IUFillNumber(&PWM1N[0], "PWMout1", "%", "%0.0f", 0, 100, 10, 0); 
 	IUFillNumberVector(&PWM1NP, PWM1N, 1, getDeviceName(), "PWMOUT1", RelayLabelsT[2].text, OUTPUTS_TAB, IP_RW, 60, IPS_IDLE);	
 
-	IUFillNumber(&PWM2N[0], "PWMout2", "PWM out 2", "%0.0f", 0, 100, 10, 0); 
+	IUFillNumber(&PWM2N[0], "PWMout2", "%", "%0.0f", 0, 100, 10, 0); 
 	IUFillNumberVector(&PWM2NP, PWM2N, 1, getDeviceName(), "PWMOUT2", RelayLabelsT[3].text, OUTPUTS_TAB, IP_RW, 60, IPS_IDLE);	
 
 	// Set initial relays states to OFF
@@ -855,6 +855,7 @@ void AstroLink4Pi::TimerHit()
                 systemUpdate();
                 updateSwitches();
                 nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
+                DEBUGF(INDI::Logger::DBG_SESSION, "System update %0.0f %0.0f", nextSystemRead, timeMillis);
             }    
             if(nextPwmCycle < timeMillis)
             {
