@@ -231,7 +231,7 @@ bool AstroLink4Pi::initProperties()
 
     FI::initProperties(FOCUS_TAB);
 
-    addDebugControl();
+    // addDebugControl();
     // addSimulationControl();
     addConfigurationControl();
 
@@ -303,7 +303,7 @@ bool AstroLink4Pi::initProperties()
 	IUFillText(&RelayLabelsT[1], "RELAYLABEL02", "OUT 2", "OUT 2");
 	IUFillText(&RelayLabelsT[2], "RELAYLABEL03", "PWM 1", "PWM 1");
 	IUFillText(&RelayLabelsT[3], "RELAYLABEL04", "PWM 2", "PWM 2");
-	IUFillTextVector(&RelayLabelsTP, RelayLabelsT, 4, getDeviceName(), "RELAYLABELS", "Relay Labels", OUTPUTS_TAB, IP_RW, 60, IPS_IDLE);    
+	IUFillTextVector(&RelayLabelsTP, RelayLabelsT, 4, getDeviceName(), "RELAYLABELS", "Relay Labels", OPTIONS_TAB, IP_RW, 60, IPS_IDLE);    
 
 	// Load options before connecting
 	// load config before defining switches
@@ -313,15 +313,15 @@ bool AstroLink4Pi::initProperties()
 
 	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", ISS_OFF);
 	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", ISS_ON);
-	IUFillSwitchVector(&Switch1SP, Switch1S, 2, getDeviceName(), "SWITCH_1", RelayLabelsT[0].text, MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
+	IUFillSwitchVector(&Switch1SP, Switch1S, 2, getDeviceName(), "SWITCH_1", RelayLabelsT[0].text, OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	IUFillSwitch(&Switch2S[0], "SW2ON", "ON", ISS_OFF);
 	IUFillSwitch(&Switch2S[1], "SW2OFF", "OFF", ISS_ON);
-	IUFillSwitchVector(&Switch2SP, Switch2S, 2, getDeviceName(), "SWITCH_2", RelayLabelsT[1].text, MAIN_CONTROL_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
+	IUFillSwitchVector(&Switch2SP, Switch2S, 2, getDeviceName(), "SWITCH_2", RelayLabelsT[1].text, OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	IUFillNumber(&PWMoutN[0], "PWMout1", "PWM out 1", "%0.0f", 0, 100, 10, 0); 
 	IUFillNumber(&PWMoutN[1], "PWMout2", "PWM out 2", "%0.0f", 0, 100, 10, 0); 
-	IUFillNumberVector(&PWMoutNP, PWMoutN, 2, getDeviceName(), "PWMOUTS", "PWM outputs", MAIN_CONTROL_TAB, IP_RW, 60, IPS_IDLE);	
+	IUFillNumberVector(&PWMoutNP, PWMoutN, 2, getDeviceName(), "PWMOUTS", "PWM outputs", OUTPUTS_TAB, IP_RW, 60, IPS_IDLE);	
 
 	// Set initial relays states to OFF
 	for (int i=0; i < 2; i++) relayState[i] = pwmState[i] = 0;    
