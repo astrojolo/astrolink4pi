@@ -140,7 +140,6 @@ private:
 	int pwmCounter = 0;	
 	int pwmCycleTime = 100;
 
-	long int nextStepperStandby = 0;
 	long int nextTemperatureRead = 0;
 	long int nextTemperatureCompensation = 0;
 	long int nextSystemRead = 0;

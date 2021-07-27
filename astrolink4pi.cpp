@@ -37,7 +37,6 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 
 #define MAX_RESOLUTION                      2   // the highest resolution supported is 1/2 step
 #define TEMPERATURE_UPDATE_TIMEOUT          (5 * 1000) // 3 sec
-#define STEPPER_STANDBY_TIMEOUT             (2 * 1000) // 2 sec
 #define TEMPERATURE_COMPENSATION_TIMEOUT    (30 * 1000) // 60 sec
 #define SYSTEM_UPDATE_PERIOD                1000
 #define PWM_CYCLE_PERIOD                    100
@@ -191,7 +190,6 @@ bool AstroLink4Pi::Connect()
     getFocuserInfo();
     long int currentTime = millis();
     nextTemperatureRead = currentTime + TEMPERATURE_UPDATE_TIMEOUT;
-    nextStepperStandby = currentTime + STEPPER_STANDBY_TIMEOUT;
     nextTemperatureCompensation = currentTime + TEMPERATURE_COMPENSATION_TIMEOUT;
     nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;
 
@@ -834,6 +832,7 @@ void AstroLink4Pi::TimerHit()
             IDSetNumber(&FocusAbsPosNP, nullptr);
 
             lastTemperature = FocusTemperatureN[0].value; // register last temperature
+            stepperStandby();
         }
         else
         {
@@ -849,17 +848,11 @@ void AstroLink4Pi::TimerHit()
                 temperatureCompensation();
                 nextTemperatureCompensation = timeMillis + TEMPERATURE_COMPENSATION_TIMEOUT;
             }
-            if(nextStepperStandby < timeMillis)
-            {
-                stepperStandby();
-                nextStepperStandby = timeMillis + STEPPER_STANDBY_TIMEOUT;
-            }
             if(nextSystemRead < timeMillis)
             {
                 systemUpdate();
                 updateSwitches();
                 nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
-                DEBUGF(INDI::Logger::DBG_SESSION, "System update %d %d", timeMillis, nextSystemRead);
             }    
             if(nextPwmCycle < timeMillis)
             {
