@@ -861,6 +861,7 @@ void AstroLink4Pi::TimerHit()
             {
                 systemUpdate();
                 nextPwmCycle = timeMillis + PWM_CYCLE_PERIOD;
+                DEBUGF(INDI::Logger::DBG_SESSION, "System update %d %d", timeMillis, nextPwmCycle);
             }     
         }
 	} 
