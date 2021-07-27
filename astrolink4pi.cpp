@@ -319,9 +319,11 @@ bool AstroLink4Pi::initProperties()
 	IUFillSwitch(&Switch2S[1], "SW2OFF", "OFF", ISS_ON);
 	IUFillSwitchVector(&Switch2SP, Switch2S, 2, getDeviceName(), "SWITCH_2", RelayLabelsT[1].text, OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
-	IUFillNumber(&PWMoutN[0], "PWMout1", "PWM out 1", "%0.0f", 0, 100, 10, 0); 
-	IUFillNumber(&PWMoutN[1], "PWMout2", "PWM out 2", "%0.0f", 0, 100, 10, 0); 
-	IUFillNumberVector(&PWMoutNP, PWMoutN, 2, getDeviceName(), "PWMOUTS", "PWM outputs", OUTPUTS_TAB, IP_RW, 60, IPS_IDLE);	
+	IUFillNumber(&PWM1N[0], "PWMout1", "PWM out 1", "%0.0f", 0, 100, 10, 0); 
+	IUFillNumberVector(&PWM1NP, PWM1N, 2, getDeviceName(), "PWMOUT1", RelayLabelsT[2].text, OUTPUTS_TAB, IP_RW, 60, IPS_IDLE);	
+
+	IUFillNumber(&PWM2N[0], "PWMout2", "PWM out 2", "%0.0f", 0, 100, 10, 0); 
+	IUFillNumberVector(&PWM2NP, PWM2N, 2, getDeviceName(), "PWMOUT2", RelayLabelsT[3].text, OUTPUTS_TAB, IP_RW, 60, IPS_IDLE);	
 
 	// Set initial relays states to OFF
 	for (int i=0; i < 2; i++) relayState[i] = pwmState[i] = 0;    
@@ -468,20 +470,23 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 		}  
 
 		// handle PWMouts
-		if (!strcmp(name, PWMoutNP.name))
+		if (!strcmp(name, PWM1NP.name))
 		{
-			if (!isConnected())
-			{
-				DEBUG(INDI::Logger::DBG_WARNING, "Cannot set PWM value while device is not connected.");
-				return false;
-			}
+			IUUpdateNumber(&PWM1NP,values,names,n);
+			PWM1NP.s=IPS_OK;
+			IDSetNumber(&PWM1NP, nullptr);
+			pwmState[0] = PWM1N[0].value;
+			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 1 set to %0.0f", PWM1N[0].value);
+			return true;
+		}
 
-			IUUpdateNumber(&PWMoutNP,values,names,n);
-			PWMoutNP.s=IPS_OK;
-			IDSetNumber(&PWMoutNP, nullptr);
-			pwmState[0] = PWMoutN[0].value;
-			pwmState[1] = PWMoutN[1].value;
-			DEBUGF(INDI::Logger::DBG_SESSION, "PWM set to %0.0f and %0.0f %", PWMoutN[0].value, PWMoutN[1].value);
+		if (!strcmp(name, PWM2NP.name))
+		{
+			IUUpdateNumber(&PWM2NP,values,names,n);
+			PWM2NP.s=IPS_OK;
+			IDSetNumber(&PWM2NP, nullptr);
+			pwmState[1] = PWM2N[0].value;
+			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 2 set to %0.0f", PWM2N[0].value);
 			return true;
 		}
 
