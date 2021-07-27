@@ -1322,7 +1322,7 @@ void AstroLink4Pi::getFocuserInfo()
 uint32_t AstroLink4Pi::millis()
 {
     struct timespec clock;
-    if(clock_gettime(CLOCK_MONOTONIC, &clock) == 0)
+    if(clock_gettime(CLOCK_REALTIME, &clock) == 0)
     {
        DEBUGF(INDI::Logger::DBG_SESSION, "millis %0.0f", clock.tv_nsec);
        return 1000 * clock.tv_sec + clock.tv_nsec / 1000000;
