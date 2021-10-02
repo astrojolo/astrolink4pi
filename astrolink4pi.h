@@ -62,6 +62,8 @@ private:
 	virtual bool readDS18B20();
 	virtual void updateSwitches();
 
+	ISwitch FocusResolutionS[6];
+	ISwitchVectorProperty FocusResolutionSP;
 	INumber FocusStepDelayN[1];
 	INumberVectorProperty FocusStepDelayNP;
 	INumber FocusTemperatureN[1];
@@ -111,10 +113,13 @@ private:
 
 
 	struct gpiod_chip *chip;
-	struct gpiod_line *gpio_a1;
-	struct gpiod_line *gpio_a2;
-	struct gpiod_line *gpio_b1;
-	struct gpiod_line *gpio_b2;
+	struct gpiod_line *gpio_en;
+	struct gpiod_line *gpio_m0;
+	struct gpiod_line *gpio_m1;
+	struct gpiod_line *gpio_m2;
+	struct gpiod_line *gpio_rst;
+	struct gpiod_line *gpio_stp;
+	struct gpiod_line *gpio_dir;
 	struct gpiod_line *gpio_sysfan;
 	struct gpiod_line *gpio_out1;
 	struct gpiod_line *gpio_out2;
@@ -147,7 +152,7 @@ private:
 
 	void getFocuserInfo();
 	void temperatureCompensation();
-	void stepperStandby();
+	void stepperStandby(bool state);
 	void systemUpdate();
 	void fanControl();
 	void pwmCycle();

@@ -35,21 +35,25 @@
 
 std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 
-#define MAX_RESOLUTION                      2   // the highest resolution supported is 1/2 step
+#define MAX_RESOLUTION                      32   // the highest resolution supported is 1/32 step
 #define TEMPERATURE_UPDATE_TIMEOUT          (5 * 1000) // 3 sec
 #define TEMPERATURE_COMPENSATION_TIMEOUT    (30 * 1000) // 60 sec
 #define SYSTEM_UPDATE_PERIOD                1000
 #define PWM_CYCLE_PERIOD                    100
 
-#define A1_PIN	    23
-#define A2_PIN	    24
-#define B1_PIN	    18
-#define B2_PIN	    17
+#define EN_PIN	    15
+#define M0_PIN	    17
+#define M1_PIN	    18
+#define M2_PIN	    27
+#define RST_PIN	    22
+#define STP_PIN	    24
+#define DIR_PIN	    23
 #define FAN_PIN     14
 #define OUT1_PIN	5
 #define OUT2_PIN	6
 #define PWM1_PIN	13
 #define PWM2_PIN	19
+
 
 int halfStep[8][4] = { {1,0,0,0}, {1,0,1,0}, {0,0,1,0}, {0,1,1,0}, {0,1,0,0}, {0,1,0,1}, {0,0,0,1}, {1,0,0,1} };
 int fullStep[8][4] = { {1,0,0,0}, {0,0,1,0}, {0,1,0,0}, {0,0,0,1}, {1,0,0,0}, {0,0,1,0}, {0,1,0,0}, {0,0,0,1} };
@@ -111,13 +115,13 @@ bool AstroLink4Pi::Connect()
 	chip = gpiod_chip_open("/dev/gpiochip0");
 	if (!chip)
 	{
-		DEBUG(INDI::Logger::DBG_ERROR, "Problem initiating Astroberry Focuser.");
+		DEBUG(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi.");
 		return false;
 	}
 
 	// verify BCM Pins are not used by other consumers
-	int pins[] = {A1_PIN, A2_PIN, B1_PIN, B2_PIN, FAN_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN};
-	for (unsigned int pin = 0; pin < 9; pin++)
+	int pins[] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, FAN_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN};
+	for (unsigned int pin = 0; pin < 12; pin++)
 	{
 		if (gpiod_line_is_used(gpiod_chip_get_line(chip, pins[pin])))
 		{
@@ -128,10 +132,13 @@ bool AstroLink4Pi::Connect()
 	}
 
 	// Select gpios
-	gpio_a1 = gpiod_chip_get_line(chip, A1_PIN);
-	gpio_a2 = gpiod_chip_get_line(chip, A2_PIN);
-	gpio_b1 = gpiod_chip_get_line(chip, B1_PIN);
-	gpio_b2 = gpiod_chip_get_line(chip, B2_PIN);
+	gpio_en = gpiod_chip_get_line(chip, EN_PIN);
+	gpio_m0 = gpiod_chip_get_line(chip, M0_PIN);
+	gpio_m1 = gpiod_chip_get_line(chip, M1_PIN);
+	gpio_m2 = gpiod_chip_get_line(chip, M2_PIN);
+	gpio_rst = gpiod_chip_get_line(chip, RST_PIN);
+	gpio_stp = gpiod_chip_get_line(chip, STP_PIN);
+	gpio_dir = gpiod_chip_get_line(chip, DIR_PIN);
 	gpio_sysfan = gpiod_chip_get_line(chip, FAN_PIN);
 	gpio_out1 = gpiod_chip_get_line(chip, OUT1_PIN);
 	gpio_out2 = gpiod_chip_get_line(chip, OUT2_PIN);
@@ -139,10 +146,13 @@ bool AstroLink4Pi::Connect()
 	gpio_pwm2 = gpiod_chip_get_line(chip, PWM2_PIN);
 
 	// Set initial state for gpios
-	gpiod_line_request_output(gpio_a1, "a1@astrolink4pi_focuser", 0);
-	gpiod_line_request_output(gpio_a2, "a2@astrolink4pi_focuser", 0);
-	gpiod_line_request_output(gpio_b1, "b1@astrolink4pi_focuser", 0); 
-	gpiod_line_request_output(gpio_b2, "b2@astrolink4pi_focuser", 0);
+	gpiod_line_request_output(gpio_en, "en@astrolink4pi_focuser", 1);			// start as disabld
+	gpiod_line_request_output(gpio_m0, "m0@astrolink4pi_focuser", 0);
+	gpiod_line_request_output(gpio_m1, "m1@astrolink4pi_focuser", 0); 
+	gpiod_line_request_output(gpio_m2, "m2@astrolink4pi_focuser", 0);
+	gpiod_line_request_output(gpio_rst, "rst@astrolink4pi_focuser", 1);			// start as wake up
+	gpiod_line_request_output(gpio_stp, "stp@astrolink4pi_focuser", 0);
+	gpiod_line_request_output(gpio_dir, "dir@astrolink4pi_focuser", 0);
 	gpiod_line_request_output(gpio_sysfan, "astrolink4pi_sysfan", 0);    
 	gpiod_line_request_output(gpio_out1, "out1@astrolink4pi_relays", relayState[0]);
 	gpiod_line_request_output(gpio_out2, "out2@astrolink4pi_relays", relayState[1]);
@@ -185,7 +195,7 @@ bool AstroLink4Pi::Connect()
 	FocusAbsPosN[0].value = savePosition(-1) != -1 ? (int) savePosition(-1) * resolution / MAX_RESOLUTION : 0;
 
 	// preset resolution
-	// SetResolution(resolution);
+	SetResolution(resolution);
 
     getFocuserInfo();
     long int currentTime = millis();
@@ -232,6 +242,15 @@ bool AstroLink4Pi::initProperties()
     // addDebugControl();
     // addSimulationControl();
     addConfigurationControl();
+
+	// Focuser Resolution
+	IUFillSwitch(&FocusResolutionS[0],"FOCUS_RESOLUTION_1","Full Step",ISS_ON);
+	IUFillSwitch(&FocusResolutionS[1],"FOCUS_RESOLUTION_2","Half Step",ISS_OFF);
+	IUFillSwitch(&FocusResolutionS[2],"FOCUS_RESOLUTION_4","1/4 STEP",ISS_OFF);
+	IUFillSwitch(&FocusResolutionS[3],"FOCUS_RESOLUTION_8","1/8 STEP",ISS_OFF);
+	IUFillSwitch(&FocusResolutionS[4],"FOCUS_RESOLUTION_16","1/16 STEP",ISS_OFF);
+	IUFillSwitch(&FocusResolutionS[5],"FOCUS_RESOLUTION_32","1/32 STEP",ISS_OFF);
+	IUFillSwitchVector(&FocusResolutionSP,FocusResolutionS,6,getDeviceName(),"FOCUS_RESOLUTION","Resolution", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
     // Step delay setting
 	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "milliseconds", "%0.0f", 2, 10, 1, 5);
@@ -360,7 +379,7 @@ bool AstroLink4Pi::updateProperties()
         defineProperty(&FocusStepDelayNP);
 		defineProperty(&ActiveTelescopeTP);
 		defineProperty(&FocuserTravelNP);
-		// defineProperty(&FocusResolutionSP);
+		defineProperty(&FocusResolutionSP);
 		defineProperty(&FocuserInfoNP);
 		defineProperty(&FocusStepDelayNP);
 		defineProperty(&FocusBacklashNP);
@@ -386,7 +405,7 @@ bool AstroLink4Pi::updateProperties()
 	} else {
 		deleteProperty(ActiveTelescopeTP.name);
 		deleteProperty(FocuserTravelNP.name);
-		// deleteProperty(FocusResolutionSP.name);
+		deleteProperty(FocusResolutionSP.name);
 		deleteProperty(FocuserInfoNP.name);
 		deleteProperty(FocusStepDelayNP.name);
 		deleteProperty(FocusBacklashNP.name);
@@ -459,7 +478,7 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 			return true;
 		}  
 
-		// handle focuser travel
+		// handle CPU Fan
 		if (!strcmp(name, CpuFanTempNP.name))
 		{
 			IUUpdateNumber(&CpuFanTempNP,values,names,n);
@@ -729,6 +748,89 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 			}
 		}        
 
+		// handle focus resolution
+		if(!strcmp(name, FocusResolutionSP.name))
+		{
+			int last_resolution = resolution;
+			int current_switch = IUFindOnSwitchIndex(&FocusResolutionSP);
+
+			IUUpdateSwitch(&FocusResolutionSP, states, names, n);
+
+			//Resolution 1/1
+			if ( FocusResolutionS[0].s == ISS_ON )
+				resolution = 1;
+
+			//Resolution 1/2
+			if ( FocusResolutionS[1].s == ISS_ON )
+				resolution = 2;
+
+			//Resolution 1/4
+			if ( FocusResolutionS[2].s == ISS_ON )
+				resolution = 4;
+
+			//Resolution 1/8
+			if ( FocusResolutionS[3].s == ISS_ON )
+				resolution = 8;
+
+			//Resolution 1/16
+			if ( FocusResolutionS[4].s == ISS_ON )
+				resolution = 16;
+
+			//Resolution 1/32
+			if ( FocusResolutionS[5].s == ISS_ON )
+				resolution = 32;
+
+			// Adjust position to a step in lower resolution
+			int position_adjustment = last_resolution * (FocusAbsPosN[0].value / last_resolution - (int) FocusAbsPosN[0].value / last_resolution);
+			if ( resolution < last_resolution && position_adjustment > 0 )
+			{
+				if ( (float) position_adjustment / last_resolution < 0.5)
+				{
+					position_adjustment *= -1;
+				} else {
+					position_adjustment = last_resolution - position_adjustment;
+				}
+				DEBUGF(INDI::Logger::DBG_SESSION, "Focuser position adjusted by %d steps at 1/%d resolution to sync with 1/%d resolution.", position_adjustment, last_resolution, resolution);
+				MoveAbsFocuser(FocusAbsPosN[0].value + position_adjustment);
+			}
+
+			SetResolution(resolution);
+
+			// update values based on resolution
+			FocusRelPosN[0].min = (int) FocusRelPosN[0].min * resolution / last_resolution;
+			FocusRelPosN[0].max = (int) FocusRelPosN[0].max * resolution / last_resolution;
+			FocusRelPosN[0].step = (int) FocusRelPosN[0].step * resolution / last_resolution;
+			FocusRelPosN[0].value = (int) FocusRelPosN[0].value * resolution / last_resolution;
+			IDSetNumber(&FocusRelPosNP, nullptr);
+			IUUpdateMinMax(&FocusRelPosNP);
+
+			FocusAbsPosN[0].max = (int) FocusAbsPosN[0].max * resolution / last_resolution;
+			FocusAbsPosN[0].step = (int) FocusAbsPosN[0].step * resolution / last_resolution;
+			FocusAbsPosN[0].value = (int) FocusAbsPosN[0].value * resolution / last_resolution;
+			IDSetNumber(&FocusAbsPosNP, nullptr);
+			IUUpdateMinMax(&FocusAbsPosNP);
+
+			FocusMaxPosN[0].min = (int) FocusMaxPosN[0].min * resolution / last_resolution;
+			FocusMaxPosN[0].max = (int) FocusMaxPosN[0].max * resolution / last_resolution;
+			FocusMaxPosN[0].step = (int) FocusMaxPosN[0].step * resolution / last_resolution;
+			FocusMaxPosN[0].value = (int) FocusMaxPosN[0].value * resolution / last_resolution;
+			IDSetNumber(&FocusMaxPosNP, nullptr);
+			IUUpdateMinMax(&FocusMaxPosNP);
+
+			PresetN[0].value = (int) PresetN[0].value * resolution / last_resolution;
+			PresetN[1].value = (int) PresetN[1].value * resolution / last_resolution;
+			PresetN[2].value = (int) PresetN[2].value * resolution / last_resolution;
+			IDSetNumber(&PresetNP, nullptr);
+
+			getFocuserInfo();
+
+			FocusResolutionSP.s = IPS_OK;
+			IDSetSwitch(&FocusResolutionSP, nullptr);
+			DEBUGF(INDI::Logger::DBG_SESSION, "Focuser resolution set to 1/%d.", resolution);
+			return true;
+		}
+
+
         if (strstr(name, "FOCUS"))
             return FI::processSwitch(dev, name, states, names, n);        
 	}
@@ -793,7 +895,7 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 {
     FI::saveConfigItems(fp);
    	IUSaveConfigText(fp, &ActiveTelescopeTP);
-	// IUSaveConfigSwitch(fp, &FocusResolutionSP);
+	IUSaveConfigSwitch(fp, &FocusResolutionSP);
 	IUSaveConfigSwitch(fp, &FocusReverseSP);
 	IUSaveConfigSwitch(fp, &TemperatureCompensateSP);
 	IUSaveConfigNumber(fp, &FocusMaxPosNP);
@@ -832,7 +934,7 @@ void AstroLink4Pi::TimerHit()
             IDSetNumber(&FocusAbsPosNP, nullptr);
 
             lastTemperature = FocusTemperatureN[0].value; // register last temperature
-            stepperStandby();
+            stepperStandby(true);
         }
         else
         {
@@ -915,32 +1017,13 @@ bool AstroLink4Pi::AbortFocuser()
 
 void AstroLink4Pi::stepMotor(int direction)
 {
-	currentStep = currentStep + direction;
-
-	if (currentStep < 0)
-	{
-		currentStep = 7;
-	}
-
-	if (currentStep > 7)
-	{
-		currentStep = 0;
-	}
-
-	if (resolution == 1)
-	{	//Full Step
-		gpiod_line_set_value(gpio_a1, fullStep[currentStep][0]);
-        gpiod_line_set_value(gpio_a2, fullStep[currentStep][1]);
-        gpiod_line_set_value(gpio_b1, fullStep[currentStep][2]);
-        gpiod_line_set_value(gpio_b2, fullStep[currentStep][3]);
-	}
-	else if (resolution == 2)
-	{	//Half Step
-		gpiod_line_set_value(gpio_a1, halfStep[currentStep][0]);
-        gpiod_line_set_value(gpio_a2, halfStep[currentStep][1]);
-        gpiod_line_set_value(gpio_b1, halfStep[currentStep][2]);
-        gpiod_line_set_value(gpio_b2, halfStep[currentStep][3]);
-	}
+	(direction == 0) ? gpiod_line_set_value(gpio_dir, 0) : gpiod_line_set_value(gpio_dir, 1);
+	// step on
+	gpiod_line_set_value(gpio_step, 1);
+	// wait
+	usleep(50);
+	// step off
+	gpiod_line_set_value(gpio_step, 0);
 }
 
 IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
@@ -972,6 +1055,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	// set focuser busy
 	FocusAbsPosNP.s = IPS_BUSY;
 	IDSetNumber(&FocusAbsPosNP, nullptr);
+	stepperStandby(false);
 
 	// check last motion direction for backlash triggering
 	int lastdir = lastDirection;
@@ -1015,6 +1099,62 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 
 void AstroLink4Pi::SetResolution(int res)
 {
+	// Release lines
+	gpiod_line_release(gpio_m1);
+	gpiod_line_release(gpio_m2);
+	gpiod_line_release(gpio_m0);
+
+	/* Stepper motor resolution settings for ==== DRV8825 =====
+	*            M0 M1 M2 
+	* 1) 1/1   - 0  0  0
+	* 2) 1/2   - 1  0  0
+	* 3) 1/4   - 0  1  0
+	* 4) 1/8   - 1  1  0
+	* 5) 1/16  - 0  0  1
+	* 6) 1/32  - 1  1  1
+	*/
+
+	switch(res)
+	{
+		case 1:	// 1:1
+			gpiod_line_request_output(gpio_m0, "m0@astroberry_focuser", 0);
+			gpiod_line_request_output(gpio_m1, "m1@astroberry_focuser", 0);
+			gpiod_line_request_output(gpio_m2, "m2@astroberry_focuser", 0);
+			break;
+		case 2:	// 1:2
+			gpiod_line_request_output(gpio_m0, "m0@astroberry_focuser", 1);
+			gpiod_line_request_output(gpio_m1, "m1@astroberry_focuser", 0);
+			gpiod_line_request_output(gpio_m2, "m2@astroberry_focuser", 0);
+			break;
+		case 4:	// 1:4
+			gpiod_line_request_output(gpio_m0, "m0@astroberry_focuser", 0);
+			gpiod_line_request_output(gpio_m1, "m1@astroberry_focuser", 1);
+			gpiod_line_request_output(gpio_m2, "m2@astroberry_focuser", 0);
+			break;
+		case 8:	// 1:8
+			gpiod_line_request_output(gpio_m0, "m0@astroberry_focuser", 0);
+			gpiod_line_request_output(gpio_m1, "m1@astroberry_focuser", 1);
+			gpiod_line_request_output(gpio_m2, "m2@astroberry_focuser", 0);
+			break;
+		case 16:	// 1:16
+			gpiod_line_request_output(gpio_m0, "m0@astroberry_focuser", 0);
+			gpiod_line_request_output(gpio_m1, "m1@astroberry_focuser", 0);
+			gpiod_line_request_output(gpio_m2, "m2@astroberry_focuser", 1);
+			break;
+		case 32:	// 1:32
+			gpiod_line_request_output(gpio_m0, "m0@astroberry_focuser", 1);
+			gpiod_line_request_output(gpio_m1, "m1@astroberry_focuser", 1);
+			gpiod_line_request_output(gpio_m2, "m2@astroberry_focuser", 1);
+			break;
+		default:	// 1:1
+			gpiod_line_request_output(gpio_m0, "m0@astroberry_focuser", 0);
+			gpiod_line_request_output(gpio_m1, "m1@astroberry_focuser", 0);
+			gpiod_line_request_output(gpio_m2, "m2@astroberry_focuser", 0);
+
+			break;
+	}
+
+
 	DEBUGF(INDI::Logger::DBG_SESSION, "Resolution set to 1 / %0.0f.", res);
 }
 
@@ -1199,22 +1339,13 @@ bool AstroLink4Pi::readDS18B20()
 	return true;
 }
 
-void AstroLink4Pi::stepperStandby()
+void AstroLink4Pi::stepperStandby(bool state)
 {
 	if (!isConnected())
 		return;
-
-    if(gpiod_line_get_value(gpio_a1) == 1 || gpiod_line_get_value(gpio_a2) == 1 ||
-        gpiod_line_get_value(gpio_b1) == 1 || gpiod_line_get_value(gpio_b2) == 1)
-    {
-
-        gpiod_line_set_value(gpio_a1, 0); 
-        gpiod_line_set_value(gpio_a2, 0);
-        gpiod_line_set_value(gpio_b1, 0);
-        gpiod_line_set_value(gpio_b2, 0);
-
-        DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor going standby.");
-    }
+ 
+    (state) ? gpiod_line_set_value(gpio_en, 1) : gpiod_line_set_value(gpio_en, 0); 
+    DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor going standby.");
 }
 
 void AstroLink4Pi::systemUpdate()
