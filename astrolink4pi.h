@@ -60,10 +60,11 @@ private:
 	virtual int savePosition(int pos);
 	virtual void stepMotor(int direction);
 	virtual bool readDS18B20();
-	virtual void updateSwitches();
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
+	ISwitch FocusHoldS[2];
+	ISwitchVectorProperty FocusHoldSP;
 	INumber FocusStepDelayN[1];
 	INumberVectorProperty FocusStepDelayNP;
 	INumber FocusTemperatureN[1];
@@ -91,9 +92,6 @@ private:
 	ISwitchVectorProperty SysControlSP;
 	ISwitch SysOpConfirmS[2];
 	ISwitchVectorProperty SysOpConfirmSP;	
-
-	INumber CpuFanTempN[1];
-	INumberVectorProperty CpuFanTempNP;
 
 	IText RelayLabelsT[4];
 	ITextVectorProperty RelayLabelsTP;
@@ -127,6 +125,7 @@ private:
 	struct gpiod_line *gpio_pwm2;	
 
 	int resolution = 1;
+	int holdPower = 0;
 	float lastTemperature;
 
 	int backlashTicksRemaining;
@@ -154,7 +153,6 @@ private:
 	void temperatureCompensation();
 	void stepperStandby(bool state);
 	void systemUpdate();
-	void fanControl();
 	void pwmCycle();
 	long int millis();
 

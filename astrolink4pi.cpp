@@ -48,10 +48,10 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define RST_PIN	    22
 #define STP_PIN	    24
 #define DIR_PIN	    23
-#define FAN_PIN     14
+#define FAN_PIN     13
 #define OUT1_PIN	5
 #define OUT2_PIN	6
-#define PWM1_PIN	13
+#define PWM1_PIN	26
 #define PWM2_PIN	19
 
 
@@ -213,6 +213,8 @@ bool AstroLink4Pi::Connect()
 bool AstroLink4Pi::Disconnect()
 {
 	// Close device
+	gpiod_line_request_output(gpio_en, "en@astrolink4pi_focuser", 1);			// make disabled
+	gpiod_line_request_output(gpio_rst, "rst@astrolink4pi_focuser", 0);			// sleep
 	gpiod_chip_close(chip);
 
 	// Unlock Relay Labels setting
@@ -252,12 +254,14 @@ bool AstroLink4Pi::initProperties()
 	IUFillSwitch(&FocusResolutionS[5],"FOCUS_RESOLUTION_32","1/32 STEP",ISS_OFF);
 	IUFillSwitchVector(&FocusResolutionSP,FocusResolutionS,6,getDeviceName(),"FOCUS_RESOLUTION","Resolution", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
+	// Focuser motor hold
+	IUFillSwitch(&FocusHoldS[0],"FOCUS_HOLD_0","0%",ISS_ON);
+	IUFillSwitch(&FocusHoldS[1],"FOCUS_HOLD_4","100%",ISS_OFF);
+	IUFillSwitchVector(&FocusHoldSP,FocusHoldS,2,getDeviceName(),"FOCUS_HOLD","Hold power", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
+
     // Step delay setting
 	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "milliseconds", "%0.0f", 2, 10, 1, 5);
 	IUFillNumberVector(&FocusStepDelayNP, FocusStepDelayN, 1, getDeviceName(), "FOCUS_STEPDELAY", "Step Delay", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
-
-	IUFillNumber(&CpuFanTempN[0], "CPU_FAN_TEMP", "°C", "%0.0f", 0, 80, 1, 50);
-	IUFillNumberVector(&CpuFanTempNP, CpuFanTempN, 1, getDeviceName(), "CPU_FANTEMP", "System fan temp.", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	// Focuser temperature
 	IUFillNumber(&FocusTemperatureN[0], "FOCUS_TEMPERATURE_VALUE", "°C", "%0.2f", -50, 50, 1, 0);
@@ -380,13 +384,13 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&ActiveTelescopeTP);
 		defineProperty(&FocuserTravelNP);
 		defineProperty(&FocusResolutionSP);
+		defineProperty(&FocusHoldSP);
 		defineProperty(&FocuserInfoNP);
 		defineProperty(&FocusStepDelayNP);
 		defineProperty(&FocusBacklashNP);
 		defineProperty(&SysTimeTP);
 		defineProperty(&SysInfoTP);
 		defineProperty(&SysControlSP);        
-        defineProperty(&CpuFanTempNP);
 		defineProperty(&Switch1SP);
 		defineProperty(&Switch2SP);
 		defineProperty(&PWM1NP);        
@@ -406,6 +410,7 @@ bool AstroLink4Pi::updateProperties()
 		deleteProperty(ActiveTelescopeTP.name);
 		deleteProperty(FocuserTravelNP.name);
 		deleteProperty(FocusResolutionSP.name);
+		deleteProperty(FocusHoldSP.name);
 		deleteProperty(FocuserInfoNP.name);
 		deleteProperty(FocusStepDelayNP.name);
 		deleteProperty(FocusBacklashNP.name);
@@ -415,7 +420,6 @@ bool AstroLink4Pi::updateProperties()
 		deleteProperty(SysTimeTP.name);
 		deleteProperty(SysInfoTP.name);
 		deleteProperty(SysControlSP.name);    
-        deleteProperty(CpuFanTempNP.name);   
    		deleteProperty(Switch1SP.name);
 		deleteProperty(Switch2SP.name);
 		deleteProperty(PWM1NP.name);    
@@ -475,16 +479,6 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 			FocuserTravelNP.s=IPS_OK;
 			IDSetNumber(&FocuserTravelNP, nullptr);
 			DEBUGF(INDI::Logger::DBG_SESSION, "Maximum focuser travel set to %0.0f mm", FocuserTravelN[0].value);
-			return true;
-		}  
-
-		// handle CPU Fan
-		if (!strcmp(name, CpuFanTempNP.name))
-		{
-			IUUpdateNumber(&CpuFanTempNP,values,names,n);
-			CpuFanTempNP.s=IPS_OK;
-			IDSetNumber(&CpuFanTempNP, nullptr);
-			DEBUGF(INDI::Logger::DBG_SESSION, "System fan temperature se to %0.0f °C", CpuFanTempN[0].value);
 			return true;
 		}  
 
@@ -746,13 +740,29 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 				IDSetSwitch(&Switch2SP, NULL);
 				return true;
 			}
-		}        
+		}   
+
+		// handle focus motor hold
+		if(!strcmp(name, FocusHoldSP.name))
+		{
+			IUUpdateSwitch(&FocusHoldSP, states, names, n);
+
+			if ( FocusHoldS[0].s == ISS_ON )
+				holdPower = 0;
+
+			if ( FocusHoldS[1].s == ISS_ON )
+				holdPower = 1;
+
+			FocusHoldSP.s = IPS_OK;
+			IDSetSwitch(&FocusHoldSP, nullptr);
+			stepperStandby(true);
+			return true;
+		}     
 
 		// handle focus resolution
 		if(!strcmp(name, FocusResolutionSP.name))
 		{
 			int last_resolution = resolution;
-			int current_switch = IUFindOnSwitchIndex(&FocusResolutionSP);
 
 			IUUpdateSwitch(&FocusResolutionSP, states, names, n);
 
@@ -817,16 +827,10 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 			IDSetNumber(&FocusMaxPosNP, nullptr);
 			IUUpdateMinMax(&FocusMaxPosNP);
 
-			PresetN[0].value = (int) PresetN[0].value * resolution / last_resolution;
-			PresetN[1].value = (int) PresetN[1].value * resolution / last_resolution;
-			PresetN[2].value = (int) PresetN[2].value * resolution / last_resolution;
-			IDSetNumber(&PresetNP, nullptr);
-
 			getFocuserInfo();
 
 			FocusResolutionSP.s = IPS_OK;
 			IDSetSwitch(&FocusResolutionSP, nullptr);
-			DEBUGF(INDI::Logger::DBG_SESSION, "Focuser resolution set to 1/%d.", resolution);
 			return true;
 		}
 
@@ -896,6 +900,7 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
     FI::saveConfigItems(fp);
    	IUSaveConfigText(fp, &ActiveTelescopeTP);
 	IUSaveConfigSwitch(fp, &FocusResolutionSP);
+	IUSaveConfigSwitch(fp, &FocusHoldSP);
 	IUSaveConfigSwitch(fp, &FocusReverseSP);
 	IUSaveConfigSwitch(fp, &TemperatureCompensateSP);
 	IUSaveConfigNumber(fp, &FocusMaxPosNP);
@@ -903,7 +908,6 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 	IUSaveConfigNumber(fp, &FocusBacklashNP);
 	IUSaveConfigNumber(fp, &FocuserTravelNP);
 	IUSaveConfigNumber(fp, &TemperatureCoefNP);
-    IUSaveConfigNumber(fp, &CpuFanTempNP);
 	IUSaveConfigNumber(fp, &PWMcycleNP);
 	IUSaveConfigText(fp, &RelayLabelsTP);
 	IUSaveConfigSwitch(fp, &Switch1SP);
@@ -939,8 +943,7 @@ void AstroLink4Pi::TimerHit()
         else
         {
             // Do other stuff only while the stepper is not moving
-            fanControl();
-            if(nextTemperatureRead < timeMillis) 
+			if(nextTemperatureRead < timeMillis) 
             {
                 readDS18B20();
                 nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
@@ -953,7 +956,6 @@ void AstroLink4Pi::TimerHit()
             if(nextSystemRead < timeMillis)
             {
                 systemUpdate();
-                updateSwitches();
                 nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
             }    
             if(nextPwmCycle < timeMillis)
@@ -967,19 +969,15 @@ void AstroLink4Pi::TimerHit()
     {
         // Progress with movement
         int motorDirection = lastDirection;
-
+		
         // handle Reverse Motion
         if (FocusReverseS[INDI_ENABLED].s == ISS_ON) 
         {
             motorDirection = -1 * motorDirection;
         }
 
-        bool isBacklash = false;
-        if(backlashTicksRemaining > 0)
-        {
-            isBacklash = true;
-        }
-
+        bool isBacklash = (backlashTicksRemaining > 0);
+ 
         //Move the actual motor
         stepMotor(motorDirection);
 
@@ -1003,7 +1001,6 @@ void AstroLink4Pi::TimerHit()
             backlashTicksRemaining -= 1;
         }
     }
-
 	SetTimer(FocusStepDelayN[0].value);
 }
 
@@ -1017,13 +1014,13 @@ bool AstroLink4Pi::AbortFocuser()
 
 void AstroLink4Pi::stepMotor(int direction)
 {
-	(direction == 0) ? gpiod_line_set_value(gpio_dir, 0) : gpiod_line_set_value(gpio_dir, 1);
+	if (direction < 0) gpiod_line_set_value(gpio_dir, 0); else gpiod_line_set_value(gpio_dir, 1);
 	// step on
-	gpiod_line_set_value(gpio_step, 1);
+	gpiod_line_set_value(gpio_stp, 1);
 	// wait
-	usleep(50);
+	usleep(10);
 	// step off
-	gpiod_line_set_value(gpio_step, 0);
+	gpiod_line_set_value(gpio_stp, 0);
 }
 
 IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
@@ -1057,9 +1054,6 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	IDSetNumber(&FocusAbsPosNP, nullptr);
 	stepperStandby(false);
 
-	// check last motion direction for backlash triggering
-	int lastdir = lastDirection;
-
 	// set direction
 	const char* direction;
 	int newDirection;
@@ -1074,10 +1068,8 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 		newDirection = -1;
 	}
 
-	lastDirection = newDirection;
-
 	// if direction changed do backlash adjustment
-	if ( lastdir != 0 && newDirection != lastdir && FocusBacklashN[0].value != 0)
+	if ( lastDirection != 0 && newDirection != lastDirection && FocusBacklashN[0].value != 0)
 	{
 		DEBUGF(INDI::Logger::DBG_SESSION, "Backlash compensation by %0.0f steps.", FocusBacklashN[0].value);
 		backlashTicksRemaining = FocusBacklashN[0].value;
@@ -1086,6 +1078,8 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	{
 		backlashTicksRemaining = 0;
 	}
+
+	lastDirection = newDirection;
 
 	// process targetTicks
 	ticksRemaining = abs(targetTicks - FocusAbsPosN[0].value);
@@ -1103,16 +1097,6 @@ void AstroLink4Pi::SetResolution(int res)
 	gpiod_line_release(gpio_m1);
 	gpiod_line_release(gpio_m2);
 	gpiod_line_release(gpio_m0);
-
-	/* Stepper motor resolution settings for ==== DRV8825 =====
-	*            M0 M1 M2 
-	* 1) 1/1   - 0  0  0
-	* 2) 1/2   - 1  0  0
-	* 3) 1/4   - 0  1  0
-	* 4) 1/8   - 1  1  0
-	* 5) 1/16  - 0  0  1
-	* 6) 1/32  - 1  1  1
-	*/
 
 	switch(res)
 	{
@@ -1155,7 +1139,7 @@ void AstroLink4Pi::SetResolution(int res)
 	}
 
 
-	DEBUGF(INDI::Logger::DBG_SESSION, "Resolution set to 1 / %0.0f.", res);
+	DEBUGF(INDI::Logger::DBG_SESSION, "Resolution set to 1 / %d.", res);
 }
 
 bool AstroLink4Pi::ReverseFocuser(bool enabled)
@@ -1339,13 +1323,21 @@ bool AstroLink4Pi::readDS18B20()
 	return true;
 }
 
-void AstroLink4Pi::stepperStandby(bool state)
+void AstroLink4Pi::stepperStandby(bool disabled)
 {
 	if (!isConnected())
 		return;
  
-    (state) ? gpiod_line_set_value(gpio_en, 1) : gpiod_line_set_value(gpio_en, 0); 
-    DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor going standby.");
+    if (holdPower > 0 || !disabled) 
+	{
+		gpiod_line_set_value(gpio_en, 0);
+		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled.");
+	}
+	else 
+	{
+		gpiod_line_set_value(gpio_en, 1);
+		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
+	}
 }
 
 void AstroLink4Pi::systemUpdate()
@@ -1460,16 +1452,6 @@ long int AstroLink4Pi::millis()
     }    
 }
 
-void AstroLink4Pi::fanControl()
-{
-	if (!isConnected())
-		return;
-
-	fanCycle++;
-	if(fanCycle > 10) fanCycle = 0;
-	gpiod_line_set_value(gpio_sysfan, (fanPWM >= fanCycle));
-}
-
 void AstroLink4Pi::pwmCycle()
 {
 	if (!isConnected())
@@ -1481,48 +1463,3 @@ void AstroLink4Pi::pwmCycle()
 	gpiod_line_set_value(gpio_pwm2, pwmState[1] > 10*((pwmCounter + 5) % 10));
 }
 
-void AstroLink4Pi::updateSwitches()
-{
-	int gpio_relay_status[4];
-	
-	gpio_relay_status[0] = gpiod_line_get_value(gpio_out1);
-	gpio_relay_status[1] = gpiod_line_get_value(gpio_out2);
-
-
-	// update relay switch #1
-	if ( Switch1S[0].s != gpio_relay_status[0])
-	{
-		if (gpio_relay_status[0] == 1)
-		{
-			Switch1SP.s = IPS_OK;
-			Switch1S[0].s = ISS_ON;
-			Switch1S[1].s = ISS_OFF;
-			IDSetSwitch(&Switch1SP, NULL);
-		} else {
-			Switch1SP.s = IPS_IDLE;
-			Switch1S[0].s = ISS_OFF;
-			Switch1S[1].s = ISS_ON;
-			IDSetSwitch(&Switch1SP, NULL);
-		}
-	}
-
-	// update relay switch #2
-	if ( Switch2S[0].s != gpio_relay_status[1])
-	{
-		if (gpio_relay_status[1] == 1)
-		{
-			Switch2SP.s = IPS_OK;
-			Switch2S[0].s = ISS_ON;
-			Switch2S[1].s = ISS_OFF;
-			IDSetSwitch(&Switch2SP, NULL);
-		} else {
-			Switch2SP.s = IPS_IDLE;
-			Switch2S[0].s = ISS_OFF;
-			Switch2S[1].s = ISS_ON;
-			IDSetSwitch(&Switch2SP, NULL);
-		}
-	}
-
-	DEBUGF(INDI::Logger::DBG_DEBUG, "OUT #1 status: %i - Switch #1 status: %i", gpio_relay_status[0], Switch1S[0].s);
-	DEBUGF(INDI::Logger::DBG_DEBUG, "OUT #2 status: %i - Switch #1 status: %i", gpio_relay_status[1], Switch2S[0].s);
-}
