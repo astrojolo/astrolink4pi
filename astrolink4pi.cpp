@@ -48,7 +48,6 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define RST_PIN	    22
 #define STP_PIN	    24
 #define DIR_PIN	    23
-#define FAN_PIN     13
 #define OUT1_PIN	5
 #define OUT2_PIN	6
 #define PWM1_PIN	26
@@ -120,8 +119,8 @@ bool AstroLink4Pi::Connect()
 	}
 
 	// verify BCM Pins are not used by other consumers
-	int pins[] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, FAN_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN};
-	for (unsigned int pin = 0; pin < 12; pin++)
+	int pins[] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN};
+	for (unsigned int pin = 0; pin < 11; pin++)
 	{
 		if (gpiod_line_is_used(gpiod_chip_get_line(chip, pins[pin])))
 		{
@@ -139,7 +138,6 @@ bool AstroLink4Pi::Connect()
 	gpio_rst = gpiod_chip_get_line(chip, RST_PIN);
 	gpio_stp = gpiod_chip_get_line(chip, STP_PIN);
 	gpio_dir = gpiod_chip_get_line(chip, DIR_PIN);
-	gpio_sysfan = gpiod_chip_get_line(chip, FAN_PIN);
 	gpio_out1 = gpiod_chip_get_line(chip, OUT1_PIN);
 	gpio_out2 = gpiod_chip_get_line(chip, OUT2_PIN);
 	gpio_pwm1 = gpiod_chip_get_line(chip, PWM1_PIN);
@@ -153,7 +151,6 @@ bool AstroLink4Pi::Connect()
 	gpiod_line_request_output(gpio_rst, "rst@astrolink4pi_focuser", 1);			// start as wake up
 	gpiod_line_request_output(gpio_stp, "stp@astrolink4pi_focuser", 0);
 	gpiod_line_request_output(gpio_dir, "dir@astrolink4pi_focuser", 0);
-	gpiod_line_request_output(gpio_sysfan, "astrolink4pi_sysfan", 0);    
 	gpiod_line_request_output(gpio_out1, "out1@astrolink4pi_relays", relayState[0]);
 	gpiod_line_request_output(gpio_out2, "out2@astrolink4pi_relays", relayState[1]);
 	gpiod_line_request_output(gpio_pwm1, "pwm1@astrolink4pi_relays", 0);
