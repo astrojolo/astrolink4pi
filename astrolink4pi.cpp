@@ -460,6 +460,7 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 		// handle focus maximum position
 		if (!strcmp(name, FocusMaxPosNP.name))
 		{
+			DEBUGF(INDI::Logger::DBG_SESSION, "Setting max pos to %i.", FocusMaxPosN[0].value);
 			IUUpdateNumber(&FocusMaxPosNP,values,names,n);
 
 			FocusAbsPosN[0].max = FocusMaxPosN[0].value;
