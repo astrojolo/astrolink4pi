@@ -86,7 +86,7 @@ private:
 
 	IText SysTimeT[2];
 	ITextVectorProperty SysTimeTP;
-	IText SysInfoT[8];
+	IText SysInfoT[7];
 	ITextVectorProperty SysInfoTP;
 	ISwitch SysControlS[2];
 	ISwitchVectorProperty SysControlSP;
@@ -133,11 +133,6 @@ private:
 	int lastDirection = 0;
 	int currentStep = -1;
 	bool abortStep = false;		
-
-	int fanPWM = 0;			// 0 to 10
-	int fanCycle = 0;
-	int cpuTemps[15];
-	int cpuTempsIndex = 0;	
 
 	int pwmState[2];
 	int relayState[2];

@@ -316,8 +316,7 @@ bool AstroLink4Pi::initProperties()
 	IUFillText(&SysInfoT[4],"HOSTNAME","Hostname",NULL);
 	IUFillText(&SysInfoT[5],"LOCAL_IP","Local IP",NULL);
 	IUFillText(&SysInfoT[6],"PUBLIC_IP","Public IP",NULL);
-	IUFillText(&SysInfoT[7],"SYS_FAN","System fan [%]",NULL);
-	IUFillTextVector(&SysInfoTP,SysInfoT,8,getDeviceName(),"SYSTEM_INFO","System Info",SYSTEM_TAB,IP_RO,60,IPS_IDLE);
+	IUFillTextVector(&SysInfoTP,SysInfoT,7,getDeviceName(),"SYSTEM_INFO","System Info",SYSTEM_TAB,IP_RO,60,IPS_IDLE);
 
 	IUFillSwitch(&SysControlS[0], "SYSCTRL_REBOOT", "Reboot", ISS_OFF);
 	IUFillSwitch(&SysControlS[1], "SYSCTRL_SHUTDOWN", "Shutdown", ISS_OFF);
@@ -377,8 +376,6 @@ bool AstroLink4Pi::initProperties()
 	FocusMotionS[FOCUS_OUTWARD].s = ISS_ON;
 	FocusMotionS[FOCUS_INWARD].s = ISS_OFF;
 	IDSetSwitch(&FocusMotionSP, nullptr);
-
-    for(int i = 0; i < 15; i++) cpuTemps[i] = 0;
 
 	return true;
 }
@@ -1387,23 +1384,6 @@ void AstroLink4Pi::systemUpdate()
 		if(fgets(buffer, 128, pipe) != NULL) IUSaveText(&SysInfoT[1], buffer);
 		pclose(pipe);
 		
-		// average 15 measurements, so the fan will not overreact
-		cpuTemps[cpuTempsIndex] = atoi(buffer);
-		cpuTempsIndex++;
-		if(cpuTempsIndex > 14) cpuTempsIndex = 0;
-		int sum = 0;
-		for(int i = 0; i < 15; i++) sum += cpuTemps[i];
-
-		int newFanPWM = ((sum / 15 - 50) / 2);
-		if(newFanPWM < 0) newFanPWM = 0;
-		if(newFanPWM > 10) newFanPWM = 10;
-		if(newFanPWM != fanPWM)
-		{
-			fanPWM = newFanPWM;
-			snprintf(ts, sizeof(ts), "%4.0f", (10.0*fanPWM));
-			IUSaveText(&SysInfoT[7], ts);			
-		}
-
 		//update uptime
 		pipe = popen("uptime|awk -F, '{print $1}'|awk -Fup '{print $2}'|xargs", "r");
 		if(fgets(buffer, 128, pipe) != NULL) IUSaveText(&SysInfoT[2], buffer);
