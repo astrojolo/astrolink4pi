@@ -210,12 +210,19 @@ bool AstroLink4Pi::Connect()
 bool AstroLink4Pi::Disconnect()
 {
 	// Close device
-	int hset = gpiod_line_request_output(gpio_hold, "hold@astrolink4pi_focuser", 1);
-	DEBUGF(INDI::Logger::DBG_SESSION, "Hold set %d", hset);
-	int enaset = gpiod_line_request_output(gpio_en, "en@astrolink4pi_focuser", 1);			// make disabled
-	DEBUGF(INDI::Logger::DBG_SESSION, "Enabled set %d", enaset);
+	gpiod_line_set_value(gpio_hold, 1);
+	gpiod_line_set_value(gpio_rst, 0);								// sleep
+	int enabledState = gpiod_line_set_value(gpio_en, 1);			// make disabled
+	if(enabledState != 4)
+	{
+		DEBUGF(INDI::Logger::DBG_ERROR, "Cannot set GPIO line %i to disable stepper motor driver. Focusing motor may still be powered.", EN_PIN);
+	}
+	else
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
+	}
+	
 
-	gpiod_line_request_output(gpio_rst, "rst@astrolink4pi_focuser", 0);			// sleep
 	gpiod_chip_close(chip);
 
 
@@ -1107,39 +1114,39 @@ void AstroLink4Pi::SetResolution(int res)
 	switch(res)
 	{
 		case 1:	// 1:1
-			gpiod_line_request_output(gpio_m0, "m0@astroberry_focuser", 0);
-			gpiod_line_request_output(gpio_m1, "m1@astroberry_focuser", 0);
-			gpiod_line_request_output(gpio_m2, "m2@astroberry_focuser", 0);
+			gpiod_line_set_value(gpio_m0, 0);
+			gpiod_line_set_value(gpio_m1, 0);
+			gpiod_line_set_value(gpio_m2, 0);
 			break;
 		case 2:	// 1:2
-			gpiod_line_request_output(gpio_m0, "m0@astroberry_focuser", 1);
-			gpiod_line_request_output(gpio_m1, "m1@astroberry_focuser", 0);
-			gpiod_line_request_output(gpio_m2, "m2@astroberry_focuser", 0);
+			gpiod_line_set_value(gpio_m0, 1);
+			gpiod_line_set_value(gpio_m1, 0);
+			gpiod_line_set_value(gpio_m2, 0);
 			break;
 		case 4:	// 1:4
-			gpiod_line_request_output(gpio_m0, "m0@astroberry_focuser", 0);
-			gpiod_line_request_output(gpio_m1, "m1@astroberry_focuser", 1);
-			gpiod_line_request_output(gpio_m2, "m2@astroberry_focuser", 0);
+			gpiod_line_set_value(gpio_m0, 0);
+			gpiod_line_set_value(gpio_m1, 1);
+			gpiod_line_set_value(gpio_m2, 0);
 			break;
 		case 8:	// 1:8
-			gpiod_line_request_output(gpio_m0, "m0@astroberry_focuser", 0);
-			gpiod_line_request_output(gpio_m1, "m1@astroberry_focuser", 1);
-			gpiod_line_request_output(gpio_m2, "m2@astroberry_focuser", 0);
+			gpiod_line_set_value(gpio_m0, 0);
+			gpiod_line_set_value(gpio_m1, 1);
+			gpiod_line_set_value(gpio_m2, 0);
 			break;
 		case 16:	// 1:16
-			gpiod_line_request_output(gpio_m0, "m0@astroberry_focuser", 0);
-			gpiod_line_request_output(gpio_m1, "m1@astroberry_focuser", 0);
-			gpiod_line_request_output(gpio_m2, "m2@astroberry_focuser", 1);
+			gpiod_line_set_value(gpio_m0, 0);
+			gpiod_line_set_value(gpio_m1, 0);
+			gpiod_line_set_value(gpio_m2, 1);
 			break;
 		case 32:	// 1:32
-			gpiod_line_request_output(gpio_m0, "m0@astroberry_focuser", 1);
-			gpiod_line_request_output(gpio_m1, "m1@astroberry_focuser", 1);
-			gpiod_line_request_output(gpio_m2, "m2@astroberry_focuser", 1);
+			gpiod_line_set_value(gpio_m0, 1);
+			gpiod_line_set_value(gpio_m1, 1);
+			gpiod_line_set_value(gpio_m2, 1);
 			break;
 		default:	// 1:1
-			gpiod_line_request_output(gpio_m0, "m0@astroberry_focuser", 0);
-			gpiod_line_request_output(gpio_m1, "m1@astroberry_focuser", 0);
-			gpiod_line_request_output(gpio_m2, "m2@astroberry_focuser", 0);
+			gpiod_line_set_value(gpio_m0, 0);
+			gpiod_line_set_value(gpio_m1, 0);
+			gpiod_line_set_value(gpio_m2, 0);
 
 			break;
 	}
