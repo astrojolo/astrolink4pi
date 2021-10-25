@@ -1334,13 +1334,13 @@ void AstroLink4Pi::stepperStandby(bool disabled)
 	{
 		gpiod_line_set_value(gpio_en, 0);
 		gpiod_line_set_value(gpio_hold, 0);
-		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled.");
+		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 100%%.");
 	}
 	else if (holdPower == 1 || !disabled) 
 	{
 		gpiod_line_set_value(gpio_en, 0);
 		gpiod_line_set_value(gpio_hold, 1);
-		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 50%.");
+		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 50%%.");
 	}
 	else
 	{
