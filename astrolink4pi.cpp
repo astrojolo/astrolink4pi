@@ -460,14 +460,11 @@ bool AstroLink4Pi::ISNewNumber (const char *dev, const char *name, double values
 		// handle focus maximum position
 		if (!strcmp(name, FocusMaxPosNP.name))
 		{
-			DEBUGF(INDI::Logger::DBG_SESSION, "Setting max pos to %i.", FocusMaxPosN[0].value);
 			IUUpdateNumber(&FocusMaxPosNP,values,names,n);
 
-			DEBUGF(INDI::Logger::DBG_SESSION, "Setting max pos to %i.", FocusMaxPosN[0].value);
 			FocusAbsPosN[0].max = FocusMaxPosN[0].value;
 			IUUpdateMinMax(&FocusAbsPosNP); // This call is not INDI protocol compliant
 
-			DEBUGF(INDI::Logger::DBG_SESSION, "Setting max pos to %i.", FocusMaxPosN[0].value);
 			FocusAbsPosNP.s=IPS_OK;
 			IDSetNumber(&FocusMaxPosNP, nullptr);
             getFocuserInfo();
