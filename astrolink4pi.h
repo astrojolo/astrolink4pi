@@ -63,7 +63,7 @@ private:
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
-	ISwitch FocusHoldS[2];
+	ISwitch FocusHoldS[3];
 	ISwitchVectorProperty FocusHoldSP;
 	INumber FocusStepDelayN[1];
 	INumberVectorProperty FocusStepDelayNP;
@@ -118,11 +118,11 @@ private:
 	struct gpiod_line *gpio_rst;
 	struct gpiod_line *gpio_stp;
 	struct gpiod_line *gpio_dir;
-	struct gpiod_line *gpio_sysfan;
 	struct gpiod_line *gpio_out1;
 	struct gpiod_line *gpio_out2;
 	struct gpiod_line *gpio_pwm1;
 	struct gpiod_line *gpio_pwm2;	
+	struct gpiod_line *gpio_hold;	
 
 	int resolution = 1;
 	int holdPower = 0;

@@ -52,6 +52,7 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define OUT2_PIN	6
 #define PWM1_PIN	26
 #define PWM2_PIN	19
+#define HOLD_PIN	10
 
 
 int halfStep[8][4] = { {1,0,0,0}, {1,0,1,0}, {0,0,1,0}, {0,1,1,0}, {0,1,0,0}, {0,1,0,1}, {0,0,0,1}, {1,0,0,1} };
@@ -119,8 +120,8 @@ bool AstroLink4Pi::Connect()
 	}
 
 	// verify BCM Pins are not used by other consumers
-	int pins[] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN};
-	for (unsigned int pin = 0; pin < 11; pin++)
+	int pins[] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN, HOLD_PIN};
+	for (unsigned int pin = 0; pin < 12; pin++)
 	{
 		if (gpiod_line_is_used(gpiod_chip_get_line(chip, pins[pin])))
 		{
@@ -142,6 +143,7 @@ bool AstroLink4Pi::Connect()
 	gpio_out2 = gpiod_chip_get_line(chip, OUT2_PIN);
 	gpio_pwm1 = gpiod_chip_get_line(chip, PWM1_PIN);
 	gpio_pwm2 = gpiod_chip_get_line(chip, PWM2_PIN);
+	gpio_hold = gpiod_chip_get_line(chip, HOLD_PIN);
 
 	// Set initial state for gpios
 	gpiod_line_request_output(gpio_en, "en@astrolink4pi_focuser", 1);			// start as disabld
@@ -155,6 +157,7 @@ bool AstroLink4Pi::Connect()
 	gpiod_line_request_output(gpio_out2, "out2@astrolink4pi_relays", relayState[1]);
 	gpiod_line_request_output(gpio_pwm1, "pwm1@astrolink4pi_relays", 0);
 	gpiod_line_request_output(gpio_pwm2, "pwm2@astrolink4pi_relays", 0);
+	gpiod_line_request_output(gpio_hold, "hold@astrolink4pi_relays", 1);		// start as disabled
 
     // Lock Relay Labels setting
 	RelayLabelsTP.s = IPS_BUSY;
@@ -253,8 +256,9 @@ bool AstroLink4Pi::initProperties()
 
 	// Focuser motor hold
 	IUFillSwitch(&FocusHoldS[0],"FOCUS_HOLD_0","0%",ISS_ON);
-	IUFillSwitch(&FocusHoldS[1],"FOCUS_HOLD_4","100%",ISS_OFF);
-	IUFillSwitchVector(&FocusHoldSP,FocusHoldS,2,getDeviceName(),"FOCUS_HOLD","Hold power", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
+	IUFillSwitch(&FocusHoldS[1],"FOCUS_HOLD_1","50%",ISS_ON);
+	IUFillSwitch(&FocusHoldS[2],"FOCUS_HOLD_2","100%",ISS_OFF);
+	IUFillSwitchVector(&FocusHoldSP,FocusHoldS,3,getDeviceName(),"FOCUS_HOLD","Hold power", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
     // Step delay setting
 	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "milliseconds", "%0.0f", 2, 10, 1, 5);
@@ -749,6 +753,9 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 
 			if ( FocusHoldS[1].s == ISS_ON )
 				holdPower = 1;
+
+			if ( FocusHoldS[1].s == ISS_ON )
+				holdPower = 2;
 
 			FocusHoldSP.s = IPS_OK;
 			IDSetSwitch(&FocusHoldSP, nullptr);
@@ -1325,14 +1332,22 @@ void AstroLink4Pi::stepperStandby(bool disabled)
 	if (!isConnected())
 		return;
  
-    if (holdPower > 0 || !disabled) 
+    if (holdPower == 2 || !disabled) 
 	{
 		gpiod_line_set_value(gpio_en, 0);
+		gpiod_line_set_value(gpio_hold, 0);
 		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled.");
 	}
-	else 
+	else if (holdPower == 1 || !disabled) 
+	{
+		gpiod_line_set_value(gpio_en, 0);
+		gpiod_line_set_value(gpio_hold, 1);
+		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 50%.");
+	}
+	else
 	{
 		gpiod_line_set_value(gpio_en, 1);
+		gpiod_line_set_value(gpio_hold, 1);
 		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
 	}
 }
