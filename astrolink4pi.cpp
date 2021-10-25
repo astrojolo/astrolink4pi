@@ -938,7 +938,7 @@ void AstroLink4Pi::TimerHit()
     
 	if(backlashTicksRemaining <= 0 && ticksRemaining <= 0)
 	{
-        if(FocusAbsPosNP.s == IPS_BUSY)
+        if(FocusAbsPosNP.s != IPS_OK)
         {
             // All movement completed/aborted, but still the movement not completed
             // save position to file
