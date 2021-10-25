@@ -256,7 +256,7 @@ bool AstroLink4Pi::initProperties()
 
 	// Focuser motor hold
 	IUFillSwitch(&FocusHoldS[0],"FOCUS_HOLD_0","0%",ISS_ON);
-	IUFillSwitch(&FocusHoldS[1],"FOCUS_HOLD_1","50%",ISS_ON);
+	IUFillSwitch(&FocusHoldS[1],"FOCUS_HOLD_1","50%",ISS_OFF);
 	IUFillSwitch(&FocusHoldS[2],"FOCUS_HOLD_2","100%",ISS_OFF);
 	IUFillSwitchVector(&FocusHoldSP,FocusHoldS,3,getDeviceName(),"FOCUS_HOLD","Hold power", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
