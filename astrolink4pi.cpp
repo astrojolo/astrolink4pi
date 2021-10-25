@@ -55,9 +55,6 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define HOLD_PIN	10
 
 
-int halfStep[8][4] = { {1,0,0,0}, {1,0,1,0}, {0,0,1,0}, {0,1,1,0}, {0,1,0,0}, {0,1,0,1}, {0,0,0,1}, {1,0,0,1} };
-int fullStep[8][4] = { {1,0,0,0}, {0,0,1,0}, {0,1,0,0}, {0,0,0,1}, {1,0,0,0}, {0,0,1,0}, {0,1,0,0}, {0,0,0,1} };
-
 void ISPoll(void *p);
 
 void ISInit()
@@ -213,6 +210,7 @@ bool AstroLink4Pi::Connect()
 bool AstroLink4Pi::Disconnect()
 {
 	// Close device
+	gpiod_line_request_output(gpio_hold, "en@astrolink4pi_focuser", 1);
 	gpiod_line_request_output(gpio_en, "en@astrolink4pi_focuser", 1);			// make disabled
 	gpiod_line_request_output(gpio_rst, "rst@astrolink4pi_focuser", 0);			// sleep
 	gpiod_chip_close(chip);
