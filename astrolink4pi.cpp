@@ -210,7 +210,8 @@ bool AstroLink4Pi::Connect()
 bool AstroLink4Pi::Disconnect()
 {
 	// Close device
-	gpiod_line_request_output(gpio_hold, "en@astrolink4pi_focuser", 1);
+	int hset = gpiod_line_request_output(gpio_hold, "hold@astrolink4pi_focuser", 1);
+	DEBUGF(INDI::Logger::DBG_SESSION, "Hold set %d", hset);
 	int enaset = gpiod_line_request_output(gpio_en, "en@astrolink4pi_focuser", 1);			// make disabled
 	DEBUGF(INDI::Logger::DBG_SESSION, "Enabled set %d", enaset);
 
