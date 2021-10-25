@@ -386,6 +386,7 @@ bool AstroLink4Pi::initProperties()
 bool AstroLink4Pi::updateProperties()
 {
 	INDI::DefaultDevice::updateProperties();
+	INDI::Focuser::updateProperties();
 
 	if (isConnected())
 	{
