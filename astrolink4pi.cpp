@@ -754,7 +754,7 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 			if ( FocusHoldS[1].s == ISS_ON )
 				holdPower = 1;
 
-			if ( FocusHoldS[1].s == ISS_ON )
+			if ( FocusHoldS[2].s == ISS_ON )
 				holdPower = 2;
 
 			FocusHoldSP.s = IPS_OK;
