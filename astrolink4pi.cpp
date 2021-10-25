@@ -213,7 +213,7 @@ bool AstroLink4Pi::Disconnect()
 	gpiod_line_set_value(gpio_hold, 1);
 	gpiod_line_set_value(gpio_rst, 0);								// sleep
 	int enabledState = gpiod_line_set_value(gpio_en, 1);			// make disabled
-	if(enabledState != 4)
+	if(enabledState != 0)
 	{
 		DEBUGF(INDI::Logger::DBG_ERROR, "Cannot set GPIO line %i to disable stepper motor driver. Focusing motor may still be powered.", EN_PIN);
 	}
@@ -1107,9 +1107,9 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 void AstroLink4Pi::SetResolution(int res)
 {
 	// Release lines
-	gpiod_line_release(gpio_m1);
-	gpiod_line_release(gpio_m2);
-	gpiod_line_release(gpio_m0);
+	gpiod_line_set_value(gpio_m0, 1);
+	gpiod_line_set_value(gpio_m1, 1);
+	gpiod_line_set_value(gpio_m2, 1);
 
 	switch(res)
 	{
