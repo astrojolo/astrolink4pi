@@ -726,6 +726,25 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 			}
 		}
 
+		
+		// handle relay 1 default
+		if (!strcmp(name, SwitchDef1SP.name))
+		{
+			if (isConnected())
+			{
+				DEBUG(INDI::Logger::DBG_WARNING, "Cannot set output defaults while device is connected.");
+				return false;
+			}
+
+			IUUpdateSwitch(&SwitchDef1SP, states, names, n);
+			SwitchDef1SP.s = IPS_OK;
+			IDSetSwitch(&SwitchDef1SP, NULL);
+
+			DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi OUT 1 default value set. You need to save configuration and restart driver to activate the changes.");
+
+			return true;
+		}
+
 		// handle relay 2
 		if (!strcmp(name, Switch2SP.name))
 		{
