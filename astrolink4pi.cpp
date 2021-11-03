@@ -669,7 +669,6 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 
 			if ( Switch1S[0].s == ISS_ON )
 			{
-                millis();
 				rv = gpiod_line_set_value(gpio_out1, 1);
 				if (rv != 0)
 				{
