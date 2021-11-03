@@ -207,9 +207,6 @@ bool AstroLink4Pi::Connect()
 
     SetTimer(FocusStepDelayN[0].value);
 
-	// ISState states[] = {SwitchDef1S[0].s, SwitchDef1S[1].s};
-	// char * names[] = {Switch1S[0].name, Switch1S[1].name};
-	// setRelay1(states, names, 2);
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
 
 	return true;
@@ -365,10 +362,8 @@ bool AstroLink4Pi::initProperties()
 	defineProperty(&SwitchDef2SP);
 	loadConfig();
 
-	DEBUGF(INDI::Logger::DBG_WARNING, "SwitchDef1SP %s", RelayLabelsT[0].text);
-
-	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", ISS_OFF);
-	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", ISS_ON);
+	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", ISS_ON);
+	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", ISS_OFF);
 	IUFillSwitchVector(&Switch1SP, Switch1S, 2, getDeviceName(), "SWITCH_1", RelayLabelsT[0].text, OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	IUFillSwitch(&Switch2S[0], "SW2ON", "ON", ISS_OFF);
