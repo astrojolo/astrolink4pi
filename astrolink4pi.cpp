@@ -353,7 +353,6 @@ bool AstroLink4Pi::initProperties()
 	IUFillSwitch(&SwitchDef2S[1], "SW2OFF", "OFF", ISS_ON);
 	IUFillSwitchVector(&SwitchDef2SP, SwitchDef2S, 2, getDeviceName(), "SWITCHDEF_2", "Default OUT 2", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);	
 
-	DEBUGF(INDI::Logger::DBG_WARNING, "Default out 1 %s", SwitchDef1S[0].s);
 
 	// Load options before connecting
 	// load config before defining switches
@@ -362,6 +361,8 @@ bool AstroLink4Pi::initProperties()
 	defineProperty(&SwitchDef1SP);
 	defineProperty(&SwitchDef2SP);
 	loadConfig();
+
+	DEBUGF(INDI::Logger::DBG_WARNING, "Default out 1 %s", SwitchDef1S[0].s);
 
 	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", SwitchDef1S[0].s);
 	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", SwitchDef1S[1].s);
