@@ -207,6 +207,8 @@ bool AstroLink4Pi::Connect()
 
     SetTimer(FocusStepDelayN[0].value);
 
+	
+	DEBUGF(INDI::Logger::DBG_SESSION, "SwitchDef1S %i", SwitchDef1S[0].s);
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
 
 	return true;
@@ -362,14 +364,12 @@ bool AstroLink4Pi::initProperties()
 	defineProperty(&SwitchDef2SP);
 	loadConfig();
 
-	DEBUGF(INDI::Logger::DBG_WARNING, "Default out 1 %s", SwitchDef1S[0].s);
-
-	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", SwitchDef1S[0].s);
-	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", SwitchDef1S[1].s);
+	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", ISS_OFF);
+	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", ISS_ON);
 	IUFillSwitchVector(&Switch1SP, Switch1S, 2, getDeviceName(), "SWITCH_1", RelayLabelsT[0].text, OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
-	IUFillSwitch(&Switch2S[0], "SW2ON", "ON", SwitchDef2S[0].s);
-	IUFillSwitch(&Switch2S[1], "SW2OFF", "OFF", SwitchDef2S[1].s);
+	IUFillSwitch(&Switch2S[0], "SW2ON", "ON", ISS_OFF);
+	IUFillSwitch(&Switch2S[1], "SW2OFF", "OFF", ISS_ON);
 	IUFillSwitchVector(&Switch2SP, Switch2S, 2, getDeviceName(), "SWITCH_2", RelayLabelsT[1].text, OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	IUFillNumber(&PWM1N[0], "PWMout1", "%", "%0.0f", 0, 100, 10, 0); 
