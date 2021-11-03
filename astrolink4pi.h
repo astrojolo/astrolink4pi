@@ -156,7 +156,7 @@ private:
 	void pwmCycle();
 	long int millis();
 
-	void setRelay1(	ISState * states, char * names[], int n );
+	bool setRelay1(	ISState * states, char * names[], int n );
 
 	static constexpr const char *SYSTEM_TAB {"System"};
 	static constexpr const char *OUTPUTS_TAB {"Outputs"};

@@ -687,7 +687,7 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 		// handle relay 1
 		if (!strcmp(name, Switch1SP.name))
 		{
-			setRelay1(states, names, n);
+			return setRelay1(states, names, n);
 		}
 
 		
@@ -856,8 +856,9 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 	return INDI::DefaultDevice::ISNewSwitch(dev,name,states,names,n);
 }
 
-void AstroLink4Pi::setRelay1(	ISState * states, char * names[], int n )
+bool AstroLink4Pi::setRelay1(	ISState * states, char * names[], int n )
 {
+	int rv;
 	IUUpdateSwitch(&Switch1SP, states, names, n);
 
 	if ( Switch1S[0].s == ISS_ON )
