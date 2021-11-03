@@ -365,10 +365,10 @@ bool AstroLink4Pi::initProperties()
 	defineProperty(&SwitchDef2SP);
 	loadConfig();
 
-	DEBUGF(INDI::Logger::DBG_WARNING, "SwitchDef1SP %s", SwitchDef1SP.state);
+	DEBUGF(INDI::Logger::DBG_WARNING, "SwitchDef1SP %s", SwitchDef1S[0].s);
 
-	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", (SwitchDef1SP.state == ISS_OFF) ? ISS_OFF : ISS_ON);
-	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", (SwitchDef1SP.state == ISS_OFF) ? ISS_ON : ISS_OFF);
+	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", SwitchDef1S[0].s);
+	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", SwitchDef1S[1].s);
 	IUFillSwitchVector(&Switch1SP, Switch1S, 2, getDeviceName(), "SWITCH_1", RelayLabelsT[0].text, OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	IUFillSwitch(&Switch2S[0], "SW2ON", "ON", ISS_OFF);
