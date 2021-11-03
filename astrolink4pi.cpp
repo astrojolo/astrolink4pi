@@ -207,7 +207,9 @@ bool AstroLink4Pi::Connect()
 
     SetTimer(FocusStepDelayN[0].value);
 
-	setRelay1({SwitchDef1S[0].s, SwitchDef1S[1].s}, {Switch1S[0].name, Switch1S[1].name}, 2);
+	ISState states[] = {SwitchDef1S[0].s, SwitchDef1S[1].s};
+	char * names = {Switch1S[0].name, Switch1S[1].name};
+	setRelay1(states, names, 2);
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
 
 	return true;
