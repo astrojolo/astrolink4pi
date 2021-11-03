@@ -345,14 +345,6 @@ bool AstroLink4Pi::initProperties()
 	IUFillText(&RelayLabelsT[3], "RELAYLABEL04", "PWM 2", "PWM 2");
 	IUFillTextVector(&RelayLabelsTP, RelayLabelsT, 4, getDeviceName(), "RELAYLABELS", "Relay Labels", OPTIONS_TAB, IP_RW, 60, IPS_IDLE);   
 
-	// Load options before connecting
-	// load config before defining switches
-    defineProperty(&PWMcycleNP);
-	defineProperty(&RelayLabelsTP);
-	defineProperty(&SwitchDef1SP);
-	defineProperty(&SwitchDef2SP);
-	loadConfig();
-
 	IUFillSwitch(&SwitchDef1S[0], "SW1ON", "ON", ISS_OFF);
 	IUFillSwitch(&SwitchDef1S[1], "SW1OFF", "OFF", ISS_ON);
 	IUFillSwitchVector(&SwitchDef1SP, SwitchDef1S, 2, getDeviceName(), "SWITCHDEF_1", "Default OUT 1", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
@@ -360,6 +352,14 @@ bool AstroLink4Pi::initProperties()
 	IUFillSwitch(&SwitchDef2S[0], "SW2ON", "ON", ISS_OFF);
 	IUFillSwitch(&SwitchDef2S[1], "SW2OFF", "OFF", ISS_ON);
 	IUFillSwitchVector(&SwitchDef2SP, SwitchDef2S, 2, getDeviceName(), "SWITCHDEF_2", "Default OUT 2", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);	
+
+	// Load options before connecting
+	// load config before defining switches
+    defineProperty(&PWMcycleNP);
+	defineProperty(&RelayLabelsTP);
+	defineProperty(&SwitchDef1SP);
+	defineProperty(&SwitchDef2SP);
+	loadConfig();
 
 	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", SwitchDef1S[0].s);
 	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", SwitchDef1S[1].s);
@@ -741,9 +741,11 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 			IDSetSwitch(&SwitchDef1SP, NULL);
 
 			DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi OUT 1 default value set. You need to save configuration and restart driver to activate the changes.");
+			DEBUGF(INDI::Logger::DBG_DEBUG, "AstroLink 4 Pi OUT 1 default value set to %s", SwitchDef1S[0].s);
 
 			return true;
 		}
+
 
 		// handle relay 2
 		if (!strcmp(name, Switch2SP.name))
