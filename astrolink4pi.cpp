@@ -207,8 +207,7 @@ bool AstroLink4Pi::Connect()
 
     SetTimer(FocusStepDelayN[0].value);
 
-	
-	DEBUGF(INDI::Logger::DBG_SESSION, "SwitchDef1S %i", SwitchDef1S[0].s);
+	setRelay1({SwitchDef1S[0].s, SwitchDef1S[1].s}, {Switch1S[0].name, Switch1S[1].name}, 2);
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
 
 	return true;
@@ -688,45 +687,7 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 		// handle relay 1
 		if (!strcmp(name, Switch1SP.name))
 		{
-			IUUpdateSwitch(&Switch1SP, states, names, n);
-
-			if ( Switch1S[0].s == ISS_ON )
-			{
-                millis();
-				rv = gpiod_line_set_value(gpio_out1, 1);
-				if (rv != 0)
-				{
-					DEBUG(INDI::Logger::DBG_ERROR, "Error setting Astroberry Relay #1");
-					Switch1SP.s = IPS_ALERT;
-					Switch1S[0].s = ISS_OFF;
-					IDSetSwitch(&Switch1SP, NULL);
-					return false;
-				}
-				relayState[0] =  1;
-				DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Relays #1 set to ON");
-				Switch1SP.s = IPS_OK;
-				Switch1S[1].s = ISS_OFF;
-				IDSetSwitch(&Switch1SP, NULL);
-				return true;
-			}
-			if ( Switch1S[1].s == ISS_ON )
-			{
-				rv = gpiod_line_set_value(gpio_out1, 0);
-				if (rv != 0)
-				{
-					DEBUG(INDI::Logger::DBG_ERROR, "Error setting Astroberry Relay #1");
-					Switch1SP.s = IPS_ALERT;
-					Switch1S[1].s = ISS_OFF;
-					IDSetSwitch(&Switch1SP, NULL);
-					return false;
-				}
-				relayState[0] =  0;
-				DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Relays #1 set to OFF");
-				Switch1SP.s = IPS_IDLE;
-				Switch1S[0].s = ISS_OFF;
-				IDSetSwitch(&Switch1SP, NULL);
-				return true;
-			}
+			setRelay1(states, names, n);
 		}
 
 		
@@ -893,6 +854,48 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 	}
 
 	return INDI::DefaultDevice::ISNewSwitch(dev,name,states,names,n);
+}
+
+void AstroLink4Pi::setRelay1(	ISState * states, char * names[], int n )
+{
+	IUUpdateSwitch(&Switch1SP, states, names, n);
+
+	if ( Switch1S[0].s == ISS_ON )
+	{
+		rv = gpiod_line_set_value(gpio_out1, 1);
+		if (rv != 0)
+		{
+			DEBUG(INDI::Logger::DBG_ERROR, "Error setting Astroberry Relay #1");
+			Switch1SP.s = IPS_ALERT;
+			Switch1S[0].s = ISS_OFF;
+			IDSetSwitch(&Switch1SP, NULL);
+			return false;
+		}
+		relayState[0] =  1;
+		DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Relays #1 set to ON");
+		Switch1SP.s = IPS_OK;
+		Switch1S[1].s = ISS_OFF;
+		IDSetSwitch(&Switch1SP, NULL);
+		return true;
+	}
+	if ( Switch1S[1].s == ISS_ON )
+	{
+		rv = gpiod_line_set_value(gpio_out1, 0);
+		if (rv != 0)
+		{
+			DEBUG(INDI::Logger::DBG_ERROR, "Error setting Astroberry Relay #1");
+			Switch1SP.s = IPS_ALERT;
+			Switch1S[1].s = ISS_OFF;
+			IDSetSwitch(&Switch1SP, NULL);
+			return false;
+		}
+		relayState[0] =  0;
+		DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Relays #1 set to OFF");
+		Switch1SP.s = IPS_IDLE;
+		Switch1S[0].s = ISS_OFF;
+		IDSetSwitch(&Switch1SP, NULL);
+		return true;
+	}	
 }
 
 bool AstroLink4Pi::ISNewText (const char *dev, const char *name, char *texts[], char *names[], int n)
