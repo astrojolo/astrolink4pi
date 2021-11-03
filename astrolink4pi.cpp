@@ -353,6 +353,8 @@ bool AstroLink4Pi::initProperties()
 	IUFillSwitch(&SwitchDef2S[1], "SW2OFF", "OFF", ISS_ON);
 	IUFillSwitchVector(&SwitchDef2SP, SwitchDef2S, 2, getDeviceName(), "SWITCHDEF_2", "Default OUT 2", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);	
 
+	DEBUGF(INDI::Logger::DBG_WARNING, "Default out 1 %s", SwitchDef1S[0].s);
+
 	// Load options before connecting
 	// load config before defining switches
     defineProperty(&PWMcycleNP);
@@ -741,7 +743,6 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 			IDSetSwitch(&SwitchDef1SP, NULL);
 
 			DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi OUT 1 default value set. You need to save configuration and restart driver to activate the changes.");
-			// DEBUGF(INDI::Logger::DBG_DEBUG, "AstroLink 4 Pi OUT 1 default value set to %s", SwitchDef1S[0].s);
 
 			return true;
 		}
