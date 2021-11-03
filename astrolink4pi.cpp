@@ -741,7 +741,7 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 			IDSetSwitch(&SwitchDef1SP, NULL);
 
 			DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi OUT 1 default value set. You need to save configuration and restart driver to activate the changes.");
-			DEBUGF(INDI::Logger::DBG_DEBUG, "AstroLink 4 Pi OUT 1 default value set to %s", SwitchDef1S[0].s);
+			// DEBUGF(INDI::Logger::DBG_DEBUG, "AstroLink 4 Pi OUT 1 default value set to %s", SwitchDef1S[0].s);
 
 			return true;
 		}
