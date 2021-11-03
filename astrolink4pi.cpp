@@ -162,8 +162,8 @@ bool AstroLink4Pi::Connect()
 
 	Switch1DefSP.s = IPS_BUSY;
 	Switch2DefSP.s = IPS_BUSY;
-	IDSetSwitch(&Switch1DefSP, nullptr);
-	IDSetSwitch(&Switch2DefSP, nullptr);
+	IDSetSwitch(&SwitchDef1SP, nullptr);
+	IDSetSwitch(&SwitchDef2SP, nullptr);
 
     // Get basic system info
 	FILE* pipe;
@@ -235,10 +235,10 @@ bool AstroLink4Pi::Disconnect()
 	RelayLabelsTP.s = IPS_IDLE;
 	IDSetText(&RelayLabelsTP, nullptr);    
 
-	Switch1DefSP.s = IPS_IDLE;
-	Switch2DefSP.s = IPS_IDLE;
-	IDSetSwitch(&Switch1DefSP, nullptr);
-	IDSetSwitch(&Switch2DefSP, nullptr);	
+	SwitchDef1SP.s = IPS_IDLE;
+	SwitchDef2SP.s = IPS_IDLE;
+	IDSetSwitch(&SwitchDef1SP, nullptr);
+	IDSetSwitch(&SwitchDef2SP, nullptr);	
   
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi disconnected successfully.");
 
