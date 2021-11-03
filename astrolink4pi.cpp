@@ -160,11 +160,6 @@ bool AstroLink4Pi::Connect()
 	RelayLabelsTP.s = IPS_BUSY;
 	IDSetText(&RelayLabelsTP, nullptr);
 
-	SwitchDef1SP.s = IPS_BUSY;
-	SwitchDef2SP.s = IPS_BUSY;
-	IDSetSwitch(&SwitchDef1SP, nullptr);
-	IDSetSwitch(&SwitchDef2SP, nullptr);
-
     // Get basic system info
 	FILE* pipe;
 	char buffer[128];
@@ -234,11 +229,6 @@ bool AstroLink4Pi::Disconnect()
 	// Unlock Relay Labels setting
 	RelayLabelsTP.s = IPS_IDLE;
 	IDSetText(&RelayLabelsTP, nullptr);    
-
-	SwitchDef1SP.s = IPS_IDLE;
-	SwitchDef2SP.s = IPS_IDLE;
-	IDSetSwitch(&SwitchDef1SP, nullptr);
-	IDSetSwitch(&SwitchDef2SP, nullptr);	
   
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi disconnected successfully.");
 
@@ -343,27 +333,16 @@ bool AstroLink4Pi::initProperties()
 	IUFillText(&RelayLabelsT[1], "RELAYLABEL02", "OUT 2", "OUT 2");
 	IUFillText(&RelayLabelsT[2], "RELAYLABEL03", "PWM 1", "PWM 1");
 	IUFillText(&RelayLabelsT[3], "RELAYLABEL04", "PWM 2", "PWM 2");
-	IUFillTextVector(&RelayLabelsTP, RelayLabelsT, 4, getDeviceName(), "RELAYLABELS", "Relay Labels", OPTIONS_TAB, IP_RW, 60, IPS_IDLE);   
-
-	IUFillSwitch(&SwitchDef1S[0], "SW1ON", "ON", ISS_OFF);
-	IUFillSwitch(&SwitchDef1S[1], "SW1OFF", "OFF", ISS_ON);
-	IUFillSwitchVector(&SwitchDef1SP, SwitchDef1S, 2, getDeviceName(), "SWITCHDEF_1", "Default OUT 1", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
-
-	IUFillSwitch(&SwitchDef2S[0], "SW2ON", "ON", ISS_OFF);
-	IUFillSwitch(&SwitchDef2S[1], "SW2OFF", "OFF", ISS_ON);
-	IUFillSwitchVector(&SwitchDef2SP, SwitchDef2S, 2, getDeviceName(), "SWITCHDEF_2", "Default OUT 2", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);	
-
+	IUFillTextVector(&RelayLabelsTP, RelayLabelsT, 4, getDeviceName(), "RELAYLABELS", "Relay Labels", OPTIONS_TAB, IP_RW, 60, IPS_IDLE);    
 
 	// Load options before connecting
 	// load config before defining switches
     defineProperty(&PWMcycleNP);
 	defineProperty(&RelayLabelsTP);
-	defineProperty(&SwitchDef1SP);
-	defineProperty(&SwitchDef2SP);
 	loadConfig();
 
-	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", ISS_ON);
-	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", ISS_OFF);
+	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", ISS_OFF);
+	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", ISS_ON);
 	IUFillSwitchVector(&Switch1SP, Switch1S, 2, getDeviceName(), "SWITCH_1", RelayLabelsT[0].text, OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	IUFillSwitch(&Switch2S[0], "SW2ON", "ON", ISS_OFF);
@@ -686,28 +665,46 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 		// handle relay 1
 		if (!strcmp(name, Switch1SP.name))
 		{
-			return setRelay1(states, names, n);
-		}
+			IUUpdateSwitch(&Switch1SP, states, names, n);
 
-		
-		// handle relay 1 default
-		if (!strcmp(name, SwitchDef1SP.name))
-		{
-			if (isConnected())
+			if ( Switch1S[0].s == ISS_ON )
 			{
-				DEBUG(INDI::Logger::DBG_WARNING, "Cannot set output defaults while device is connected.");
-				return false;
+                millis();
+				rv = gpiod_line_set_value(gpio_out1, 1);
+				if (rv != 0)
+				{
+					DEBUG(INDI::Logger::DBG_ERROR, "Error setting Astroberry Relay #1");
+					Switch1SP.s = IPS_ALERT;
+					Switch1S[0].s = ISS_OFF;
+					IDSetSwitch(&Switch1SP, NULL);
+					return false;
+				}
+				relayState[0] =  1;
+				DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Relays #1 set to ON");
+				Switch1SP.s = IPS_OK;
+				Switch1S[1].s = ISS_OFF;
+				IDSetSwitch(&Switch1SP, NULL);
+				return true;
 			}
-
-			IUUpdateSwitch(&SwitchDef1SP, states, names, n);
-			SwitchDef1SP.s = IPS_OK;
-			IDSetSwitch(&SwitchDef1SP, NULL);
-
-			DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi OUT 1 default value set. You need to save configuration and restart driver to activate the changes.");
-
-			return true;
+			if ( Switch1S[1].s == ISS_ON )
+			{
+				rv = gpiod_line_set_value(gpio_out1, 0);
+				if (rv != 0)
+				{
+					DEBUG(INDI::Logger::DBG_ERROR, "Error setting Astroberry Relay #1");
+					Switch1SP.s = IPS_ALERT;
+					Switch1S[1].s = ISS_OFF;
+					IDSetSwitch(&Switch1SP, NULL);
+					return false;
+				}
+				relayState[0] =  0;
+				DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Relays #1 set to OFF");
+				Switch1SP.s = IPS_IDLE;
+				Switch1S[0].s = ISS_OFF;
+				IDSetSwitch(&Switch1SP, NULL);
+				return true;
+			}
 		}
-
 
 		// handle relay 2
 		if (!strcmp(name, Switch2SP.name))
@@ -855,50 +852,6 @@ bool AstroLink4Pi::ISNewSwitch (const char *dev, const char *name, ISState *stat
 	return INDI::DefaultDevice::ISNewSwitch(dev,name,states,names,n);
 }
 
-bool AstroLink4Pi::setRelay1(	ISState * states, char * names[], int n )
-{
-	int rv;
-	IUUpdateSwitch(&Switch1SP, states, names, n);
-
-	if ( Switch1S[0].s == ISS_ON )
-	{
-		rv = gpiod_line_set_value(gpio_out1, 1);
-		if (rv != 0)
-		{
-			DEBUG(INDI::Logger::DBG_ERROR, "Error setting Astroberry Relay #1");
-			Switch1SP.s = IPS_ALERT;
-			Switch1S[0].s = ISS_OFF;
-			IDSetSwitch(&Switch1SP, NULL);
-			return false;
-		}
-		relayState[0] =  1;
-		DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Relays #1 set to ON");
-		Switch1SP.s = IPS_OK;
-		Switch1S[1].s = ISS_OFF;
-		IDSetSwitch(&Switch1SP, NULL);
-		return true;
-	}
-	if ( Switch1S[1].s == ISS_ON )
-	{
-		rv = gpiod_line_set_value(gpio_out1, 0);
-		if (rv != 0)
-		{
-			DEBUG(INDI::Logger::DBG_ERROR, "Error setting Astroberry Relay #1");
-			Switch1SP.s = IPS_ALERT;
-			Switch1S[1].s = ISS_OFF;
-			IDSetSwitch(&Switch1SP, NULL);
-			return false;
-		}
-		relayState[0] =  0;
-		DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Relays #1 set to OFF");
-		Switch1SP.s = IPS_IDLE;
-		Switch1S[0].s = ISS_OFF;
-		IDSetSwitch(&Switch1SP, NULL);
-		return true;
-	}	
-	return false;
-}
-
 bool AstroLink4Pi::ISNewText (const char *dev, const char *name, char *texts[], char *names[], int n)
 {
     // first we check if it's for our device
@@ -969,8 +922,6 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 	IUSaveConfigText(fp, &RelayLabelsTP);
 	IUSaveConfigSwitch(fp, &Switch1SP);
 	IUSaveConfigSwitch(fp, &Switch2SP);    
-	IUSaveConfigSwitch(fp, &SwitchDef1SP);
-	IUSaveConfigSwitch(fp, &SwitchDef2SP);    
 
 	return true;
 }

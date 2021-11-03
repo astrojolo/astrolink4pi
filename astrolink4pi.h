@@ -101,11 +101,6 @@ private:
 	ISwitch Switch2S[2];
 	ISwitchVectorProperty Switch2SP;
 
-	ISwitch SwitchDef1S[2];
-	ISwitchVectorProperty SwitchDef1SP;
-	ISwitch SwitchDef2S[2];
-	ISwitchVectorProperty SwitchDef2SP;
-
 	INumber PWM1N[1];
 	INumberVectorProperty PWM1NP;
 	INumber PWM2N[1];
@@ -155,8 +150,6 @@ private:
 	void systemUpdate();
 	void pwmCycle();
 	long int millis();
-
-	bool setRelay1(	ISState * states, char * names[], int n );
 
 	static constexpr const char *SYSTEM_TAB {"System"};
 	static constexpr const char *OUTPUTS_TAB {"Outputs"};
