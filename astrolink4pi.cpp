@@ -160,8 +160,8 @@ bool AstroLink4Pi::Connect()
 	RelayLabelsTP.s = IPS_BUSY;
 	IDSetText(&RelayLabelsTP, nullptr);
 
-	Switch1DefSP.s = IPS_BUSY;
-	Switch2DefSP.s = IPS_BUSY;
+	SwitchDef1SP.s = IPS_BUSY;
+	SwitchDef2SP.s = IPS_BUSY;
 	IDSetSwitch(&SwitchDef1SP, nullptr);
 	IDSetSwitch(&SwitchDef2SP, nullptr);
 
