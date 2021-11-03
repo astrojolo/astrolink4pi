@@ -899,6 +899,7 @@ bool AstroLink4Pi::setRelay1(	ISState * states, char * names[], int n )
 		IDSetSwitch(&Switch1SP, NULL);
 		return true;
 	}	
+	return false;
 }
 
 bool AstroLink4Pi::ISNewText (const char *dev, const char *name, char *texts[], char *names[], int n)
