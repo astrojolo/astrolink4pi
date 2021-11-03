@@ -345,28 +345,28 @@ bool AstroLink4Pi::initProperties()
 	IUFillText(&RelayLabelsT[3], "RELAYLABEL04", "PWM 2", "PWM 2");
 	IUFillTextVector(&RelayLabelsTP, RelayLabelsT, 4, getDeviceName(), "RELAYLABELS", "Relay Labels", OPTIONS_TAB, IP_RW, 60, IPS_IDLE);   
 	
-	IUFillSwitch(&Switch1DefS[0], "SW1ON", "ON", ISS_OFF);
-	IUFillSwitch(&Switch1DefS[1], "SW1OFF", "OFF", ISS_ON);
-	IUFillSwitchVector(&Switch1DefSP, Switch1DefS, 2, getDeviceName(), "SWITCH_1", "Default OUT 1", OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
+	IUFillSwitch(&SwitchDef1S[0], "SW1ON", "ON", ISS_OFF);
+	IUFillSwitch(&SwitchDef1S[1], "SW1OFF", "OFF", ISS_ON);
+	IUFillSwitchVector(&Switch1Def1SP, SwitchDef1S, 2, getDeviceName(), "SWITCH_1", "Default OUT 1", OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
-	IUFillSwitch(&Switch2DefS[0], "SW2ON", "ON", ISS_OFF);
-	IUFillSwitch(&Switch2DefS[1], "SW2OFF", "OFF", ISS_ON);
-	IUFillSwitchVector(&Switch2DefSP, Switch2DefS, 2, getDeviceName(), "SWITCH_2", "Default OUT 1", OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);	
+	IUFillSwitch(&SwitchDef2S[0], "SW2ON", "ON", ISS_OFF);
+	IUFillSwitch(&SwitchDef2S[1], "SW2OFF", "OFF", ISS_ON);
+	IUFillSwitchVector(&SwitchDef2SP, SwitchDef2S, 2, getDeviceName(), "SWITCH_2", "Default OUT 1", OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);	
 
 	// Load options before connecting
 	// load config before defining switches
     defineProperty(&PWMcycleNP);
 	defineProperty(&RelayLabelsTP);
-	defineProperty(&Switch1DefSP);
-	defineProperty(&Switch2DefSP);
+	defineProperty(&SwitchDef1SP);
+	defineProperty(&SwitchDef2SP);
 	loadConfig();
 
-	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", Switch1DefS[0].s);
-	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", Switch1DefS[1].s);
+	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", SwitchDef1S[0].s);
+	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", SwitchDef1S[1].s);
 	IUFillSwitchVector(&Switch1SP, Switch1S, 2, getDeviceName(), "SWITCH_1", RelayLabelsT[0].text, OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
-	IUFillSwitch(&Switch2S[0], "SW2ON", "ON", Switch2DefS[0].s);
-	IUFillSwitch(&Switch2S[1], "SW2OFF", "OFF", Switch2DefS[1].s);
+	IUFillSwitch(&Switch2S[0], "SW2ON", "ON", SwitchDef2S[0].s);
+	IUFillSwitch(&Switch2S[1], "SW2OFF", "OFF", SwitchDef2S[1].s);
 	IUFillSwitchVector(&Switch2SP, Switch2S, 2, getDeviceName(), "SWITCH_2", RelayLabelsT[1].text, OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	IUFillNumber(&PWM1N[0], "PWMout1", "%", "%0.0f", 0, 100, 10, 0); 
