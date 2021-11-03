@@ -365,7 +365,7 @@ bool AstroLink4Pi::initProperties()
 	defineProperty(&SwitchDef2SP);
 	loadConfig();
 
-	DEBUGF(INDI::Logger::DBG_SESSION, "SwitchDef1SP %s", SwitchDef1SP.name);
+	DEBUGF(INDI::Logger::DBG_WARNING, "SwitchDef1SP %s", SwitchDef1SP.name);
 
 	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", ISS_OFF);
 	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", ISS_ON);
