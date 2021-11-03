@@ -101,6 +101,11 @@ private:
 	ISwitch Switch2S[2];
 	ISwitchVectorProperty Switch2SP;
 
+	ISwitch SwitchDef1S[2];
+	ISwitchVectorProperty Switch1DefSP;
+	ISwitch SwitchDef2S[2];
+	ISwitchVectorProperty Switch2DefSP;
+
 	INumber PWM1N[1];
 	INumberVectorProperty PWM1NP;
 	INumber PWM2N[1];
