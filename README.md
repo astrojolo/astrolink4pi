@@ -13,16 +13,18 @@ AstroLink 4 Pi micro features:
   - Focuser info including: critical focus zone in μm, step size in μm, steps per critical focus zone
   - Automatic temperature compensation based on DS18B20 temperature sensor
   - Stepper movement abort
+  - 6 pin RJ12 stepper output
 * Power outputs
   - Two switchable 12V DC outputs, 5A max each
+  - One permanent 12V DC output
   - Two PWM regulated RCA outputs, 3A max each
+  - One adjustable DC output 3-10V, 1.5A max
   - Configurable labels
 * Astroberry System
   - Provides system information such as local system time, UTC offset, hardware identification, CPU temperature, uptime, system load, hostname, local IP, public IP
   - Allows for system restart and shut down (Supported on linux operating system only. Requires advanced configuration of sudo to allow restart & shutdown without password)
 * Other
-  - One adjustable voltage output 3-10V
-  - One permanent 12V DC output
+  - Internal fan controlled by GPIO pin - automatic work
 
 # Source
 https://github.com/astrojolo/astrolink4pi
@@ -71,10 +73,6 @@ astroberry ALL=(ALL) NOPASSWD: /sbin/reboot, /sbin/poweroff
 
 For custom labels you need to save configuration and restart the driver after changing relays' labels.
 
-# AstroLink 4 Pi micro images
+# AstroLink 4 Pi images
 
-![Schematic](/images/astrolink4pi-micro.png)
-
-![PCB](/images/astrolink4pi-micro-pcb.png)
-
-![Photo](/images/astrolink4pi-micro.jpg)
+![Photo](/images/al4pi-interior.JPG)
