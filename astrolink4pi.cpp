@@ -135,9 +135,9 @@ bool AstroLink4Pi::Connect()
 	wiringPiSetupGpio();
 	pinMode(REV_PIN, INPUT);
 	pullUpDnControl(REV_PIN, PUD_UP);
-	DEBUGF(INDI::Logger::DBG_ERROR, "REV pin ", digitalRead(REV_PIN));
+	DEBUGF(INDI::Logger::DBG_ERROR, "REV pin %d", digitalRead(REV_PIN));
 	pullUpDnControl(REV_PIN, PUD_DOWN);
-	DEBUGF(INDI::Logger::DBG_ERROR, "REV pin ", digitalRead(REV_PIN));
+	DEBUGF(INDI::Logger::DBG_ERROR, "REV pin %d", digitalRead(REV_PIN));
 
 
 	// verify BCM Pins are not used by other consumers
