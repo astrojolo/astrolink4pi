@@ -149,6 +149,7 @@ private:
 	void stepperStandby(bool state);
 	void systemUpdate();
 	void pwmCycle();
+	void analogWrite (const int chan, const int value)
 	long int millis();
 
 	static constexpr const char *SYSTEM_TAB {"System"};

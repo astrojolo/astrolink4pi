@@ -17,6 +17,7 @@
 *******************************************************************************/
 
 #include <stdio.h>
+#include <stdint.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -25,10 +26,14 @@
 #include <math.h>
 #include <memory>
 #include <time.h>
+#include <sys/ioctl.h>
+#include <linux/spi/spidev.h>
 #include "config.h"
 
 
 #include <gpiod.h>
+#include <wiringPi.h>
+#include <wiringPiSPI.h>
 
 #include "astrolink4pi.h"
 
@@ -53,6 +58,10 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define PWM1_PIN	26
 #define PWM2_PIN	19
 #define HOLD_PIN	10
+
+
+#define	SPI_DAC_SPEED		1000000
+#define	SPI_D2A		      	1
 
 
 void ISPoll(void *p);
@@ -112,8 +121,14 @@ bool AstroLink4Pi::Connect()
 	chip = gpiod_chip_open("/dev/gpiochip0");
 	if (!chip)
 	{
-		DEBUG(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi.");
+		DEBUG(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi - GPIO.");
 		return false;
+	}
+
+	if(wiringPiSPISetup (SPI_D2A, SPI_DAC_SPEED) < 0)
+	{
+		DEBUG(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi - DAC");
+		return false;		
 	}
 
 	// verify BCM Pins are not used by other consumers
@@ -127,6 +142,22 @@ bool AstroLink4Pi::Connect()
 			return false;
 		}
 	}
+
+	// Check revision with resistor pin
+	// GPIOD_LINE_REQUEST_FLAG_BIAS_PULL_UP
+	// gpiod_line_set_flags
+	/*
+	ret = gpiod_line_request_input(line, CONSUMER);
+   if (ret < 0) {
+         perror("Request line as input failed\n");
+         goto release_line;
+    }
+   ret = gpiod_line_set_flags(line,GPIOD_LINE_REQUEST_FLAG_BIAS_PULL_UP);
+   if (ret < 0) {
+          perror("set_flags:");
+          goto release_line;
+   }
+   */
 
 	// Select gpios
 	gpio_en = gpiod_chip_get_line(chip, EN_PIN);
@@ -1465,3 +1496,26 @@ void AstroLink4Pi::pwmCycle()
 	gpiod_line_set_value(gpio_pwm2, pwmState[1] > 10*((pwmCounter + 5) % 10));
 }
 
+
+/*
+ *	Write an 8-bit data value to the MCP4802 
+ */
+
+void AstroLink4Pi::analogWrite (const int chan, const int value)
+{
+  uint8_t spiData [2] ;
+  uint8_t chanBits, dataBits ;
+
+  if (chan == 0)
+    chanBits = 0x30 ;
+  else
+    chanBits = 0xB0 ;
+
+  chanBits |= ((value >> 4) & 0x0F) ;
+  dataBits  = ((value << 4) & 0xF0) ;
+
+  spiData [0] = chanBits ;
+  spiData [1] = dataBits ;
+
+  wiringPiSPIDataRW (SPI_D2A, spiData, 2) ;
+}
