@@ -32,8 +32,11 @@
 
 
 #include <gpiod.h>
+extern "C" {
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
+}
+
 
 #include "astrolink4pi.h"
 

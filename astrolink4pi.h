@@ -149,15 +149,8 @@ private:
 	void stepperStandby(bool state);
 	void systemUpdate();
 	void pwmCycle();
-	long int millis();
-
-#ifdef __cplusplus
-extern "C" {
-#endif	
 	void analogWrite (const int chan, const int value);
-#ifdef __cplusplus
-}
-#endif		
+	long int millis();
 
 	static constexpr const char *SYSTEM_TAB {"System"};
 	static constexpr const char *OUTPUTS_TAB {"Outputs"};
