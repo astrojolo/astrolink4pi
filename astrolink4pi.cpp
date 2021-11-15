@@ -59,7 +59,7 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define PWM1_PIN	26
 #define PWM2_PIN	19
 #define HOLD_PIN	10
-
+#define REV_PIN		2
 
 #define	SPI_DAC_SPEED		1000000
 #define	SPI_D2A		      	1
@@ -131,15 +131,10 @@ bool AstroLink4Pi::Connect()
 		DEBUG(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi - DAC");
 		return false;		
 	}
-	else
-	{
-		DEBUG(INDI::Logger::DBG_SESSION, "WiringPi initialized.");
-	}
-	
 
 	// verify BCM Pins are not used by other consumers
-	int pins[] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN, HOLD_PIN};
-	for (unsigned int pin = 0; pin < 12; pin++)
+	int pins[] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN, HOLD_PIN, REV_PIN};
+	for (unsigned int pin = 0; pin < 13; pin++)
 	{
 		if (gpiod_line_is_used(gpiod_chip_get_line(chip, pins[pin])))
 		{
@@ -178,6 +173,43 @@ bool AstroLink4Pi::Connect()
 	gpio_pwm1 = gpiod_chip_get_line(chip, PWM1_PIN);
 	gpio_pwm2 = gpiod_chip_get_line(chip, PWM2_PIN);
 	gpio_hold = gpiod_chip_get_line(chip, HOLD_PIN);
+	gpio_rev = gpiod_chip_get_line(chip, REV_PIN);
+
+	int ret = gpiod_line_request_input(gpio_rev, "rev@astrolink4pi_focuser");
+	if (ret < 0)
+	{
+		DEBUG(INDI::Logger::DBG_ERROR, "REV pin setup failed");
+		return false;
+	}
+	ret = gpiod_line_set_flags(gpio_rev, GPIOD_LINE_REQUEST_FLAG_BIAS_PULL_UP);
+	if (ret < 0)
+	{
+		DEBUG(INDI::Logger::DBG_ERROR, "REV pin pull up failed");
+		return false;
+	}	
+	ret = gpiod_line_get_value(gpio_rev);
+	if (ret == 0)
+	{
+		DEBUG(INDI::Logger::DBG_ERROR, "REV pin UP failed");
+		return false;
+	}	
+	ret = gpiod_line_set_flags(gpio_rev, GPIOD_LINE_REQUEST_FLAG_BIAS_PULL_DOWN);
+	if (ret < 0)
+	{
+		DEBUG(INDI::Logger::DBG_ERROR, "REV pin pull down failed");
+		return false;
+	}	
+	ret = gpiod_line_get_value(gpio_rev);
+	if (ret != 0)
+	{
+		DEBUG(INDI::Logger::DBG_ERROR, "REV pin DOWN failed");
+		return false;
+	}	
+	else
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "REV pin okay");
+	}
+	
 
 	// Set initial state for gpios
 	gpiod_line_request_output(gpio_en, "en@astrolink4pi_focuser", 1);			// start as disabld

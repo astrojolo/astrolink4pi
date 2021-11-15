@@ -123,6 +123,7 @@ private:
 	struct gpiod_line *gpio_pwm1;
 	struct gpiod_line *gpio_pwm2;	
 	struct gpiod_line *gpio_hold;	
+	struct gpiod_line *gpio_rev;
 
 	int resolution = 1;
 	int holdPower = 0;
