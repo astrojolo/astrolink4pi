@@ -131,6 +131,11 @@ bool AstroLink4Pi::Connect()
 		DEBUG(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi - DAC");
 		return false;		
 	}
+	else
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "WiringPi initialized.");
+	}
+	
 
 	// verify BCM Pins are not used by other consumers
 	int pins[] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN, HOLD_PIN};
