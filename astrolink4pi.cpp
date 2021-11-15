@@ -181,7 +181,7 @@ bool AstroLink4Pi::Connect()
 		DEBUG(INDI::Logger::DBG_ERROR, "REV pin setup failed");
 		return false;
 	}
-	ret = gpiod_line_set_flags(gpio_rev, GPIOD_LINE_REQUEST_FLAG_BIAS_PULL_UP);
+	ret = gpiod_line_set_flags(gpio_rev, GPIOD_LINE_BIAS_PULL_UP);
 	if (ret < 0)
 	{
 		DEBUG(INDI::Logger::DBG_ERROR, "REV pin pull up failed");
@@ -193,7 +193,7 @@ bool AstroLink4Pi::Connect()
 		DEBUG(INDI::Logger::DBG_ERROR, "REV pin UP failed");
 		return false;
 	}	
-	ret = gpiod_line_set_flags(gpio_rev, GPIOD_LINE_REQUEST_FLAG_BIAS_PULL_DOWN);
+	ret = gpiod_line_set_flags(gpio_rev, GPIOD_LINE_BIAS_PULL_DOWN);
 	if (ret < 0)
 	{
 		DEBUG(INDI::Logger::DBG_ERROR, "REV pin pull down failed");
