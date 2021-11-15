@@ -17,7 +17,6 @@
 *******************************************************************************/
 
 #include <stdio.h>
-#include <stdint.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -26,15 +25,10 @@
 #include <math.h>
 #include <memory>
 #include <time.h>
-#include <sys/ioctl.h>
-#include <linux/spi/spidev.h>
 #include "config.h"
 
 
 #include <gpiod.h>
-#include <wiringPi.h>
-#include <wiringPiSPI.h>
-
 
 #include "astrolink4pi.h"
 
@@ -59,10 +53,6 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define PWM1_PIN	26
 #define PWM2_PIN	19
 #define HOLD_PIN	10
-#define REV_PIN		2
-
-#define	SPI_DAC_SPEED		1000000
-#define	SPI_D2A		      	1
 
 
 void ISPoll(void *p);
@@ -122,25 +112,9 @@ bool AstroLink4Pi::Connect()
 	chip = gpiod_chip_open("/dev/gpiochip0");
 	if (!chip)
 	{
-		DEBUG(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi - GPIO.");
+		DEBUG(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi.");
 		return false;
 	}
-
-	if(wiringPiSPISetup (SPI_D2A, SPI_DAC_SPEED) < 0)
-	{
-		DEBUG(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi - DAC");
-		return false;		
-	}
-
-	wiringPiSetup();
-	pinMode(8, INPUT);
-	//digitalWrite(8, 1);
-	pullUpDnControl(8, PUD_UP);
-	DEBUGF(INDI::Logger::DBG_ERROR, "REV pin %d", digitalRead(8));
-	//digitalWrite(8, 0);
-	pullUpDnControl(8, PUD_DOWN);
-	DEBUGF(INDI::Logger::DBG_ERROR, "REV pin %d", digitalRead(8));
-
 
 	// verify BCM Pins are not used by other consumers
 	int pins[] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN, HOLD_PIN};
@@ -153,7 +127,6 @@ bool AstroLink4Pi::Connect()
 			return false;
 		}
 	}
-
 
 	// Select gpios
 	gpio_en = gpiod_chip_get_line(chip, EN_PIN);
@@ -168,7 +141,6 @@ bool AstroLink4Pi::Connect()
 	gpio_pwm1 = gpiod_chip_get_line(chip, PWM1_PIN);
 	gpio_pwm2 = gpiod_chip_get_line(chip, PWM2_PIN);
 	gpio_hold = gpiod_chip_get_line(chip, HOLD_PIN);
-
 
 	// Set initial state for gpios
 	gpiod_line_request_output(gpio_en, "en@astrolink4pi_focuser", 1);			// start as disabld
@@ -1493,26 +1465,3 @@ void AstroLink4Pi::pwmCycle()
 	gpiod_line_set_value(gpio_pwm2, pwmState[1] > 10*((pwmCounter + 5) % 10));
 }
 
-
-/*
- *	Write an 8-bit data value to the MCP4802 
- */
-
-void AstroLink4Pi::analogWrite (const int chan, const int value)
-{
-  uint8_t spiData [2] ;
-  uint8_t chanBits, dataBits ;
-
-  if (chan == 0)
-    chanBits = 0x30 ;
-  else
-    chanBits = 0xB0 ;
-
-  chanBits |= ((value >> 4) & 0x0F) ;
-  dataBits  = ((value << 4) & 0xF0) ;
-
-  spiData [0] = chanBits ;
-  spiData [1] = dataBits ;
-
-  wiringPiSPIDataRW (SPI_D2A, spiData, 2) ;
-}
