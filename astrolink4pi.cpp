@@ -133,10 +133,12 @@ bool AstroLink4Pi::Connect()
 	}
 
 	wiringPiSetupGpio();
-	pinMode(REV_PIN, INPUT);
-	pullUpDnControl(REV_PIN, PUD_UP);
+	pinMode(REV_PIN, OUTPUT);
+	digitalWrite(REV_PIN, 1);
+	//pullUpDnControl(REV_PIN, PUD_UP);
 	DEBUGF(INDI::Logger::DBG_ERROR, "REV pin %d", digitalRead(REV_PIN));
-	pullUpDnControl(REV_PIN, PUD_DOWN);
+	digitalWrite(REV_PIN, 0);
+	//pullUpDnControl(REV_PIN, PUD_DOWN);
 	DEBUGF(INDI::Logger::DBG_ERROR, "REV pin %d", digitalRead(REV_PIN));
 
 
