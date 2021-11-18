@@ -54,7 +54,7 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define PWM1_PIN 26
 #define PWM2_PIN 19
 #define HOLD_PIN 10
-#define CHK_PIN 14
+#define CHK_PIN 20
 
 void ISPoll(void *p);
 
@@ -130,32 +130,6 @@ bool AstroLink4Pi::Connect()
 	setDac(1, 255);
 	DEBUGF(INDI::Logger::DBG_SESSION, "Board revision %d detected", revision);
 
-	// verify BCM Pins are not used by other consumers
-	// int pins[] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN, HOLD_PIN};
-	// for (unsigned int pin = 0; pin < 12; pin++)
-	// {
-	// 	if (gpiod_line_is_used(gpiod_chip_get_line(chip, pins[pin])))
-	// 	{
-	// 		DEBUGF(INDI::Logger::DBG_ERROR, "BCM Pin %0.0f already used", pins[pin]);
-	// 		gpiod_chip_close(chip);
-	// 		return false;
-	// 	}
-	// }
-
-	// Select gpios
-	// gpio_en = gpiod_chip_get_line(chip, EN_PIN);
-	// gpio_m0 = gpiod_chip_get_line(chip, M0_PIN);
-	// gpio_m1 = gpiod_chip_get_line(chip, M1_PIN);
-	// gpio_m2 = gpiod_chip_get_line(chip, M2_PIN);
-	// gpio_rst = gpiod_chip_get_line(chip, RST_PIN);
-	// gpio_stp = gpiod_chip_get_line(chip, STP_PIN);
-	// gpio_dir = gpiod_chip_get_line(chip, DIR_PIN);
-	// gpio_out1 = gpiod_chip_get_line(chip, OUT1_PIN);
-	// gpio_out2 = gpiod_chip_get_line(chip, OUT2_PIN);
-	// gpio_pwm1 = gpiod_chip_get_line(chip, PWM1_PIN);
-	// gpio_pwm2 = gpiod_chip_get_line(chip, PWM2_PIN);
-	// gpio_hold = gpiod_chip_get_line(chip, HOLD_PIN);
-
 	set_mode(pigpioHandle, EN_PIN, PI_OUTPUT);
 	gpio_write(pigpioHandle, EN_PIN, 1); // start as disabled
 	set_mode(pigpioHandle, M0_PIN, PI_OUTPUT);
@@ -180,20 +154,6 @@ bool AstroLink4Pi::Connect()
 	gpio_write(pigpioHandle, PWM2_PIN, 0);
 	set_mode(pigpioHandle, HOLD_PIN, PI_OUTPUT);
 	gpio_write(pigpioHandle, HOLD_PIN, 1); // start as disabled
-
-	// Set initial state for gpios
-	// gpiod_line_request_output(gpio_en, "en@astrolink4pi_focuser", 1); // start as disabld
-	// gpiod_line_request_output(gpio_m0, "m0@astrolink4pi_focuser", 0);
-	// gpiod_line_request_output(gpio_m1, "m1@astrolink4pi_focuser", 0);
-	// gpiod_line_request_output(gpio_m2, "m2@astrolink4pi_focuser", 0);
-	// gpiod_line_request_output(gpio_rst, "rst@astrolink4pi_focuser", 1); // start as wake up
-	// gpiod_line_request_output(gpio_stp, "stp@astrolink4pi_focuser", 0);
-	// gpiod_line_request_output(gpio_dir, "dir@astrolink4pi_focuser", 0);
-	// gpiod_line_request_output(gpio_out1, "out1@astrolink4pi_relays", relayState[0]);
-	// gpiod_line_request_output(gpio_out2, "out2@astrolink4pi_relays", relayState[1]);
-	// gpiod_line_request_output(gpio_pwm1, "pwm1@astrolink4pi_relays", 0);
-	// gpiod_line_request_output(gpio_pwm2, "pwm2@astrolink4pi_relays", 0);
-	// gpiod_line_request_output(gpio_hold, "hold@astrolink4pi_relays", 1); // start as disabled
 
 	// Lock Relay Labels setting
 	RelayLabelsTP.s = IPS_BUSY;
@@ -1083,18 +1043,14 @@ bool AstroLink4Pi::AbortFocuser()
 void AstroLink4Pi::stepMotor(int direction)
 {
 	if (direction < 0)
-		// gpiod_line_set_value(gpio_dir, 0);
 		gpio_write(pigpioHandle, DIR_PIN, 0);
 	else
-		// gpiod_line_set_value(gpio_dir, 1);
 		gpio_write(pigpioHandle, DIR_PIN, 1);
 	// step on
-	// gpiod_line_set_value(gpio_stp, 1);
 	gpio_write(pigpioHandle, STP_PIN, 1);
 	// wait
 	usleep(10);
 	// step off
-	// gpiod_line_set_value(gpio_stp, 0);
 	gpio_write(pigpioHandle, STP_PIN, 0);
 }
 
@@ -1171,9 +1127,6 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 void AstroLink4Pi::SetResolution(int res)
 {
 	// Release lines
-	// gpiod_line_set_value(gpio_m0, 1);
-	// gpiod_line_set_value(gpio_m1, 1);
-	// gpiod_line_set_value(gpio_m2, 1);
 	gpio_write(pigpioHandle, M0_PIN, 1);
 	gpio_write(pigpioHandle, M1_PIN, 1);
 	gpio_write(pigpioHandle, M2_PIN, 1);
@@ -1181,57 +1134,37 @@ void AstroLink4Pi::SetResolution(int res)
 	switch (res)
 	{
 	case 1: // 1:1
-		// gpiod_line_set_value(gpio_m0, 0);
-		// gpiod_line_set_value(gpio_m1, 0);
-		// gpiod_line_set_value(gpio_m2, 0);
+
 		gpio_write(pigpioHandle, M0_PIN, 0);
 		gpio_write(pigpioHandle, M1_PIN, 0);
 		gpio_write(pigpioHandle, M2_PIN, 0);
 		break;
 	case 2: // 1:2
-		// gpiod_line_set_value(gpio_m0, 1);
-		// gpiod_line_set_value(gpio_m1, 0);
-		// gpiod_line_set_value(gpio_m2, 0);
 		gpio_write(pigpioHandle, M0_PIN, 1);
 		gpio_write(pigpioHandle, M1_PIN, 0);
 		gpio_write(pigpioHandle, M2_PIN, 0);
 		break;
 	case 4: // 1:4
-		// gpiod_line_set_value(gpio_m0, 0);
-		// gpiod_line_set_value(gpio_m1, 1);
-		// gpiod_line_set_value(gpio_m2, 0);
 		gpio_write(pigpioHandle, M0_PIN, 0);
 		gpio_write(pigpioHandle, M1_PIN, 1);
 		gpio_write(pigpioHandle, M2_PIN, 0);
 		break;
 	case 8: // 1:8
-		// gpiod_line_set_value(gpio_m0, 1);
-		// gpiod_line_set_value(gpio_m1, 1);
-		// gpiod_line_set_value(gpio_m2, 0);
 		gpio_write(pigpioHandle, M0_PIN, 1);
 		gpio_write(pigpioHandle, M1_PIN, 1);
 		gpio_write(pigpioHandle, M2_PIN, 0);
 		break;
 	case 16: // 1:16
-		// gpiod_line_set_value(gpio_m0, 0);
-		// gpiod_line_set_value(gpio_m1, 0);
-		// gpiod_line_set_value(gpio_m2, 1);
 		gpio_write(pigpioHandle, M0_PIN, 0);
 		gpio_write(pigpioHandle, M1_PIN, 0);
 		gpio_write(pigpioHandle, M2_PIN, 1);
 		break;
 	case 32: // 1:32
-		// gpiod_line_set_value(gpio_m0, 1);
-		// gpiod_line_set_value(gpio_m1, 1);
-		// gpiod_line_set_value(gpio_m2, 1);
 		gpio_write(pigpioHandle, M0_PIN, 1);
 		gpio_write(pigpioHandle, M1_PIN, 1);
 		gpio_write(pigpioHandle, M2_PIN, 1);
 		break;
 	default: // 1:1
-		// gpiod_line_set_value(gpio_m0, 0);
-		// gpiod_line_set_value(gpio_m1, 0);
-		// gpiod_line_set_value(gpio_m2, 0);
 		gpio_write(pigpioHandle, M0_PIN, 0);
 		gpio_write(pigpioHandle, M1_PIN, 0);
 		gpio_write(pigpioHandle, M2_PIN, 0);
@@ -1436,24 +1369,18 @@ void AstroLink4Pi::stepperStandby(bool disabled)
 
 	if (holdPower == 2 || !disabled)
 	{
-		// gpiod_line_set_value(gpio_en, 0);
-		// gpiod_line_set_value(gpio_hold, 0);
 		gpio_write(pigpioHandle, EN_PIN, 0);
 		gpio_write(pigpioHandle, HOLD_PIN, 0);
 		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 100%%.");
 	}
 	else if (holdPower == 1 || !disabled)
 	{
-		// gpiod_line_set_value(gpio_en, 0);
-		// gpiod_line_set_value(gpio_hold, 1);
 		gpio_write(pigpioHandle, EN_PIN, 0);
 		gpio_write(pigpioHandle, HOLD_PIN, 1);
 		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 50%%.");
 	}
 	else
 	{
-		// gpiod_line_set_value(gpio_en, 1);
-		// gpiod_line_set_value(gpio_hold, 1);
 		gpio_write(pigpioHandle, EN_PIN, 1);
 		gpio_write(pigpioHandle, HOLD_PIN, 1);
 		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
@@ -1570,8 +1497,6 @@ void AstroLink4Pi::pwmCycle()
 	pwmCounter++;
 	if (pwmCounter > 10)
 		pwmCounter = 0;
-	// gpiod_line_set_value(gpio_pwm1, pwmState[0] > 10 * pwmCounter);
-	// gpiod_line_set_value(gpio_pwm2, pwmState[1] > 10 * ((pwmCounter + 5) % 10));
 	gpio_write(pigpioHandle, PWM1_PIN, pwmState[0] > 10 * pwmCounter);
 	gpio_write(pigpioHandle, PWM2_PIN, pwmState[1] > 10 * ((pwmCounter + 5) % 10));
 }
