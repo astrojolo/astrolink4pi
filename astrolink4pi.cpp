@@ -54,6 +54,7 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define PWM1_PIN 26
 #define PWM2_PIN 19
 #define HOLD_PIN 10
+#define CHK_PIN 14
 
 void ISPoll(void *p);
 
@@ -115,6 +116,19 @@ bool AstroLink4Pi::Connect()
 		DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi - GPIO. %d ", pigpioHandle);
 		return false;
 	}
+
+	set_mode(pigpioHandle, CHK_PIN, PI_INPUT);
+	setDac(1, 0);
+	if(gpio_read(pigpioHandle, CHK_PIN) == 0)
+	{
+		setDac(1, 200);
+		if(gpio_read(pigpioHandle, CHK_PIN == 1))
+		{
+			revision = 2;
+		}
+	}
+	setDac(1, 0);
+	DEBUGF(INDI::Logger::DBG_SESSION, "Board revision %d detected", revision);
 
 	// verify BCM Pins are not used by other consumers
 	// int pins[] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN, HOLD_PIN};
@@ -240,7 +254,7 @@ bool AstroLink4Pi::Disconnect()
 {
 	// Close device
 	gpio_write(pigpioHandle, HOLD_PIN, 1);
-	gpio_write(pigpioHandle, RST_PIN, 0);					 // sleep
+	gpio_write(pigpioHandle, RST_PIN, 0);					// sleep
 	int enabledState = gpio_write(pigpioHandle, EN_PIN, 1); // make disabled
 
 	// gpiod_line_set_value(gpio_hold, 1);
@@ -1562,7 +1576,6 @@ void AstroLink4Pi::pwmCycle()
 	gpio_write(pigpioHandle, PWM2_PIN, pwmState[1] > 10 * ((pwmCounter + 5) % 10));
 }
 
-
 int AstroLink4Pi::setDac(int chan, int value)
 {
 	char spiData[2];
@@ -1581,6 +1594,6 @@ int AstroLink4Pi::setDac(int chan, int value)
 
 	int spiHandle = spi_open(pigpioHandle, 1, 1000000, 0);
 	int written = spi_write(pigpioHandle, spiHandle, spiData, 2);
-	spi_close(pigpioHandle, spiHandle);	
+	spi_close(pigpioHandle, spiHandle);
 	return written;
 }
