@@ -184,7 +184,7 @@ bool AstroLink4Pi::Connect()
 	gpio_write(pigpioHandle, PWM1_PIN, 0);
 	set_mode(pigpioHandle, PWM2_PIN, PI_OUTPUT);
 	gpio_write(pigpioHandle, PWM2_PIN, 0);
-	set_mode(pigpioHandle, (HOLD_PIN, PI_OUTPUT);
+	set_mode(pigpioHandle, HOLD_PIN, PI_OUTPUT);
 	gpio_write(pigpioHandle, HOLD_PIN, 1); // start as disabled
 
 	// Set initial state for gpios
@@ -261,7 +261,7 @@ bool AstroLink4Pi::Disconnect()
 	// Close device
 	gpio_write(pigpioHandle, HOLD_PIN, 1);
 	gpio_write(pigpioHandle, RST_PIN, 0);					 // sleep
-	int gpio_write = gpio_write(pigpioHandle, pigpioHandle, EN_PIN, 1); // make disabled
+	int enabledState = gpio_write(pigpioHandle, EN_PIN, 1); // make disabled
 
 	// gpiod_line_set_value(gpio_hold, 1);
 	// gpiod_line_set_value(gpio_rst, 0);					 // sleep
