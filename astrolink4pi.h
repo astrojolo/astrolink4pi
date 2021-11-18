@@ -149,7 +149,7 @@ private:
 	void stepperStandby(bool state);
 	void systemUpdate();
 	int setDac(int chan, int value);
-	int checkRevision();
+	int checkRevision(int handle);
 	long int millis();
 
 	static constexpr const char *SYSTEM_TAB {"System"};
