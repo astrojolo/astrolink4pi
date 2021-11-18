@@ -506,7 +506,6 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			PWM1NP.s = IPS_OK;
 			IDSetNumber(&PWM1NP, nullptr);
 			pwmState[0] = PWM1N[0].value;
-			setDac(0, pwmState[0]);
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 1 set to %0.0f", PWM1N[0].value);
 			return true;
 		}
@@ -517,7 +516,6 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			PWM2NP.s = IPS_OK;
 			IDSetNumber(&PWM2NP, nullptr);
 			pwmState[1] = PWM2N[0].value;
-			setDac(1, pwmState[1]);
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 2 set to %0.0f", PWM2N[0].value);
 			return true;
 		}
