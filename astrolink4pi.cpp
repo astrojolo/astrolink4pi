@@ -108,9 +108,10 @@ const char *AstroLink4Pi::getDefaultName()
 
 bool AstroLink4Pi::Connect()
 {
-	if (gpioInitialise() < 0)
+	int status = gpioInitialise();
+	if (status < 0)
 	{
-		DEBUG(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi - GPIO.");
+		DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi - GPIO. % ", status);
 		return false;
 	}
 
