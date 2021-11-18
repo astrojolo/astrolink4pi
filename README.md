@@ -39,6 +39,11 @@ In most cases it's enough to run:
 ```
 sudo apt-get install cmake libindi-dev libgpiod-dev
 ```
+You also need to enable pigpiod daemon, that is preinstalled with astroberry, but not enabled at startup:
+```
+sudo systemctl enable pigpiod
+```
+and restart the device.
 Then you can compile the driver:
 ```
 git clone https://github.com/astrojolo/astrolink4pi
