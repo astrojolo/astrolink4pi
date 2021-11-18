@@ -122,7 +122,7 @@ bool AstroLink4Pi::Connect()
 	if(gpio_read(pigpioHandle, CHK_PIN) == 0)
 	{
 		setDac(1, 255);
-		if(gpio_read(pigpioHandle, CHK_PIN == 1))
+		if(gpio_read(pigpioHandle, CHK_PIN) == 1)
 		{
 			revision = 2;
 		}
