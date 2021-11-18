@@ -118,17 +118,7 @@ bool AstroLink4Pi::Connect()
 	}
 
 	set_mode(pigpioHandle, CHK_PIN, PI_INPUT);
-	setDac(1, 0);
-	if(gpio_read(pigpioHandle, CHK_PIN) == 0)
-	{
-		setDac(1, 255);
-		if(gpio_read(pigpioHandle, CHK_PIN) == 1)
-		{
-			revision = 2;
-		}
-	}
-	setDac(1, 255);
-	DEBUGF(INDI::Logger::DBG_SESSION, "Board revision %d detected", revision);
+	revision = checkRevision(pigpioHandle);
 
 	set_mode(pigpioHandle, EN_PIN, PI_OUTPUT);
 	gpio_write(pigpioHandle, EN_PIN, 1); // start as disabled
@@ -224,9 +214,6 @@ bool AstroLink4Pi::Disconnect()
 	gpio_write(pigpioHandle, RST_PIN, 0);					// sleep
 	int enabledState = gpio_write(pigpioHandle, EN_PIN, 1); // make disabled
 
-	// gpiod_line_set_value(gpio_hold, 1);
-	// gpiod_line_set_value(gpio_rst, 0);					 // sleep
-	// int enabledState = gpiod_line_set_value(gpio_en, 1); // make disabled
 	if (enabledState != 0)
 	{
 		DEBUGF(INDI::Logger::DBG_ERROR, "Cannot set GPIO line %i to disable stepper motor driver. Focusing motor may still be powered.", EN_PIN);
@@ -236,8 +223,6 @@ bool AstroLink4Pi::Disconnect()
 		DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
 	}
 
-	// gpiod_chip_close(chip);
-	// gpioTerminate();
 	pigpio_stop(pigpioHandle);
 
 	// Unlock Relay Labels setting
@@ -267,6 +252,18 @@ bool AstroLink4Pi::initProperties()
 	// addDebugControl();
 	// addSimulationControl();
 	addConfigurationControl();
+
+	int handle = pigpio_start(NULL, NULL);
+	if (handle < 0)
+	{
+		DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating properties of AstroLink 4 Pi - GPIO. %d ", pigpioHandle);
+	}
+	else
+	{
+		set_mode(handle, CHK_PIN, PI_INPUT);
+		revision = checkRevision(pigpioHandle);
+		pigpio_stop(handle);
+	}
 
 	// Focuser Resolution
 	IUFillSwitch(&FocusResolutionS[0], "FOCUS_RESOLUTION_1", "Full Step", ISS_ON);
@@ -1492,7 +1489,6 @@ long int AstroLink4Pi::millis()
 	}
 }
 
-
 int AstroLink4Pi::setDac(int chan, int value)
 {
 	char spiData[2];
@@ -1513,4 +1509,21 @@ int AstroLink4Pi::setDac(int chan, int value)
 	int written = spi_write(pigpioHandle, spiHandle, spiData, 2);
 	spi_close(pigpioHandle, spiHandle);
 	return written;
+}
+
+int AstroLink4Pi::checkRevision(int handle)
+{
+	int rev = 1;
+	set_mode(handle, CHK_PIN, PI_INPUT);
+	setDac(1, 0);
+	if (gpio_read(handle, CHK_PIN) == 0)
+	{
+		setDac(1, 255);
+		if (gpio_read(handle, CHK_PIN) == 1)
+		{
+			rev = 2;
+		}
+	}
+	setDac(1, 255);
+	DEBUGF(INDI::Logger::DBG_SESSION, "Board revision %d detected", rev);
 }
