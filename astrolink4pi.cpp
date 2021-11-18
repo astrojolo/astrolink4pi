@@ -352,7 +352,7 @@ bool AstroLink4Pi::initProperties()
 	defineProperty(&RelayLabelsTP);
 	loadConfig();
 
-	IUFillNumber(&PWMcycleN[0], "PWMcycle", "PWM cycle [ms]", "%0.0f", 10, 1000, 10, 20);
+	IUFillNumber(&PWMcycleN[0], "PWMcycle", "PWM freq. [Hz]", "%0.0f", 10, 1000, 10, 20);
 	IUFillNumberVector(&PWMcycleNP, PWMcycleN, 1, getDeviceName(), "PWMCYCLE", "PWM frequency", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", ISS_OFF);
@@ -537,7 +537,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IDSetNumber(&PWMcycleNP, nullptr);
 			set_PWM_frequency(pigpioHandle, PWM1_PIN, PWMcycleN[0].value);
 			set_PWM_frequency(pigpioHandle, PWM2_PIN, PWMcycleN[0].value);
-			DEBUGF(INDI::Logger::DBG_SESSION, "PWM frequency set to %0.0f ms", PWMcycleN[0].value);
+			DEBUGF(INDI::Logger::DBG_SESSION, "PWM frequency set to %0.0f Hz", PWMcycleN[0].value);
 			return true;
 		}
 
