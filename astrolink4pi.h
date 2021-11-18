@@ -124,6 +124,7 @@ private:
 	// struct gpiod_line *gpio_pwm2;	
 	// struct gpiod_line *gpio_hold;	
 
+	int pigpioHandle = -1;
 	int resolution = 1;
 	int holdPower = 0;
 	float lastTemperature;
