@@ -150,6 +150,7 @@ private:
 	void stepperStandby(bool state);
 	void systemUpdate();
 	void pwmCycle();
+	int setDac(int value);
 	long int millis();
 
 	static constexpr const char *SYSTEM_TAB {"System"};

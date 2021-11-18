@@ -116,26 +116,6 @@ bool AstroLink4Pi::Connect()
 		return false;
 	}
 
-	char spiData[2];
-	uint8_t chanBits, dataBits;
-	int chan = 0;
-	int value = 100;
-
-	if (chan == 0)
-		chanBits = 0x30;
-	else
-		chanBits = 0xB0;
-
-	chanBits |= ((value >> 4) & 0x0F);
-	dataBits = ((value << 4) & 0xF0);
-
-	spiData[0] = chanBits;
-	spiData[1] = dataBits;
-
-	int spiHandle = spi_open(pigpioHandle, 1, 1000000, 0);
-	spi_write(pigpioHandle, spiHandle, spiData, 2);
-	spi_close(pigpioHandle, spiHandle);
-
 	// verify BCM Pins are not used by other consumers
 	// int pins[] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN, HOLD_PIN};
 	// for (unsigned int pin = 0; pin < 12; pin++)
@@ -552,6 +532,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			PWM1NP.s = IPS_OK;
 			IDSetNumber(&PWM1NP, nullptr);
 			pwmState[0] = PWM1N[0].value;
+			setDac(0, pwmState[0]);
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 1 set to %0.0f", PWM1N[0].value);
 			return true;
 		}
@@ -562,6 +543,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			PWM2NP.s = IPS_OK;
 			IDSetNumber(&PWM2NP, nullptr);
 			pwmState[1] = PWM2N[0].value;
+			setDac(1, pwmState[1]);
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 2 set to %0.0f", PWM2N[0].value);
 			return true;
 		}
@@ -1578,4 +1560,27 @@ void AstroLink4Pi::pwmCycle()
 	// gpiod_line_set_value(gpio_pwm2, pwmState[1] > 10 * ((pwmCounter + 5) % 10));
 	gpio_write(pigpioHandle, PWM1_PIN, pwmState[0] > 10 * pwmCounter);
 	gpio_write(pigpioHandle, PWM2_PIN, pwmState[1] > 10 * ((pwmCounter + 5) % 10));
+}
+
+
+int AstroLink4Pi::setDac(int chan, int value)
+{
+	char spiData[2];
+	uint8_t chanBits, dataBits;
+
+	if (chan == 0)
+		chanBits = 0x30;
+	else
+		chanBits = 0xB0;
+
+	chanBits |= ((value >> 4) & 0x0F);
+	dataBits = ((value << 4) & 0xF0);
+
+	spiData[0] = chanBits;
+	spiData[1] = dataBits;
+
+	int spiHandle = spi_open(pigpioHandle, 1, 1000000, 0);
+	int written = spi_write(pigpioHandle, spiHandle, spiData, 2);
+	spi_close(pigpioHandle, spiHandle);	
+	return written;
 }
