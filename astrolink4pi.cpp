@@ -121,13 +121,13 @@ bool AstroLink4Pi::Connect()
 	setDac(1, 0);
 	if(gpio_read(pigpioHandle, CHK_PIN) == 0)
 	{
-		setDac(1, 200);
+		setDac(1, 255);
 		if(gpio_read(pigpioHandle, CHK_PIN == 1))
 		{
 			revision = 2;
 		}
 	}
-	setDac(1, 0);
+	setDac(1, 255);
 	DEBUGF(INDI::Logger::DBG_SESSION, "Board revision %d detected", revision);
 
 	// verify BCM Pins are not used by other consumers
