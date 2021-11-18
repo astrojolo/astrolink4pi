@@ -139,18 +139,15 @@ private:
 	int pwmState[2];
 	int relayState[2];
 	int pwmCounter = 0;	
-	int pwmCycleTime = 100;
 
 	long int nextTemperatureRead = 0;
 	long int nextTemperatureCompensation = 0;
 	long int nextSystemRead = 0;
-	long int nextPwmCycle = 0;
 
 	void getFocuserInfo();
 	void temperatureCompensation();
 	void stepperStandby(bool state);
 	void systemUpdate();
-	void pwmCycle();
 	int setDac(int chan, int value);
 	long int millis();
 

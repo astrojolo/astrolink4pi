@@ -340,9 +340,6 @@ bool AstroLink4Pi::initProperties()
 	IUFillSwitch(&SysOpConfirmS[1], "SYSOPCONFIRM_CANCEL", "No", ISS_OFF);
 	IUFillSwitchVector(&SysOpConfirmSP, SysOpConfirmS, 2, getDeviceName(), "SYSOPCONFIRM", "Continue?", SYSTEM_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
-	IUFillNumber(&PWMcycleN[0], "PWMcycle", "PWM cycle [ms]", "%0.0f", 50, 1000, 50, 100);
-	IUFillNumberVector(&PWMcycleNP, PWMcycleN, 1, getDeviceName(), "PWMCYCLE", "PWM cycle", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
-
 	IUFillText(&RelayLabelsT[0], "RELAYLABEL01", "OUT 1", "OUT 1");
 	IUFillText(&RelayLabelsT[1], "RELAYLABEL02", "OUT 2", "OUT 2");
 	IUFillText(&RelayLabelsT[2], "RELAYLABEL03", "PWM 1", "PWM 1");
@@ -354,6 +351,9 @@ bool AstroLink4Pi::initProperties()
 	defineProperty(&PWMcycleNP);
 	defineProperty(&RelayLabelsTP);
 	loadConfig();
+
+	IUFillNumber(&PWMcycleN[0], "PWMcycle", "PWM cycle [ms]", "%0.0f", 10, 1000, 10, 20);
+	IUFillNumberVector(&PWMcycleNP, PWMcycleN, 1, getDeviceName(), "PWMCYCLE", "PWM frequency", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", ISS_OFF);
 	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", ISS_ON);
@@ -512,7 +512,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&PWM1NP, values, names, n);
 			PWM1NP.s = IPS_OK;
 			IDSetNumber(&PWM1NP, nullptr);
-			set_PWM_dutycycle(pigpioHandle, PWM1_PIN, PWM2N[1].value);
+			set_PWM_dutycycle(pigpioHandle, PWM1_PIN, PWM1N[0].value);
 			pwmState[0] = PWM1N[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 1 set to %0.0f", PWM1N[0].value);
 			return true;
@@ -535,8 +535,9 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&PWMcycleNP, values, names, n);
 			PWMcycleNP.s = IPS_OK;
 			IDSetNumber(&PWMcycleNP, nullptr);
-			pwmCycleTime = PWMcycleN[0].value;
-			DEBUGF(INDI::Logger::DBG_SESSION, "PWM cycle time set to %0.0f ms", PWMcycleN[0].value);
+			set_PWM_frequency(pigpioHandle, PWM1_PIN, PWMcycleN[0].value);
+			set_PWM_frequency(pigpioHandle, PWM2_PIN, PWMcycleN[0].value);
+			DEBUGF(INDI::Logger::DBG_SESSION, "PWM frequency set to %0.0f ms", PWMcycleN[0].value);
 			return true;
 		}
 
@@ -992,11 +993,6 @@ void AstroLink4Pi::TimerHit()
 			{
 				systemUpdate();
 				nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
-			}
-			if (nextPwmCycle < timeMillis)
-			{
-				pwmCycle();
-				nextPwmCycle = timeMillis + PWM_CYCLE_PERIOD;
 			}
 		}
 	}
@@ -1496,17 +1492,6 @@ long int AstroLink4Pi::millis()
 	}
 }
 
-void AstroLink4Pi::pwmCycle()
-{
-	if (!isConnected())
-		return;
-
-	pwmCounter++;
-	if (pwmCounter > 10)
-		pwmCounter = 0;
-	// gpio_write(pigpioHandle, PWM1_PIN, pwmState[0] > 10 * pwmCounter);
-	// gpio_write(pigpioHandle, PWM2_PIN, pwmState[1] > 10 * ((pwmCounter + 5) % 10));
-}
 
 int AstroLink4Pi::setDac(int chan, int value)
 {
