@@ -114,7 +114,7 @@ bool AstroLink4Pi::Connect()
 		return false;
 	}
 
-	uint8_t spiData[2];
+	char spiData[2];
 	uint8_t chanBits, dataBits;
 	int chan = 0;
 	int value = 100;
@@ -131,36 +131,36 @@ bool AstroLink4Pi::Connect()
 	spiData[1] = dataBits;
 
 	int spiHandle = spiOpen(1, 1000000, 0);
-	spiWrite(0, spiData, 2)
+	spiWrite(0, spiData, 2);
 	spiClose(0);
 
-		// verify BCM Pins are not used by other consumers
-		// int pins[] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN, HOLD_PIN};
-		// for (unsigned int pin = 0; pin < 12; pin++)
-		// {
-		// 	if (gpiod_line_is_used(gpiod_chip_get_line(chip, pins[pin])))
-		// 	{
-		// 		DEBUGF(INDI::Logger::DBG_ERROR, "BCM Pin %0.0f already used", pins[pin]);
-		// 		gpiod_chip_close(chip);
-		// 		return false;
-		// 	}
-		// }
+	// verify BCM Pins are not used by other consumers
+	// int pins[] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN, HOLD_PIN};
+	// for (unsigned int pin = 0; pin < 12; pin++)
+	// {
+	// 	if (gpiod_line_is_used(gpiod_chip_get_line(chip, pins[pin])))
+	// 	{
+	// 		DEBUGF(INDI::Logger::DBG_ERROR, "BCM Pin %0.0f already used", pins[pin]);
+	// 		gpiod_chip_close(chip);
+	// 		return false;
+	// 	}
+	// }
 
-		// Select gpios
-		// gpio_en = gpiod_chip_get_line(chip, EN_PIN);
-		// gpio_m0 = gpiod_chip_get_line(chip, M0_PIN);
-		// gpio_m1 = gpiod_chip_get_line(chip, M1_PIN);
-		// gpio_m2 = gpiod_chip_get_line(chip, M2_PIN);
-		// gpio_rst = gpiod_chip_get_line(chip, RST_PIN);
-		// gpio_stp = gpiod_chip_get_line(chip, STP_PIN);
-		// gpio_dir = gpiod_chip_get_line(chip, DIR_PIN);
-		// gpio_out1 = gpiod_chip_get_line(chip, OUT1_PIN);
-		// gpio_out2 = gpiod_chip_get_line(chip, OUT2_PIN);
-		// gpio_pwm1 = gpiod_chip_get_line(chip, PWM1_PIN);
-		// gpio_pwm2 = gpiod_chip_get_line(chip, PWM2_PIN);
-		// gpio_hold = gpiod_chip_get_line(chip, HOLD_PIN);
+	// Select gpios
+	// gpio_en = gpiod_chip_get_line(chip, EN_PIN);
+	// gpio_m0 = gpiod_chip_get_line(chip, M0_PIN);
+	// gpio_m1 = gpiod_chip_get_line(chip, M1_PIN);
+	// gpio_m2 = gpiod_chip_get_line(chip, M2_PIN);
+	// gpio_rst = gpiod_chip_get_line(chip, RST_PIN);
+	// gpio_stp = gpiod_chip_get_line(chip, STP_PIN);
+	// gpio_dir = gpiod_chip_get_line(chip, DIR_PIN);
+	// gpio_out1 = gpiod_chip_get_line(chip, OUT1_PIN);
+	// gpio_out2 = gpiod_chip_get_line(chip, OUT2_PIN);
+	// gpio_pwm1 = gpiod_chip_get_line(chip, PWM1_PIN);
+	// gpio_pwm2 = gpiod_chip_get_line(chip, PWM2_PIN);
+	// gpio_hold = gpiod_chip_get_line(chip, HOLD_PIN);
 
-		gpioSetMode(EN_PIN, PI_OUTPUT);
+	gpioSetMode(EN_PIN, PI_OUTPUT);
 	gpioWrite(EN_PIN, 1); // start as disabled
 	gpioSetMode(M0_PIN, PI_OUTPUT);
 	gpioWrite(M0_PIN, 0);
