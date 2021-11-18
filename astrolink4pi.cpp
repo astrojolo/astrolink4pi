@@ -111,7 +111,7 @@ bool AstroLink4Pi::Connect()
 	int status = gpioInitialise();
 	if (status < 0)
 	{
-		DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi - GPIO. % ", status);
+		DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi - GPIO. %d ", status);
 		return false;
 	}
 
@@ -132,8 +132,8 @@ bool AstroLink4Pi::Connect()
 	spiData[1] = dataBits;
 
 	int spiHandle = spiOpen(1, 1000000, 0);
-	spiWrite(0, spiData, 2);
-	spiClose(0);
+	spiWrite(spiHandle, spiData, 2);
+	spiClose(spiHandle);
 
 	// verify BCM Pins are not used by other consumers
 	// int pins[] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN, HOLD_PIN};
