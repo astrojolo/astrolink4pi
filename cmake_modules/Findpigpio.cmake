@@ -10,13 +10,13 @@ find_path(pigpio_INCLUDE_DIR
 # Find the pigpio libraries.
 find_library(pigpio_LIBRARY 
 	NAMES libpigpio.so
-	HINTS /usr/lib)
+	HINTS /usr/local/lib)
 find_library(pigpiod_if_LIBRARY 
 	NAMES libpigpiod_if.so
-	HINTS /usr/lib)
+	HINTS /usr/local/lib)
 find_library(pigpiod_if2_LIBRARY 
 	NAMES libpigpiod_if2.so
-	HINTS /usr/lib)
+	HINTS /usr/local/lib)
     
 # Set the pigpio variables to plural form to make them accessible for 
 # the paramount cmake modules.
