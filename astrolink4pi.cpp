@@ -148,10 +148,17 @@ bool AstroLink4Pi::Connect()
 	gpio_write(pigpioHandle, OUT1_PIN, relayState[0]);
 	set_mode(pigpioHandle, OUT2_PIN, PI_OUTPUT);
 	gpio_write(pigpioHandle, OUT2_PIN, relayState[1]);
+
 	set_mode(pigpioHandle, PWM1_PIN, PI_OUTPUT);
-	gpio_write(pigpioHandle, PWM1_PIN, 0);
+	set_PWM_frequency(pigpioHandle, PWM1_PIN, 10);
+	set_PWM_range(pigpioHandle, PWM1_PIN, 100);
+	set_PWM_dutycycle(pigpioHandle, PWM1_PIN, 0);
+
 	set_mode(pigpioHandle, PWM2_PIN, PI_OUTPUT);
-	gpio_write(pigpioHandle, PWM2_PIN, 0);
+	set_PWM_frequency(pigpioHandle, PWM2_PIN, 10);
+	set_PWM_range(pigpioHandle, PWM2_PIN, 100);
+	set_PWM_dutycycle(pigpioHandle, PWM2_PIN, 0);
+
 	set_mode(pigpioHandle, HOLD_PIN, PI_OUTPUT);
 	gpio_write(pigpioHandle, HOLD_PIN, 1); // start as disabled
 
@@ -505,6 +512,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&PWM1NP, values, names, n);
 			PWM1NP.s = IPS_OK;
 			IDSetNumber(&PWM1NP, nullptr);
+			set_PWM_dutycycle(pigpioHandle, PWM1_PIN, PWM2N[1].value);
 			pwmState[0] = PWM1N[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 1 set to %0.0f", PWM1N[0].value);
 			return true;
@@ -515,6 +523,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&PWM2NP, values, names, n);
 			PWM2NP.s = IPS_OK;
 			IDSetNumber(&PWM2NP, nullptr);
+			set_PWM_dutycycle(pigpioHandle, PWM2_PIN, PWM2N[0].value);
 			pwmState[1] = PWM2N[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 2 set to %0.0f", PWM2N[0].value);
 			return true;
@@ -1495,8 +1504,8 @@ void AstroLink4Pi::pwmCycle()
 	pwmCounter++;
 	if (pwmCounter > 10)
 		pwmCounter = 0;
-	gpio_write(pigpioHandle, PWM1_PIN, pwmState[0] > 10 * pwmCounter);
-	gpio_write(pigpioHandle, PWM2_PIN, pwmState[1] > 10 * ((pwmCounter + 5) % 10));
+	// gpio_write(pigpioHandle, PWM1_PIN, pwmState[0] > 10 * pwmCounter);
+	// gpio_write(pigpioHandle, PWM2_PIN, pwmState[1] > 10 * ((pwmCounter + 5) % 10));
 }
 
 int AstroLink4Pi::setDac(int chan, int value)
