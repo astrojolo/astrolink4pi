@@ -239,7 +239,7 @@ bool AstroLink4Pi::Disconnect()
 	// Close device
 	gpioWrite(HOLD_PIN, 1);
 	gpioWrite(RST_PIN, 0);					  // sleep
-	int enabled_state = gpioWrite(EN_PIN, 1); // make disabled
+	int enabledState = gpioWrite(EN_PIN, 1); // make disabled
 
 	// gpiod_line_set_value(gpio_hold, 1);
 	// gpiod_line_set_value(gpio_rst, 0);					 // sleep
