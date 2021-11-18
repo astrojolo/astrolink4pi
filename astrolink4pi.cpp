@@ -119,10 +119,10 @@ bool AstroLink4Pi::Connect()
 
 	set_mode(pigpioHandle, CHK_PIN, PI_INPUT);
 	setDac(1, 0);
-	if(gpio_read(pigpioHandle, CHK_PIN) == 0)
+	if (gpio_read(pigpioHandle, CHK_PIN) == 0)
 	{
 		setDac(1, 255);
-		if(gpio_read(pigpioHandle, CHK_PIN == 1))
+		if (gpio_read(pigpioHandle, CHK_PIN == 1))
 		{
 			revision = 2;
 		}
@@ -957,81 +957,83 @@ void AstroLink4Pi::TimerHit()
 	if (!isConnected())
 		return;
 
-	long int timeMillis = millis();
+	// long int timeMillis = millis();
 
-	if (backlashTicksRemaining <= 0 && ticksRemaining <= 0)
-	{
-		if (FocusAbsPosNP.s != IPS_OK)
-		{
-			// All movement completed/aborted, but still the movement not completed
-			// save position to file
-			savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
+	// if (backlashTicksRemaining <= 0 && ticksRemaining <= 0)
+	// {
+	// 	if (FocusAbsPosNP.s != IPS_OK)
+	// 	{
+	// 		// All movement completed/aborted, but still the movement not completed
+	// 		// save position to file
+	// 		savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
 
-			// update abspos value and status
-			DEBUGF(INDI::Logger::DBG_SESSION, "Focuser at the position %0.0f.", FocusAbsPosN[0].value);
+	// 		// update abspos value and status
+	// 		DEBUGF(INDI::Logger::DBG_SESSION, "Focuser at the position %0.0f.", FocusAbsPosN[0].value);
 
-			FocusAbsPosNP.s = IPS_OK;
-			IDSetNumber(&FocusAbsPosNP, nullptr);
+	// 		FocusAbsPosNP.s = IPS_OK;
+	// 		IDSetNumber(&FocusAbsPosNP, nullptr);
 
-			lastTemperature = FocusTemperatureN[0].value; // register last temperature
-			stepperStandby(true);
-		}
-		else
-		{
-			// Do other stuff only while the stepper is not moving
-			if (nextTemperatureRead < timeMillis)
-			{
-				readDS18B20();
-				nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
-			}
-			if (nextTemperatureCompensation < timeMillis)
-			{
-				temperatureCompensation();
-				nextTemperatureCompensation = timeMillis + TEMPERATURE_COMPENSATION_TIMEOUT;
-			}
-			if (nextSystemRead < timeMillis)
-			{
-				systemUpdate();
-				nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
-			}
-		}
-	}
-	else
-	{
-		// Progress with movement
-		int motorDirection = lastDirection;
+	// 		lastTemperature = FocusTemperatureN[0].value; // register last temperature
+	// 		stepperStandby(true);
+	// 	}
+	// 	else
+	// 	{
+	// 		// Do other stuff only while the stepper is not moving
+	// 		if (nextTemperatureRead < timeMillis)
+	// 		{
+	// 			readDS18B20();
+	// 			nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
+	// 		}
+	// 		if (nextTemperatureCompensation < timeMillis)
+	// 		{
+	// 			temperatureCompensation();
+	// 			nextTemperatureCompensation = timeMillis + TEMPERATURE_COMPENSATION_TIMEOUT;
+	// 		}
+	// 		if (nextSystemRead < timeMillis)
+	// 		{
+	// 			systemUpdate();
+	// 			nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
+	// 		}
+	// 	}
+	// }
+	// else
+	// {
+	// 	// Progress with movement
+	// 	int motorDirection = lastDirection;
 
-		// handle Reverse Motion
-		if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
-		{
-			motorDirection = -1 * motorDirection;
-		}
+	// 	// handle Reverse Motion
+	// 	if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
+	// 	{
+	// 		motorDirection = -1 * motorDirection;
+	// 	}
 
-		bool isBacklash = (backlashTicksRemaining > 0);
+	// 	bool isBacklash = (backlashTicksRemaining > 0);
 
-		//Move the actual motor
-		stepMotor(motorDirection);
+	// 	//Move the actual motor
+	// 	stepMotor(motorDirection);
 
-		if (isBacklash == false)
-		{ //Only Count the position change if it is not due to backlash
-			// INWARD - count down
-			if (lastDirection == -1)
-				FocusAbsPosN[0].value -= 1;
+	// 	if (isBacklash == false)
+	// 	{ //Only Count the position change if it is not due to backlash
+	// 		// INWARD - count down
+	// 		if (lastDirection == -1)
+	// 			FocusAbsPosN[0].value -= 1;
 
-			// OUTWARD - count up
-			if (lastDirection == 1)
-				FocusAbsPosN[0].value += 1;
+	// 		// OUTWARD - count up
+	// 		if (lastDirection == 1)
+	// 			FocusAbsPosN[0].value += 1;
 
-			IDSetNumber(&FocusAbsPosNP, nullptr);
+	// 		IDSetNumber(&FocusAbsPosNP, nullptr);
 
-			//decrement counter
-			ticksRemaining -= 1;
-		}
-		else
-		{ //Don't count the backlash position change, just decrement the counter
-			backlashTicksRemaining -= 1;
-		}
-	}
+	// 		//decrement counter
+	// 		ticksRemaining -= 1;
+	// 	}
+	// 	else
+	// 	{ //Don't count the backlash position change, just decrement the counter
+	// 		backlashTicksRemaining -= 1;
+	// 	}
+	// }
+
+	stepMotor(1);
 	SetTimer(FocusStepDelayN[0].value);
 }
 
@@ -1491,7 +1493,6 @@ long int AstroLink4Pi::millis()
 		return 0;
 	}
 }
-
 
 int AstroLink4Pi::setDac(int chan, int value)
 {
