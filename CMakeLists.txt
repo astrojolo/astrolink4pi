@@ -31,7 +31,7 @@ IF (UNITY_BUILD)
 ENDIF ()
 
 add_executable(indi_astrolink4pi ${indi_astrolink4pi_SRCS})
-target_link_libraries(indi_astrolink4pi ${INDI_LIBRARIES} ${GPIO_LIBRARIES} ${WIRINGPI_LIBRARIES} ${pigpiod_if2_LIBRARY})
+target_link_libraries(indi_astrolink4pi ${INDI_LIBRARIES} ${pigpiod_if2_LIBRARY})
 install(TARGETS indi_astrolink4pi RUNTIME DESTINATION bin )
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/indi_astrolink4pi.xml DESTINATION ${INDI_DATA_DIR})
 
