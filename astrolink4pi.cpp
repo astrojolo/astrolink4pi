@@ -366,10 +366,6 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&PWM2N[0], "PWMout2", "%", "%0.0f", 0, 100, 10, 0);
 	IUFillNumberVector(&PWM2NP, PWM2N, 1, getDeviceName(), "PWMOUT2", RelayLabelsT[3].text, OUTPUTS_TAB, IP_RW, 60, IPS_IDLE);
 
-	// Set initial relays states to OFF
-	for (int i = 0; i < 2; i++)
-		relayState[i] = pwmState[i] = 0;
-
 	// initial values at resolution 1/1
 	FocusMaxPosN[0].min = 1000;
 	FocusMaxPosN[0].max = 100000;
