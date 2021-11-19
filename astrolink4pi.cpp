@@ -1521,6 +1521,6 @@ int AstroLink4Pi::checkRevision(int handle)
 		}
 	}
 	setDac(1, 255);
-	DEBUGF(INDI::Logger::DBG_SESSION, "Board revision %d detected", rev);
+	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;
 }
