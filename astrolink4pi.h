@@ -109,21 +109,6 @@ private:
 	INumber PWMcycleN[1];
 	INumberVectorProperty PWMcycleNP;	
 
-
-	// struct gpiod_chip *chip;
-	// struct gpiod_line *gpio_en;
-	// struct gpiod_line *gpio_m0;
-	// struct gpiod_line *gpio_m1;
-	// struct gpiod_line *gpio_m2;
-	// struct gpiod_line *gpio_rst;
-	// struct gpiod_line *gpio_stp;
-	// struct gpiod_line *gpio_dir;
-	// struct gpiod_line *gpio_out1;
-	// struct gpiod_line *gpio_out2;
-	// struct gpiod_line *gpio_pwm1;
-	// struct gpiod_line *gpio_pwm2;	
-	// struct gpiod_line *gpio_hold;	
-
 	int revision = 1;
 	int pigpioHandle = -1;
 	int resolution = 1;
