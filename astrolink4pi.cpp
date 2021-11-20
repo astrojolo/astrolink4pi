@@ -348,7 +348,6 @@ bool AstroLink4Pi::initProperties()
 
 	// Load options before connecting
 	// load config before defining switches
-	defineProperty(&PWMcycleNP);
 	defineProperty(&RelayLabelsTP);
 	loadConfig();
 
@@ -409,6 +408,7 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&Switch2SP);
 		defineProperty(&PWM1NP);
 		defineProperty(&PWM2NP);
+		defineProperty(&PWMcycleNP);
 
 		IDSnoopDevice(ActiveTelescopeT[0].text, "TELESCOPE_INFO");
 
@@ -435,6 +435,7 @@ bool AstroLink4Pi::updateProperties()
 		deleteProperty(Switch2SP.name);
 		deleteProperty(PWM1NP.name);
 		deleteProperty(PWM2NP.name);
+		deleteProperty(PWMcycleNP.name);
 		FI::updateProperties();
 	}
 
@@ -968,7 +969,7 @@ void AstroLink4Pi::TimerHit()
 			// Do other stuff only while the stepper is not moving
 			if (nextTemperatureRead < timeMillis)
 			{
-				readDS18B20();
+				bool sensorAvailable = readDS18B20();
 				nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
 			}
 			if (nextTemperatureCompensation < timeMillis)
