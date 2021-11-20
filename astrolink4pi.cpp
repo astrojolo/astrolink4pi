@@ -971,8 +971,7 @@ void AstroLink4Pi::TimerHit()
 			{
 				sensorAvailable = readDS18B20();
 				nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
-				if (!sensorAvailable)
-					FocusTemperatureNP.s = IPS_ALERT;
+				if(!sensorAvailable) FocusTemperatureNP.s = IPS_ALERT;
 			}
 			if (nextTemperatureCompensation < timeMillis)
 			{
@@ -1273,6 +1272,12 @@ void AstroLink4Pi::temperatureCompensation()
 	}
 }
 
+
+bool AstroLink4Pi::readSensor()
+{
+
+}
+
 bool AstroLink4Pi::readDS18B20()
 {
 	if (!isConnected())
@@ -1287,16 +1292,14 @@ bool AstroLink4Pi::readDS18B20()
 	char path[] = "/sys/bus/w1/devices";
 	ssize_t numRead;
 	float tempC;
-	DEBUG(INDI::Logger::DBG_WARNING, "11");
 
 	dir = opendir(path);
-	DEBUG(INDI::Logger::DBG_WARNING, "22");
+
 	// search for --the first-- DS18B20 device
 	if (dir != NULL)
 	{
 		while ((dirent = readdir(dir)))
 		{
-			DEBUG(INDI::Logger::DBG_WARNING, "33");
 			// DS18B20 device is family code beginning with 28-
 			if (dirent->d_type == DT_LNK && strstr(dirent->d_name, "28-") != NULL)
 			{
@@ -1305,7 +1308,6 @@ bool AstroLink4Pi::readDS18B20()
 			}
 		}
 		(void)closedir(dir);
-		DEBUG(INDI::Logger::DBG_WARNING, "44");
 	}
 	else
 	{
@@ -1316,10 +1318,9 @@ bool AstroLink4Pi::readDS18B20()
 	// Assemble path to --the first-- DS18B20 device
 	sprintf(devPath, "%s/%s/w1_slave", path, dev);
 
-	DEBUG(INDI::Logger::DBG_WARNING, "55");
 	// Opening the device's file triggers new reading
-	int fd = open(devPath, O_RDONLY);
-	DEBUG(INDI::Logger::DBG_WARNING, "66");
+	// int fd = open(devPath, O_RDONLY);
+	int fd = file_open(pigpioHandle, devPath, PI_FILE_READ);
 	if (fd == -1)
 	{
 		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available.");
@@ -1329,22 +1330,22 @@ bool AstroLink4Pi::readDS18B20()
 	// set busy
 	FocusTemperatureNP.s = IPS_BUSY;
 	IDSetNumber(&FocusTemperatureNP, nullptr);
-	DEBUG(INDI::Logger::DBG_WARNING, "77");
+
 	// read sensor output
-	while ((numRead = read(fd, buf, 256)) > 0)
-		DEBUG(INDI::Logger::DBG_WARNING, "88");
-	;
-	close(fd);
+	//while ((numRead = read(fd, buf, 256)) > 0)
+	//;
+	numRead = file_read(pigpioHandle, fd, buf, 1000);
+	// close(fd);
+	file_close(pigpioHandle, fd);
 
 	// parse temperature value from sensor output
 	strncpy(temperatureData, strstr(buf, "t=") + 2, 5);
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature sensor raw output: %s", buf);
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature string: %s", temperatureData);
 
-	DEBUG(INDI::Logger::DBG_WARNING, "99");
 	tempC = strtof(temperatureData, NULL) / 1000;
 	// tempF = (tempC / 1000) * 9 / 5 + 32;
-	DEBUG(INDI::Logger::DBG_WARNING, "100");
+
 	// check if temperature is reasonable
 	if (abs(tempC) > 100)
 	{
