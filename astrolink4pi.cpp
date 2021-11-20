@@ -286,7 +286,7 @@ bool AstroLink4Pi::initProperties()
 
 	// Focuser temperature
 	IUFillNumber(&FocusTemperatureN[0], "FOCUS_TEMPERATURE_VALUE", "°C", "%0.2f", -50, 50, 1, 0);
-	IUFillNumberVector(&FocusTemperatureNP, FocusTemperatureN, 1, getDeviceName(), "FOCUS_TEMPERATURE", "Temperature", MAIN_CONTROL_TAB, IP_RO, 0, IPS_IDLE);
+	IUFillNumberVector(&FocusTemperatureNP, FocusTemperatureN, 1, getDeviceName(), "FOCUS_TEMPERATURE", "Temperature", SYSTEM_TAB, IP_RO, 0, IPS_IDLE);
 
 	// Temperature Coefficient
 	IUFillNumber(&TemperatureCoefN[0], "steps/°C", "", "%.1f", -1000, 1000, 1, 0);
@@ -1335,8 +1335,8 @@ bool AstroLink4Pi::readDS18B20()
 
 	// parse temperature value from sensor output
 	strncpy(temperatureData, strstr(buf, "t=") + 2, 5);
-	DEBUGF(INDI::Logger::DBG_WARNING, "Temperature sensor raw output: %s", buf);
-	DEBUGF(INDI::Logger::DBG_WARNING, "Temperature string: %s", temperatureData);
+	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature sensor raw output: %s", buf);
+	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature string: %s", temperatureData);
 
 	tempC = strtof(temperatureData, NULL) / 1000;
 	// tempF = (tempC / 1000) * 9 / 5 + 32;
@@ -1344,7 +1344,7 @@ bool AstroLink4Pi::readDS18B20()
 	// check if temperature is reasonable
 	if (abs(tempC) > 100)
 	{
-		DEBUG(INDI::Logger::DBG_WARNING, "Temperature reading out of range.");
+		DEBUG(INDI::Logger::DBG_DEBUG, "Temperature reading out of range.");
 		return false;
 	}
 
@@ -1353,7 +1353,7 @@ bool AstroLink4Pi::readDS18B20()
 	// set OK
 	FocusTemperatureNP.s = IPS_OK;
 	IDSetNumber(&FocusTemperatureNP, nullptr);
-	DEBUGF(INDI::Logger::DBG_WARNING, "Temperature: %.2f°C", tempC);
+	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature: %.2f°C", tempC);
 
 	return true;
 }
