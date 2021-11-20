@@ -60,7 +60,6 @@ private:
 	virtual int savePosition(int pos);
 	virtual void stepMotor(int direction);
 	virtual bool readDS18B20();
-	virtual bool readSensor();
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;

@@ -1272,12 +1272,6 @@ void AstroLink4Pi::temperatureCompensation()
 	}
 }
 
-
-bool AstroLink4Pi::readSensor()
-{
-
-}
-
 bool AstroLink4Pi::readDS18B20()
 {
 	if (!isConnected())
@@ -1319,8 +1313,7 @@ bool AstroLink4Pi::readDS18B20()
 	sprintf(devPath, "%s/%s/w1_slave", path, dev);
 
 	// Opening the device's file triggers new reading
-	// int fd = open(devPath, O_RDONLY);
-	int fd = file_open(pigpioHandle, devPath, PI_FILE_READ);
+	int fd = open(devPath, O_RDONLY);
 	if (fd == -1)
 	{
 		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available.");
@@ -1332,11 +1325,9 @@ bool AstroLink4Pi::readDS18B20()
 	IDSetNumber(&FocusTemperatureNP, nullptr);
 
 	// read sensor output
-	//while ((numRead = read(fd, buf, 256)) > 0)
-	//;
-	numRead = file_read(pigpioHandle, fd, buf, 1000);
-	// close(fd);
-	file_close(pigpioHandle, fd);
+	while ((numRead = read(fd, buf, 256)) > 0)
+		;
+	close(fd);
 
 	// parse temperature value from sensor output
 	strncpy(temperatureData, strstr(buf, "t=") + 2, 5);
