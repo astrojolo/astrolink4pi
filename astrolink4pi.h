@@ -114,12 +114,11 @@ private:
 	int resolution = 1;
 	int holdPower = 0;
 	float lastTemperature;
+	bool sensorAvailable = false;
 
 	int backlashTicksRemaining;
 	int ticksRemaining;
 	int lastDirection = 0;
-	int currentStep = -1;
-	bool abortStep = false;		
 
 	int pwmState[2];
 	int relayState[2];

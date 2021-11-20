@@ -969,8 +969,9 @@ void AstroLink4Pi::TimerHit()
 			// Do other stuff only while the stepper is not moving
 			if (nextTemperatureRead < timeMillis)
 			{
-				bool sensorAvailable = readDS18B20();
+				sensorAvailable = readDS18B20();
 				nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
+				if(!sensorAvailable) FocusTemperatureNP.s = IPS_ALERT;
 			}
 			if (nextTemperatureCompensation < timeMillis)
 			{
