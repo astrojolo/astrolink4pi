@@ -39,11 +39,18 @@ In most cases it's enough to run:
 ```
 sudo apt-get install cmake libindi-dev libgpiod-dev
 ```
-Then you can compile the driver:
+Then you can compile the driver (fresh installation):
 ```
 git clone https://github.com/astrojolo/astrolink4pi
 cd astrolink4pi
 mkdir build && cd build
+cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+make
+```
+Or update to latest version:
+```
+cd ~/astrolink4pi/build/
+git pull
 cmake -DCMAKE_INSTALL_PREFIX=/usr ..
 make
 ```
