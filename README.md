@@ -52,6 +52,13 @@ mkdir build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr ..
 make
 ```
+Or update to latest version:
+```
+cd ~/astrolink4pi/build/
+git pull
+cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+make
+```
 You can install the drivers by running:
 ```
 sudo make install
