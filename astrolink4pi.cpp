@@ -1312,10 +1312,16 @@ bool AstroLink4Pi::readDS18B20()
 
 	// Assemble path to --the first-- DS18B20 device
 	sprintf(devPath, "%s/%s/w1_slave", path, dev);
-	
+
 	try
 	{
 		std::ifstream file(devPath, std::ios::in);
+		if (file.eof())
+			DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor EOF.");
+		if (file.bad())
+			DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor BAD.");
+		if (file.fail())
+			DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor FAIL.");
 		if (file.good())
 		{
 			file.read((char *)(&buf[0]), sizeof(buf));
