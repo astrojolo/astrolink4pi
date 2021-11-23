@@ -1314,9 +1314,9 @@ bool AstroLink4Pi::readDS18B20()
 	sprintf(devPath, "%s/%s/w1_slave", path, dev);
 
 	FILE *pFile;
-	char c;
+	int c;
 	int n = 0;
-	pFile = fopen(devPath);
+	pFile = fopen(devPath, "r");
 	if (pFile == NULL)
 	{
 		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available.");
@@ -1327,7 +1327,7 @@ bool AstroLink4Pi::readDS18B20()
 		do
 		{
 			c = fgetc(pFile);
-			strcat(buf, c);
+			strcat(buf, (const char) c);
 		} while (c != EOF);
 		fclose(pFile);
 	}
