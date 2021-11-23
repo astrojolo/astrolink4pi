@@ -1314,7 +1314,7 @@ bool AstroLink4Pi::readDS18B20()
 
 	// Opening the device's file triggers new reading
 	int fd = open(devPath, O_RDONLY);
-	if (fd == -1)
+	if (fd < 0)
 	{
 		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available.");
 		return false;
@@ -1325,8 +1325,13 @@ bool AstroLink4Pi::readDS18B20()
 	IDSetNumber(&FocusTemperatureNP, nullptr);
 
 	// read sensor output
-	while ((numRead = read(fd, buf, 256)) > 0)
-		;
+	if(read(fd, buf, sizeof(buf)) < 0)
+	{
+		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor read error.");
+		return false;		
+	}
+	// while ((numRead = read(fd, buf, 256)) > 0)
+	// 	;
 	close(fd);
 
 	// parse temperature value from sensor output
