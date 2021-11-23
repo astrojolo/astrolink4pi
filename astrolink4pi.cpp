@@ -1330,13 +1330,11 @@ bool AstroLink4Pi::readDS18B20()
 			c = fgetc(pFile);
 			if (c != EOF)
 			{
-				DEBUGF(INDI::Logger::DBG_WARNING, "Read %d", c);
+				int len = strlen(buf);
+				buf[len] = (char)c;
+				buf[len + 1] = '\0';
 			}
-			else
-			{
-				DEBUGF(INDI::Logger::DBG_WARNING, "Read %s", "EOF");
-			}
-			
+
 		} while (c != EOF);
 		fclose(pFile);
 	}
