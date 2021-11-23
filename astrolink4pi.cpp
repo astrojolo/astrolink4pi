@@ -1285,7 +1285,6 @@ bool AstroLink4Pi::readDS18B20()
 	char buf[256] = "";		 // Data from device
 	char temperatureData[6]; // Temp C * 1000 reported by device
 	char path[] = "/sys/bus/w1/devices";
-	ssize_t numRead;
 	float tempC;
 
 	dir = opendir(path);
@@ -1316,7 +1315,6 @@ bool AstroLink4Pi::readDS18B20()
 	// We use fgetc to support EOF. This prevents driver crash when hot plug/unplug the sensor
 	FILE *pFile;
 	int c;
-	int n = 0;
 	pFile = fopen(devPath, "r");
 	if (pFile == NULL)
 	{
