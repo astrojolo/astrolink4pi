@@ -1319,7 +1319,7 @@ bool AstroLink4Pi::readDS18B20()
 
 		if (file.good())
 		{
-			file.read((char *)(&buf[0]), size);
+			file.read((char *)(&buf[0]), sizeof(buf));
 		}
 		else
 		{
