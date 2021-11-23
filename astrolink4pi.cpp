@@ -1332,6 +1332,11 @@ bool AstroLink4Pi::readDS18B20()
 			{
 				DEBUGF(INDI::Logger::DBG_WARNING, "Read %d", c);
 			}
+			else
+			{
+				DEBUGF(INDI::Logger::DBG_WARNING, "Read %s", "EOF");
+			}
+			
 		} while (c != EOF);
 		fclose(pFile);
 	}
