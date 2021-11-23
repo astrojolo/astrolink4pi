@@ -1335,7 +1335,7 @@ bool AstroLink4Pi::readDS18B20()
 		}
 		file.close();
 	}
-	catch (const ifstream::failure &e)
+	catch (const std::exception &e)
 	{
 		DEBUGF(INDI::Logger::DBG_WARNING, "Temperature sensor not available %s", e.what());
 		return false;
