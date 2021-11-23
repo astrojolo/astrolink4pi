@@ -1313,7 +1313,7 @@ bool AstroLink4Pi::readDS18B20()
 	// Assemble path to --the first-- DS18B20 device
 	sprintf(devPath, "%s/%s/w1_slave", path, dev);
 
-	std::ifstream file(devPath.c_str(), std::ios::in);
+	std::ifstream file(devPath, std::ios::in);
 	std::streamsize size = 0;
 	if (file.seekg(0, std::ios::end).good())
 		size = file.tellg();
