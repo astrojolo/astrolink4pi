@@ -1321,7 +1321,6 @@ bool AstroLink4Pi::readDS18B20()
 		size -= file.tellg();
 	if (size > 0)
 	{
-		buf.resize((size_t)size);
 		file.read((char *)(&buf[0]), size);
 	}
 	else
