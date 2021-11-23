@@ -1317,14 +1317,8 @@ bool AstroLink4Pi::readDS18B20()
 	{
 		std::ifstream file(devPath, std::ios::in);
 
-		std::streamsize size = 0;
-		if (file.seekg(0, std::ios::end).good())
-			size = file.tellg();
-		if (file.seekg(0, std::ios::beg).good())
-			size -= file.tellg();
-		if (size > 0)
+		if (file.good())
 		{
-			DEBUGF(INDI::Logger::DBG_WARNING, "Size %d", size);
 			file.read((char *)(&buf[0]), size);
 		}
 		else
