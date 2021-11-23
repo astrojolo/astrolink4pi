@@ -971,8 +971,7 @@ void AstroLink4Pi::TimerHit()
 			{
 				sensorAvailable = readDS18B20();
 				nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
-				if (!sensorAvailable)
-					FocusTemperatureNP.s = IPS_ALERT;
+				if(!sensorAvailable) FocusTemperatureNP.s = IPS_ALERT;
 			}
 			if (nextTemperatureCompensation < timeMillis)
 			{
@@ -1283,7 +1282,6 @@ bool AstroLink4Pi::readDS18B20()
 	char dev[16];			 // Dev ID
 	char devPath[128];		 // Path to device
 	char buf[256];			 // Data from device
-	int length;				 // Data length
 	char temperatureData[6]; // Temp C * 1000 reported by device
 	char path[] = "/sys/bus/w1/devices";
 	ssize_t numRead;
@@ -1314,22 +1312,6 @@ bool AstroLink4Pi::readDS18B20()
 	// Assemble path to --the first-- DS18B20 device
 	sprintf(devPath, "%s/%s/w1_slave", path, dev);
 
-	std::ifstream inFile;
-	inFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-	try
-	{
-		inFile.open(devPath, std::ifstream::in);
-		//inFile.read(buf, sizeof(buf));
-		inFile.close();
-	}
-	catch (std::ifstream::failure &e)
-	{
-		//std::cerr << e.what() << '\n';
-		DEBUGF(INDI::Logger::DBG_WARNING, "Temperature sensor not available %s", e.what());
-		return false;
-	}
-
-	/*
 	// Opening the device's file triggers new reading
 	int fd = open(devPath, O_RDONLY);
 	if (fd < 0)
@@ -1346,7 +1328,7 @@ bool AstroLink4Pi::readDS18B20()
 	while ((numRead = read(fd, buf, 256)) > 0)
 		;
 	close(fd);
-*/
+
 	// parse temperature value from sensor output
 	strncpy(temperatureData, strstr(buf, "t=") + 2, 5);
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature sensor raw output: %s", buf);
