@@ -1319,7 +1319,7 @@ bool AstroLink4Pi::readDS18B20()
 	try
 	{
 		inFile.open(devPath, std::ifstream::in);
-		inFile.read(buf, sizeof(buf));
+		//inFile.read(buf, sizeof(buf));
 		inFile.close();
 	}
 	catch (std::ifstream::failure &e)
