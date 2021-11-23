@@ -1329,6 +1329,7 @@ bool AstroLink4Pi::readDS18B20()
 			c = fgetc(pFile);
 		} while (c != EOF);
 		fclose(pFile);
+		return false;
 	}
 
 	/*
