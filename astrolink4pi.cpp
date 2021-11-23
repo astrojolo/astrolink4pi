@@ -1313,31 +1313,41 @@ bool AstroLink4Pi::readDS18B20()
 	// Assemble path to --the first-- DS18B20 device
 	sprintf(devPath, "%s/%s/w1_slave", path, dev);
 
+	DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available 0.");
 	try
 	{
+		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available 1.");
 		std::ifstream file(devPath, std::ios::in);
-
+		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available.");
 		std::streamsize size = 0;
+		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available 2.");
 		if (file.seekg(0, std::ios::end).good())
 			size = file.tellg();
+		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available 3.");
 		if (file.seekg(0, std::ios::beg).good())
 			size -= file.tellg();
+		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available 4.");
 		if (size > 0)
 		{
+			DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available 5.");
 			file.read((char *)(&buf[0]), size);
+			DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available 6.");
 		}
 		else
 		{
-			DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available.");
+			DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available 7.");
 			return false;
 		}
+		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available 8.");
 		file.close();
+		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available 9.");
 	}
 	catch (const std::exception &e)
 	{
 		DEBUGF(INDI::Logger::DBG_WARNING, "Temperature sensor not available %s", e.what());
 		return false;
 	}
+	DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available 10.");
 
 	/*
 	// Opening the device's file triggers new reading
