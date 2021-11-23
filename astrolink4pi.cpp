@@ -1282,7 +1282,7 @@ bool AstroLink4Pi::readDS18B20()
 	struct dirent *dirent;
 	char dev[16];			 // Dev ID
 	char devPath[128];		 // Path to device
-	char buf[256];			 // Data from device
+	char buf[256] = "";		 // Data from device
 	char temperatureData[6]; // Temp C * 1000 reported by device
 	char path[] = "/sys/bus/w1/devices";
 	ssize_t numRead;
@@ -1313,6 +1313,7 @@ bool AstroLink4Pi::readDS18B20()
 	// Assemble path to --the first-- DS18B20 device
 	sprintf(devPath, "%s/%s/w1_slave", path, dev);
 
+	// We use fgetc to support EOF. This prevents driver crash when hot plug/unplug the sensor
 	FILE *pFile;
 	int c;
 	int n = 0;
@@ -1327,10 +1328,14 @@ bool AstroLink4Pi::readDS18B20()
 		do
 		{
 			c = fgetc(pFile);
-			DEBUGF(INDI::Logger::DBG_WARNING, "Read %d", c);
+			if (c != EOF)
+			{
+				int len = strlen(buf);
+				buf[len] = (char)c;
+				buf[len + 1] = '\0';
+			}
 		} while (c != EOF);
 		fclose(pFile);
-		return false;
 	}
 
 	/*
