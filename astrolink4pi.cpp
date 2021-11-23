@@ -1328,12 +1328,7 @@ bool AstroLink4Pi::readDS18B20()
 		do
 		{
 			c = fgetc(pFile);
-			if (c != EOF)
-			{
-				int len = strlen(buf);
-				buf[len] = (char)c;
-				buf[len + 1] = '\0';
-			}
+			DEBUGF(INDI::Logger::DBG_WARNING, "Read %d", c);
 		} while (c != EOF);
 		fclose(pFile);
 	}
@@ -1377,7 +1372,7 @@ bool AstroLink4Pi::readDS18B20()
 	while ((numRead = read(fd, buf, 256)) > 0)
 		;
 	close(fd);
-*/
+
 	// parse temperature value from sensor output
 	strncpy(temperatureData, strstr(buf, "t=") + 2, 5);
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature sensor raw output: %s", buf);
@@ -1401,6 +1396,8 @@ bool AstroLink4Pi::readDS18B20()
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature: %.2f°C", tempC);
 
 	return true;
+	*/
+	return false;
 }
 
 void AstroLink4Pi::stepperStandby(bool disabled)
