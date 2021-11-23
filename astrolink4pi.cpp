@@ -1339,45 +1339,11 @@ bool AstroLink4Pi::readDS18B20()
 		fclose(pFile);
 	}
 
-	/*
-	try
+	if (strlen(buf) < 10)
 	{
-		std::ifstream file(devPath, std::ios::in);
-
-		if (file.good())
-		{
-			file.read((char *)(&buf[0]), sizeof(buf));
-		}
-		else
-		{
-			DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available.");
-			return false;
-		}
-		file.close();
-	}
-	catch (std::ifstream::failure &e)
-	{
-		DEBUGF(INDI::Logger::DBG_WARNING, "Temperature sensor not available %s", e.what());
+		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor read error.");
 		return false;
 	}
-
-	
-	// Opening the device's file triggers new reading
-	int fd = open(devPath, O_RDONLY);
-	if (fd < 0)
-	{
-		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available.");
-		return false;
-	}
-
-	// set busy
-	FocusTemperatureNP.s = IPS_BUSY;
-	IDSetNumber(&FocusTemperatureNP, nullptr);
-
-	// read sensor output
-	while ((numRead = read(fd, buf, 256)) > 0)
-		;
-	close(fd);
 
 	// parse temperature value from sensor output
 	strncpy(temperatureData, strstr(buf, "t=") + 2, 5);
@@ -1402,8 +1368,6 @@ bool AstroLink4Pi::readDS18B20()
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature: %.2f°C", tempC);
 
 	return true;
-	*/
-	return false;
 }
 
 void AstroLink4Pi::stepperStandby(bool disabled)
