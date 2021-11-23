@@ -1316,7 +1316,6 @@ bool AstroLink4Pi::readDS18B20()
 	try
 	{
 		std::ifstream file(devPath, std::ios::in);
-		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 		if (file.good())
 		{
 			file.read((char *)(&buf[0]), sizeof(buf));
