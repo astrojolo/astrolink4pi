@@ -1316,7 +1316,7 @@ bool AstroLink4Pi::readDS18B20()
 	try
 	{
 		std::ifstream file(devPath, std::ios::in);
-		file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+		file.exceptions(std::ifstream::failbit | std::ifstream::badbit | std::ifstream::eofbit);
 		if (file.good())
 		{
 			file.read((char *)(&buf[0]), sizeof(buf));
@@ -1328,7 +1328,7 @@ bool AstroLink4Pi::readDS18B20()
 		}
 		file.close();
 	}
-	catch (const std::exception &e)
+	catch (std::ifstream::failure& e)
 	{
 		DEBUGF(INDI::Logger::DBG_WARNING, "Temperature sensor not available %s", e.what());
 		return false;
