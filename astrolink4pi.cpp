@@ -1314,7 +1314,7 @@ bool AstroLink4Pi::readDS18B20()
 	sprintf(devPath, "%s/%s/w1_slave", path, dev);
 
 	FILE *pFile;
-	int c;
+	char c;
 	int n = 0;
 	pFile = fopen(devPath);
 	if (pFile == NULL)
