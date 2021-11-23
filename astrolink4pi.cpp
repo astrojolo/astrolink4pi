@@ -1313,21 +1313,34 @@ bool AstroLink4Pi::readDS18B20()
 	// Assemble path to --the first-- DS18B20 device
 	sprintf(devPath, "%s/%s/w1_slave", path, dev);
 
-	std::ifstream file(devPath, std::ios::in);
-	std::streamsize size = 0;
-	if (file.seekg(0, std::ios::end).good())
-		size = file.tellg();
-	if (file.seekg(0, std::ios::beg).good())
-		size -= file.tellg();
-	if (size > 0)
+	std::ifstream file;
+	file.exceptions(ifstream::badbit); // No need to check failbit
+	try
 	{
-		file.read((char *)(&buf[0]), size);
+		file.open(devPath, std::ios::in);
+
+		std::streamsize size = 0;
+		if (file.seekg(0, std::ios::end).good())
+			size = file.tellg();
+		if (file.seekg(0, std::ios::beg).good())
+			size -= file.tellg();
+		if (size > 0)
+		{
+			file.read((char *)(&buf[0]), size);
+		}
+		else
+		{
+			DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available.");
+			return false;
+		}
+		file.close();
 	}
-	else
+	catch (const ifstream::failure &e)
 	{
-		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available.");
-		return false;		
+		DEBUGF(INDI::Logger::DBG_WARNING, "Temperature sensor not available %s", e.what());
+		return false;
 	}
+
 	/*
 	// Opening the device's file triggers new reading
 	int fd = open(devPath, O_RDONLY);
