@@ -6,10 +6,4 @@
 		<version>@VERSION_MAJOR@.@VERSION_MINOR@</version>
 	</device>
 </devGroup>
-<devGroup group="Focusers">
-	<device label="AstroLink 4 Pi Focuser" manufacturer="Astrojolo">
-		<driver name="AstroLink 4 Pi Focuser">indi_astrolink4pi</driver>
-		<version>@VERSION_MAJOR@.@VERSION_MINOR@</version>
-	</device>
-</devGroup>
 </driversList>
