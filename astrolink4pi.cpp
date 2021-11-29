@@ -951,7 +951,6 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 	IUSaveConfigText(fp, &ActiveTelescopeTP);
 	IUSaveConfigSwitch(fp, &FocusResolutionSP);
 	IUSaveConfigSwitch(fp, &FocusHoldSP);
-	IUSaveConfigSwitch(fp, &StepperCurrentNP);
 	IUSaveConfigSwitch(fp, &FocusReverseSP);
 	IUSaveConfigSwitch(fp, &TemperatureCompensateSP);
 	IUSaveConfigNumber(fp, &FocusMaxPosNP);
@@ -963,6 +962,7 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 	IUSaveConfigText(fp, &RelayLabelsTP);
 	IUSaveConfigSwitch(fp, &Switch1SP);
 	IUSaveConfigSwitch(fp, &Switch2SP);
+	IUSaveConfigNumber(fp, &StepperCurrentNP);
 	IUSaveConfigNumber(fp, &PWM1NP);
 	IUSaveConfigNumber(fp, &PWM2NP);
 
