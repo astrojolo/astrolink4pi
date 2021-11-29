@@ -1425,7 +1425,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 		}
 		if (revision == 2)
 		{
-			setDac(1, getDac(holdPower * stepperCurrent / 5));
+			setDac(0, getDac(holdPower * stepperCurrent / 5));
 			if (holdPower > 0)
 			{
 				DEBUGF(INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", holdPower * 20);
@@ -1444,7 +1444,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 		}
 		if(revision == 2)
 		{
-			setDac(1, getDac(stepperCurrent));
+			setDac(0, getDac(stepperCurrent));
 		}
 	}
 }
