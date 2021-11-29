@@ -276,9 +276,12 @@ bool AstroLink4Pi::initProperties()
 
 	// Focuser motor hold
 	IUFillSwitch(&FocusHoldS[0], "FOCUS_HOLD_0", "0%", ISS_ON);
-	IUFillSwitch(&FocusHoldS[1], "FOCUS_HOLD_1", "50%", ISS_OFF);
-	IUFillSwitch(&FocusHoldS[2], "FOCUS_HOLD_2", "100%", ISS_OFF);
-	IUFillSwitchVector(&FocusHoldSP, FocusHoldS, 3, getDeviceName(), "FOCUS_HOLD", "Hold power", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
+	IUFillSwitch(&FocusHoldS[1], "FOCUS_HOLD_1", "20%", ISS_OFF);
+	IUFillSwitch(&FocusHoldS[2], "FOCUS_HOLD_2", "40%", ISS_OFF);
+	IUFillSwitch(&FocusHoldS[3], "FOCUS_HOLD_3", "60%", ISS_OFF);
+	IUFillSwitch(&FocusHoldS[4], "FOCUS_HOLD_4", "80%", ISS_OFF);
+	IUFillSwitch(&FocusHoldS[5], "FOCUS_HOLD_5", "100%", ISS_OFF);
+	IUFillSwitchVector(&FocusHoldSP, FocusHoldS, 6, getDeviceName(), "FOCUS_HOLD", "Hold power", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	// Step delay setting
 	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "milliseconds", "%0.0f", 2, 10, 1, 5);
@@ -534,6 +537,17 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			return true;
 		}
 
+		// handle stepper current
+		if (!strcmp(name, StepperCurrentNP.name))
+		{
+			IUUpdateNumber(&StepperCurrentNP, values, names, n);
+			StepperCurrentNP.s = IPS_OK;
+			IDSetNumber(&StepperCurrentNP, nullptr);
+			stepperCurrent = StepperCurrentN[0].value;
+			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current set to %0.0f mA", stepperCurrent);
+			return true;
+		}
+
 		if (strstr(name, "FOCUS_"))
 			return FI::processNumber(dev, name, values, names, n);
 	}
@@ -779,9 +793,18 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			if (FocusHoldS[2].s == ISS_ON)
 				holdPower = 2;
 
+			if (FocusHoldS[3].s == ISS_ON)
+				holdPower = 3;
+
+			if (FocusHoldS[4].s == ISS_ON)
+				holdPower = 4;
+
+			if (FocusHoldS[5].s == ISS_ON)
+				holdPower = 5;
+
 			FocusHoldSP.s = IPS_OK;
 			IDSetSwitch(&FocusHoldSP, nullptr);
-			stepperStandby(true);
+			setCurrent(true);
 			return true;
 		}
 
@@ -928,6 +951,7 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 	IUSaveConfigText(fp, &ActiveTelescopeTP);
 	IUSaveConfigSwitch(fp, &FocusResolutionSP);
 	IUSaveConfigSwitch(fp, &FocusHoldSP);
+	IUSaveConfigSwitch(fp, &StepperCurrentNP);
 	IUSaveConfigSwitch(fp, &FocusReverseSP);
 	IUSaveConfigSwitch(fp, &TemperatureCompensateSP);
 	IUSaveConfigNumber(fp, &FocusMaxPosNP);
@@ -967,7 +991,7 @@ void AstroLink4Pi::TimerHit()
 			IDSetNumber(&FocusAbsPosNP, nullptr);
 
 			lastTemperature = FocusTemperatureN[0].value; // register last temperature
-			stepperStandby(true);
+			setCurrent(true);
 		}
 		else
 		{
@@ -1081,7 +1105,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	// set focuser busy
 	FocusAbsPosNP.s = IPS_BUSY;
 	IDSetNumber(&FocusAbsPosNP, nullptr);
-	stepperStandby(false);
+	setCurrent(false);
 
 	// set direction
 	const char *direction;
@@ -1373,29 +1397,62 @@ bool AstroLink4Pi::readDS18B20()
 	return true;
 }
 
-void AstroLink4Pi::stepperStandby(bool disabled)
+void AstroLink4Pi::setCurrent(bool standby)
 {
 	if (!isConnected())
 		return;
 
-	if (holdPower == 2 || !disabled)
+	gpio_write(pigpioHandle, EN_PIN, (holdPower > 0) ? 0 : 1);
+	if (standby)
 	{
-		gpio_write(pigpioHandle, EN_PIN, 0);
-		gpio_write(pigpioHandle, HOLD_PIN, 0);
-		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 100%%.");
-	}
-	else if (holdPower == 1 || !disabled)
-	{
-		gpio_write(pigpioHandle, EN_PIN, 0);
-		gpio_write(pigpioHandle, HOLD_PIN, 1);
-		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 50%%.");
+		if (revision == 1)
+		{
+			if (holdPower == 5)
+			{
+				gpio_write(pigpioHandle, HOLD_PIN, 0);
+				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 100%%.");
+			}
+			else if (holdPower > 0)
+			{
+				gpio_write(pigpioHandle, HOLD_PIN, 1);
+				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 50%%.");
+			}
+			else
+			{
+				gpio_write(pigpioHandle, HOLD_PIN, 1);
+				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
+			}
+		}
+		if (revision == 2)
+		{
+			setDac(1, getDac(stepperCurrent) * 51);
+			if (holdPower > 0)
+			{
+				DEBUGF(INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", holdPower * 20);
+			}
+			else
+			{
+				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
+			}
+		}
 	}
 	else
 	{
-		gpio_write(pigpioHandle, EN_PIN, 1);
-		gpio_write(pigpioHandle, HOLD_PIN, 1);
-		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
+		if(revision == 1)
+		{
+			gpio_write(pigpioHandle, HOLD_PIN, 0);
+		}
+		if(revision == 2)
+		{
+			setDac(1, getDac(stepperCurrent));
+		}
 	}
+}
+
+
+int AstroLink4Pi::getDac(int current)
+{
+	return current / 10;
 }
 
 void AstroLink4Pi::systemUpdate()

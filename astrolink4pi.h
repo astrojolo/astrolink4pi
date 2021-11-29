@@ -63,7 +63,7 @@ private:
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
-	ISwitch FocusHoldS[3];
+	ISwitch FocusHoldS[6];
 	ISwitchVectorProperty FocusHoldSP;
 	INumber FocusStepDelayN[1];
 	INumberVectorProperty FocusStepDelayNP;
@@ -126,6 +126,7 @@ private:
 	int pwmState[2];
 	int relayState[2];
 	int pwmCounter = 0;	
+	int stepperCurrent = 0;
 
 	long int nextTemperatureRead = 0;
 	long int nextTemperatureCompensation = 0;
@@ -133,7 +134,8 @@ private:
 
 	void getFocuserInfo();
 	void temperatureCompensation();
-	void stepperStandby(bool state);
+	void setCurrent(bool standby);
+	int getDac(int current);
 	void systemUpdate();
 	int setDac(int chan, int value);
 	int checkRevision(int handle);
