@@ -201,6 +201,7 @@ bool AstroLink4Pi::Connect()
 	nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;
 
 	SetTimer(FocusStepDelayN[0].value);
+	setCurrent(true);
 
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
 
@@ -545,6 +546,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IDSetNumber(&StepperCurrentNP, nullptr);
 			stepperCurrent = StepperCurrentN[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current set to %0.0f mA", StepperCurrentN[0].value);
+			setCurrent(true);
 			return true;
 		}
 
@@ -1452,7 +1454,8 @@ void AstroLink4Pi::setCurrent(bool standby)
 
 int AstroLink4Pi::getDac(int current)
 {
-	return current / 10;
+	// for 0.1 ohm resistor Vref = iref / 2
+	return 255 * current / 4096;
 }
 
 void AstroLink4Pi::systemUpdate()
