@@ -16,22 +16,6 @@
  Boston, MA 02110-1301, USA.
 *******************************************************************************/
 
-#include <stdio.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <string.h>
-#include <fstream>
-#include <math.h>
-#include <memory>
-#include <time.h>
-#include <iostream>
-#include "config.h"
-
-// #include <gpiod.h>
-// #include <pigpio.h>
-#include <pigpiod_if2.h>
-
 #include "astrolink4pi.h"
 
 std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
@@ -40,7 +24,6 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define TEMPERATURE_UPDATE_TIMEOUT (5 * 1000)		 // 3 sec
 #define TEMPERATURE_COMPENSATION_TIMEOUT (30 * 1000) // 60 sec
 #define SYSTEM_UPDATE_PERIOD 1000
-#define PWM_CYCLE_PERIOD 100
 
 #define EN_PIN 15
 #define M0_PIN 17

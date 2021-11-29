@@ -20,6 +20,19 @@
 #ifndef ASTROLINK4PI_H
 #define ASTROLINK4PI_H
 
+#include <stdio.h>
+#include <dirent.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
+#include <fstream>
+#include <math.h>
+#include <memory>
+#include <time.h>
+#include <iostream>
+#include "config.h"
+
+#include <pigpiod_if2.h>
 
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
