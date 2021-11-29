@@ -148,7 +148,7 @@ private:
 	void getFocuserInfo();
 	void temperatureCompensation();
 	void setCurrent(bool standby);
-	int getDac(int current);
+	int getDacValue(int current);
 	void systemUpdate();
 	int setDac(int chan, int value);
 	int checkRevision(int handle);
