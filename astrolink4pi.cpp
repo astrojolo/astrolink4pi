@@ -1452,7 +1452,6 @@ void AstroLink4Pi::setCurrent(bool standby)
 
 int AstroLink4Pi::getDac(int current)
 {
-	DEBUGF(INDI::Logger::DBG_SESSION, "Get dac %d %%.", current);
 	return current / 10;
 }
 
