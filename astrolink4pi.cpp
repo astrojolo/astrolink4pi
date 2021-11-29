@@ -544,7 +544,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			StepperCurrentNP.s = IPS_OK;
 			IDSetNumber(&StepperCurrentNP, nullptr);
 			stepperCurrent = StepperCurrentN[0].value;
-			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current set to %0.0f mA", stepperCurrent);
+			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current set to %0.0f mA", StepperCurrentN[0].value);
 			return true;
 		}
 
@@ -1452,6 +1452,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 
 int AstroLink4Pi::getDac(int current)
 {
+	DEBUGF(INDI::Logger::DBG_SESSION, "Get dac %d %%.", current);
 	return current / 10;
 }
 
