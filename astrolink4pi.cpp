@@ -1434,8 +1434,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 	}
 }
 
-
-int AstroLink4Pi::getDac(int current)
+int AstroLink4Pi::getDacValue(int current)
 {
 	// for 0.1 ohm resistor Vref = iref / 2
 	return 255 * current / 4096;
