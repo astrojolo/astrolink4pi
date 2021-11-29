@@ -109,6 +109,9 @@ private:
 	INumber PWMcycleN[1];
 	INumberVectorProperty PWMcycleNP;	
 
+	INumber StepperCurrentN[1];
+	INumberVectorProperty StepperCurrentNP;		
+
 	int revision = 1;
 	int pigpioHandle = -1;
 	int resolution = 1;

@@ -351,6 +351,9 @@ bool AstroLink4Pi::initProperties()
 	defineProperty(&RelayLabelsTP);
 	loadConfig();
 
+	IUFillNumber(&StepperCurrentN[0], "STEPPER_CURRENT", "mA", "%0.0f", 200, 2000, 50, 400);
+	IUFillNumberVector(&StepperCurrentNP, StepperCurrentN, 1, getDeviceName(), "STEPPER_CURRENT", "Stepper current", OPTIONS_TAB, (revision == 2) ? IP_RW : IP_RO, 0, (revision == 2) ? IPS_IDLE : IPS_ALERT);
+
 	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", ISS_OFF);
 	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", ISS_ON);
 	IUFillSwitchVector(&Switch1SP, Switch1S, 2, getDeviceName(), "SWITCH_1", RelayLabelsT[0].text, OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
@@ -409,6 +412,7 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&PWM1NP);
 		defineProperty(&PWM2NP);
 		defineProperty(&PWMcycleNP);
+		defineProperty(&StepperCurrentNP);
 
 		IDSnoopDevice(ActiveTelescopeT[0].text, "TELESCOPE_INFO");
 
@@ -436,6 +440,7 @@ bool AstroLink4Pi::updateProperties()
 		deleteProperty(PWM1NP.name);
 		deleteProperty(PWM2NP.name);
 		deleteProperty(PWMcycleNP.name);
+		deleteProperty(StepperCurrentNP.name);
 		FI::updateProperties();
 	}
 
