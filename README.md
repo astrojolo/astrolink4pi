@@ -14,6 +14,7 @@ AstroLink 4 Pi micro features:
   - Automatic temperature compensation based on DS18B20 temperature sensor
   - Stepper movement abort
   - 6 pin RJ12 stepper output
+  - embedded real time clock (AstroLink 4 Pi version 2 only)
 * Power outputs
   - Two switchable 12V DC outputs, 5A max each
   - One permanent 12V DC output
@@ -86,6 +87,10 @@ and add following line before exit 0 statement at the file end
 echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
 ```
 After restart the astroberry system time will be synchronized with embedded DS1307 clock.
+Check hwclock help to find more options, like time adjustments and synchronization:
+```
+hwclock -h
+```
 
 # How to use it?
 Enable 1-Wire interface using raspi-config or adding 'dtoverlay=w1-gpio' to /boot/configure.txt for temperature compensation support (reboot required). Run Kstars and select AstroLink 4 Pi (Aux section) in Ekos profile editor. Then start INDI server in Ekos with your profile, containg AstroLink 4 Pi drivers. Alternatively you can start INDI server manually by running:
