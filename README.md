@@ -69,6 +69,18 @@ sudo copy indi_astrolink4pi /usr/bin/
 sudo copy indi_astrolink4pi.xml /usr/share/indi/
 ```
 
+**Real Time clock enabling - only version 2**
+
+To enable automatic synchronization of the RTC embedded in the version 2 of AstroLink 4 Pi you need to edit the file
+```
+sudo nano /etc/rc.local
+```
+and add following line before exit 0 statement at the file end
+```
+echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
+```
+After restart the astroberry system time will be synchronized with embedded DS1307 clock.
+
 # How to use it?
 Enable 1-Wire interface using raspi-config or adding 'dtoverlay=w1-gpio' to /boot/configure.txt for temperature compensation support (reboot required). Run Kstars and select AstroLink 4 Pi (Aux section) in Ekos profile editor. Then start INDI server in Ekos with your profile, containg AstroLink 4 Pi drivers. Alternatively you can start INDI server manually by running:
 ```
