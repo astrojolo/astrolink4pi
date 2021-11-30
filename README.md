@@ -34,6 +34,12 @@ https://github.com/astrojolo/astrolink4pi
 * CMake >= 2.4.7
 
 # Installation
+
+If you have a fresh SD card with astroberry system, then it is worth to update the system with command
+```
+sudo apt update && sudo apt upgrade && sudo apt dist-upgrade
+```
+
 Download and install required libraries before compiling AstroLink 4 Pi. See [INDI site](http://indilib.org/download.html) for more details.
 In most cases it's enough to run:
 ```
