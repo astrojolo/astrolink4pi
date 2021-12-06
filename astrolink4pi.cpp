@@ -1388,7 +1388,6 @@ void AstroLink4Pi::setCurrent(bool standby)
 		return;
 
 	gpio_write(pigpioHandle, EN_PIN, (holdPower > 0) ? 0 : 1);
-	DEBUGF(INDI::Logger::DBG_SESSION, "Ena pin hold power %i", holdPower);
 	if (standby)
 	{
 		if (revision == 1)
