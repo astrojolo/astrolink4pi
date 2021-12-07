@@ -19,8 +19,8 @@ include_directories(${INDI_INCLUDE_DIR})
 
 include(CMakeCommon)
 
-#set(GPIO_LIBRARIES "libgpiod.so")
-#set(PIGPIO_LIBRARIES "libpigpiod_if2.so")
+set(GPIO_LIBRARIES "libgpiod.so")
+set(PIGPIO_LIBRARIES "libpigpiod_if2.so")
 
 ################ AstroLink 4 Pi ################
 set(indi_astrolink4pi_SRCS
