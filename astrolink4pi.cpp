@@ -1358,7 +1358,7 @@ bool AstroLink4Pi::readDS18B20()
 	}
 
 	// parse temperature value from sensor output
-	strncpy(temperatureData, strstr(buf, "t=") + 2, 5);
+	strncpy(temperatureData, strstr(buf, "t=") + 2, 6);
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature sensor raw output: %s", buf);
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature string: %s", temperatureData);
 
