@@ -1387,9 +1387,9 @@ void AstroLink4Pi::setCurrent(bool standby)
 	if (!isConnected())
 		return;
 
-	gpio_write(pigpioHandle, EN_PIN, (holdPower > 0) ? 0 : 1);
 	if (standby)
 	{
+		gpio_write(pigpioHandle, EN_PIN, (holdPower > 0) ? 0 : 1);
 		if (revision == 1)
 		{
 			if (holdPower == 5)
@@ -1423,6 +1423,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 	}
 	else
 	{
+		gpio_write(pigpioHandle, EN_PIN, 0);
 		if(revision == 1)
 		{
 			gpio_write(pigpioHandle, HOLD_PIN, 0);
