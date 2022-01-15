@@ -104,7 +104,8 @@ bool AstroLink4Pi::Connect()
 	set_mode(pigpioHandle, CHK_PIN, PI_INPUT);
 	revision = checkRevision(pigpioHandle);
 
-	set_mode(pigpioHandle, DECAY_PIN, PI_INPUT);	// mixed decay for DRV
+	set_mode(pigpioHandle, DECAY_PIN, PI_OUTPUT);	
+	gpio_write(pigpioHandle, DECAY_PIN, 0); //  decay for DRV
 	set_mode(pigpioHandle, EN_PIN, PI_OUTPUT);
 	gpio_write(pigpioHandle, EN_PIN, 1); // start as disabled
 	set_mode(pigpioHandle, M0_PIN, PI_OUTPUT);
@@ -1392,6 +1393,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 	if (standby)
 	{
 		gpio_write(pigpioHandle, EN_PIN, (holdPower > 0) ? 0 : 1);
+		gpio_write(pigpioHandle, DECAY_PIN, 0);
 		if (revision == 1)
 		{
 			if (holdPower == 5)
@@ -1426,6 +1428,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 	else
 	{
 		gpio_write(pigpioHandle, EN_PIN, 0);
+		gpio_write(pigpioHandle, DECAY_PIN, 1);
 		if(revision == 1)
 		{
 			gpio_write(pigpioHandle, HOLD_PIN, 0);
