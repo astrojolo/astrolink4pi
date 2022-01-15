@@ -25,6 +25,7 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define TEMPERATURE_COMPENSATION_TIMEOUT (30 * 1000) // 60 sec
 #define SYSTEM_UPDATE_PERIOD 1000
 
+#define DECAY_PIN 14
 #define EN_PIN 15
 #define M0_PIN 17
 #define M1_PIN 18
@@ -103,6 +104,7 @@ bool AstroLink4Pi::Connect()
 	set_mode(pigpioHandle, CHK_PIN, PI_INPUT);
 	revision = checkRevision(pigpioHandle);
 
+	set_mode(pigpioHandle, DECAY_PIN, PI_INPUT);	// mixed decay for DRV
 	set_mode(pigpioHandle, EN_PIN, PI_OUTPUT);
 	gpio_write(pigpioHandle, EN_PIN, 1); // start as disabled
 	set_mode(pigpioHandle, M0_PIN, PI_OUTPUT);
