@@ -75,6 +75,7 @@ OR manually installing files by running:
 sudo cp indi_astrolink4pi /usr/bin/
 sudo cp indi_astrolink4pi.xml /usr/share/indi/
 ```
+After these steps AstroLink 4 Pi driver will be visible in the Aux devices lists under **Astrojolo** group.
 
 **Real Time clock enabling - only version 2**
 
