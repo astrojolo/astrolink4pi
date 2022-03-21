@@ -72,8 +72,8 @@ sudo make install
 ```
 OR manually installing files by running:
 ```
-sudo copy indi_astrolink4pi /usr/bin/
-sudo copy indi_astrolink4pi.xml /usr/share/indi/
+sudo cp indi_astrolink4pi /usr/bin/
+sudo cp indi_astrolink4pi.xml /usr/share/indi/
 ```
 
 **Real Time clock enabling - only version 2**
