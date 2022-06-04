@@ -104,7 +104,7 @@ bool AstroLink4Pi::Connect()
 	set_mode(pigpioHandle, CHK_PIN, PI_INPUT);
 	revision = checkRevision(pigpioHandle);
 
-	set_mode(pigpioHandle, DECAY_PIN, PI_OUTPUT);	
+	set_mode(pigpioHandle, DECAY_PIN, PI_OUTPUT);
 	gpio_write(pigpioHandle, DECAY_PIN, 0); //  decay for DRV
 	set_mode(pigpioHandle, EN_PIN, PI_OUTPUT);
 	gpio_write(pigpioHandle, EN_PIN, 1); // start as disabled
@@ -1429,11 +1429,11 @@ void AstroLink4Pi::setCurrent(bool standby)
 	{
 		gpio_write(pigpioHandle, EN_PIN, 0);
 		gpio_write(pigpioHandle, DECAY_PIN, 1);
-		if(revision == 1)
+		if (revision == 1)
 		{
 			gpio_write(pigpioHandle, HOLD_PIN, 0);
 		}
-		if(revision == 2)
+		if (revision == 2)
 		{
 			setDac(0, getDacValue(stepperCurrent));
 		}
@@ -1568,6 +1568,25 @@ int AstroLink4Pi::setDac(int chan, int value)
 	int written = spi_write(pigpioHandle, spiHandle, spiData, 2);
 	spi_close(pigpioHandle, spiHandle);
 	return written;
+}
+
+bool AstroLink4Pi::readSHT()
+{
+	char i2cData[32];
+
+	int i2cHandle = i2c_open(pigpioHandle, 0, 0x44, 0);
+	int written = i2c_write_block_data(pigpioHandle, i2cHandle, 0x2C, [0x66]);
+
+	//sleep 500ms
+
+	int read = i2c_read_block_data(pigpioHandle, i2cHandle, 0x00, i2cData);
+
+	int temp = data[0] * 256 + data[1];
+	double cTemp = -45.0 + (175.0 * temp / 65535.0);
+	double fTemp = -49.0 + (315.0 * temp / 65535.0);
+	double humidity = 100.0 * (data[3] * 256.0 + data[4]) / 65535.0;
+
+	return false;
 }
 
 int AstroLink4Pi::checkRevision(int handle)
