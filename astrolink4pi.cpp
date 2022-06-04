@@ -1535,7 +1535,7 @@ void AstroLink4Pi::getFocuserInfo()
 
 long int AstroLink4Pi::millis()
 {
-	DEBUGF(INDI::Logger::DBG_SESSION, "Time %i", ret);
+	DEBUGF(INDI::Logger::DBG_WARNING, "Time %i", ret);
 	struct timespec clock;
 	if (clock_gettime(CLOCK_MONOTONIC, &clock) == 0)
 	{
