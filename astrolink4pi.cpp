@@ -1039,8 +1039,6 @@ void AstroLink4Pi::TimerHit()
 			backlashTicksRemaining -= 1;
 		}
 	}
-	DEBUGF(INDI::Logger::DBG_SESSION, "Time %i", timeMillis);
-
 	SetTimer(FocusStepDelayN[0].value);
 }
 
