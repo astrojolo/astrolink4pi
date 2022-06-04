@@ -271,7 +271,7 @@ bool AstroLink4Pi::initProperties()
 	IUFillSwitchVector(&FocusHoldSP, FocusHoldS, 6, getDeviceName(), "FOCUS_HOLD", "Hold power", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	// Step delay setting
-	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "milliseconds", "%0.0f", 2, 50, 1, 5);
+	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "milliseconds", "%0.0f", 2, 20, 1, 5);
 	IUFillNumberVector(&FocusStepDelayNP, FocusStepDelayN, 1, getDeviceName(), "FOCUS_STEPDELAY", "Step Delay", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	IUFillNumber(&PWMcycleN[0], "PWMcycle", "PWM freq. [Hz]", "%0.0f", 10, 1000, 10, 20);
