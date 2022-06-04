@@ -1580,12 +1580,12 @@ bool AstroLink4Pi::readSHT()
 
 	//sleep 500ms
 
-	int read = i2c_read_block_data(pigpioHandle, i2cHandle, 0x00, i2cData);
+	//int read = i2c_read_block_data(pigpioHandle, i2cHandle, 0x00, i2cData);
 
-	int temp = i2cData[0] * 256 + i2cData[1];
-	double cTemp = -45.0 + (175.0 * temp / 65535.0);
-	double fTemp = -49.0 + (315.0 * temp / 65535.0);
-	double humidity = 100.0 * (i2cData[3] * 256.0 + i2cData[4]) / 65535.0;
+	//int temp = i2cData[0] * 256 + i2cData[1];
+	//double cTemp = -45.0 + (175.0 * temp / 65535.0);
+	//double fTemp = -49.0 + (315.0 * temp / 65535.0);
+	//double humidity = 100.0 * (i2cData[3] * 256.0 + i2cData[4]) / 65535.0;
 
 	return false;
 }
