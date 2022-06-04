@@ -186,11 +186,11 @@ bool AstroLink4Pi::Connect()
 	nextTemperatureCompensation = currentTime + TEMPERATURE_COMPENSATION_TIMEOUT;
 	nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;
 
-	DEBUGF(INDI::Logger::DBG_SESSION, "Setting timer %i", FocusStepDelayN[0].value);
 
 	SetTimer(FocusStepDelayN[0].value);
 	setCurrent(true);
 
+	DEBUG(INDI::Logger::DBG_SESSION, "Setting timer");
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
 
 	return true;
