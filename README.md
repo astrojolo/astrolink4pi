@@ -34,24 +34,23 @@ https://github.com/astrojolo/astrolink4pi
 * INDI available here http://indilib.org/download.html
 * CMake >= 2.4.7
 
-# Installation
-
-If you have a fresh SD card with astroberry system, then it is worth to update the system with command
+# Stellarmate installation prerequisites
 ```
-sudo apt update && sudo apt upgrade && sudo apt dist-upgrade
-```
-
-Download and install required libraries before compiling AstroLink 4 Pi. See [INDI site](http://indilib.org/download.html) for more details.
-In most cases it's enough to run:
-```
-sudo apt-get install cmake libindi-dev libgpiod-dev
-```
-You also need to enable pigpiod daemon, that is preinstalled with astroberry, but not enabled at startup:
-```
+sudo apt update
+sudo apt-get install cmake
+sudo apt-get install libindi-dev
+sudo apt-get install gpiod libgpiod-dev libgpiod-doc
 sudo systemctl enable pigpiod
 ```
-and restart the device.
-Then you can compile the driver:
+
+# Astroberry installation prerequisites
+```
+sudo apt update
+sudo apt-get install cmake libindi-dev libgpiod-dev
+sudo systemctl enable pigpiod
+```
+
+# AstroLink 4 Pi driver installation
 ```
 git clone https://github.com/astrojolo/astrolink4pi
 cd astrolink4pi
