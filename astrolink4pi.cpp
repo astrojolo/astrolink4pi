@@ -1535,12 +1535,12 @@ void AstroLink4Pi::getFocuserInfo()
 
 long int AstroLink4Pi::millis()
 {
+	DEBUGF(INDI::Logger::DBG_SESSION, "Time %i", ret);
 	struct timespec clock;
 	if (clock_gettime(CLOCK_MONOTONIC, &clock) == 0)
 	{
 		static long int tv_sec_zero = clock.tv_sec;
 		int ret = 1000 * (clock.tv_sec - tv_sec_zero) + clock.tv_nsec / 1000000;
-		DEBUGF(INDI::Logger::DBG_SESSION, "Time %i", ret);
 		return ret;
 	}
 	else
