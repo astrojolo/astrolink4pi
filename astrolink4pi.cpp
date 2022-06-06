@@ -998,10 +998,6 @@ bool AstroLink4Pi::AbortFocuser()
 		_motionThread.join();
 	}
 	DEBUG(INDI::Logger::DBG_SESSION, "Focuser motion aborted.");
-	FocusAbsPosNP.s = IPS_OK;
-	IDSetNumber(&FocusAbsPosNP, nullptr);
-	FocusRelPosNP.s = IPS_OK;
-	IDSetNumber(&FocusRelPosNP, nullptr);
 	return true;
 }
 
@@ -1123,6 +1119,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
         IDSetNumber(&FocusAbsPosNP, nullptr);
         FocusRelPosNP.s = IPS_OK;
         IDSetNumber(&FocusRelPosNP, nullptr);
+		DEBUG(INDI::Logger::DBG_SESSION, "IPSOK");
         
 		savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
 		lastTemperature = FocusTemperatureN[0].value; // register last temperature
