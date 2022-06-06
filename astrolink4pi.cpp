@@ -1167,6 +1167,16 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 
 			std::this_thread::sleep_for(std::chrono::microseconds(1000));
         }
+
+        // update abspos value and status
+        FocusAbsPosN[0].value = currentPos;
+        FocusAbsPosNP.s = IPS_OK;
+		DEBUGF(INDI::Logger::DBG_SESSION, "Motor moved to position %i", (int)currentPos);
+        FocusRelPosNP.s = IPS_OK;
+        IDSetNumber(&FocusRelPosNP, nullptr);
+        
+        _savePosition(currentPos);
+
 	}, targetTicks, lastDirection, pigpioHandle);
 
 	return IPS_BUSY;
