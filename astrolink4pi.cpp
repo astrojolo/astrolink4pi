@@ -85,7 +85,11 @@ AstroLink4Pi::AstroLink4Pi() : FI(this)
 
 AstroLink4Pi::~AstroLink4Pi()
 {
-	//
+	if (_motionThread.joinable())
+	{
+		_abort = true;
+		_motionThread.join();
+	}
 }
 
 const char *AstroLink4Pi::getDefaultName()
@@ -271,7 +275,7 @@ bool AstroLink4Pi::initProperties()
 	IUFillSwitchVector(&FocusHoldSP, FocusHoldS, 6, getDeviceName(), "FOCUS_HOLD", "Hold power", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	// Step delay setting
-	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "milliseconds", "%0.0f", 2, 20, 1, 5);
+	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "milliseconds", "%0.0f", 200, 2000, 1, 500);
 	IUFillNumberVector(&FocusStepDelayNP, FocusStepDelayN, 1, getDeviceName(), "FOCUS_STEPDELAY", "Step Delay", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	IUFillNumber(&PWMcycleN[0], "PWMcycle", "PWM freq. [Hz]", "%0.0f", 10, 1000, 10, 20);
@@ -1044,6 +1048,11 @@ void AstroLink4Pi::TimerHit()
 
 bool AstroLink4Pi::AbortFocuser()
 {
+	if (_motionThread.joinable())
+	{
+		_abort = true;
+		_motionThread.join();
+	}
 	DEBUG(INDI::Logger::DBG_SESSION, "Focuser motion aborted.");
 	backlashTicksRemaining = 0;
 	ticksRemaining = 0;
@@ -1129,7 +1138,19 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "Focuser is moving %s to position %d.", direction, targetTicks);
 
-	SetTimer(FocusStepDelayN[0].value);
+	//SetTimer(FocusStepDelayN[0].value);
+
+	if (_motionThread.joinable())
+	{
+		_abort = true;
+		_motionThread.join();
+	}
+
+	_abort = false;
+	_motionThread = std::thread([this](uint32_t targetPos)
+	{ 
+		DEBUGF(INDI::Logger::DBG_SESSION, "Inside a new thread %i", targetPos); 
+	}, targetTicks);
 
 	return IPS_BUSY;
 }
@@ -1573,11 +1594,11 @@ int AstroLink4Pi::setDac(int chan, int value)
 
 bool AstroLink4Pi::readSHT()
 {
-	char i2cData[32];
-	char startMeasure[] = "\x66";
+	//char i2cData[32];
+	//char startMeasure[] = "\x66";
 
-	int i2cHandle = i2c_open(pigpioHandle, 0, 0x44, 0);
-	int written = i2c_write_block_data(pigpioHandle, i2cHandle, 0x2C, startMeasure, 1);
+	//int i2cHandle = i2c_open(pigpioHandle, 0, 0x44, 0);
+	//int written = i2c_write_block_data(pigpioHandle, i2cHandle, 0x2C, startMeasure, 1);
 
 	//sleep 500ms
 
