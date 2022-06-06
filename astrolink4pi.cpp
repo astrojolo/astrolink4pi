@@ -972,6 +972,7 @@ void AstroLink4Pi::TimerHit()
 	{
 		if (FocusAbsPosNP.s != IPS_OK)
 		{
+			/*
 			// All movement completed/aborted, but still the movement not completed
 			// save position to file
 			savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
@@ -984,6 +985,7 @@ void AstroLink4Pi::TimerHit()
 
 			lastTemperature = FocusTemperatureN[0].value; // register last temperature
 			setCurrent(true);
+			*/
 		}
 		else
 		{
@@ -1169,9 +1171,9 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
         }
 
         // update abspos value and status
+		DEBUGF(INDI::Logger::DBG_SESSION, "Motor moved to position %i", (int)currentPos);
         FocusAbsPosN[0].value = currentPos;
         FocusAbsPosNP.s = IPS_OK;
-		DEBUGF(INDI::Logger::DBG_SESSION, "Motor moved to position %i", (int)currentPos);
         FocusRelPosNP.s = IPS_OK;
         IDSetNumber(&FocusRelPosNP, nullptr);
         
