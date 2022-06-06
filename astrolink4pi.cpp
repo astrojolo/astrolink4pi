@@ -1151,6 +1151,8 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	{ 
 		DEBUGF(INDI::Logger::DBG_SESSION, "Inside a new thread %i", targetPos); 
 
+		auto newDirection = 1;
+		uint32_t currentPos = FocusAbsPosN[0].value;
 		// GO
         while (currentPos != targetPos && !_abort)
         {          
