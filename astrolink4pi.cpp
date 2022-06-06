@@ -1009,6 +1009,7 @@ void AstroLink4Pi::TimerHit()
 	}
 	else
 	{
+		/*
 		// Progress with movement
 		int motorDirection = lastDirection;
 
@@ -1042,6 +1043,7 @@ void AstroLink4Pi::TimerHit()
 		{ //Don't count the backlash position change, just decrement the counter
 			backlashTicksRemaining -= 1;
 		}
+		*/
 	}
 	SetTimer(FocusStepDelayN[0].value);
 }
@@ -1061,16 +1063,7 @@ bool AstroLink4Pi::AbortFocuser()
 
 void AstroLink4Pi::stepMotor(int direction)
 {
-	if (direction < 0)
-		gpio_write(pigpioHandle, DIR_PIN, 0);
-	else
-		gpio_write(pigpioHandle, DIR_PIN, 1);
-	// step on
-	gpio_write(pigpioHandle, STP_PIN, 1);
-	// wait
-	usleep(10);
-	// step off
-	gpio_write(pigpioHandle, STP_PIN, 0);
+
 }
 
 IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
@@ -1133,12 +1126,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 
 	lastDirection = newDirection;
 
-	// process targetTicks
-	ticksRemaining = abs(targetTicks - FocusAbsPosN[0].value);
-
 	DEBUGF(INDI::Logger::DBG_SESSION, "Focuser is moving %s to position %d.", direction, targetTicks);
-
-	//SetTimer(FocusStepDelayN[0].value);
 
 	if (_motionThread.joinable())
 	{
@@ -1147,28 +1135,39 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	}
 
 	_abort = false;
-	_motionThread = std::thread([this](uint32_t targetPos)
+	_motionThread = std::thread([this](uint32_t targetPos, int direction, int pigpioHandle)
 	{ 
 		DEBUGF(INDI::Logger::DBG_SESSION, "Inside a new thread %i", targetPos); 
 
-		auto newDirection = 1;
+		// Progress with movement
+		int motorDirection = direction;
+
+		// handle Reverse Motion
+		if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
+		{
+			motorDirection = -1 * motorDirection;
+		}
+
 		uint32_t currentPos = FocusAbsPosN[0].value;
 		// GO
         while (currentPos != targetPos && !_abort)
         {          
-            currentPos += newDirection;
+            currentPos += motorDirection;
             
-            if (currentPos % 3 == 0)
+            if (currentPos % 100 == 0)
             {
                 FocusAbsPosN[0].value = currentPos;
                 FocusAbsPosNP.s = IPS_BUSY;
                 IDSetNumber(&FocusAbsPosNP, nullptr);
             }            
-			std::this_thread::sleep_for(std::chrono::milliseconds(200));
-			DEBUGF(INDI::Logger::DBG_SESSION, "Position %i", currentPos); 
+			gpio_write(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 0 : 1);
+			gpio_write(pigpioHandle, STP_PIN, 1);
+			usleep(10);
+			gpio_write(pigpioHandle, STP_PIN, 0);			
 
+			std::this_thread::sleep_for(std::chrono::microseconds(1000));
         }
-	}, targetTicks);
+	}, targetTicks, lastDirection, pigpioHandle);
 
 	return IPS_BUSY;
 }
