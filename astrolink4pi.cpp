@@ -1096,14 +1096,14 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 			usleep(10);
 			gpio_write(pigpioHandle, STP_PIN, 0);			
 
-			if (backlashTicksRemaining > 0)
-			{ //Only Count the position change if it is not due to backlash
+			//if (backlashTicksRemaining > 0)
+			//{ //Only Count the position change if it is not due to backlash
 				currentPos += direction;
-			}
-			else
-			{ //Don't count the backlash position change, just decrement the counter
-				backlashTicksRemaining -= 1;
-			}
+			//}
+			//else
+			//{ //Don't count the backlash position change, just decrement the counter
+				//backlashTicksRemaining -= 1;
+			//}
 
 			std::this_thread::sleep_for(std::chrono::microseconds((int) FocusStepDelayN[0].value));
         }
