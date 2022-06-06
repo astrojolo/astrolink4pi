@@ -1168,16 +1168,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 			usleep(10);
 			gpio_write(pigpioHandle, STP_PIN, 0);			
 
-			auto start = std::chrono::high_resolution_clock::now();
-			for(;;)
-			{
-				auto later = std::chrono::high_resolution_clock::now();
-				auto micros = std::chrono::duration_cast<std::chrono::microseconds>(later - start);
-				if (micros.count() >= (int) FocusStepDelayN[0].value)
-					break;
-			}
-
-			//std::this_thread::sleep_for(std::chrono::microseconds((int) FocusStepDelayN[0].value));
+			std::this_thread::sleep_for(std::chrono::microseconds((int) FocusStepDelayN[0].value));
         }
 
         // update abspos value and status
@@ -1188,7 +1179,9 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
         FocusRelPosNP.s = IPS_OK;
         IDSetNumber(&FocusRelPosNP, nullptr);
         
-        savePosition(currentPos);
+		savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
+		lastTemperature = FocusTemperatureN[0].value; // register last temperature
+		setCurrent(true);
 
 	}, targetTicks, lastDirection, pigpioHandle);
 
