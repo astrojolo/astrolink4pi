@@ -1009,12 +1009,6 @@ IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
 
 IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 {
-	if (FocusAbsPosNP.s != IPS_OK)
-	{
-		DEBUG(INDI::Logger::DBG_WARNING, "Focuser movement still in progress.");
-		return IPS_BUSY;
-	}
-
 	if (targetTicks < FocusAbsPosN[0].min || targetTicks > FocusAbsPosN[0].max)
 	{
 		DEBUG(INDI::Logger::DBG_WARNING, "Requested position is out of range.");
@@ -1119,8 +1113,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
         IDSetNumber(&FocusAbsPosNP, nullptr);
         FocusRelPosNP.s = IPS_OK;
         IDSetNumber(&FocusRelPosNP, nullptr);
-		DEBUG(INDI::Logger::DBG_SESSION, "IPSOK");
-        
+	        
 		savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
 		lastTemperature = FocusTemperatureN[0].value; // register last temperature
 		setCurrent(true);
