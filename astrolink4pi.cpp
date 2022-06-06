@@ -1168,7 +1168,16 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 			usleep(10);
 			gpio_write(pigpioHandle, STP_PIN, 0);			
 
-			std::this_thread::sleep_for(std::chrono::microseconds((int) FocusStepDelayN[0].value));
+			auto start = std::chrono::high_resolution_clock::now();
+			for(;;)
+			{
+				auto later = std::chrono::high_resolution_clock::now();
+				auto micros = std::chrono::duration_cast<std::chrono::microseconds>(later - start);
+				if (micros.count() >= (int) FocusStepDelayN[0].value)
+					break;
+			}
+
+			//std::this_thread::sleep_for(std::chrono::microseconds((int) FocusStepDelayN[0].value));
         }
 
         // update abspos value and status
