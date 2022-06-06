@@ -31,6 +31,7 @@
 #include <time.h>
 #include <iostream>
 #include <thread>
+#include <chrono>
 #include "config.h"
 
 #include <pigpiod_if2.h>

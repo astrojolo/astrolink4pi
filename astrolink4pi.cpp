@@ -1150,6 +1150,22 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	_motionThread = std::thread([this](uint32_t targetPos)
 	{ 
 		DEBUGF(INDI::Logger::DBG_SESSION, "Inside a new thread %i", targetPos); 
+
+		// GO
+        while (currentPos != targetPos && !_abort)
+        {          
+            currentPos += newDirection;
+            
+            if (currentPos % 3 == 0)
+            {
+                FocusAbsPosN[0].value = currentPos;
+                FocusAbsPosNP.s = IPS_BUSY;
+                IDSetNumber(&FocusAbsPosNP, nullptr);
+            }            
+			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+			DEBUGF(INDI::Logger::DBG_SESSION, "Position %i", currentPos); 
+
+        }
 	}, targetTicks);
 
 	return IPS_BUSY;
