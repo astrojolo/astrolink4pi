@@ -24,6 +24,7 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define TEMPERATURE_UPDATE_TIMEOUT (5 * 1000)		 // 3 sec
 #define TEMPERATURE_COMPENSATION_TIMEOUT (30 * 1000) // 60 sec
 #define SYSTEM_UPDATE_PERIOD 1000
+#define POLL_PERIOD	1000
 
 #define DECAY_PIN 14
 #define EN_PIN 15
@@ -190,7 +191,7 @@ bool AstroLink4Pi::Connect()
 	nextTemperatureCompensation = currentTime + TEMPERATURE_COMPENSATION_TIMEOUT;
 	nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;
 
-	SetTimer(FocusStepDelayN[0].value);
+	SetTimer(POLL_PERIOD);
 	setCurrent(true);
 
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
@@ -275,7 +276,7 @@ bool AstroLink4Pi::initProperties()
 	IUFillSwitchVector(&FocusHoldSP, FocusHoldS, 6, getDeviceName(), "FOCUS_HOLD", "Hold power", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	// Step delay setting
-	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "milliseconds", "%0.0f", 200, 2000, 1, 500);
+	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "microseconds", "%0.0f", 200, 20000, 1, 2000);
 	IUFillNumberVector(&FocusStepDelayNP, FocusStepDelayN, 1, getDeviceName(), "FOCUS_STEPDELAY", "Step Delay", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	IUFillNumber(&PWMcycleN[0], "PWMcycle", "PWM freq. [Hz]", "%0.0f", 10, 1000, 10, 20);
@@ -454,7 +455,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IDSetNumber(&FocusStepDelayNP, nullptr);
 			FocusStepDelayNP.s = IPS_OK;
 			IDSetNumber(&FocusStepDelayNP, nullptr);
-			DEBUGF(INDI::Logger::DBG_SESSION, "Step delay set to %0.0f ms.", FocusStepDelayN[0].value);
+			DEBUGF(INDI::Logger::DBG_SESSION, "Step delay set to %0.0f us.", FocusStepDelayN[0].value);
 			return true;
 		}
 
@@ -1047,7 +1048,7 @@ void AstroLink4Pi::TimerHit()
 		}
 		*/
 	}
-	SetTimer(FocusStepDelayN[0].value);
+	SetTimer(POLL_PERIOD);
 }
 
 bool AstroLink4Pi::AbortFocuser()
@@ -1167,7 +1168,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 			usleep(10);
 			gpio_write(pigpioHandle, STP_PIN, 0);			
 
-			std::this_thread::sleep_for(std::chrono::microseconds(1000));
+			std::this_thread::sleep_for(std::chrono::microseconds(FocusStepDelayN[0].value));
         }
 
         // update abspos value and status
