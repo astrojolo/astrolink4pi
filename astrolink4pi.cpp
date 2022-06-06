@@ -1158,9 +1158,9 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
             
             if (currentPos % 100 == 0)
             {
-                //FocusAbsPosN[0].value = currentPos;
-                //FocusAbsPosNP.s = IPS_BUSY;
-                //IDSetNumber(&FocusAbsPosNP, nullptr);
+                FocusAbsPosN[0].value = currentPos;
+                FocusAbsPosNP.s = IPS_BUSY;
+                IDSetNumber(&FocusAbsPosNP, nullptr);
             }            
 			gpio_write(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 0 : 1);
 			gpio_write(pigpioHandle, STP_PIN, 1);
@@ -1171,9 +1171,11 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
         }
 
         // update abspos value and status
-		DEBUGF(INDI::Logger::DBG_SESSION, "Motor moved to position %i", (int)currentPos);
+		DEBUGF(INDI::Logger::DBG_SESSION, "Focuser moved to position %i", (int)currentPos);
         FocusAbsPosN[0].value = currentPos;
         FocusAbsPosNP.s = IPS_OK;
+        IDSetNumber(&FocusAbsPosNP, nullptr);
+        FocusRelPosNP.s = IPS_OK;
         IDSetNumber(&FocusRelPosNP, nullptr);
         
         savePosition(currentPos);
