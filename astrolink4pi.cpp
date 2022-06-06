@@ -1011,7 +1011,7 @@ IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
 
 IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 {
-	if (backlashTicksRemaining > 0 || ticksRemaining > 0)
+	if (FocusAbsPosNP.s != IPS_OK)
 	{
 		DEBUG(INDI::Logger::DBG_WARNING, "Focuser movement still in progress.");
 		return IPS_BUSY;
@@ -1074,8 +1074,6 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	_abort = false;
 	_motionThread = std::thread([this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
 	{ 
-		DEBUGF(INDI::Logger::DBG_SESSION, "Inside a new thread %i", targetPos); 
-
 		int motorDirection = direction;
 		if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
 		{
@@ -1104,14 +1102,15 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 			{ //Don't count the backlash position change, just decrement the counter
 				backlashTicksRemaining -= 1;
 			}
-        auto start = std::chrono::high_resolution_clock::now();
-        for(;;)
-        {
-            auto later = std::chrono::high_resolution_clock::now();
-            auto micros = std::chrono::duration_cast<std::chrono::microseconds>(later - start);
-            if (micros.count() >= (int) FocusStepDelayN[0].value)
-                break;
-        }
+
+			auto start = std::chrono::high_resolution_clock::now();
+			for(;;)
+			{
+				auto later = std::chrono::high_resolution_clock::now();
+				auto micros = std::chrono::duration_cast<std::chrono::microseconds>(later - start);
+				if (micros.count() >= (int) FocusStepDelayN[0].value)
+					break;
+			}
 			//std::this_thread::sleep_for(std::chrono::microseconds((int) FocusStepDelayN[0].value));
         }
 
