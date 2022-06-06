@@ -30,13 +30,14 @@
 #include <memory>
 #include <time.h>
 #include <iostream>
+#include <thread>
+#include <chrono>
 #include "config.h"
 
 #include <pigpiod_if2.h>
 
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
-
 
 class AstroLink4Pi : public INDI::DefaultDevice, public INDI::FocuserInterface
 {
@@ -47,21 +48,21 @@ public:
 	virtual bool initProperties();
 	virtual bool updateProperties();
 
-	virtual bool ISNewNumber (const char *dev, const char *name, double values[], char *names[], int n);
-	virtual bool ISNewSwitch (const char *dev, const char *name, ISState *states, char *names[], int n);
-	virtual bool ISNewText (const char *dev, const char *name, char *texts[], char *names[], int n);
+	virtual bool ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n);
+	virtual bool ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n);
+	virtual bool ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n);
 	virtual bool ISSnoopDevice(XMLEle *root);
 
 protected:
 	const char *getDefaultName();
 
 	// Focuser Overrides
-    virtual IPState MoveAbsFocuser(uint32_t targetTicks) override;
-    virtual IPState MoveRelFocuser(FocusDirection dir, uint32_t ticks) override;
+	virtual IPState MoveAbsFocuser(uint32_t targetTicks) override;
+	virtual IPState MoveRelFocuser(FocusDirection dir, uint32_t ticks) override;
 	virtual bool ReverseFocuser(bool enabled);
 	virtual bool AbortFocuser();
 	virtual bool SyncFocuser(uint32_t ticks) override;
-	virtual bool SetFocuserBacklash(int32_t steps) override;	
+	virtual bool SetFocuserBacklash(int32_t steps) override;
 
 	virtual bool saveConfigItems(FILE *fp);
 	virtual void TimerHit();
@@ -71,7 +72,6 @@ private:
 	virtual bool Disconnect();
 	virtual void SetResolution(int res);
 	virtual int savePosition(int pos);
-	virtual void stepMotor(int direction);
 	virtual bool readSHT();
 	virtual bool readDS18B20();
 
@@ -86,17 +86,17 @@ private:
 	INumber TemperatureCoefN[1];
 	INumberVectorProperty TemperatureCoefNP;
 	ISwitch TemperatureCompensateS[2];
-	ISwitchVectorProperty TemperatureCompensateSP;	
+	ISwitchVectorProperty TemperatureCompensateSP;
 
 	INumber FocuserInfoN[3];
 	INumberVectorProperty FocuserInfoNP;
 	INumber FocuserTravelN[1];
-	INumberVectorProperty FocuserTravelNP;	
+	INumberVectorProperty FocuserTravelNP;
 
 	INumber ScopeParametersN[2];
 	INumberVectorProperty ScopeParametersNP;
 	IText ActiveTelescopeT[1];
-	ITextVectorProperty ActiveTelescopeTP;	
+	ITextVectorProperty ActiveTelescopeTP;
 
 	IText SysTimeT[2];
 	ITextVectorProperty SysTimeTP;
@@ -105,7 +105,7 @@ private:
 	ISwitch SysControlS[2];
 	ISwitchVectorProperty SysControlSP;
 	ISwitch SysOpConfirmS[2];
-	ISwitchVectorProperty SysOpConfirmSP;	
+	ISwitchVectorProperty SysOpConfirmSP;
 
 	IText RelayLabelsT[4];
 	ITextVectorProperty RelayLabelsTP;
@@ -121,10 +121,10 @@ private:
 	INumberVectorProperty PWM2NP;
 
 	INumber PWMcycleN[1];
-	INumberVectorProperty PWMcycleNP;	
+	INumberVectorProperty PWMcycleNP;
 
 	INumber StepperCurrentN[1];
-	INumberVectorProperty StepperCurrentNP;		
+	INumberVectorProperty StepperCurrentNP;
 
 	int revision = 1;
 	int pigpioHandle = -1;
@@ -134,17 +134,19 @@ private:
 	bool sensorAvailable = false;
 
 	int backlashTicksRemaining;
-	int ticksRemaining;
 	int lastDirection = 0;
 
 	int pwmState[2];
 	int relayState[2];
-	int pwmCounter = 0;	
+	int pwmCounter = 0;
 	int stepperCurrent = 0;
 
 	long int nextTemperatureRead = 0;
 	long int nextTemperatureCompensation = 0;
 	long int nextSystemRead = 0;
+
+	std::thread _motionThread;
+	volatile bool _abort;
 
 	void getFocuserInfo();
 	void temperatureCompensation();
@@ -155,8 +157,8 @@ private:
 	int checkRevision(int handle);
 	long int millis();
 
-	static constexpr const char *SYSTEM_TAB {"System"};
-	static constexpr const char *OUTPUTS_TAB {"Outputs"};
+	static constexpr const char *SYSTEM_TAB{"System"};
+	static constexpr const char *OUTPUTS_TAB{"Outputs"};
 };
 
 #endif
