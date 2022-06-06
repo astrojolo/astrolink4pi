@@ -1175,7 +1175,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
         FocusRelPosNP.s = IPS_OK;
         IDSetNumber(&FocusRelPosNP, nullptr);
         
-        _savePosition(currentPos);
+        savePosition(currentPos);
 
 	}, targetTicks, lastDirection, pigpioHandle);
 
