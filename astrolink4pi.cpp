@@ -24,7 +24,7 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define TEMPERATURE_UPDATE_TIMEOUT (5 * 1000)		 // 3 sec
 #define TEMPERATURE_COMPENSATION_TIMEOUT (30 * 1000) // 60 sec
 #define SYSTEM_UPDATE_PERIOD 1000
-#define POLL_PERIOD	1000
+#define POLL_PERIOD 500
 
 #define DECAY_PIN 14
 #define EN_PIN 15
@@ -969,85 +969,24 @@ void AstroLink4Pi::TimerHit()
 
 	long int timeMillis = millis();
 
-	if (backlashTicksRemaining <= 0 && ticksRemaining <= 0)
+	if (nextTemperatureRead < timeMillis)
 	{
-		if (FocusAbsPosNP.s != IPS_OK)
-		{
-			/*
-			// All movement completed/aborted, but still the movement not completed
-			// save position to file
-			savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
-
-			// update abspos value and status
-			DEBUGF(INDI::Logger::DBG_SESSION, "Focuser at the position %0.0f.", FocusAbsPosN[0].value);
-
-			FocusAbsPosNP.s = IPS_OK;
-			IDSetNumber(&FocusAbsPosNP, nullptr);
-
-			lastTemperature = FocusTemperatureN[0].value; // register last temperature
-			setCurrent(true);
-			*/
-		}
-		else
-		{
-			// Do other stuff only while the stepper is not moving
-			if (nextTemperatureRead < timeMillis)
-			{
-				sensorAvailable = readDS18B20();
-				nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
-				if (!sensorAvailable)
-					FocusTemperatureNP.s = IPS_ALERT;
-			}
-			if (nextTemperatureCompensation < timeMillis)
-			{
-				temperatureCompensation();
-				nextTemperatureCompensation = timeMillis + TEMPERATURE_COMPENSATION_TIMEOUT;
-			}
-			if (nextSystemRead < timeMillis)
-			{
-				systemUpdate();
-				nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
-			}
-		}
+		sensorAvailable = readDS18B20();
+		nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
+		if (!sensorAvailable)
+			FocusTemperatureNP.s = IPS_ALERT;
 	}
-	else
+	if (nextTemperatureCompensation < timeMillis)
 	{
-		/*
-		// Progress with movement
-		int motorDirection = lastDirection;
-
-		// handle Reverse Motion
-		if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
-		{
-			motorDirection = -1 * motorDirection;
-		}
-
-		bool isBacklash = (backlashTicksRemaining > 0);
-
-		//Move the actual motor
-		stepMotor(motorDirection);
-
-		if (isBacklash == false)
-		{ //Only Count the position change if it is not due to backlash
-			// INWARD - count down
-			if (lastDirection == -1)
-				FocusAbsPosN[0].value -= 1;
-
-			// OUTWARD - count up
-			if (lastDirection == 1)
-				FocusAbsPosN[0].value += 1;
-
-			IDSetNumber(&FocusAbsPosNP, nullptr);
-
-			//decrement counter
-			ticksRemaining -= 1;
-		}
-		else
-		{ //Don't count the backlash position change, just decrement the counter
-			backlashTicksRemaining -= 1;
-		}
-		*/
+		temperatureCompensation();
+		nextTemperatureCompensation = timeMillis + TEMPERATURE_COMPENSATION_TIMEOUT;
 	}
+	if (nextSystemRead < timeMillis)
+	{
+		systemUpdate();
+		nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
+	}
+
 	SetTimer(POLL_PERIOD);
 }
 
@@ -1062,11 +1001,6 @@ bool AstroLink4Pi::AbortFocuser()
 	backlashTicksRemaining = 0;
 	ticksRemaining = 0;
 	return true;
-}
-
-void AstroLink4Pi::stepMotor(int direction)
-{
-
 }
 
 IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
@@ -1138,25 +1072,19 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	}
 
 	_abort = false;
-	_motionThread = std::thread([this](uint32_t targetPos, int direction, int pigpioHandle)
+	_motionThread = std::thread([this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
 	{ 
 		DEBUGF(INDI::Logger::DBG_SESSION, "Inside a new thread %i", targetPos); 
 
-		// Progress with movement
 		int motorDirection = direction;
-
-		// handle Reverse Motion
 		if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
 		{
 			motorDirection = -1 * motorDirection;
 		}
 
 		uint32_t currentPos = FocusAbsPosN[0].value;
-		// GO
         while (currentPos != targetPos && !_abort)
-        {          
-            currentPos += motorDirection;
-            
+        {                      
             if (currentPos % 100 == 0)
             {
                 FocusAbsPosN[0].value = currentPos;
@@ -1167,6 +1095,15 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 			gpio_write(pigpioHandle, STP_PIN, 1);
 			usleep(10);
 			gpio_write(pigpioHandle, STP_PIN, 0);			
+
+			if (backlashTicksRemaining > 0)
+			{ //Only Count the position change if it is not due to backlash
+				currentPos += direction;
+			}
+			else
+			{ //Don't count the backlash position change, just decrement the counter
+				backlashTicksRemaining -= 1;
+			}
 
 			std::this_thread::sleep_for(std::chrono::microseconds((int) FocusStepDelayN[0].value));
         }
@@ -1183,7 +1120,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 		lastTemperature = FocusTemperatureN[0].value; // register last temperature
 		setCurrent(true);
 
-	}, targetTicks, lastDirection, pigpioHandle);
+	}, targetTicks, lastDirection, pigpioHandle, backlashTicksRemaining);
 
 	return IPS_BUSY;
 }

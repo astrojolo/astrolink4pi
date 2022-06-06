@@ -72,7 +72,6 @@ private:
 	virtual bool Disconnect();
 	virtual void SetResolution(int res);
 	virtual int savePosition(int pos);
-	virtual void stepMotor(int direction);
 	virtual bool readSHT();
 	virtual bool readDS18B20();
 
