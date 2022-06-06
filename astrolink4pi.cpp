@@ -998,8 +998,10 @@ bool AstroLink4Pi::AbortFocuser()
 		_motionThread.join();
 	}
 	DEBUG(INDI::Logger::DBG_SESSION, "Focuser motion aborted.");
-	backlashTicksRemaining = 0;
-	ticksRemaining = 0;
+	FocusAbsPosNP.s = IPS_OK;
+	IDSetNumber(&FocusAbsPosNP, nullptr);
+	FocusRelPosNP.s = IPS_OK;
+	IDSetNumber(&FocusRelPosNP, nullptr);
 	return true;
 }
 

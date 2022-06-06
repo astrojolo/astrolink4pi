@@ -134,7 +134,6 @@ private:
 	bool sensorAvailable = false;
 
 	int backlashTicksRemaining;
-	int ticksRemaining;
 	int lastDirection = 0;
 
 	int pwmState[2];
