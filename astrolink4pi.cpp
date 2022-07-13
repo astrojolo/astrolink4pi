@@ -26,20 +26,21 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define SYSTEM_UPDATE_PERIOD 1000
 #define POLL_PERIOD 500
 
-#define DECAY_PIN 14
-#define EN_PIN 15
-#define M0_PIN 17
-#define M1_PIN 18
-#define M2_PIN 27
-#define RST_PIN 22
-#define STP_PIN 24
-#define DIR_PIN 23
-#define OUT1_PIN 5
-#define OUT2_PIN 6
-#define PWM1_PIN 26
-#define PWM2_PIN 19
-#define HOLD_PIN 10
-#define CHK_PIN 20
+#define DECAY_PIN 	14
+#define EN_PIN 		15
+#define M0_PIN 		17
+#define M1_PIN 		18
+#define M2_PIN 		27
+#define RST_PIN 	22
+#define STP_PIN 	24
+#define DIR_PIN 	23
+#define OUT1_PIN 	5
+#define OUT2_PIN 	6
+#define PWM1_PIN 	26
+#define PWM2_PIN 	19
+#define HOLD_PIN 	10
+#define CHK_PIN 	20
+#define CHK2_PIN 	16
 
 void ISPoll(void *p);
 
@@ -230,7 +231,7 @@ bool AstroLink4Pi::initProperties()
 {
 	INDI::DefaultDevice::initProperties();
 
-	setDriverInterface(AUX_INTERFACE | FOCUSER_INTERFACE);
+	setDriverInterface(AUX_INTERFACE | FOCUSER_INTERFACE | WEATHER_INTERFACE);
 
 	FI::SetCapability(FOCUSER_CAN_ABS_MOVE |
 					  FOCUSER_CAN_REL_MOVE |
@@ -240,7 +241,7 @@ bool AstroLink4Pi::initProperties()
 					  FOCUSER_HAS_BACKLASH);
 
 	FI::initProperties(FOCUS_TAB);
-
+    WI::initProperties(ENVIRONMENT_TAB, ENVIRONMENT_TAB);
 	// addDebugControl();
 	// addSimulationControl();
 	addConfigurationControl();
@@ -363,6 +364,11 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&PWM2N[0], "PWMout2", "%", "%0.0f", 0, 100, 10, 0);
 	IUFillNumberVector(&PWM2NP, PWM2N, 1, getDeviceName(), "PWMOUT2", RelayLabelsT[3].text, OUTPUTS_TAB, IP_RW, 60, IPS_IDLE);
 
+    // Environment Group
+    addParameter("WEATHER_TEMPERATURE", "Temperature (C)", -15, 35, 15);
+    addParameter("WEATHER_HUMIDITY", "Humidity %", 0, 100, 15);
+    addParameter("WEATHER_DEWPOINT", "Dew Point (C)", -25, 20, 15);
+
 	// initial values at resolution 1/1
 	FocusMaxPosN[0].min = 1000;
 	FocusMaxPosN[0].max = 100000;
@@ -392,6 +398,8 @@ bool AstroLink4Pi::updateProperties()
 	if (isConnected())
 	{
 		FI::updateProperties();
+		WI::updateProperties();
+
 		defineProperty(&ActiveTelescopeTP);
 		defineProperty(&FocuserTravelNP);
 		defineProperty(&FocusResolutionSP);
@@ -437,6 +445,7 @@ bool AstroLink4Pi::updateProperties()
 		deleteProperty(PWMcycleNP.name);
 		deleteProperty(StepperCurrentNP.name);
 		FI::updateProperties();
+		WI::updateProperties();
 	}
 
 	return true;
@@ -543,6 +552,8 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 
 		if (strstr(name, "FOCUS_"))
 			return FI::processNumber(dev, name, values, names, n);
+        if (strstr(name, "WEATHER_"))
+            return WI::processNumber(dev, name, values, names, n);			
 	}
 
 	return INDI::DefaultDevice::ISNewNumber(dev, name, values, names, n);
@@ -1258,6 +1269,11 @@ bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
 	return true;
 }
 
+bool FocuserLink::SetFocuserBacklashEnabled(bool enabled)
+{
+    return true;
+}
+
 void AstroLink4Pi::temperatureCompensation()
 {
 	if (!isConnected())
@@ -1584,13 +1600,25 @@ int AstroLink4Pi::checkRevision(int handle)
 {
 	int rev = 1;
 	set_mode(handle, CHK_PIN, PI_INPUT);
+	set_mode(handle, CHK2_PIN, PI_INPUT);
 	setDac(1, 0);
 	if (gpio_read(handle, CHK_PIN) == 0)
 	{
 		setDac(1, 255);
 		if (gpio_read(handle, CHK_PIN) == 1)
 		{
+			
 			rev = 2;
+		}
+	}
+	setDac(1, 0);
+	if (gpio_read(handle, CHK2_PIN) == 0)
+	{
+		setDac(1, 255);
+		if (gpio_read(handle, CHK2_PIN) == 1)
+		{
+			
+			rev = 3;
 		}
 	}
 	setDac(1, 255);

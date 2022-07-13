@@ -39,7 +39,7 @@
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
 
-class AstroLink4Pi : public INDI::DefaultDevice, public INDI::FocuserInterface
+class AstroLink4Pi : public INDI::DefaultDevice, public INDI::FocuserInterface, public INDI::WeatherInterface
 {
 public:
 	AstroLink4Pi();
@@ -62,10 +62,19 @@ protected:
 	virtual bool ReverseFocuser(bool enabled);
 	virtual bool AbortFocuser();
 	virtual bool SyncFocuser(uint32_t ticks) override;
+
 	virtual bool SetFocuserBacklash(int32_t steps) override;
+    virtual bool SetFocuserBacklashEnabled(bool enabled) override;
+    virtual bool SetFocuserMaxPosition(uint32_t ticks) override;
 
 	virtual bool saveConfigItems(FILE *fp);
 	virtual void TimerHit();
+
+	// Weather Overrides
+    virtual IPState updateWeather() override
+    {
+        return IPS_OK;
+    }
 
 private:
 	virtual bool Connect();
@@ -157,6 +166,7 @@ private:
 	int checkRevision(int handle);
 	long int millis();
 
+    static constexpr const char *ENVIRONMENT_TAB {"Environment"};
 	static constexpr const char *SYSTEM_TAB{"System"};
 	static constexpr const char *OUTPUTS_TAB{"Outputs"};
 };
