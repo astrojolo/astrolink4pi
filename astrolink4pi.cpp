@@ -79,7 +79,7 @@ void ISSnoopDevice(XMLEle *root)
 	astroLink4Pi->ISSnoopDevice(root);
 }
 
-AstroLink4Pi::AstroLink4Pi() : FI(this)
+AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 	pigpioHandle = pigpio_start(NULL, NULL);
