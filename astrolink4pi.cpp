@@ -1269,7 +1269,7 @@ bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
 	return true;
 }
 
-bool FocuserLink::SetFocuserBacklashEnabled(bool enabled)
+bool AstroLink4Pi::SetFocuserBacklashEnabled(bool enabled)
 {
     return true;
 }

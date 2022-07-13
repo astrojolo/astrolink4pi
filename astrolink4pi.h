@@ -38,6 +38,7 @@
 
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
+#include <indiweatherinterface.h>
 
 class AstroLink4Pi : public INDI::DefaultDevice, public INDI::FocuserInterface, public INDI::WeatherInterface
 {
