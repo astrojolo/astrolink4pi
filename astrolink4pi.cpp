@@ -26,21 +26,21 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define SYSTEM_UPDATE_PERIOD 1000
 #define POLL_PERIOD 500
 
-#define DECAY_PIN 	14
-#define EN_PIN 		15
-#define M0_PIN 		17
-#define M1_PIN 		18
-#define M2_PIN 		27
-#define RST_PIN 	22
-#define STP_PIN 	24
-#define DIR_PIN 	23
-#define OUT1_PIN 	5
-#define OUT2_PIN 	6
-#define PWM1_PIN 	26
-#define PWM2_PIN 	19
-#define HOLD_PIN 	10
-#define CHK_PIN 	20
-#define CHK2_PIN 	16
+#define DECAY_PIN 14
+#define EN_PIN 15
+#define M0_PIN 17
+#define M1_PIN 18
+#define M2_PIN 27
+#define RST_PIN 22
+#define STP_PIN 24
+#define DIR_PIN 23
+#define OUT1_PIN 5
+#define OUT2_PIN 6
+#define PWM1_PIN 26
+#define PWM2_PIN 19
+#define HOLD_PIN 10
+#define CHK_PIN 20
+#define CHK2_PIN 16
 
 void ISPoll(void *p);
 
@@ -152,26 +152,26 @@ bool AstroLink4Pi::Connect()
 	FILE *pipe;
 	char buffer[128];
 
-	//update Hardware
-	//https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
+	// update Hardware
+	// https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
 	pipe = popen("cat /sys/firmware/devicetree/base/model", "r");
 	if (fgets(buffer, 128, pipe) != NULL)
 		IUSaveText(&SysInfoT[0], buffer);
 	pclose(pipe);
 
-	//update Hostname
+	// update Hostname
 	pipe = popen("hostname", "r");
 	if (fgets(buffer, 128, pipe) != NULL)
 		IUSaveText(&SysInfoT[4], buffer);
 	pclose(pipe);
 
-	//update Local IP
+	// update Local IP
 	pipe = popen("hostname -I|awk -F' '  '{print $1}'|xargs", "r");
 	if (fgets(buffer, 128, pipe) != NULL)
 		IUSaveText(&SysInfoT[5], buffer);
 	pclose(pipe);
 
-	//update Public IP
+	// update Public IP
 	pipe = popen("wget -qO- http://ipecho.net/plain|xargs", "r");
 	if (fgets(buffer, 128, pipe) != NULL)
 		IUSaveText(&SysInfoT[6], buffer);
@@ -180,7 +180,7 @@ bool AstroLink4Pi::Connect()
 	// Update client
 	IDSetText(&SysInfoTP, NULL);
 
-	//read last position from file & convert from MAX_RESOLUTION to current resolution
+	// read last position from file & convert from MAX_RESOLUTION to current resolution
 	FocusAbsPosN[0].value = savePosition(-1) != -1 ? (int)savePosition(-1) * resolution / MAX_RESOLUTION : 0;
 
 	// preset resolution
@@ -241,7 +241,7 @@ bool AstroLink4Pi::initProperties()
 					  FOCUSER_HAS_BACKLASH);
 
 	FI::initProperties(FOCUS_TAB);
-    WI::initProperties(ENVIRONMENT_TAB, ENVIRONMENT_TAB);
+	WI::initProperties(ENVIRONMENT_TAB, ENVIRONMENT_TAB);
 	// addDebugControl();
 	// addSimulationControl();
 	addConfigurationControl();
@@ -364,10 +364,10 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&PWM2N[0], "PWMout2", "%", "%0.0f", 0, 100, 10, 0);
 	IUFillNumberVector(&PWM2NP, PWM2N, 1, getDeviceName(), "PWMOUT2", RelayLabelsT[3].text, OUTPUTS_TAB, IP_RW, 60, IPS_IDLE);
 
-    // Environment Group
-    addParameter("WEATHER_TEMPERATURE", "Temperature (C)", -15, 35, 15);
-    addParameter("WEATHER_HUMIDITY", "Humidity %", 0, 100, 15);
-    addParameter("WEATHER_DEWPOINT", "Dew Point (C)", -25, 20, 15);
+	// Environment Group
+	addParameter("WEATHER_TEMPERATURE", "Temperature (C)", -15, 35, 15);
+	addParameter("WEATHER_HUMIDITY", "Humidity %", 0, 100, 15);
+	addParameter("WEATHER_DEWPOINT", "Dew Point (C)", -25, 20, 15);
 
 	// initial values at resolution 1/1
 	FocusMaxPosN[0].min = 1000;
@@ -552,8 +552,8 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 
 		if (strstr(name, "FOCUS_"))
 			return FI::processNumber(dev, name, values, names, n);
-        if (strstr(name, "WEATHER_"))
-            return WI::processNumber(dev, name, values, names, n);			
+		if (strstr(name, "WEATHER_"))
+			return WI::processNumber(dev, name, values, names, n);
 	}
 
 	return INDI::DefaultDevice::ISNewNumber(dev, name, values, names, n);
@@ -819,27 +819,27 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 
 			IUUpdateSwitch(&FocusResolutionSP, states, names, n);
 
-			//Resolution 1/1
+			// Resolution 1/1
 			if (FocusResolutionS[0].s == ISS_ON)
 				resolution = 1;
 
-			//Resolution 1/2
+			// Resolution 1/2
 			if (FocusResolutionS[1].s == ISS_ON)
 				resolution = 2;
 
-			//Resolution 1/4
+			// Resolution 1/4
 			if (FocusResolutionS[2].s == ISS_ON)
 				resolution = 4;
 
-			//Resolution 1/8
+			// Resolution 1/8
 			if (FocusResolutionS[3].s == ISS_ON)
 				resolution = 8;
 
-			//Resolution 1/16
+			// Resolution 1/16
 			if (FocusResolutionS[4].s == ISS_ON)
 				resolution = 16;
 
-			//Resolution 1/32
+			// Resolution 1/32
 			if (FocusResolutionS[5].s == ISS_ON)
 				resolution = 32;
 
@@ -1076,60 +1076,60 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 
 	_abort = false;
 	_motionThread = std::thread([this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
-	{ 
-		int motorDirection = direction;
-		if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
-		{
-			motorDirection = -1 * motorDirection;
-		}
+								{
+									int motorDirection = direction;
+									if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
+									{
+										motorDirection = -1 * motorDirection;
+									}
 
-		uint32_t currentPos = FocusAbsPosN[0].value;
-        while (currentPos != targetPos && !_abort)
-        {                      
-            if (currentPos % 100 == 0)
-            {
-                FocusAbsPosN[0].value = currentPos;
-                FocusAbsPosNP.s = IPS_BUSY;
-                IDSetNumber(&FocusAbsPosNP, nullptr);
-            }            
-			gpio_write(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 0 : 1);
-			gpio_write(pigpioHandle, STP_PIN, 1);
-			usleep(10);
-			gpio_write(pigpioHandle, STP_PIN, 0);			
+									uint32_t currentPos = FocusAbsPosN[0].value;
+									while (currentPos != targetPos && !_abort)
+									{
+										if (currentPos % 100 == 0)
+										{
+											FocusAbsPosN[0].value = currentPos;
+											FocusAbsPosNP.s = IPS_BUSY;
+											IDSetNumber(&FocusAbsPosNP, nullptr);
+										}
+										gpio_write(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 0 : 1);
+										gpio_write(pigpioHandle, STP_PIN, 1);
+										usleep(10);
+										gpio_write(pigpioHandle, STP_PIN, 0);
 
-			if (backlashTicksRemaining <= 0)
-			{ //Only Count the position change if it is not due to backlash
-				currentPos += motorDirection;
-			}
-			else
-			{ //Don't count the backlash position change, just decrement the counter
-				backlashTicksRemaining -= 1;
-			}
+										if (backlashTicksRemaining <= 0)
+										{ // Only Count the position change if it is not due to backlash
+											currentPos += motorDirection;
+										}
+										else
+										{ // Don't count the backlash position change, just decrement the counter
+											backlashTicksRemaining -= 1;
+										}
 
-			auto start = std::chrono::high_resolution_clock::now();
-			for(;;)
-			{
-				auto later = std::chrono::high_resolution_clock::now();
-				auto micros = std::chrono::duration_cast<std::chrono::microseconds>(later - start);
-				if (micros.count() >= (int) FocusStepDelayN[0].value)
-					break;
-			}
-			//std::this_thread::sleep_for(std::chrono::microseconds((int) FocusStepDelayN[0].value));
-        }
+										auto start = std::chrono::high_resolution_clock::now();
+										for (;;)
+										{
+											auto later = std::chrono::high_resolution_clock::now();
+											auto micros = std::chrono::duration_cast<std::chrono::microseconds>(later - start);
+											if (micros.count() >= (int)FocusStepDelayN[0].value)
+												break;
+										}
+										// std::this_thread::sleep_for(std::chrono::microseconds((int) FocusStepDelayN[0].value));
+									}
 
-        // update abspos value and status
-		DEBUGF(INDI::Logger::DBG_SESSION, "Focuser moved to position %i", (int)currentPos);
-        FocusAbsPosN[0].value = currentPos;
-        FocusAbsPosNP.s = IPS_OK;
-        IDSetNumber(&FocusAbsPosNP, nullptr);
-        FocusRelPosNP.s = IPS_OK;
-        IDSetNumber(&FocusRelPosNP, nullptr);
-	        
-		savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
-		lastTemperature = FocusTemperatureN[0].value; // register last temperature
-		setCurrent(true);
+									// update abspos value and status
+									DEBUGF(INDI::Logger::DBG_SESSION, "Focuser moved to position %i", (int)currentPos);
+									FocusAbsPosN[0].value = currentPos;
+									FocusAbsPosNP.s = IPS_OK;
+									IDSetNumber(&FocusAbsPosNP, nullptr);
+									FocusRelPosNP.s = IPS_OK;
+									IDSetNumber(&FocusRelPosNP, nullptr);
 
-	}, targetTicks, lastDirection, pigpioHandle, backlashTicksRemaining);
+									savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
+									lastTemperature = FocusTemperatureN[0].value;							// register last temperature
+									setCurrent(true);
+								},
+								targetTicks, lastDirection, pigpioHandle, backlashTicksRemaining);
 
 	return IPS_BUSY;
 }
@@ -1271,7 +1271,12 @@ bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
 
 bool AstroLink4Pi::SetFocuserBacklashEnabled(bool enabled)
 {
-    return true;
+	return true;
+}
+
+bool AstroLink4Pi::SetFocuserMaxPosition(uint32_t ticks)
+{
+	return true;
 }
 
 void AstroLink4Pi::temperatureCompensation()
@@ -1472,19 +1477,19 @@ void AstroLink4Pi::systemUpdate()
 	FILE *pipe;
 	char buffer[128];
 
-	//update CPU temp
+	// update CPU temp
 	pipe = popen("echo $(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))", "r");
 	if (fgets(buffer, 128, pipe) != NULL)
 		IUSaveText(&SysInfoT[1], buffer);
 	pclose(pipe);
 
-	//update uptime
+	// update uptime
 	pipe = popen("uptime|awk -F, '{print $1}'|awk -Fup '{print $2}'|xargs", "r");
 	if (fgets(buffer, 128, pipe) != NULL)
 		IUSaveText(&SysInfoT[2], buffer);
 	pclose(pipe);
 
-	//update load
+	// update load
 	pipe = popen("uptime|awk -F, '{print $3\" /\"$4\" /\"$5}'|awk -F: '{print $2}'|xargs", "r");
 	if (fgets(buffer, 128, pipe) != NULL)
 		IUSaveText(&SysInfoT[3], buffer);
@@ -1578,20 +1583,20 @@ int AstroLink4Pi::setDac(int chan, int value)
 
 bool AstroLink4Pi::readSHT()
 {
-	//char i2cData[32];
-	//char startMeasure[] = "\x66";
+	// char i2cData[32];
+	// char startMeasure[] = "\x66";
 
-	//int i2cHandle = i2c_open(pigpioHandle, 0, 0x44, 0);
-	//int written = i2c_write_block_data(pigpioHandle, i2cHandle, 0x2C, startMeasure, 1);
+	// int i2cHandle = i2c_open(pigpioHandle, 0, 0x44, 0);
+	// int written = i2c_write_block_data(pigpioHandle, i2cHandle, 0x2C, startMeasure, 1);
 
-	//sleep 500ms
+	// sleep 500ms
 
-	//int read = i2c_read_block_data(pigpioHandle, i2cHandle, 0x00, i2cData);
+	// int read = i2c_read_block_data(pigpioHandle, i2cHandle, 0x00, i2cData);
 
-	//int temp = i2cData[0] * 256 + i2cData[1];
-	//double cTemp = -45.0 + (175.0 * temp / 65535.0);
-	//double fTemp = -49.0 + (315.0 * temp / 65535.0);
-	//double humidity = 100.0 * (i2cData[3] * 256.0 + i2cData[4]) / 65535.0;
+	// int temp = i2cData[0] * 256 + i2cData[1];
+	// double cTemp = -45.0 + (175.0 * temp / 65535.0);
+	// double fTemp = -49.0 + (315.0 * temp / 65535.0);
+	// double humidity = 100.0 * (i2cData[3] * 256.0 + i2cData[4]) / 65535.0;
 
 	return false;
 }
@@ -1607,7 +1612,7 @@ int AstroLink4Pi::checkRevision(int handle)
 		setDac(1, 255);
 		if (gpio_read(handle, CHK_PIN) == 1)
 		{
-			
+
 			rev = 2;
 		}
 	}
@@ -1617,7 +1622,7 @@ int AstroLink4Pi::checkRevision(int handle)
 		setDac(1, 255);
 		if (gpio_read(handle, CHK2_PIN) == 1)
 		{
-			
+
 			rev = 3;
 		}
 	}
