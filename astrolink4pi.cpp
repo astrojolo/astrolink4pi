@@ -1590,7 +1590,7 @@ int AstroLink4Pi::setDac(int chan, int value)
 
 bool AstroLink4Pi::readSHT()
 {
-	char i2cData[32];
+	char i2cData[6];
 
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x44, 0);
 	DEBUGF(INDI::Logger::DBG_WARNING, "I2C handle %i", i2cHandle);
@@ -1601,7 +1601,7 @@ bool AstroLink4Pi::readSHT()
 
 	time_sleep(0.5);
 
-	int read = i2c_read_block_data(pigpioHandle, i2cHandle, 0x00, i2cData);
+	int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 6);
 	DEBUGF(INDI::Logger::DBG_WARNING, "I2C read %i", read);
 
 	i2c_close(pigpioHandle, i2cHandle);
