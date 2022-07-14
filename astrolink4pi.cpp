@@ -1608,8 +1608,8 @@ bool AstroLink4Pi::readSHT()
 
 		double a = 17.271;
 		double b = 237.7;
-		double temp = (a * cTemp) / (b + cTemp) + log(humidity * 0.01);
-		double Td = (b * temp) / (a - temp);
+		double tempAux = (a * cTemp) / (b + cTemp) + log(humidity * 0.01);
+		double Td = (b * tempAux) / (a - tempAux);
 
 		setParameterValue("WEATHER_TEMPERATURE", cTemp);
 		setParameterValue("WEATHER_HUMIDITY", humidity);
