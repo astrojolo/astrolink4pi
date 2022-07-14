@@ -1593,8 +1593,8 @@ bool AstroLink4Pi::readSHT()
 	char i2cData[6];
 
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x44, 0);
-	int written = i2c_write_byte(pigpioHandle, i2cHandle, 0x2C);
-	written = i2c_write_byte(pigpioHandle, i2cHandle, 0x06);
+	int written = i2c_write_byte(pigpioHandle, i2cHandle, 0x06);
+	written = i2c_write_byte(pigpioHandle, i2cHandle, 0x2C);
 
 	time_sleep(0.5);
 
