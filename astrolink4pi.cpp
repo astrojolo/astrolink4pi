@@ -1596,9 +1596,9 @@ bool AstroLink4Pi::readSHT()
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x44, 0);
 	int written = i2c_write_block_data(pigpioHandle, i2cHandle, 0x2C, startMeasure, 1);
 
-	sleep 500ms
+	time_sleep(0.5);
 
-		int read = i2c_read_block_data(pigpioHandle, i2cHandle, 0x00, i2cData);
+	int read = i2c_read_block_data(pigpioHandle, i2cHandle, 0x00, i2cData);
 
 	if (read > 4)
 	{
@@ -1645,7 +1645,6 @@ int AstroLink4Pi::checkRevision(int handle)
 		setDac(1, 255);
 		if (gpio_read(handle, CHK2_PIN) == 1)
 		{
-
 			rev = 3;
 		}
 	}
