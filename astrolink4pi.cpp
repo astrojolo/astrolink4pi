@@ -1594,28 +1594,26 @@ bool AstroLink4Pi::readSHT()
 
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x44, 0);
 	int written = i2c_write_byte_data(pigpioHandle, i2cHandle, 0x2C, 0x06);
-	DEBUGF(INDI::Logger::DBG_WARNING, "I2C written %i", written);
 
 	time_sleep(0.5);
 
 	int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 6);
-	DEBUGF(INDI::Logger::DBG_WARNING, "I2C read %i", read);
 
 	i2c_close(pigpioHandle, i2cHandle);
 	if (read > 4)
 	{
-		DEBUGF(INDI::Logger::DBG_WARNING, "I2C read %i", i2cData[0]);
-		DEBUGF(INDI::Logger::DBG_WARNING, "I2C read %i", i2cData[1]);
-		DEBUGF(INDI::Logger::DBG_WARNING, "I2C read %i", i2cData[3]);
-		DEBUGF(INDI::Logger::DBG_WARNING, "I2C read %i", i2cData[4]);
 		int temp = i2cData[0] * 256 + i2cData[1];
 		double cTemp = -45.0 + (175.0 * temp / 65535.0);
-		double fTemp = -49.0 + (315.0 * temp / 65535.0);
 		double humidity = 100.0 * (i2cData[3] * 256.0 + i2cData[4]) / 65535.0;
+
+		double a = 17.271;
+		double b = 237.7;
+		double temp = (a * celsius) / (b + celsius) + log(humidity * 0.01);
+		double Td = (b * temp) / (a - temp);
 
 		setParameterValue("WEATHER_TEMPERATURE", cTemp);
 		setParameterValue("WEATHER_HUMIDITY", humidity);
-		setParameterValue("WEATHER_DEWPOINT", 0.0);
+		setParameterValue("WEATHER_DEWPOINT", Td);
 		ParametersNP.s = IPS_OK;
 		IDSetNumber(&ParametersNP, nullptr);
 	}
