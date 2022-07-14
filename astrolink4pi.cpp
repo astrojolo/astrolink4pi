@@ -1607,9 +1607,9 @@ bool AstroLink4Pi::readSHT()
 		double fTemp = -49.0 + (315.0 * temp / 65535.0);
 		double humidity = 100.0 * (i2cData[3] * 256.0 + i2cData[4]) / 65535.0;
 
-		setParameterValue("WEATHER_TEMPERATURE", std::stod(cTemp));
-		setParameterValue("WEATHER_HUMIDITY", std::stod(humidity));
-		setParameterValue("WEATHER_DEWPOINT", std::stod(0.0));
+		setParameterValue("WEATHER_TEMPERATURE", cTemp);
+		setParameterValue("WEATHER_HUMIDITY", humidity);
+		setParameterValue("WEATHER_DEWPOINT", 0.0);
 		ParametersNP.s = IPS_OK;
 		IDSetNumber(&ParametersNP, nullptr);
 	}
