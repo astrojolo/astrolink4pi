@@ -989,6 +989,7 @@ void AstroLink4Pi::TimerHit()
 
 	if (nextTemperatureRead < timeMillis)
 	{
+		readSHT();
 		sensorAvailable = readDS18B20();
 		nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
 		if (!sensorAvailable)
