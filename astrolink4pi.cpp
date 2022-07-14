@@ -369,6 +369,11 @@ bool AstroLink4Pi::initProperties()
 	addParameter("WEATHER_HUMIDITY", "Humidity %", 0, 100, 15);
 	addParameter("WEATHER_DEWPOINT", "Dew Point (C)", -25, 20, 15);
 
+	// Sky Sensor
+	IUFillNumber(&SensorSkyN[SENSSKY_T], "SKY_TEMP", "Sky temperature [C]", "%.1f", -50, 100, 1, 0);
+	IUFillNumber(&SensorSkyN[SENSSKY_A], "SKY_DIFF", "Temperature difference [C]", "%.1f", -50, 100, 1, 0);
+	IUFillNumberVector(&SensorSkyNP, SensorSkyN, 2, getDeviceName(), "SKY_SENSOR", "Sky sensor", ENVIRONMENT_TAB, IP_RO, 60, IPS_IDLE);
+
 	// initial values at resolution 1/1
 	FocusMaxPosN[0].min = 1000;
 	FocusMaxPosN[0].max = 100000;
@@ -407,6 +412,7 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&FocuserInfoNP);
 		defineProperty(&FocusStepDelayNP);
 		defineProperty(&FocusBacklashNP);
+		defineProperty(&SensorSkyNP);
 		defineProperty(&SysTimeTP);
 		defineProperty(&SysInfoTP);
 		defineProperty(&SysControlSP);
@@ -432,6 +438,7 @@ bool AstroLink4Pi::updateProperties()
 		deleteProperty(FocuserInfoNP.name);
 		deleteProperty(FocusStepDelayNP.name);
 		deleteProperty(FocusBacklashNP.name);
+		deleteProperty(SensorSkyNP.name);
 		deleteProperty(FocusTemperatureNP.name);
 		deleteProperty(TemperatureCoefNP.name);
 		deleteProperty(TemperatureCompensateSP.name);
@@ -1127,8 +1134,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 
 									savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
 									lastTemperature = FocusTemperatureN[0].value;							// register last temperature
-									setCurrent(true);
-								},
+									setCurrent(true); },
 								targetTicks, lastDirection, pigpioHandle, backlashTicksRemaining);
 
 	return IPS_BUSY;
@@ -1583,20 +1589,36 @@ int AstroLink4Pi::setDac(int chan, int value)
 
 bool AstroLink4Pi::readSHT()
 {
-	// char i2cData[32];
-	// char startMeasure[] = "\x66";
+	char i2cData[32];
+	char startMeasure[] = "\x66";
 
-	// int i2cHandle = i2c_open(pigpioHandle, 0, 0x44, 0);
-	// int written = i2c_write_block_data(pigpioHandle, i2cHandle, 0x2C, startMeasure, 1);
+	int i2cHandle = i2c_open(pigpioHandle, 1, 0x44, 0);
+	int written = i2c_write_block_data(pigpioHandle, i2cHandle, 0x2C, startMeasure, 1);
 
-	// sleep 500ms
+	sleep 500ms
 
-	// int read = i2c_read_block_data(pigpioHandle, i2cHandle, 0x00, i2cData);
+		int read = i2c_read_block_data(pigpioHandle, i2cHandle, 0x00, i2cData);
 
-	// int temp = i2cData[0] * 256 + i2cData[1];
-	// double cTemp = -45.0 + (175.0 * temp / 65535.0);
-	// double fTemp = -49.0 + (315.0 * temp / 65535.0);
-	// double humidity = 100.0 * (i2cData[3] * 256.0 + i2cData[4]) / 65535.0;
+	if (read > 4)
+	{
+		int temp = i2cData[0] * 256 + i2cData[1];
+		double cTemp = -45.0 + (175.0 * temp / 65535.0);
+		double fTemp = -49.0 + (315.0 * temp / 65535.0);
+		double humidity = 100.0 * (i2cData[3] * 256.0 + i2cData[4]) / 65535.0;
+
+		setParameterValue("WEATHER_TEMPERATURE", std::stod(cTemp));
+		setParameterValue("WEATHER_HUMIDITY", std::stod(humidity));
+		setParameterValue("WEATHER_DEWPOINT", std::stod(0.0));
+		ParametersNP.s = IPS_OK;
+		IDSetNumber(&ParametersNP, nullptr);
+	}
+	else
+	{
+		setParameterValue("WEATHER_TEMPERATURE", 0.0);
+		setParameterValue("WEATHER_HUMIDITY", 0.0);
+		setParameterValue("WEATHER_DEWPOINT", 0.0);
+		ParametersNP.s = IPS_IDLE;
+	}
 
 	return false;
 }

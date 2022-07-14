@@ -136,6 +136,13 @@ private:
 	INumber StepperCurrentN[1];
 	INumberVectorProperty StepperCurrentNP;
 
+    INumber SensorSkyN[2];
+    INumberVectorProperty SensorSkyNP;
+    enum
+    {
+        SENSSKY_T, SENSSKY_A
+    };	
+
 	int revision = 1;
 	int pigpioHandle = -1;
 	int resolution = 1;
