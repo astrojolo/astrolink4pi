@@ -1604,7 +1604,7 @@ bool AstroLink4Pi::readSHT()
 	int read = i2c_read_block_data(pigpioHandle, i2cHandle, 0x00, i2cData);
 	DEBUGF(INDI::Logger::DBG_WARNING, "I2C read %i", read);
 
-	i2c_close(i2cHandle);
+	i2c_close(pigpioHandle, i2cHandle);
 	if (read > 4)
 	{
 		int temp = i2cData[0] * 256 + i2cData[1];
