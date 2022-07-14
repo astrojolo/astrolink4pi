@@ -1283,15 +1283,6 @@ bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
 	return true;
 }
 
-bool AstroLink4Pi::SetFocuserBacklashEnabled(bool enabled)
-{
-	return true;
-}
-
-bool AstroLink4Pi::SetFocuserMaxPosition(uint32_t ticks)
-{
-	return true;
-}
 
 void AstroLink4Pi::temperatureCompensation()
 {
