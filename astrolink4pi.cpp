@@ -1593,20 +1593,20 @@ bool AstroLink4Pi::readSHT()
 	char i2cData[6];
 
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x44, 0);
-	DEBUGF(INDI::Logger::DBG_WARNING, "I2C handle %i", i2cHandle);
 	int written = i2c_write_byte(pigpioHandle, i2cHandle, 0x2C);
-	DEBUGF(INDI::Logger::DBG_WARNING, "I2C written %i", written);
 	written = i2c_write_byte(pigpioHandle, i2cHandle, 0x06);
-	DEBUGF(INDI::Logger::DBG_WARNING, "I2C written %i", written);
 
 	time_sleep(0.5);
 
 	int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 6);
-	DEBUGF(INDI::Logger::DBG_WARNING, "I2C read %i", read);
 
 	i2c_close(pigpioHandle, i2cHandle);
 	if (read > 4)
 	{
+		DEBUGF(INDI::Logger::DBG_WARNING, "I2C read %i", i2cData[0]);
+		DEBUGF(INDI::Logger::DBG_WARNING, "I2C read %i", i2cData[1]);
+		DEBUGF(INDI::Logger::DBG_WARNING, "I2C read %i", i2cData[3]);
+		DEBUGF(INDI::Logger::DBG_WARNING, "I2C read %i", i2cData[4]);
 		int temp = i2cData[0] * 256 + i2cData[1];
 		double cTemp = -45.0 + (175.0 * temp / 65535.0);
 		double fTemp = -49.0 + (315.0 * temp / 65535.0);
