@@ -989,8 +989,15 @@ void AstroLink4Pi::TimerHit()
 
 	if (nextTemperatureRead < timeMillis)
 	{
-		readSHT();
-		sensorAvailable = readDS18B20();
+		if (revision == 3)
+		{
+			sensorAvailable = readSHT();
+		}
+		else
+		{
+			sensorAvailable = readDS18B20();
+		}
+
 		nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
 		if (!sensorAvailable)
 			FocusTemperatureNP.s = IPS_ALERT;
@@ -1352,7 +1359,7 @@ bool AstroLink4Pi::readDS18B20()
 	pFile = fopen(devPath, "r");
 	if (pFile == NULL)
 	{
-		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor not available.");
+		DEBUG(INDI::Logger::DBG_DEBUG, "Temperature sensor not available.");
 		return false;
 	}
 	else
@@ -1593,7 +1600,17 @@ bool AstroLink4Pi::readSHT()
 	char i2cData[6];
 
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x44, 0);
+	if (i2cHandle < 0)
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "No SHT sensor found.");
+		return false;
+	}
 	int written = i2c_write_byte_data(pigpioHandle, i2cHandle, 0x2C, 0x06);
+	if (written != 0)
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to SHT sensor");
+		return false;
+	}
 
 	time_sleep(0.5);
 
@@ -1611,6 +1628,10 @@ bool AstroLink4Pi::readSHT()
 		double tempAux = (a * cTemp) / (b + cTemp) + log(humidity * 0.01);
 		double Td = (b * tempAux) / (a - tempAux);
 
+		FocusTemperatureN[0].value = cTemp;
+		FocusTemperatureNP.s = IPS_OK;
+		IDSetNumber(&FocusTemperatureNP, nullptr);
+
 		setParameterValue("WEATHER_TEMPERATURE", cTemp);
 		setParameterValue("WEATHER_HUMIDITY", humidity);
 		setParameterValue("WEATHER_DEWPOINT", Td);
@@ -1623,9 +1644,11 @@ bool AstroLink4Pi::readSHT()
 		setParameterValue("WEATHER_HUMIDITY", 0.0);
 		setParameterValue("WEATHER_DEWPOINT", 0.0);
 		ParametersNP.s = IPS_IDLE;
+		DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from SHT sensor");
+		return false;
 	}
 
-	return false;
+	return true;
 }
 
 int AstroLink4Pi::checkRevision(int handle)
