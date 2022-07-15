@@ -991,7 +991,7 @@ void AstroLink4Pi::TimerHit()
 	{
 		if (revision == 3)
 		{
-			sensorAvailable = readSHT();
+			sensorAvailable = readSHT() | readMLX();
 		}
 		else
 		{
@@ -1282,7 +1282,6 @@ bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
 	DEBUGF(INDI::Logger::DBG_SESSION, "Backlash set to %i steps", steps);
 	return true;
 }
-
 
 void AstroLink4Pi::temperatureCompensation()
 {
@@ -1584,6 +1583,36 @@ int AstroLink4Pi::setDac(int chan, int value)
 	int written = spi_write(pigpioHandle, spiHandle, spiData, 2);
 	spi_close(pigpioHandle, spiHandle);
 	return written;
+}
+
+bool AstroLink4Pi::readMLX()
+{
+	int i2cHandle = i2c_open(pigpioHandle, 1, 0x5A, 0);
+	if (i2cHandle < 0)
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "No MLX sensor found.");
+		return false;
+	}
+	int Tamb = i2c_read_word_data(pigpioHandle, i2cHandle, 0x06);
+	int Tobj = i2c_read_word_data(pigpioHandle, i2cHandle, 0x07);
+
+	i2c_close(pigpioHandle, i2cHandle);
+	if (Tamb >= 0 && Tobj >= 0)
+	{
+		double amb = 0.02 * Tamb - 273.15;
+		double obj = 0.02 * Tobj - 273.15;
+		SensorSkyN[0].value = obj);
+		SensorSkyN[1].value = obj - amb);
+		SensorSkyNP.s = IPS_OK;
+	}
+	else
+	{
+		SensorSkyN[0].value = 0.0);
+		SensorSkyN[1].value = 0.0);
+		SensorSkyNP.s = IPS_IDLE;
+		IDSetNumber(&SensorSkyNP, nullptr);
+		DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from MLX sensor.");
+	}
 }
 
 bool AstroLink4Pi::readSHT()

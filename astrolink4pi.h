@@ -80,6 +80,7 @@ private:
 	virtual void SetResolution(int res);
 	virtual int savePosition(int pos);
 	virtual bool readSHT();
+	virtual bool readMLX();
 	virtual bool readDS18B20();
 
 	ISwitch FocusResolutionS[6];
