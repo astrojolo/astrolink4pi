@@ -1601,14 +1601,14 @@ bool AstroLink4Pi::readMLX()
 	{
 		double amb = 0.02 * Tamb - 273.15;
 		double obj = 0.02 * Tobj - 273.15;
-		SensorSkyN[0].value = obj);
-		SensorSkyN[1].value = obj - amb);
+		SensorSkyN[0].value = obj;
+		SensorSkyN[1].value = obj - amb;
 		SensorSkyNP.s = IPS_OK;
 	}
 	else
 	{
-		SensorSkyN[0].value = 0.0);
-		SensorSkyN[1].value = 0.0);
+		SensorSkyN[0].value = 0.0;
+		SensorSkyN[1].value = 0.0;
 		SensorSkyNP.s = IPS_IDLE;
 		IDSetNumber(&SensorSkyNP, nullptr);
 		DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from MLX sensor.");
