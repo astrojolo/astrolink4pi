@@ -991,11 +991,12 @@ void AstroLink4Pi::TimerHit()
 	{
 		if (revision == 3)
 		{
-			sensorAvailable = readSHT() | readMLX();
+			SHTavailable = readSHT();
+			MLXavailable = readMLX();
 		}
 		else
 		{
-			sensorAvailable = readDS18B20();
+			DSavailable = readDS18B20();
 		}
 
 		nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
@@ -1588,34 +1589,38 @@ int AstroLink4Pi::setDac(int chan, int value)
 bool AstroLink4Pi::readMLX()
 {
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x5A, 0);
-	if (i2cHandle < 0)
+	if (i2cHandle >= 0)
 	{
-		DEBUG(INDI::Logger::DBG_DEBUG, "No MLX sensor found.");
-		return false;
-	}
-	int Tamb = i2c_read_word_data(pigpioHandle, i2cHandle, 0x06);
-	int Tobj = i2c_read_word_data(pigpioHandle, i2cHandle, 0x07);
-
-	i2c_close(pigpioHandle, i2cHandle);
-	if (Tamb >= 0 && Tobj >= 0)
-	{
-		double amb = 0.02 * Tamb - 273.15;
-		double obj = 0.02 * Tobj - 273.15;
-		SensorSkyN[0].value = obj;
-		SensorSkyN[1].value = obj - amb;
-		SensorSkyNP.s = IPS_OK;
-		IDSetNumber(&SensorSkyNP, nullptr);
+		int Tamb = i2c_read_word_data(pigpioHandle, i2cHandle, 0x06);
+		int Tobj = i2c_read_word_data(pigpioHandle, i2cHandle, 0x07);
+		i2c_close(pigpioHandle, i2cHandle);
+		if (Tamb >= 0 && Tobj >= 0)
+		{
+			SensorSkyN[0].value = 0.02 * Tobj - 273.15;
+			SensorSkyN[1].value = 0.02 * (Tobj - Tamb);
+			MLXavailable = true;
+		}
+		else
+		{
+			DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from MLX sensor.");
+			MLXavailable = false;
+		}
 	}
 	else
 	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "No MLX sensor found.");
+		MLXavailable = false;
+	}
+
+	if (!MLXavailable)
+	{
 		SensorSkyN[0].value = 0.0;
 		SensorSkyN[1].value = 0.0;
-		SensorSkyNP.s = IPS_IDLE;
-		IDSetNumber(&SensorSkyNP, nullptr);
-		DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from MLX sensor.");
-		return false;
 	}
-	return true;
+
+	SensorSkyNP.s = MLXavailable ? IPS_OK : IPS_IDLE;
+	IDSetNumber(&SensorSkyNP, nullptr);
+	return MLXavailable;
 }
 
 bool AstroLink4Pi::readSHT()
@@ -1623,55 +1628,57 @@ bool AstroLink4Pi::readSHT()
 	char i2cData[6];
 
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x44, 0);
-	if (i2cHandle < 0)
+	if (i2cHandle >= 0)
 	{
-		DEBUG(INDI::Logger::DBG_DEBUG, "No SHT sensor found.");
-		return false;
-	}
-	int written = i2c_write_byte_data(pigpioHandle, i2cHandle, 0x2C, 0x06);
-	if (written != 0)
-	{
-		DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to SHT sensor");
-		return false;
-	}
+		int written = i2c_write_byte_data(pigpioHandle, i2cHandle, 0x2C, 0x06);
+		if (written == 0)
+		{
+			time_sleep(0.5);
+			int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 6);
+			if (read > 4)
+			{
+				int temp = i2cData[0] * 256 + i2cData[1];
+				double cTemp = -45.0 + (175.0 * temp / 65535.0);
+				double humidity = 100.0 * (i2cData[3] * 256.0 + i2cData[4]) / 65535.0;
 
-	time_sleep(0.5);
+				double a = 17.271;
+				double b = 237.7;
+				double tempAux = (a * cTemp) / (b + cTemp) + log(humidity * 0.01);
+				double Td = (b * tempAux) / (a - tempAux);
 
-	int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 6);
+				FocusTemperatureN[0].value = cTemp;
+				FocusTemperatureNP.s = IPS_OK;
+				IDSetNumber(&FocusTemperatureNP, nullptr);
 
-	i2c_close(pigpioHandle, i2cHandle);
-	if (read > 4)
-	{
-		int temp = i2cData[0] * 256 + i2cData[1];
-		double cTemp = -45.0 + (175.0 * temp / 65535.0);
-		double humidity = 100.0 * (i2cData[3] * 256.0 + i2cData[4]) / 65535.0;
-
-		double a = 17.271;
-		double b = 237.7;
-		double tempAux = (a * cTemp) / (b + cTemp) + log(humidity * 0.01);
-		double Td = (b * tempAux) / (a - tempAux);
-
-		FocusTemperatureN[0].value = cTemp;
-		FocusTemperatureNP.s = IPS_OK;
-		IDSetNumber(&FocusTemperatureNP, nullptr);
-
-		setParameterValue("WEATHER_TEMPERATURE", cTemp);
-		setParameterValue("WEATHER_HUMIDITY", humidity);
-		setParameterValue("WEATHER_DEWPOINT", Td);
-		ParametersNP.s = IPS_OK;
-		IDSetNumber(&ParametersNP, nullptr);
+				setParameterValue("WEATHER_TEMPERATURE", cTemp);
+				setParameterValue("WEATHER_HUMIDITY", humidity);
+				setParameterValue("WEATHER_DEWPOINT", Td);
+				SHTavailable = true;
+			}
+		}
+		else
+		{
+			DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to SHT sensor");
+			SHTavailable = false;
+		}
+		i2c_close(pigpioHandle, i2cHandle);
 	}
 	else
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "No SHT sensor found.");
+		SHTavailable = false;
+	}
+
+	if (!SHTavailable)
 	{
 		setParameterValue("WEATHER_TEMPERATURE", 0.0);
 		setParameterValue("WEATHER_HUMIDITY", 0.0);
 		setParameterValue("WEATHER_DEWPOINT", 0.0);
-		ParametersNP.s = IPS_IDLE;
-		DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from SHT sensor");
-		return false;
 	}
 
-	return true;
+	ParametersNP.s = SHTavailable ? IPS_OK : IPS_IDLE;
+	IDSetNumber(&ParametersNP, nullptr);
+	return SHTavailable;
 }
 
 int AstroLink4Pi::checkRevision(int handle)
