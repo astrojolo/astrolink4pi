@@ -1612,7 +1612,9 @@ bool AstroLink4Pi::readMLX()
 		SensorSkyNP.s = IPS_IDLE;
 		IDSetNumber(&SensorSkyNP, nullptr);
 		DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from MLX sensor.");
+		return false;
 	}
+	return true;
 }
 
 bool AstroLink4Pi::readSHT()
