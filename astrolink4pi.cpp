@@ -954,8 +954,7 @@ bool AstroLink4Pi::ISSnoopDevice(XMLEle *root)
 bool AstroLink4Pi::saveConfigItems(FILE *fp)
 {
 	FI::saveConfigItems(fp);
-WI:
-	saveConfigItems(fp);
+	WI::saveConfigItems(fp);
 	IUSaveConfigText(fp, &ActiveTelescopeTP);
 	IUSaveConfigSwitch(fp, &FocusResolutionSP);
 	IUSaveConfigSwitch(fp, &FocusHoldSP);
