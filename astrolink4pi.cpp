@@ -365,14 +365,11 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumberVector(&PWM2NP, PWM2N, 1, getDeviceName(), "PWMOUT2", RelayLabelsT[3].text, OUTPUTS_TAB, IP_RW, 60, IPS_IDLE);
 
 	// Environment Group
-	addParameter("WEATHER_TEMPERATURE", "Temperature (C)", -15, 35, 15);
+	addParameter("WEATHER_TEMPERATURE", "Temperature [C]", -15, 35, 15);
 	addParameter("WEATHER_HUMIDITY", "Humidity %", 0, 100, 15);
-	addParameter("WEATHER_DEWPOINT", "Dew Point (C)", -25, 20, 15);
-
-	// Sky Sensor
-	IUFillNumber(&SensorSkyN[SENSSKY_T], "SKY_TEMP", "Sky temperature [C]", "%.1f", -50, 100, 1, 0);
-	IUFillNumber(&SensorSkyN[SENSSKY_A], "SKY_DIFF", "Temperature difference [C]", "%.1f", -50, 100, 1, 0);
-	IUFillNumberVector(&SensorSkyNP, SensorSkyN, 2, getDeviceName(), "SKY_SENSOR", "Sky sensor", ENVIRONMENT_TAB, IP_RO, 60, IPS_IDLE);
+	addParameter("WEATHER_DEWPOINT", "Dew Point [C]", -25, 20, 15);
+	addParameter("WEATHER_SKY_TEMP", "Sky temperature [C]", -50, 20, 20);
+	addParameter("WEATHER_SKY_DIFF", "Temperature difference [C]", -5, 40, 10);
 
 	// initial values at resolution 1/1
 	FocusMaxPosN[0].min = 1000;
@@ -412,7 +409,6 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&FocuserInfoNP);
 		defineProperty(&FocusStepDelayNP);
 		defineProperty(&FocusBacklashNP);
-		defineProperty(&SensorSkyNP);
 		defineProperty(&SysTimeTP);
 		defineProperty(&SysInfoTP);
 		defineProperty(&SysControlSP);
@@ -438,7 +434,6 @@ bool AstroLink4Pi::updateProperties()
 		deleteProperty(FocuserInfoNP.name);
 		deleteProperty(FocusStepDelayNP.name);
 		deleteProperty(FocusBacklashNP.name);
-		deleteProperty(SensorSkyNP.name);
 		deleteProperty(FocusTemperatureNP.name);
 		deleteProperty(TemperatureCoefNP.name);
 		deleteProperty(TemperatureCompensateSP.name);
@@ -959,6 +954,8 @@ bool AstroLink4Pi::ISSnoopDevice(XMLEle *root)
 bool AstroLink4Pi::saveConfigItems(FILE *fp)
 {
 	FI::saveConfigItems(fp);
+WI:
+	saveConfigItems(fp);
 	IUSaveConfigText(fp, &ActiveTelescopeTP);
 	IUSaveConfigSwitch(fp, &FocusResolutionSP);
 	IUSaveConfigSwitch(fp, &FocusHoldSP);
@@ -1006,13 +1003,16 @@ void AstroLink4Pi::TimerHit()
 		{
 			FocusTemperatureN[0].value = focuserTemperature;
 			FocusTemperatureNP.s = IPS_OK;
+			ParametersNP.s = IPS_OK;
 		}
 		else
 		{
 			FocusTemperatureN[0].value = 0.0;
 			FocusTemperatureNP.s = IPS_ALERT;
+			ParametersNP.s = IPS_ALERT;
 			IDSetNumber(&FocusTemperatureNP, nullptr);
 		}
+		IDSetNumber(&ParametersNP, nullptr);
 		IDSetNumber(&FocusTemperatureNP, nullptr);
 	}
 	if (nextTemperatureCompensation < timeMillis)
@@ -1604,9 +1604,10 @@ bool AstroLink4Pi::readMLX()
 		i2c_close(pigpioHandle, i2cHandle);
 		if (Tamb >= 0 && Tobj >= 0)
 		{
-			SensorSkyN[0].value = 0.02 * Tobj - 273.15;
-			SensorSkyN[1].value = 0.02 * (Tobj - Tamb);
-			if(!DSavailable && !SHTavailable) focuserTemperature = 0.02 * Tamb - 273.15;
+			setParameterValue("WEATHER_SKY_TEMP", 0.02 * Tobj - 273.15);
+			setParameterValue("WEATHER_SKY_DIFF", 0.02 * (Tobj - Tamb));
+			if (!DSavailable && !SHTavailable)
+				focuserTemperature = 0.02 * Tamb - 273.15;
 			MLXavailable = true;
 		}
 		else
@@ -1623,12 +1624,10 @@ bool AstroLink4Pi::readMLX()
 
 	if (!MLXavailable)
 	{
-		SensorSkyN[0].value = 0.0;
-		SensorSkyN[1].value = 0.0;
+		setParameterValue("WEATHER_SKY_TEMP", 0.0);
+		setParameterValue("WEATHER_SKY_DIFF", 0.0);
 	}
 
-	SensorSkyNP.s = MLXavailable ? IPS_OK : IPS_IDLE;
-	IDSetNumber(&SensorSkyNP, nullptr);
 	return MLXavailable;
 }
 
@@ -1658,7 +1657,8 @@ bool AstroLink4Pi::readSHT()
 				setParameterValue("WEATHER_TEMPERATURE", cTemp);
 				setParameterValue("WEATHER_HUMIDITY", humidity);
 				setParameterValue("WEATHER_DEWPOINT", Td);
-				if(!DSavailable) focuserTemperature = cTemp;
+				if (!DSavailable)
+					focuserTemperature = cTemp;
 				SHTavailable = true;
 			}
 		}
@@ -1681,9 +1681,6 @@ bool AstroLink4Pi::readSHT()
 		setParameterValue("WEATHER_HUMIDITY", 0.0);
 		setParameterValue("WEATHER_DEWPOINT", 0.0);
 	}
-
-	ParametersNP.s = SHTavailable ? IPS_OK : IPS_IDLE;
-	IDSetNumber(&ParametersNP, nullptr);
 	return SHTavailable;
 }
 
