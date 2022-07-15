@@ -1590,11 +1590,14 @@ bool AstroLink4Pi::readMLX()
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x5A, 0);
 	if (i2cHandle < 0)
 	{
-		DEBUG(INDI::Logger::DBG_DEBUG, "No MLX sensor found.");
+		DEBUG(INDI::Logger::DBG_WARNING, "No MLX sensor found.");
 		return false;
 	}
 	int Tamb = i2c_read_word_data(pigpioHandle, i2cHandle, 0x06);
 	int Tobj = i2c_read_word_data(pigpioHandle, i2cHandle, 0x07);
+
+	DEBUGF(INDI::Logger::DBG_WARNING, "TAMB %i", Tamb);
+	DEBUGF(INDI::Logger::DBG_WARNING, "TOBJ %i", Tobj);
 
 	i2c_close(pigpioHandle, i2cHandle);
 	if (Tamb >= 0 && Tobj >= 0)
@@ -1611,7 +1614,7 @@ bool AstroLink4Pi::readMLX()
 		SensorSkyN[1].value = 0.0;
 		SensorSkyNP.s = IPS_IDLE;
 		IDSetNumber(&SensorSkyNP, nullptr);
-		DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from MLX sensor.");
+		DEBUG(INDI::Logger::DBG_WARNING, "Cannot read data from MLX sensor.");
 		return false;
 	}
 	return true;
