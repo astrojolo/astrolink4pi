@@ -989,19 +989,31 @@ void AstroLink4Pi::TimerHit()
 
 	if (nextTemperatureRead < timeMillis)
 	{
-		if (revision == 3)
+		focuserTemperature = -1000;
+		if (revision == 1 || revision == 2)
+		{
+			DSavailable = readDS18B20();
+		}
+		else
 		{
 			SHTavailable = readSHT();
 			MLXavailable = readMLX();
 		}
-		else
-		{
-			DSavailable = readDS18B20();
-		}
 
 		nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
-		if (!sensorAvailable)
+
+		if (DSavailable || SHTavailable || MLXavailable)
+		{
+			FocusTemperatureN[0].value = focuserTemperature;
+			FocusTemperatureNP.s = IPS_OK;
+		}
+		else
+		{
+			FocusTemperatureN[0].value = 0.0;
 			FocusTemperatureNP.s = IPS_ALERT;
+			IDSetNumber(&FocusTemperatureNP, nullptr);
+		}
+		IDSetNumber(&FocusTemperatureNP, nullptr);
 	}
 	if (nextTemperatureCompensation < timeMillis)
 	{
@@ -1390,13 +1402,9 @@ bool AstroLink4Pi::readDS18B20()
 		return false;
 	}
 
-	FocusTemperatureN[0].value = tempC;
-
-	// set OK
-	FocusTemperatureNP.s = IPS_OK;
-	IDSetNumber(&FocusTemperatureNP, nullptr);
+	setParameterValue("WEATHER_TEMPERATURE", tempC);
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature: %.2f°C", tempC);
-
+	focuserTemperature = tempC;
 	return true;
 }
 
@@ -1598,6 +1606,7 @@ bool AstroLink4Pi::readMLX()
 		{
 			SensorSkyN[0].value = 0.02 * Tobj - 273.15;
 			SensorSkyN[1].value = 0.02 * (Tobj - Tamb);
+			if(!DSavailable && !SHTavailable) focuserTemperature = 0.02 * Tamb - 273.15;
 			MLXavailable = true;
 		}
 		else
@@ -1646,13 +1655,10 @@ bool AstroLink4Pi::readSHT()
 				double tempAux = (a * cTemp) / (b + cTemp) + log(humidity * 0.01);
 				double Td = (b * tempAux) / (a - tempAux);
 
-				FocusTemperatureN[0].value = cTemp;
-				FocusTemperatureNP.s = IPS_OK;
-				IDSetNumber(&FocusTemperatureNP, nullptr);
-
 				setParameterValue("WEATHER_TEMPERATURE", cTemp);
 				setParameterValue("WEATHER_HUMIDITY", humidity);
 				setParameterValue("WEATHER_DEWPOINT", Td);
+				if(!DSavailable) focuserTemperature = cTemp;
 				SHTavailable = true;
 			}
 		}

@@ -146,7 +146,7 @@ private:
 	int resolution = 1;
 	int holdPower = 0;
 	float lastTemperature;
-	bool sensorAvailable = false;
+	float focuserTemperature;
 	bool DSavailable = false;
 	bool SHTavailable = false;
 	bool MLXavailable = false;
