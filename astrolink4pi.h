@@ -64,6 +64,7 @@ protected:
 	virtual bool AbortFocuser();
 	virtual bool SyncFocuser(uint32_t ticks) override;
 	virtual bool SetFocuserBacklash(int32_t steps) override;
+	virtual bool SetFocuserMaxPosition(uint32_t ticks) override;
 
 	virtual bool saveConfigItems(FILE *fp);
 	virtual void TimerHit();

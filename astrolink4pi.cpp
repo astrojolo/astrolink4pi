@@ -1295,6 +1295,12 @@ bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
 	return true;
 }
 
+bool AstroLink4Pi::SetFocuserMaxPosition(uint32_t ticks)
+{
+	DEBUGF(INDI::Logger::DBG_SESSION, "Max position set to %i steps", steps);
+	return true;
+}
+
 void AstroLink4Pi::temperatureCompensation()
 {
 	if (!isConnected())
