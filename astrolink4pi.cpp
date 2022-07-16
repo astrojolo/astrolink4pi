@@ -1297,7 +1297,7 @@ bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
 
 bool AstroLink4Pi::SetFocuserMaxPosition(uint32_t ticks)
 {
-	DEBUGF(INDI::Logger::DBG_SESSION, "Max position set to %i steps", steps);
+	DEBUGF(INDI::Logger::DBG_SESSION, "Max position set to %i steps", ticks);
 	return true;
 }
 
