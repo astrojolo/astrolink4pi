@@ -38,8 +38,9 @@
 
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
+#include <indiweatherinterface.h>
 
-class AstroLink4Pi : public INDI::DefaultDevice, public INDI::FocuserInterface
+class AstroLink4Pi : public INDI::DefaultDevice, public INDI::FocuserInterface, public INDI::WeatherInterface
 {
 public:
 	AstroLink4Pi();
@@ -63,9 +64,16 @@ protected:
 	virtual bool AbortFocuser();
 	virtual bool SyncFocuser(uint32_t ticks) override;
 	virtual bool SetFocuserBacklash(int32_t steps) override;
+	virtual bool SetFocuserMaxPosition(uint32_t ticks) override;
 
 	virtual bool saveConfigItems(FILE *fp);
 	virtual void TimerHit();
+
+	// Weather Overrides
+    virtual IPState updateWeather() override
+    {
+        return IPS_OK;
+    }
 
 private:
 	virtual bool Connect();
@@ -73,6 +81,7 @@ private:
 	virtual void SetResolution(int res);
 	virtual int savePosition(int pos);
 	virtual bool readSHT();
+	virtual bool readMLX();
 	virtual bool readDS18B20();
 
 	ISwitch FocusResolutionS[6];
@@ -131,7 +140,10 @@ private:
 	int resolution = 1;
 	int holdPower = 0;
 	float lastTemperature;
-	bool sensorAvailable = false;
+	float focuserTemperature;
+	bool DSavailable = false;
+	bool SHTavailable = false;
+	bool MLXavailable = false;
 
 	int backlashTicksRemaining;
 	int lastDirection = 0;
@@ -157,6 +169,7 @@ private:
 	int checkRevision(int handle);
 	long int millis();
 
+    static constexpr const char *ENVIRONMENT_TAB {"Environment"};
 	static constexpr const char *SYSTEM_TAB{"System"};
 	static constexpr const char *OUTPUTS_TAB{"Outputs"};
 };
