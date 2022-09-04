@@ -110,4 +110,4 @@ For custom labels you need to save configuration and restart the driver after ch
 
 # AstroLink 4 Pi images
 
-![Photo](/images/al4pi-interior.JPG)
+![Photo](/images/al4pi-interior-v3.JPG)
