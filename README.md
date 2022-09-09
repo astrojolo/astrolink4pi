@@ -37,6 +37,8 @@ https://github.com/astrojolo/astrolink4pi
 # Stellarmate installation prerequisites
 ```
 sudo apt update
+sudo apt install git
+sudo apt-get install build-essential
 sudo apt-get install cmake
 sudo apt-get install libindi-dev
 sudo apt-get install gpiod libgpiod-dev libgpiod-doc
