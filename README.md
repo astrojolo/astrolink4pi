@@ -95,7 +95,9 @@ hwclock -h
 ```
 
 # How to use it?
-Enable 1-Wire interface using raspi-config or adding 'dtoverlay=w1-gpio' to /boot/configure.txt for temperature compensation support (reboot required). Run Kstars and select AstroLink 4 Pi (Aux section) in Ekos profile editor. Then start INDI server in Ekos with your profile, containg AstroLink 4 Pi drivers. Alternatively you can start INDI server manually by running:
+**version 1** Enable 1-Wire interface using raspi-config or adding 'dtoverlay=w1-gpio' to /boot/configure.txt for temperature compensation support (reboot required). 
+**version 2 and 3** Enable I2C interface using raspi-config for sensor support (reboot required)
+Run Kstars and select AstroLink 4 Pi (Aux section) in Ekos profile editor. Then start INDI server in Ekos with your profile, containg AstroLink 4 Pi drivers. Alternatively you can start INDI server manually by running:
 ```
 indi_server indi_astrolink4pi
 ```
