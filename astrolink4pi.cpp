@@ -1105,10 +1105,6 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	_motionThread = std::thread([this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
 								{
 									int motorDirection = direction;
-									// if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
-									// {
-									// 	motorDirection = -1 * motorDirection;
-									// }
 
 									uint32_t currentPos = FocusAbsPosN[0].value;
 									while (currentPos != targetPos && !_abort)
@@ -1119,7 +1115,14 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 											FocusAbsPosNP.s = IPS_BUSY;
 											IDSetNumber(&FocusAbsPosNP, nullptr);
 										}
-										gpio_write(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 0 : 1);
+										if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
+										{
+											gpio_write(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 1 : 0);
+										}
+										else
+										{
+											gpio_write(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 0 : 1);
+										}
 										gpio_write(pigpioHandle, STP_PIN, 1);
 										usleep(10);
 										gpio_write(pigpioHandle, STP_PIN, 0);
