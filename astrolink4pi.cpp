@@ -1105,10 +1105,10 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	_motionThread = std::thread([this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
 								{
 									int motorDirection = direction;
-									if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
-									{
-										motorDirection = -1 * motorDirection;
-									}
+									// if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
+									// {
+									// 	motorDirection = -1 * motorDirection;
+									// }
 
 									uint32_t currentPos = FocusAbsPosN[0].value;
 									while (currentPos != targetPos && !_abort)
