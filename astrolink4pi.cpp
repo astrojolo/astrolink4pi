@@ -1617,7 +1617,7 @@ bool AstroLink4Pi::readSQM()
 		if (read > 6)
 		{
 			int sqm = i2cData[5] * 256 + i2cData[6];
-			setParameterValue("SQM_READING", sqm / 2000);
+			setParameterValue("SQM_READING", i2cData[6]);
 			DEBUGF(INDI::Logger::DBG_SESSION, "SQM read %i %i", i2cData[5], i2cData[6]);
 			SQMavailable = true;
 		}
