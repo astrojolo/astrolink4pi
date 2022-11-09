@@ -370,6 +370,7 @@ bool AstroLink4Pi::initProperties()
 	addParameter("WEATHER_DEWPOINT", "Dew Point [C]", -25, 20, 15);
 	addParameter("WEATHER_SKY_TEMP", "Sky temperature [C]", -50, 20, 20);
 	addParameter("WEATHER_SKY_DIFF", "Temperature difference [C]", -5, 40, 10);
+	addParameter("SQM_READING", "Sky brightness [mag/arcsec2]", 10, 25, 15);
 
 	// initial values at resolution 1/1
 	FocusMaxPosN[0].min = 1000;
@@ -994,6 +995,7 @@ void AstroLink4Pi::TimerHit()
 		{
 			SHTavailable = readSHT();
 			MLXavailable = readMLX();
+			SQMavailable = readSQM();
 		}
 
 		nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
@@ -1602,9 +1604,33 @@ int AstroLink4Pi::setDac(int chan, int value)
 	return written;
 }
 
+bool AstroLink4Pi::readSQM()
+{
+	char i2cData[7];
+
+	int i2cHandle = i2c_open(pigpioHandle, 1, 0x5A, 0);
+	if (i2cHandle >= 0)
+	{
+		int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 7);
+		if (read > 6)
+		{
+			int sqm = i2cdata[5] * 256 + i2cdata[6];
+			setParameterValue("SQM_READING", sqm / 2000);
+			SQMavailable = true;
+		}
+		{
+			else SQMavailable = false;
+		}
+	}
+	{
+		else SQMavailable = false;
+	}
+	return SQMavailable;
+}
+
 bool AstroLink4Pi::readMLX()
 {
-	int i2cHandle = i2c_open(pigpioHandle, 1, 0x5A, 0);
+	int i2cHandle = i2c_open(pigpioHandle, 1, 0x33, 0);
 	if (i2cHandle >= 0)
 	{
 		int Tamb = i2c_read_word_data(pigpioHandle, i2cHandle, 0x06);
