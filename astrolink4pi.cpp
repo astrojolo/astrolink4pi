@@ -1608,14 +1608,17 @@ bool AstroLink4Pi::readSQM()
 {
 	char i2cData[7];
 
-	int i2cHandle = i2c_open(pigpioHandle, 1, 0x5A, 0);
+	int i2cHandle = i2c_open(pigpioHandle, 1, 0x33, 0);
 	if (i2cHandle >= 0)
 	{
+		DEBUG(INDI::Logger::DBG_SESSION, "I2C got");
 		int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 7);
+		DEBUGF(INDI::Logger::DBG_SESSION, "SQM read %i bytes", read);
 		if (read > 6)
 		{
 			int sqm = i2cData[5] * 256 + i2cData[6];
 			setParameterValue("SQM_READING", sqm / 2000);
+			DEBUGF(INDI::Logger::DBG_SESSION, "SQM read %i %i", i2cData[5], i2cData[6]);
 			SQMavailable = true;
 		}
 		else
@@ -1632,7 +1635,7 @@ bool AstroLink4Pi::readSQM()
 
 bool AstroLink4Pi::readMLX()
 {
-	int i2cHandle = i2c_open(pigpioHandle, 1, 0x33, 0);
+	int i2cHandle = i2c_open(pigpioHandle, 1, 0x5A, 0);
 	if (i2cHandle >= 0)
 	{
 		int Tamb = i2c_read_word_data(pigpioHandle, i2cHandle, 0x06);
