@@ -1614,16 +1614,18 @@ bool AstroLink4Pi::readSQM()
 		int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 7);
 		if (read > 6)
 		{
-			int sqm = i2cdata[5] * 256 + i2cdata[6];
+			int sqm = i2cData[5] * 256 + i2cData[6];
 			setParameterValue("SQM_READING", sqm / 2000);
 			SQMavailable = true;
 		}
+		else
 		{
-			else SQMavailable = false;
+			SQMavailable = false;
 		}
 	}
+	else
 	{
-		else SQMavailable = false;
+		SQMavailable = false;
 	}
 	return SQMavailable;
 }
