@@ -1611,14 +1611,12 @@ bool AstroLink4Pi::readSQM()
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x33, 0);
 	if (i2cHandle >= 0)
 	{
-		DEBUG(INDI::Logger::DBG_SESSION, "I2C got");
 		int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 7);
-		DEBUGF(INDI::Logger::DBG_SESSION, "SQM read %i bytes", read);
 		if (read > 6)
 		{
 			int sqm = i2cData[5] * 256 + i2cData[6];
-			setParameterValue("SQM_READING", i2cData[6]);
-			DEBUGF(INDI::Logger::DBG_SESSION, "SQM read %i %i", i2cData[5], i2cData[6]);
+			setParameterValue("SQM_READING", 0.01 * sqm);
+			//DEBUGF(INDI::Logger::DBG_SESSION, "SQM read %i %i", i2cData[5], i2cData[6]);
 			SQMavailable = true;
 		}
 		else
