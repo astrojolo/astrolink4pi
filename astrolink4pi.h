@@ -166,6 +166,7 @@ private:
 	int getDacValue(int current);
 	void systemUpdate();
 	int setDac(int chan, int value);
+	int setMotorPWM(int value);
 	int checkRevision(int handle);
 	long int millis();
 

@@ -26,21 +26,21 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define SYSTEM_UPDATE_PERIOD 1000
 #define POLL_PERIOD 500
 
-#define DECAY_PIN 14
-#define EN_PIN 15
-#define M0_PIN 17
-#define M1_PIN 18
-#define M2_PIN 27
-#define RST_PIN 22
-#define STP_PIN 24
-#define DIR_PIN 23
-#define OUT1_PIN 5
-#define OUT2_PIN 6
-#define PWM1_PIN 26
-#define PWM2_PIN 19
-#define HOLD_PIN 10
-#define CHK_PIN 20
-#define CHK2_PIN 16
+#define DECAY_PIN 	14
+#define EN_PIN 		15
+#define M0_PIN 		17
+#define M1_PIN 		18
+#define M2_PIN 		27
+#define RST_PIN 	22
+#define STP_PIN 	24
+#define DIR_PIN 	23
+#define OUT1_PIN 	5
+#define OUT2_PIN 	6
+#define PWM1_PIN 	26
+#define PWM2_PIN 	19
+#define HOLD_PIN 	10
+#define MOTOR_PWM 	20
+#define CHK_IN_PIN 	16
 
 void ISPoll(void *p);
 
@@ -107,8 +107,16 @@ bool AstroLink4Pi::Connect()
 		return false;
 	}
 
-	set_mode(pigpioHandle, CHK_PIN, PI_INPUT);
+	set_mode(pigpioHandle, MOTOR_PWM, PI_INPUT);
 	revision = checkRevision(pigpioHandle);
+
+	if(revision >= 4)
+	{
+		set_mode(pigpioHandle, MOTOR_PWM, PI_OUTPUT);
+		set_PWM_frequency(pigpioHandle, MOTOR_PWM, 8000);
+		set_PWM_range(pigpioHandle, MOTOR_PWM, 100);
+		set_PWM_dutycycle(pigpioHandle, MOTOR_PWM, 0);			
+	}
 
 	set_mode(pigpioHandle, DECAY_PIN, PI_OUTPUT);
 	gpio_write(pigpioHandle, DECAY_PIN, 0); //  decay for DRV
@@ -253,7 +261,7 @@ bool AstroLink4Pi::initProperties()
 	}
 	else
 	{
-		set_mode(handle, CHK_PIN, PI_INPUT);
+		set_mode(handle, MOTOR_PWM, PI_INPUT);
 		revision = checkRevision(pigpioHandle);
 		pigpio_stop(handle);
 	}
@@ -1443,9 +1451,16 @@ void AstroLink4Pi::setCurrent(bool standby)
 				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
 			}
 		}
-		if (revision > 1)
+		if (revision > 1 && revision < 4)
 		{
 			setDac(0, getDacValue(holdPower * stepperCurrent / 5));
+		}
+		if(revision >= 4)
+		{
+			set_PWM_dutycycle(handle, MOTOR_PWM, getMotorPWM(holdPower * stepperCurrent / 5));	
+		}		
+		if(revision > 1)
+		{
 			if (holdPower > 0)
 			{
 				DEBUGF(INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", holdPower * 20);
@@ -1453,7 +1468,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 			else
 			{
 				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
-			}
+			}			
 		}
 	}
 	else
@@ -1464,9 +1479,13 @@ void AstroLink4Pi::setCurrent(bool standby)
 		{
 			gpio_write(pigpioHandle, HOLD_PIN, 0);
 		}
-		if (revision > 1)
+		if (revision > 1 && revision < 4)
 		{
 			setDac(0, getDacValue(stepperCurrent));
+		}
+		if(revision >= 4)
+		{
+			set_PWM_dutycycle(handle, MOTOR_PWM, getMotorPWM(stepperCurrent));	
 		}
 	}
 }
@@ -1602,6 +1621,12 @@ int AstroLink4Pi::setDac(int chan, int value)
 	return written;
 }
 
+int AstroLink4Pi::getMotorPWM(int current)
+{
+	// 100 = 1.03V = 2.06A, 1 = 20mA
+	return current / 20;
+}
+
 bool AstroLink4Pi::readMLX()
 {
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x5A, 0);
@@ -1695,28 +1720,42 @@ bool AstroLink4Pi::readSHT()
 int AstroLink4Pi::checkRevision(int handle)
 {
 	int rev = 1;
-	set_mode(handle, CHK_PIN, PI_INPUT);
-	set_mode(handle, CHK2_PIN, PI_INPUT);
+	set_mode(handle, MOTOR_PWM, PI_INPUT);
+	set_mode(handle, CHK_IN_PIN, PI_INPUT);
 	setDac(1, 0);
-	if (gpio_read(handle, CHK_PIN) == 0)
+	if (gpio_read(handle, MOTOR_PWM) == 0)
 	{
 		setDac(1, 255);
-		if (gpio_read(handle, CHK_PIN) == 1)
+		if (gpio_read(handle, MOTOR_PWM) == 1)
 		{
 
 			rev = 2;
 		}
 	}
 	setDac(1, 0);
-	if (gpio_read(handle, CHK2_PIN) == 0)
+	if (gpio_read(handle, CHK_IN_PIN) == 0)
 	{
 		setDac(1, 255);
-		if (gpio_read(handle, CHK2_PIN) == 1)
+		if (gpio_read(handle, CHK_IN_PIN) == 1)
 		{
 			rev = 3;
 		}
 	}
 	setDac(1, 255);
+
+	if(rev == 1)
+	{
+		set_mode(handle, MOTOR_PWM, PI_OUTPUT);
+		set_PWM_frequency(handle, MOTOR_PWM, 8000);
+		set_PWM_range(handle, MOTOR_PWM, 100);
+		set_PWM_dutycycle(handle, MOTOR_PWM, 100);		
+		usleep(50000);
+		if (gpio_read(handle, CHK_IN_PIN) == 1)
+		{
+			rev = 4;
+		}
+		set_PWM_dutycycle(handle, MOTOR_PWM, 0);		
+	}
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;
 }
