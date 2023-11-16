@@ -1,6 +1,6 @@
 # AstroLink 4 Pi
 
-AstroLink 4 Pi micro features:
+AstroLink 4 Pi features:
 * Focuser
   - DRV8825 driver support for Moonlite / Robofocus / AstroLink geared unipolar steppers and bipolar microstepping up to 1/32
   - Absolute position control
@@ -11,19 +11,18 @@ AstroLink 4 Pi micro features:
   - Backlash compensation
   - Speed control
   - Focuser info including: critical focus zone in μm, step size in μm, steps per critical focus zone
-  - Automatic temperature compensation based on DS18B20 temperature sensor
+  - Automatic temperature compensation based on temperature sensor
+  - Humidity / dew point / sky temperature / cloud coverage / sky brighntess sensors support (version 3 and later)
   - Stepper movement abort
   - 6 pin RJ12 stepper output
-  - embedded real time clock (AstroLink 4 Pi version 2 only)
+  - embedded real time clock (version 2 and later)
+  - voltage, current and energy monitor (version 4 and later)
 * Power outputs
   - Two switchable 12V DC outputs, 5A max each
   - One permanent 12V DC output
   - Two PWM regulated RCA outputs, 3A max each
   - One adjustable DC output 3-10V, 1.5A max
   - Configurable labels
-* Astroberry System
-  - Provides system information such as local system time, UTC offset, hardware identification, CPU temperature, uptime, system load, hostname, local IP, public IP
-  - Allows for system restart and shut down (Supported on linux operating system only. Requires advanced configuration of sudo to allow restart & shutdown without password)
 * Other
   - Internal fan controlled by GPIO pin - automatic work
 
@@ -95,9 +94,9 @@ hwclock -h
 ```
 
 # How to use it?
-**version 1** - Enable 1-Wire interface using raspi-config or adding 'dtoverlay=w1-gpio' to /boot/configure.txt for temperature compensation support (reboot required). 
+**version 1 and later** - Enable 1-Wire interface using raspi-config or adding 'dtoverlay=w1-gpio' to /boot/configure.txt for temperature compensation support (reboot required). 
 
-**version 2 and 3** - Enable I2C interface using raspi-config for sensor support (reboot required)
+**version 2 and later** - Enable I2C interface using raspi-config for sensor support (reboot required)
 
 Run Kstars and select AstroLink 4 Pi (Aux section) in Ekos profile editor. Then start INDI server in Ekos with your profile, containg AstroLink 4 Pi drivers. Alternatively you can start INDI server manually by running:
 ```
