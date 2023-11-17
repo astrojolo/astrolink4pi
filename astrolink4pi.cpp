@@ -1730,8 +1730,8 @@ bool AstroLink4Pi::readSHT()
 
 bool AstroLink4Pi:: readPower() 
 {
-	uint8_t writeBuf[3];		// Buffer to store the 3 bytes that we write to the I2C device
-	uint8_t readBuf[2];			// 2 byte buffer to store the data read from the I2C device
+	char writeBuf[3];		// Buffer to store the 3 bytes that we write to the I2C device
+	char readBuf[2];			// 2 byte buffer to store the data read from the I2C device
 	int16_t val;	
 
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x48, 0);
