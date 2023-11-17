@@ -1731,6 +1731,8 @@ bool AstroLink4Pi::readSHT()
 
 bool AstroLink4Pi::readPower() 
 {
+	if(revision < 4) return;
+	
 	char writeBuf[3];
 	char readBuf[2];
 
