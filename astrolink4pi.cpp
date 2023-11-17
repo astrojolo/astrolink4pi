@@ -200,11 +200,6 @@ bool AstroLink4Pi::Connect()
 	nextTemperatureCompensation = currentTime + TEMPERATURE_COMPENSATION_TIMEOUT;
 	nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;
 
-	for(int i = 0; i < 3; i++)
-	{
-		vinArray[i] = vregArray[i] = itotArray[i] = ptotArray[i] = 0;
-	}
-
 	SetTimer(POLL_PERIOD);
 	setCurrent(true);
 
