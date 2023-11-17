@@ -1731,7 +1731,7 @@ bool AstroLink4Pi::readSHT()
 
 bool AstroLink4Pi::readPower() 
 {
-	char writeBuf[3];		// Buffer to store the 3 bytes that we write to the I2C device
+	char writeBuf[2];		// Buffer to store the 3 bytes that we write to the I2C device
 	char readBuf[2];			// 2 byte buffer to store the data read from the I2C device
 	int16_t val;	
 
@@ -1739,7 +1739,14 @@ bool AstroLink4Pi::readPower()
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x48, 0);
 	if (i2cHandle >= 0)
 	{
+		//writeBuf[0] = 0x01;
+		writeBuf[0] = 0xC5;   		// This sets the 8 MSBs of the config register (bits 15-8) to 11000101
+		writeBuf[1] = 0x43;  		// This sets the 8 LSBs of the config register (bits 7-0) to  01000011
+
 		DEBUG(INDI::Logger::DBG_SESSION, "I2C handle got");
+
+		int written = i2c_write_block_data(pigpioHandle, i2cHandle, 0x01, writeBuf, 2);
+		DEBUGF(INDI::Logger::DBG_SESSION, "Wite config result %d", written);
 
 		i2c_close(pigpioHandle, i2cHandle);
 		return true;
