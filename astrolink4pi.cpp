@@ -1731,7 +1731,7 @@ bool AstroLink4Pi::readSHT()
 
 bool AstroLink4Pi:: readPower() 
 {
-	char writeBuf[2];		// Buffer to store the 3 bytes that we write to the I2C device
+	char writeBuf[3];		// Buffer to store the 3 bytes that we write to the I2C device
 	char readBuf[2];			// 2 byte buffer to store the data read from the I2C device
 	int16_t val;	
 
@@ -1741,14 +1741,18 @@ bool AstroLink4Pi:: readPower()
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "I2C handle got");
 		// These three bytes are written to the ADS1115 to set the config register and start a conversion 
-		writeBuf[0] = 0xC5;   		// This sets the 8 MSBs of the config register (bits 15-8) to 11000101
-		writeBuf[1] = 0x43;  		// This sets the 8 LSBs of the config register (bits 7-0) to  01000011
+		writeBuf[0] = 0x01;
+		writeBuf[1] = 0xC5;   		// This sets the 8 MSBs of the config register (bits 15-8) to 11000101
+		writeBuf[2] = 0x43;  		// This sets the 8 LSBs of the config register (bits 7-0) to  01000011
 		
 		// Initialize the buffer used to read data from the ADS1115 to 0
 		readBuf[0]= 0;		
 		readBuf[1]= 0;		
 
-		int written = i2c_write_block_data(pigpioHandle, i2cHandle, 0x01, writeBuf, 2);
+		int written = i2c_write_byte(pigpioHandle, i2cHandle, writeBuf[0]);
+		written = i2c_write_byte(pigpioHandle, i2cHandle, writeBuf[1]);
+		written = i2c_write_byte(pigpioHandle, i2cHandle, writeBuf[2]);
+		//int written = i2c_write_block_data(pigpioHandle, i2cHandle, 0x01, writeBuf, 2);
 		if(written != 0)
 		{
 			DEBUG(INDI::Logger::DBG_SESSION, "Cannot write data to power sensor 1");
@@ -1756,10 +1760,22 @@ bool AstroLink4Pi:: readPower()
 
 		DEBUG(INDI::Logger::DBG_SESSION, "Waiting for read");
 		usleep(200000);
-
+		
+		writeBuf[0] = 0x00;
+		written = i2c_write_byte(pigpioHandle, i2cHandle, writeBuf[0]);
+		if(written != 0)
+		{
+			DEBUG(INDI::Logger::DBG_SESSION, "Cannot write data to power sensor 1");
+		}
+		
 		DEBUG(INDI::Logger::DBG_SESSION, "Read ready");
-		int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, readBuf, 2);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Read %d bytes", read);
+
+		readBuf[0] = i2c_read_byte(pigpioHandle, i2cHandle);
+		readBuf[1] = i2c_read_byte(pigpioHandle, i2cHandle);
+
+		//int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, readBuf, 2);
+		//DEBUGF(INDI::Logger::DBG_SESSION, "Read %d bytes", read);
+		
 		val = readBuf[0] << 8 | readBuf[1];	// Combine the two bytes of readBuf into a single 16 bit result 
 		DEBUGF(INDI::Logger::DBG_SESSION, "Power value is %d", val);
 		i2c_close(pigpioHandle, i2cHandle);
