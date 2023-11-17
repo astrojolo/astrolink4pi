@@ -1766,11 +1766,11 @@ bool AstroLink4Pi:: readPower()
 		}
 
 		DEBUG(INDI::Logger::DBG_SESSION, "Waiting for read");
-		while ((readBuf[0] & 0x80) == 0)	// readBuf[0] contains 8 MSBs of config register, AND with 10000000 to select bit 15
-		{
-			int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, readBuf, 2);	// Read the config register into readBuf
-		}
+		usleep(200000);
+		int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, readBuf, 2);	// Read the config register into readBuf
 		DEBUG(INDI::Logger::DBG_SESSION, "Read ready");
+		DEBUGF(INDI::Logger::DBG_SESSION, "Readbuf 0 %d", readBuf[0]);
+		DEBUGF(INDI::Logger::DBG_SESSION, "Readbuf 1 %d", readBuf[1]);
 
 		writeBuf[0] = 0;
 		written = i2c_write_byte(pigpioHandle, i2cHandle, 0x00);		
