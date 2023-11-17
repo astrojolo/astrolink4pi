@@ -1778,7 +1778,7 @@ bool AstroLink4Pi:: readPower()
 			SHTavailable = false;			
 		}
 
-		read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, readBuf, 2);
+		int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, readBuf, 2);
 		val = readBuf[0] << 8 | readBuf[1];	// Combine the two bytes of readBuf into a single 16 bit result 
 		DEBUGF(INDI::Logger::DBG_SESSION, "Power value is %d", val);
 		i2c_close(pigpioHandle, i2cHandle);
