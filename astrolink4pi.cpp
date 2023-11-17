@@ -24,7 +24,7 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define TEMPERATURE_UPDATE_TIMEOUT (5 * 1000)		 // 3 sec
 #define TEMPERATURE_COMPENSATION_TIMEOUT (30 * 1000) // 60 sec
 #define SYSTEM_UPDATE_PERIOD 1000
-#define POLL_PERIOD 100
+#define POLL_PERIOD 200
 
 #define DECAY_PIN 	14
 #define EN_PIN 		15
@@ -1786,12 +1786,9 @@ bool AstroLink4Pi::readPower()
 
 			switch(powerIndex)
 			{
-				case 1: DEBUGF(INDI::Logger::DBG_SESSION, "Vin result %d", val); 
-						PowerReadingsN[POW_VIN].value = (float) val / 32768.0 * 4.096 * 6.6; break;
-				case 3: DEBUGF(INDI::Logger::DBG_SESSION, "Vreg result %d", val); 
-						PowerReadingsN[POW_VREG].value = (float) val / 32768.0 * 4.096 * 6.6; break;
-				case 5: DEBUGF(INDI::Logger::DBG_SESSION, "Itot result %d", val); 
-						PowerReadingsN[POW_ITOT].value = (float) val / 32768.0 * 4.096 * 2 * 10; break;
+				case 1: PowerReadingsN[POW_VIN].value = (float) val / 32768.0 * 4.096 * 6.6; break;
+				case 3: PowerReadingsN[POW_VREG].value = (float) val / 32768.0 * 4.096 * 6.6; break;
+				case 5: PowerReadingsN[POW_ITOT].value = (float) val / 32768.0 * 4.096 * 1 * 10; break;
 			}
 		}
 		powerIndex++;
