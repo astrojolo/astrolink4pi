@@ -1785,7 +1785,7 @@ bool AstroLink4Pi::readPower()
 				case 3: PowerReadingsN[POW_VREG].value = (float) val / 32768.0 * 4.096 * 6.6; break;
 				case 5: PowerReadingsN[POW_ITOT].value = (float) val / 32768.0 * 4.096 * 1 * 10; break;
 			}
-			PowerReadingsN[POW_PTOT] = (float) val / 32768.0 * 4.096 * 6.6 * val / 32768.0 * 4.096 * 1 * 10;
+			PowerReadingsN[POW_PTOT].value = (float) val / 32768.0 * 4.096 * 6.6 * val / 32768.0 * 4.096 * 1 * 10;
 			energymAs += (float) val / 32768.0 * 4.096 * 1 * 10 * 0.4;
 			energymWs += (float) val / 32768.0 * 4.096 * 6.6 * val / 32768.0 * 4.096 * 1 * 10 * 0.4;
 			PowerReadingsN[POW_AH].value = energymAs / 3600;
