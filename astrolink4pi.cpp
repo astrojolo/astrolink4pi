@@ -1739,8 +1739,19 @@ bool AstroLink4Pi::readPower()
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x48, 0);
 	if (i2cHandle >= 0)
 	{
+		/*
+		15 		- 1 	start single conv
+		14:12	- 100 	Vin, 101 Vreg, 110 Itot, 111 Iref, 011 Ireal
+		11:9  	- 010	+-2.048V
+		8		- 1 single
+
+		7:5		- 010 32SPS, 011 64SPS
+		4:2		- 000 comparator
+		1:0		- 11 comparator disable
+		*/
+
 		//writeBuf[0] = 0x01;
-		writeBuf[0] = 0xC5;   		// This sets the 8 MSBs of the config register (bits 15-8) to 11000101
+		writeBuf[0] = 0xC5;   		// This sets the 8 MSBs of the config register (bits 15-8) to 11010101
 		writeBuf[1] = 0x43;  		// This sets the 8 LSBs of the config register (bits 7-0) to  01000011
 
 		DEBUG(INDI::Logger::DBG_SESSION, "I2C handle got");
@@ -1760,8 +1771,13 @@ bool AstroLink4Pi::readPower()
 
 		int read = i2c_read_byte(pigpioHandle, i2cHandle);
 		DEBUGF(INDI::Logger::DBG_SESSION, "Read 1 result %d", read);
+		readBuf[0] = read;
 		read = i2c_read_byte(pigpioHandle, i2cHandle);
 		DEBUGF(INDI::Logger::DBG_SESSION, "Read 2 result %d", read);
+		readBuf[1] = read;
+
+		val = readBuf[0] * 255 + readBuf[1];
+		DEBUGF(INDI::Logger::DBG_SESSION, "Read result %d", val);
 
 		i2c_close(pigpioHandle, i2cHandle);
 		return true;
