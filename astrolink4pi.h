@@ -161,6 +161,15 @@ private:
 	long int nextTemperatureCompensation = 0;
 	long int nextSystemRead = 0;
 
+	int powerIndex = 0;
+	int powerArrIndex = 0;
+	int vinArray[3];
+	int vregArray[3];
+	int itotArray[3];
+	int ptotArray[3];
+	float energyAh = 0;
+	float energyWh = 0;
+
 	std::thread _motionThread;
 	volatile bool _abort;
 

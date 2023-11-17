@@ -24,7 +24,7 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define TEMPERATURE_UPDATE_TIMEOUT (5 * 1000)		 // 3 sec
 #define TEMPERATURE_COMPENSATION_TIMEOUT (30 * 1000) // 60 sec
 #define SYSTEM_UPDATE_PERIOD 1000
-#define POLL_PERIOD 500
+#define POLL_PERIOD 100
 
 #define DECAY_PIN 	14
 #define EN_PIN 		15
@@ -199,6 +199,11 @@ bool AstroLink4Pi::Connect()
 	nextTemperatureRead = currentTime + TEMPERATURE_UPDATE_TIMEOUT;
 	nextTemperatureCompensation = currentTime + TEMPERATURE_COMPENSATION_TIMEOUT;
 	nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;
+
+	for(int i = 0; i < 3; i++)
+	{
+		vinArray[i] = vregArray[i] = itotArray[i] = ptotArray[i] = 0;
+	}
 
 	SetTimer(POLL_PERIOD);
 	setCurrent(true);
@@ -1000,8 +1005,6 @@ void AstroLink4Pi::TimerHit()
 	if (!isConnected())
 		return;
 
-	readPower();
-
 	long int timeMillis = millis();
 
 	if (nextTemperatureRead < timeMillis)
@@ -1045,6 +1048,8 @@ void AstroLink4Pi::TimerHit()
 		systemUpdate();
 		nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
 	}
+	readPower();
+
 	SetTimer(POLL_PERIOD);
 }
 
@@ -1740,6 +1745,8 @@ bool AstroLink4Pi::readPower()
 	if (i2cHandle >= 0)
 	{
 		/*
+		powerIndex 0-1 Vin RW, 2-3 Vreg RW, 4-5 Itot RW
+
 		15 		- 1 	start single conv
 		14:12	- 100 	Vin, 101 Vreg, 110 Itot, 111 Iref, 011 Ireal
 		11:9  	- 010	+-2.048V
@@ -1751,34 +1758,24 @@ bool AstroLink4Pi::readPower()
 		*/
 
 		writeBuf[0] = 0x01;
-		writeBuf[1] = 0xC5;   		// This sets the 8 MSBs of the config register (bits 15-8) to 11010101
-		writeBuf[2] = 0x43;  		// This sets the 8 LSBs of the config register (bits 7-0) to  01000011
+		writeBuf[1] = 0b11010101;
+		writeBuf[2] = 0b01000011;
 
 		DEBUG(INDI::Logger::DBG_SESSION, "I2C handle got");
 
 		int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 3);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Wite config result %d", written);
 
 		int read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", read);		
-		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", readBuf[0]);		
-		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", readBuf[1]);		
 		
 		sleep(1);
 
 		read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", read);		
-		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", readBuf[0]);		
-		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", readBuf[1]);		
+
 
 		writeBuf[0] = 0x00;
 		written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 1);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Wite request result %d", written);
 
 		read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Reading read %d", read);		
-		DEBUGF(INDI::Logger::DBG_SESSION, "Reading read %d", readBuf[0]);		
-		DEBUGF(INDI::Logger::DBG_SESSION, "Reading read %d", readBuf[1]);
 
 		val = readBuf[0] * 255 + readBuf[1];
 		DEBUGF(INDI::Logger::DBG_SESSION, "Read result %d", val);
