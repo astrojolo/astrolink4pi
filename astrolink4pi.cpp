@@ -1732,7 +1732,7 @@ bool AstroLink4Pi::readSHT()
 bool AstroLink4Pi::readPower() 
 {
 	if(revision < 4) return;
-	
+
 	char writeBuf[3];
 	char readBuf[2];
 
@@ -1740,7 +1740,7 @@ bool AstroLink4Pi::readPower()
 	if (i2cHandle >= 0)
 	{
 		/*
-		powerIndex 0-1 Vin RW, 2-3 Vreg RW, 4-5 Itot RW
+		powerIndex 0-1 Vin WR, 2-3 Vreg WR, 4-5 Itot WR
 
 		15 		- 1 	start single conv
 		14:12	- 100 	Vin, 101 Vreg, 110 Itot, 111 Iref, 011 Ireal
