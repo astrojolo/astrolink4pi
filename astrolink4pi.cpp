@@ -1731,8 +1731,8 @@ bool AstroLink4Pi::readSHT()
 
 bool AstroLink4Pi::readPower() 
 {
-	char writeBuf[2];		// Buffer to store the 3 bytes that we write to the I2C device
-	char readBuf[2];			// 2 byte buffer to store the data read from the I2C device
+	char writeBuf[3];
+	char readBuf[2];
 	int16_t val;	
 
 	DEBUG(INDI::Logger::DBG_SESSION, "Starting power");
@@ -1750,44 +1750,35 @@ bool AstroLink4Pi::readPower()
 		1:0		- 11 comparator disable
 		*/
 
-		//writeBuf[0] = 0x01;
-		writeBuf[0] = 0xC5;   		// This sets the 8 MSBs of the config register (bits 15-8) to 11010101
-		writeBuf[1] = 0x43;  		// This sets the 8 LSBs of the config register (bits 7-0) to  01000011
+		writeBuf[0] = 0x01;
+		writeBuf[1] = 0xC5;   		// This sets the 8 MSBs of the config register (bits 15-8) to 11010101
+		writeBuf[2] = 0x43;  		// This sets the 8 LSBs of the config register (bits 7-0) to  01000011
 
 		DEBUG(INDI::Logger::DBG_SESSION, "I2C handle got");
 
-		//int written = i2c_write_block_data(pigpioHandle, i2cHandle, 0x01, writeBuf, 2);
-		int written = i2c_write_byte_data(pigpioHandle, i2cHandle, 0x00, 0x01);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Wite config result %d", written);
-		written = i2c_write_byte_data(pigpioHandle, i2cHandle, 0x01, writeBuf[0]);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Wite config result %d", written);
-		written = i2c_write_byte_data(pigpioHandle, i2cHandle, 0x02, writeBuf[1]);
+		int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 3)
 		DEBUGF(INDI::Logger::DBG_SESSION, "Wite config result %d", written);
 
-
-		written = i2c_write_byte_data(pigpioHandle, i2cHandle, 0x00, 0x01);
-		int read = i2c_read_byte_data(pigpioHandle, i2cHandle, 0x00);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d %d", read, millis());		
+		int read = i2c_read_device(int pi, unsigned handle, readBuf, 2);
+		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", read);		
+		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", readBuf[0]);		
+		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", readBuf[1]);		
 		
 		sleep(1);
 
-		written = i2c_write_byte_data(pigpioHandle, i2cHandle, 0x00, 0x01);
-		read = i2c_read_byte_data(pigpioHandle, i2cHandle, 0x00);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d %d", read, millis());		
+		read = i2c_read_device(int pi, unsigned handle, readBuf, 2);
+		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", read);		
+		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", readBuf[0]);		
+		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", readBuf[1]);		
 
-		written = i2c_write_byte_data(pigpioHandle, i2cHandle, 0x00, 0x00);
+		writeBuf[0] = 0x00;
+		written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 1)
 		DEBUGF(INDI::Logger::DBG_SESSION, "Wite request result %d", written);
 
-		read = i2c_read_byte_data(pigpioHandle, i2cHandle, 0x00);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Read 1 result %d", read);
-		readBuf[0] = read;
-		read = i2c_read_byte_data(pigpioHandle, i2cHandle, 0x01);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Read 2 result %d", read);
-		readBuf[1] = read;
-		read = i2c_read_byte_data(pigpioHandle, i2cHandle, 0x02);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Read 3 result %d", read);
-		read = i2c_read_byte_data(pigpioHandle, i2cHandle, 0x03);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Read 4 result %d", read);
+		read = i2c_read_device(int pi, unsigned handle, readBuf, 2);
+		DEBUGF(INDI::Logger::DBG_SESSION, "Reading read %d", read);		
+		DEBUGF(INDI::Logger::DBG_SESSION, "Reading read %d", readBuf[0]);		
+		DEBUGF(INDI::Logger::DBG_SESSION, "Reading read %d", readBuf[1]);
 
 		val = readBuf[0] * 255 + readBuf[1];
 		DEBUGF(INDI::Logger::DBG_SESSION, "Read result %d", val);
