@@ -372,6 +372,15 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&PWM2N[0], "PWMout2", "%", "%0.0f", 0, 100, 10, 0);
 	IUFillNumberVector(&PWM2NP, PWM2N, 1, getDeviceName(), "PWMOUT2", RelayLabelsT[3].text, OUTPUTS_TAB, IP_RW, 60, IPS_IDLE);
 
+	// Power readings
+	IUFillNumber(&PowerReadingsN[0], "V_INPUT", "Input voltage [V]", "%0.1f", 0, 20, 1, 0);
+	IUFillNumber(&PowerReadingsN[1], "V_REG", "Regulated voltage [V]", "%0.1f", 0, 20, 1, 0);
+	IUFillNumber(&PowerReadingsN[2], "I_TOT", "Total current [A]", "%0.2f", 0, 20, 1, 0);
+	IUFillNumber(&PowerReadingsN[3], "P_TOT", "Total power [W]", "%0.1f", 0, 200, 1, 0);
+	IUFillNumber(&PowerReadingsN[4], "E_AH", "Energy consumed [Ah]", "%0.1f", 0, 10000, 1, 0);
+	IUFillNumber(&PowerReadingsN[5], "E_WH", "Energy consumed [Wh]", "%0.1f", 0, 100000, 1, 0);
+	IUFillNumberVector(&PowerReadingsNP, PowerReadingsN, 6, getDeviceName(), "POWER_READINGS", "Power readings", OUTPUTS_TAB, IP_RO, 0, IPS_IDLE);	
+
 	// Environment Group
 	addParameter("WEATHER_TEMPERATURE", "Temperature [C]", -15, 35, 15);
 	addParameter("WEATHER_HUMIDITY", "Humidity %", 0, 100, 15);
@@ -432,6 +441,7 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&FocusTemperatureNP);
 		defineProperty(&TemperatureCoefNP);
 		defineProperty(&TemperatureCompensateSP);
+		defineProperty(&PowerReadingsNP);
 	}
 	else
 	{
@@ -454,6 +464,7 @@ bool AstroLink4Pi::updateProperties()
 		deleteProperty(PWM2NP.name);
 		deleteProperty(PWMcycleNP.name);
 		deleteProperty(StepperCurrentNP.name);
+		deleteProperty(PowerReadingsNP.name);
 		FI::updateProperties();
 		WI::updateProperties();
 	}
