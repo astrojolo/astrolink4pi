@@ -1758,27 +1758,43 @@ bool AstroLink4Pi::readPower()
 		*/
 
 		writeBuf[0] = 0x01;
-		writeBuf[1] = 0b11010101;
+		writeBuf[1] = 0b11000101;
 		writeBuf[2] = 0b01000011;
+		if((powerIndex % 2) == 0)	// Trigger conversion
+		{
 
-		DEBUG(INDI::Logger::DBG_SESSION, "I2C handle got");
+			switch(powerIndex) 
+			{
+				case 2: writeBuf[1] = 0b11010101; break;
+				case 4: writeBuf[1] = 0b11100101; break;
+				default: writeBuf[1] = 0b11000101; 
+			}
+			int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 3);
+			if(written != 0)
+			{
+				DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor");
+			}
+		}
+		else						// Trigger read
+		{
+			written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 1);
+			read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
+			// Check if conversion complete
 
-		int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 3);
+			writeBuf[0] = 0x00;
+			written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 1);
+			read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
+			val = readBuf[0] * 255 + readBuf[1];
 
-		int read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
-		
-		sleep(1);
-
-		read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
-
-
-		writeBuf[0] = 0x00;
-		written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 1);
-
-		read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
-
-		val = readBuf[0] * 255 + readBuf[1];
-		DEBUGF(INDI::Logger::DBG_SESSION, "Read result %d", val);
+			switch(powerIndex)
+			{
+				case 1: DEBUGF(INDI::Logger::DBG_SESSION, "Vin result %d", val);
+				case 3: DEBUGF(INDI::Logger::DBG_SESSION, "Vreg result %d", val);
+				case 5: DEBUGF(INDI::Logger::DBG_SESSION, "Itot result %d", val);
+			}
+		}
+		powerIndex++;
+		if(powerIndex > 5) powerIndex = 0;
 
 		i2c_close(pigpioHandle, i2cHandle);
 		return true;
