@@ -377,8 +377,8 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&PowerReadingsN[POW_VREG], "POW_VREG", "Regulated voltage [V]", "%0.1f", 0, 15, 10, 0);
 	IUFillNumber(&PowerReadingsN[POW_ITOT], "POW_ITOT", "Total current [A]", "%0.2f", 0, 20, 1, 0);
 	IUFillNumber(&PowerReadingsN[POW_PTOT], "POW_PTOT", "Total power [W]", "%0.1f", 0, 200, 1, 0);
-	IUFillNumber(&PowerReadingsN[POW_AH], "POW_AH", "Energy consumed [Ah]", "%0.1f", 0, 10000, 1, 0);
-	IUFillNumber(&PowerReadingsN[POW_WH], "POW_WH", "Energy consumed [Wh]", "%0.1f", 0, 100000, 1, 0);
+	IUFillNumber(&PowerReadingsN[POW_AH], "POW_AH", "Energy consumed [Ah]", "%0.2f", 0, 10000, 1, 0);
+	IUFillNumber(&PowerReadingsN[POW_WH], "POW_WH", "Energy consumed [Wh]", "%0.2f", 0, 100000, 1, 0);
 	IUFillNumberVector(&PowerReadingsNP, PowerReadingsN, 6, getDeviceName(), "POWER_READINGS", "Power readings", OUTPUTS_TAB, IP_RO, 60, IPS_IDLE);	
 
 	// Environment Group
@@ -1785,9 +1785,9 @@ bool AstroLink4Pi::readPower()
 				case 3: PowerReadingsN[POW_VREG].value = (float) val / 32768.0 * 4.096 * 6.6; break;
 				case 5: PowerReadingsN[POW_ITOT].value = (float) val / 32768.0 * 4.096 * 1 * 10; break;
 			}
-			PowerReadingsN[POW_PTOT].value = (float) val / 32768.0 * 4.096 * 6.6 * val / 32768.0 * 4.096 * 1 * 10;
-			energymAs += (float) val / 32768.0 * 4.096 * 1 * 10 * 0.4;
-			energymWs += (float) val / 32768.0 * 4.096 * 6.6 * val / 32768.0 * 4.096 * 1 * 10 * 0.4;
+			PowerReadingsN[POW_PTOT].value = PowerReadingsN[POW_VIN].value * PowerReadingsN[POW_ITOT].value;
+			energymAs += PowerReadingsN[POW_VIN].value * 0.4;
+			energymWs += PowerReadingsN[POW_VIN].value * PowerReadingsN[POW_ITOT].value * 0.4;
 			PowerReadingsN[POW_AH].value = energymAs / 3600;
 			PowerReadingsN[POW_WH].value = energymWs / 3600;
 		}
