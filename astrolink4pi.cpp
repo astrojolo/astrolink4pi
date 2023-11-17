@@ -1729,7 +1729,7 @@ bool AstroLink4Pi::readSHT()
 	return SHTavailable;
 }
 
-bool AstroLink4Pi:: readPower() 
+bool AstroLink4Pi::readPower() 
 {
 	char writeBuf[3];		// Buffer to store the 3 bytes that we write to the I2C device
 	char readBuf[2];			// 2 byte buffer to store the data read from the I2C device
@@ -1742,10 +1742,12 @@ bool AstroLink4Pi:: readPower()
 		DEBUG(INDI::Logger::DBG_SESSION, "I2C handle got");
 
 		i2c_close(pigpioHandle, i2cHandle);
+		return true;
 	}
 	else
 	{
 		DEBUG(INDI::Logger::DBG_DEBUG, "No power sensor found.");
+		return false;
 	}
 }
 
