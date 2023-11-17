@@ -1764,12 +1764,21 @@ bool AstroLink4Pi::readPower()
 		written = i2c_write_byte(pigpioHandle, i2cHandle, writeBuf[1]);
 		DEBUGF(INDI::Logger::DBG_SESSION, "Wite config result %d", written);
 
+
+		written = i2c_write_byte(pigpioHandle, i2cHandle, 0x01);
+		int read = i2c_read_byte(pigpioHandle, i2cHandle);
+		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", read);		
+		
 		sleep(1);
+
+		written = i2c_write_byte(pigpioHandle, i2cHandle, 0x01);
+		read = i2c_read_byte(pigpioHandle, i2cHandle);
+		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", read);		
 
 		written = i2c_write_byte(pigpioHandle, i2cHandle, 0x00);
 		DEBUGF(INDI::Logger::DBG_SESSION, "Wite request result %d", written);
 
-		int read = i2c_read_byte(pigpioHandle, i2cHandle);
+		read = i2c_read_byte(pigpioHandle, i2cHandle);
 		DEBUGF(INDI::Logger::DBG_SESSION, "Read 1 result %d", read);
 		readBuf[0] = read;
 		read = i2c_read_byte(pigpioHandle, i2cHandle);
