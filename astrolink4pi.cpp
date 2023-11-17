@@ -1745,7 +1745,8 @@ bool AstroLink4Pi::readPower()
 
 		DEBUG(INDI::Logger::DBG_SESSION, "I2C handle got");
 
-		int written = i2c_write_block_data(pigpioHandle, i2cHandle, 0x01, writeBuf, 2);
+		//int written = i2c_write_block_data(pigpioHandle, i2cHandle, 0x01, writeBuf, 2);
+		int written = i2c_write_byte(pigpioHandle, i2cHandle, 0x01);
 		DEBUGF(INDI::Logger::DBG_SESSION, "Wite config result %d", written);
 
 		i2c_close(pigpioHandle, i2cHandle);
