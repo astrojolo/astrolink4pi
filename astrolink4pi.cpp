@@ -1749,12 +1749,13 @@ int AstroLink4Pi::checkRevision(int handle)
 		set_PWM_frequency(handle, MOTOR_PWM, 8000);
 		set_PWM_range(handle, MOTOR_PWM, 100);
 		set_PWM_dutycycle(handle, MOTOR_PWM, 100);		
-		//usleep(50000);
-		//if (gpio_read(handle, CHK_IN_PIN) == 1)
-		//{
-		//	rev = 4;
-		//}
-		//set_PWM_dutycycle(handle, MOTOR_PWM, 0);		
+		usleep(50000);
+		if (gpio_read(handle, CHK_IN_PIN) == 1)
+		{
+			rev = 4;
+		}
+		set_PWM_dutycycle(handle, MOTOR_PWM, 0);	
+		rev = 4;	
 	}
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;
