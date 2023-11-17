@@ -105,6 +105,10 @@ private:
 
 	INumber PowerReadingsN[6];
 	INumberVectorProperty PowerReadingsNP;
+    enum
+    {
+    POW_VIN, POW_VREG, POW_PTOT, POW_ITOT, POW_AH, POW_WH
+    };	
 
 	INumber ScopeParametersN[2];
 	INumberVectorProperty ScopeParametersNP;

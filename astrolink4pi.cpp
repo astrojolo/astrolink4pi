@@ -378,12 +378,12 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumberVector(&PWM2NP, PWM2N, 1, getDeviceName(), "PWMOUT2", RelayLabelsT[3].text, OUTPUTS_TAB, IP_RW, 60, IPS_IDLE);
 
 	// Power readings
-	IUFillNumber(&PowerReadingsN[0], "V_INPUT", "Input voltage [V]", "%0.1f", 0, 20, 1, 0);
-	IUFillNumber(&PowerReadingsN[1], "V_REG", "Regulated voltage [V]", "%0.1f", 0, 20, 1, 0);
-	IUFillNumber(&PowerReadingsN[2], "I_TOT", "Total current [A]", "%0.2f", 0, 20, 1, 0);
-	IUFillNumber(&PowerReadingsN[3], "P_TOT", "Total power [W]", "%0.1f", 0, 200, 1, 0);
-	IUFillNumber(&PowerReadingsN[4], "E_AH", "Energy consumed [Ah]", "%0.1f", 0, 10000, 1, 0);
-	IUFillNumber(&PowerReadingsN[5], "E_WH", "Energy consumed [Wh]", "%0.1f", 0, 100000, 1, 0);
+	IUFillNumber(&PowerReadingsN[POW_WH], "POW_VIN", "Input voltage [V]", "%0.1f", 0, 20, 1, 0);
+	IUFillNumber(&PowerReadingsN[POW_VREG], "POW_VREG", "Regulated voltage [V]", "%0.1f", 0, 20, 1, 0);
+	IUFillNumber(&PowerReadingsN[POW_ITOT], "POW_ITOT", "Total current [A]", "%0.2f", 0, 20, 1, 0);
+	IUFillNumber(&PowerReadingsN[POW_PTOT], "POW_PTOT", "Total power [W]", "%0.1f", 0, 200, 1, 0);
+	IUFillNumber(&PowerReadingsN[POW_AH], "POW_AH", "Energy consumed [Ah]", "%0.1f", 0, 10000, 1, 0);
+	IUFillNumber(&PowerReadingsN[POW_WH], "POW_WH", "Energy consumed [Wh]", "%0.1f", 0, 100000, 1, 0);
 	IUFillNumberVector(&PowerReadingsNP, PowerReadingsN, 6, getDeviceName(), "POWER_READINGS", "Power readings", OUTPUTS_TAB, IP_RO, 0, IPS_IDLE);	
 
 	// Environment Group
@@ -1787,7 +1787,7 @@ bool AstroLink4Pi::readPower()
 			switch(powerIndex)
 			{
 				case 1: DEBUGF(INDI::Logger::DBG_SESSION, "Vin result %d", val); 
-						PowerReadingsN[V_INPUT].value = val / 2048; break;
+						PowerReadingsN[POW_VIN].value = val / 2048; break;
 				case 3: DEBUGF(INDI::Logger::DBG_SESSION, "Vreg result %d", val); break;
 				case 5: DEBUGF(INDI::Logger::DBG_SESSION, "Itot result %d", val); break;
 			}
