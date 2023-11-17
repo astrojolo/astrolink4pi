@@ -250,7 +250,7 @@ bool AstroLink4Pi::initProperties()
 
 	FI::initProperties(FOCUS_TAB);
 	WI::initProperties(ENVIRONMENT_TAB, ENVIRONMENT_TAB);
-	// addDebugControl();
+	addDebugControl();
 	// addSimulationControl();
 	addConfigurationControl();
 
