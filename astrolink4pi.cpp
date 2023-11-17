@@ -1738,7 +1738,6 @@ bool AstroLink4Pi::readPower()
 {
 	char writeBuf[3];
 	char readBuf[2];
-	int16_t val;	
 
 	DEBUG(INDI::Logger::DBG_SESSION, "Starting power");
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x48, 0);
@@ -1777,14 +1776,14 @@ bool AstroLink4Pi::readPower()
 		}
 		else						// Trigger read
 		{
-			written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 1);
-			read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
+			int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 1);
+			int read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
 			// Check if conversion complete
 
 			writeBuf[0] = 0x00;
 			written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 1);
 			read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
-			val = readBuf[0] * 255 + readBuf[1];
+			int16_t val = readBuf[0] * 255 + readBuf[1];
 
 			switch(powerIndex)
 			{
