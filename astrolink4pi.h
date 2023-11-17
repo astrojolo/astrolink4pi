@@ -83,6 +83,7 @@ private:
 	virtual bool readSHT();
 	virtual bool readMLX();
 	virtual bool readDS18B20();
+	virtual bool readPower();
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;

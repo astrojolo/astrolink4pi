@@ -1043,7 +1043,7 @@ void AstroLink4Pi::TimerHit()
 		systemUpdate();
 		nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
 	}
-
+	readPower();
 	SetTimer(POLL_PERIOD);
 }
 
@@ -1726,6 +1726,68 @@ bool AstroLink4Pi::readSHT()
 		setParameterValue("WEATHER_DEWPOINT", 0.0);
 	}
 	return SHTavailable;
+}
+
+bool AstroLink4Pi:: readPower() 
+{
+	uint8_t writeBuf[3];		// Buffer to store the 3 bytes that we write to the I2C device
+	uint8_t readBuf[2];			// 2 byte buffer to store the data read from the I2C device
+	int16_t val;	
+
+	int i2cHandle = i2c_open(pigpioHandle, 1, 0x48, 0);
+	if (i2cHandle >= 0)
+	{
+		// These three bytes are written to the ADS1115 to set the config register and start a conversion 
+		writeBuf[0] = 1;			// This sets the pointer register so that the following two bytes write to the config register
+		writeBuf[1] = 0xC5;   		// This sets the 8 MSBs of the config register (bits 15-8) to 11000101
+		writeBuf[2] = 0x43;  		// This sets the 8 LSBs of the config register (bits 7-0) to  01000011
+		
+		// Initialize the buffer used to read data from the ADS1115 to 0
+		readBuf[0]= 0;		
+		readBuf[1]= 0;		
+
+		int written = i2c_write_byte(pigpioHandle, i2cHandle, 1);
+		if(written != 0)
+		{
+			DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor 1");
+			SHTavailable = false;			
+		}
+		written = i2c_write_byte(pigpioHandle, i2cHandle, 0xC5);
+		if(written != 0)
+		{
+			DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor 2");
+			SHTavailable = false;			
+		}
+		written = i2c_write_byte(pigpioHandle, i2cHandle, 0x43);
+		if(written != 0)
+		{
+			DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor 3");
+			SHTavailable = false;			
+		}
+
+		while ((readBuf[0] & 0x80) == 0)	// readBuf[0] contains 8 MSBs of config register, AND with 10000000 to select bit 15
+		{
+			int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, readBuf, 2);	// Read the config register into readBuf
+		}
+
+		writeBuf[0] = 0;
+		written = i2c_write_byte(pigpioHandle, i2cHandle, 0x00);		
+		if(written != 0)
+		{
+			DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor 4");
+			SHTavailable = false;			
+		}
+
+		read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, readBuf, 2);
+		val = readBuf[0] << 8 | readBuf[1];	// Combine the two bytes of readBuf into a single 16 bit result 
+		DEBUGF(INDI::Logger::DBG_SESSION, "Power value is %d", val);
+		i2c_close(pigpioHandle, i2cHandle);
+	}
+	else
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "No power sensor found.");
+		SHTavailable = false;		
+	}
 }
 
 int AstroLink4Pi::checkRevision(int handle)
