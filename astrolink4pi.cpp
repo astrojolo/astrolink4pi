@@ -1759,19 +1759,19 @@ bool AstroLink4Pi:: readPower()
 		}
 
 		DEBUG(INDI::Logger::DBG_SESSION, "Waiting for read");
-		usleep(200000);
+		//usleep(200000);
 		
-		writeBuf[0] = 0x00;
-		written = i2c_write_byte(pigpioHandle, i2cHandle, writeBuf[0]);
-		if(written != 0)
-		{
-			DEBUG(INDI::Logger::DBG_SESSION, "Cannot write data to power sensor 1");
-		}
+		//writeBuf[0] = 0x00;
+		//written = i2c_write_byte(pigpioHandle, i2cHandle, writeBuf[0]);
+		//if(written != 0)
+		//{
+		//	DEBUG(INDI::Logger::DBG_SESSION, "Cannot write data to power sensor 1");
+		//}
 		
-		DEBUG(INDI::Logger::DBG_SESSION, "Read ready");
+		//DEBUG(INDI::Logger::DBG_SESSION, "Read ready");
 
-		readBuf[0] = i2c_read_byte(pigpioHandle, i2cHandle);
-		readBuf[1] = i2c_read_byte(pigpioHandle, i2cHandle);
+		//readBuf[0] = i2c_read_byte(pigpioHandle, i2cHandle);
+		//readBuf[1] = i2c_read_byte(pigpioHandle, i2cHandle);
 
 		//int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, readBuf, 2);
 		//DEBUGF(INDI::Logger::DBG_SESSION, "Read %d bytes", read);
