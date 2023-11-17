@@ -250,7 +250,7 @@ bool AstroLink4Pi::initProperties()
 
 	FI::initProperties(FOCUS_TAB);
 	WI::initProperties(ENVIRONMENT_TAB, ENVIRONMENT_TAB);
-	addDebugControl();
+	// addDebugControl();
 	// addSimulationControl();
 	addConfigurationControl();
 
@@ -1745,57 +1745,72 @@ bool AstroLink4Pi::readPower()
 		11:9  	- 001	+-4.096V
 		8		- 1 single
 
-		7:5		- 010 32SPS, 011 64SPS
+		7:5		- 010 32SPS, 011 64SPS, 001 16SPS
 		4:2		- 000 comparator
 		1:0		- 11 comparator disable
 		*/
 
 		writeBuf[0] = 0x01;
 		writeBuf[1] = 0b11000011;
-		writeBuf[2] = 0b01000011;
+		writeBuf[2] = 0b00100011;
 		if((powerIndex % 2) == 0)	// Trigger conversion
 		{
-
 			switch(powerIndex) 
 			{
+				case 0: writeBuf[1] = 0b11000011; break;
 				case 2: writeBuf[1] = 0b11010011; break;
 				case 4: writeBuf[1] = 0b10110011; break;
-				default: writeBuf[1] = 0b11000011; 
 			}
 			int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 3);
 			if(written != 0)
 			{
 				DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor");
+				PowerReadingsNP.s = IPS_ALERT;
 			}
 		}
 		else						// Trigger read
 		{
-			int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 1);
-			int read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
-			// Check if conversion complete
+			PowerReadingsNP.s = IPS_BUSY;
 
 			writeBuf[0] = 0x00;
-			written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 1);
-			read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
-			int16_t val = readBuf[0] * 255 + readBuf[1];
-
-			switch(powerIndex)
+			int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 1);
+			if(written == 0)
 			{
-				case 1: PowerReadingsN[POW_VIN].value = (float) val / 32768.0 * 4.096 * 6.6; break;
-				case 3: PowerReadingsN[POW_VREG].value = (float) val / 32768.0 * 4.096 * 6.6; break;
-				case 5: PowerReadingsN[POW_ITOT].value = (float) val / 32768.0 * 4.096 * 1 * 10; break;
+				int read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
+				if(read > 0)
+				{
+					int16_t val = readBuf[0] * 255 + readBuf[1];
+
+					switch(powerIndex)
+					{
+						case 1: PowerReadingsN[POW_VIN].value = (float) val / 32768.0 * 4.096 * 6.6; break;
+						case 3: PowerReadingsN[POW_VREG].value = (float) val / 32768.0 * 4.096 * 6.6; break;
+						case 5: PowerReadingsN[POW_ITOT].value = (float) val / 32768.0 * 4.096 * 1 * 10; break;
+					}
+					PowerReadingsN[POW_PTOT].value = PowerReadingsN[POW_VIN].value * PowerReadingsN[POW_ITOT].value;
+					energyAs += PowerReadingsN[POW_ITOT].value * 0.4;
+					energyWs += PowerReadingsN[POW_VIN].value * PowerReadingsN[POW_ITOT].value * 0.4;
+					PowerReadingsN[POW_AH].value = energyAs / 3600;
+					PowerReadingsN[POW_WH].value = energyWs / 3600;
+
+					PowerReadingsNP.s = IPS_OK;
+				}
+				else
+				{
+					DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from power sensor");
+					PowerReadingsNP.s = IPS_ALERT;
+				}	
 			}
-			PowerReadingsN[POW_PTOT].value = PowerReadingsN[POW_VIN].value * PowerReadingsN[POW_ITOT].value;
-			energymAs += PowerReadingsN[POW_ITOT].value * 0.4;
-			energymWs += PowerReadingsN[POW_VIN].value * PowerReadingsN[POW_ITOT].value * 0.4;
-			PowerReadingsN[POW_AH].value = energymAs / 3600;
-			PowerReadingsN[POW_WH].value = energymWs / 3600;
+			else
+			{
+				DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor");
+				PowerReadingsNP.s = IPS_ALERT;
+			}			
 		}
 		powerIndex++;
 		if(powerIndex > 5) powerIndex = 0;
 
 		i2c_close(pigpioHandle, i2cHandle);
-        PowerReadingsNP.s = IPS_OK;
         IDSetNumber(&PowerReadingsNP, nullptr);		
 		return true;
 	}

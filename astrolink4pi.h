@@ -166,8 +166,8 @@ private:
 	long int nextSystemRead = 0;
 
 	int powerIndex = 0;
-	float energymAs = 0.0;
-	float energymWs = 0.0;
+	float energyAs = 0.0;
+	float energyWs = 0.0;
 
 	std::thread _motionThread;
 	volatile bool _abort;
