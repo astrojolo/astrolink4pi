@@ -1759,14 +1759,14 @@ bool AstroLink4Pi::readPower()
 		int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 3);
 		DEBUGF(INDI::Logger::DBG_SESSION, "Wite config result %d", written);
 
-		int read = i2c_read_device(int pi, unsigned handle, readBuf, 2);
+		int read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
 		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", read);		
 		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", readBuf[0]);		
 		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", readBuf[1]);		
 		
 		sleep(1);
 
-		read = i2c_read_device(int pi, unsigned handle, readBuf, 2);
+		read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
 		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", read);		
 		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", readBuf[0]);		
 		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", readBuf[1]);		
@@ -1775,7 +1775,7 @@ bool AstroLink4Pi::readPower()
 		written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 1)
 		DEBUGF(INDI::Logger::DBG_SESSION, "Wite request result %d", written);
 
-		read = i2c_read_device(int pi, unsigned handle, readBuf, 2);
+		read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
 		DEBUGF(INDI::Logger::DBG_SESSION, "Reading read %d", read);		
 		DEBUGF(INDI::Logger::DBG_SESSION, "Reading read %d", readBuf[0]);		
 		DEBUGF(INDI::Logger::DBG_SESSION, "Reading read %d", readBuf[1]);
