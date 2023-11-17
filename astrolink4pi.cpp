@@ -1769,7 +1769,7 @@ bool AstroLink4Pi::readPower()
 		int read = i2c_read_byte(pigpioHandle, i2cHandle);
 		DEBUGF(INDI::Logger::DBG_SESSION, "Config read %d", read);		
 		
-		sleep(1);
+		usleep(500000);
 
 		written = i2c_write_byte(pigpioHandle, i2cHandle, 0x01);
 		read = i2c_read_byte(pigpioHandle, i2cHandle);
