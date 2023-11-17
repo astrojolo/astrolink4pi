@@ -1000,6 +1000,8 @@ void AstroLink4Pi::TimerHit()
 	if (!isConnected())
 		return;
 
+	readPower();
+
 	long int timeMillis = millis();
 
 	if (nextTemperatureRead < timeMillis)
@@ -1043,7 +1045,6 @@ void AstroLink4Pi::TimerHit()
 		systemUpdate();
 		nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
 	}
-	readPower();
 	SetTimer(POLL_PERIOD);
 }
 
@@ -1734,9 +1735,11 @@ bool AstroLink4Pi:: readPower()
 	char readBuf[2];			// 2 byte buffer to store the data read from the I2C device
 	int16_t val;	
 
+	DEBUG(INDI::Logger::DBG_SESSION, "Starting power");
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x48, 0);
 	if (i2cHandle >= 0)
 	{
+		DEBUG(INDI::Logger::DBG_SESSION, "I2C handle got");
 		// These three bytes are written to the ADS1115 to set the config register and start a conversion 
 		writeBuf[0] = 1;			// This sets the pointer register so that the following two bytes write to the config register
 		writeBuf[1] = 0xC5;   		// This sets the 8 MSBs of the config register (bits 15-8) to 11000101
@@ -1749,33 +1752,31 @@ bool AstroLink4Pi:: readPower()
 		int written = i2c_write_byte(pigpioHandle, i2cHandle, 1);
 		if(written != 0)
 		{
-			DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor 1");
-			SHTavailable = false;			
+			DEBUG(INDI::Logger::DBG_SESSION, "Cannot write data to power sensor 1");
 		}
 		written = i2c_write_byte(pigpioHandle, i2cHandle, 0xC5);
 		if(written != 0)
 		{
-			DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor 2");
-			SHTavailable = false;			
+			DEBUG(INDI::Logger::DBG_SESSION, "Cannot write data to power sensor 2");
 		}
 		written = i2c_write_byte(pigpioHandle, i2cHandle, 0x43);
 		if(written != 0)
 		{
-			DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor 3");
-			SHTavailable = false;			
+			DEBUG(INDI::Logger::DBG_SESSION, "Cannot write data to power sensor 3");
 		}
 
+		DEBUG(INDI::Logger::DBG_SESSION, "Waiting for read");
 		while ((readBuf[0] & 0x80) == 0)	// readBuf[0] contains 8 MSBs of config register, AND with 10000000 to select bit 15
 		{
 			int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, readBuf, 2);	// Read the config register into readBuf
 		}
+		DEBUG(INDI::Logger::DBG_SESSION, "Read ready");
 
 		writeBuf[0] = 0;
 		written = i2c_write_byte(pigpioHandle, i2cHandle, 0x00);		
 		if(written != 0)
 		{
-			DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor 4");
-			SHTavailable = false;			
+			DEBUG(INDI::Logger::DBG_SESSION, "Cannot write data to power sensor 4");
 		}
 
 		int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, readBuf, 2);
