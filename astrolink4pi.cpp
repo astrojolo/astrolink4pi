@@ -1784,6 +1784,10 @@ bool AstroLink4Pi::readPower()
 		read = i2c_read_byte_data(pigpioHandle, i2cHandle, 0x01);
 		DEBUGF(INDI::Logger::DBG_SESSION, "Read 2 result %d", read);
 		readBuf[1] = read;
+		read = i2c_read_byte_data(pigpioHandle, i2cHandle, 0x02);
+		DEBUGF(INDI::Logger::DBG_SESSION, "Read 3 result %d", read);
+		read = i2c_read_byte_data(pigpioHandle, i2cHandle, 0x03);
+		DEBUGF(INDI::Logger::DBG_SESSION, "Read 4 result %d", read);
 
 		val = readBuf[0] * 255 + readBuf[1];
 		DEBUGF(INDI::Logger::DBG_SESSION, "Read result %d", val);
