@@ -1787,7 +1787,7 @@ bool AstroLink4Pi::readPower()
 			switch(powerIndex)
 			{
 				case 1: DEBUGF(INDI::Logger::DBG_SESSION, "Vin result %d", val); 
-						PowerReadingsN[POW_VIN].value = 6.6; break;
+						PowerReadingsN[POW_VIN].value = (float) val / 32768.0 * 2.048 * 6.6; break;
 				case 3: DEBUGF(INDI::Logger::DBG_SESSION, "Vreg result %d", val); break;
 				case 5: DEBUGF(INDI::Logger::DBG_SESSION, "Itot result %d", val); break;
 			}
