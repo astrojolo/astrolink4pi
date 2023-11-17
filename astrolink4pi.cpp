@@ -1747,7 +1747,7 @@ bool AstroLink4Pi::readPower()
 
 		15 		- 1 	start single conv
 		14:12	- 100 	Vin, 101 Vreg, 110 Itot, 111 Iref, 011 Ireal
-		11:9  	- 010	+-2.048V
+		11:9  	- 001	+-4.096V
 		8		- 1 single
 
 		7:5		- 010 32SPS, 011 64SPS
@@ -1756,16 +1756,16 @@ bool AstroLink4Pi::readPower()
 		*/
 
 		writeBuf[0] = 0x01;
-		writeBuf[1] = 0b11000101;
+		writeBuf[1] = 0b11000011;
 		writeBuf[2] = 0b01000011;
 		if((powerIndex % 2) == 0)	// Trigger conversion
 		{
 
 			switch(powerIndex) 
 			{
-				case 2: writeBuf[1] = 0b11010101; break;
-				case 4: writeBuf[1] = 0b10110101; break;
-				default: writeBuf[1] = 0b11000101; 
+				case 2: writeBuf[1] = 0b11010011; break;
+				case 4: writeBuf[1] = 0b10110011; break;
+				default: writeBuf[1] = 0b11000011; 
 			}
 			int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 3);
 			if(written != 0)
@@ -1786,7 +1786,8 @@ bool AstroLink4Pi::readPower()
 
 			switch(powerIndex)
 			{
-				case 1: DEBUGF(INDI::Logger::DBG_SESSION, "Vin result %d", val); break;
+				case 1: DEBUGF(INDI::Logger::DBG_SESSION, "Vin result %d", val); 
+						PowerReadingsN[V_INPUT].value = val / 2048; break;
 				case 3: DEBUGF(INDI::Logger::DBG_SESSION, "Vreg result %d", val); break;
 				case 5: DEBUGF(INDI::Logger::DBG_SESSION, "Itot result %d", val); break;
 			}
@@ -1795,6 +1796,8 @@ bool AstroLink4Pi::readPower()
 		if(powerIndex > 5) powerIndex = 0;
 
 		i2c_close(pigpioHandle, i2cHandle);
+        PowerReadingsNP.s = IPS_OK;
+        IDSetNumber(&PowerReadingsNP, nullptr);		
 		return true;
 	}
 	else
