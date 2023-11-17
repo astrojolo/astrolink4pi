@@ -1739,7 +1739,6 @@ bool AstroLink4Pi::readPower()
 	char writeBuf[3];
 	char readBuf[2];
 
-	DEBUG(INDI::Logger::DBG_SESSION, "Starting power");
 	int i2cHandle = i2c_open(pigpioHandle, 1, 0x48, 0);
 	if (i2cHandle >= 0)
 	{
@@ -1765,7 +1764,7 @@ bool AstroLink4Pi::readPower()
 			switch(powerIndex) 
 			{
 				case 2: writeBuf[1] = 0b11010101; break;
-				case 4: writeBuf[1] = 0b11100101; break;
+				case 4: writeBuf[1] = 0b10110101; break;
 				default: writeBuf[1] = 0b11000101; 
 			}
 			int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 3);
