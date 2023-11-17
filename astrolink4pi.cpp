@@ -1457,7 +1457,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 		}
 		if(revision >= 4)
 		{
-			set_PWM_dutycycle(handle, MOTOR_PWM, getMotorPWM(holdPower * stepperCurrent / 5));	
+			set_PWM_dutycycle(pigpioHandle, MOTOR_PWM, getMotorPWM(holdPower * stepperCurrent / 5));	
 		}		
 		if(revision > 1)
 		{
@@ -1485,7 +1485,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 		}
 		if(revision >= 4)
 		{
-			set_PWM_dutycycle(handle, MOTOR_PWM, getMotorPWM(stepperCurrent));	
+			set_PWM_dutycycle(pigpioHandle, MOTOR_PWM, getMotorPWM(stepperCurrent));	
 		}
 	}
 }
