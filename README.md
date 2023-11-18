@@ -29,6 +29,9 @@ AstroLink 4 Pi features:
 # Source
 https://github.com/astrojolo/astrolink4pi
 
+# Device
+https://shop.astrojolo.com/astrolink-4-computers/
+
 # Requirements
 * INDI available here http://indilib.org/download.html
 * CMake >= 2.4.7
