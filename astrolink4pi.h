@@ -82,6 +82,7 @@ private:
 	virtual int savePosition(int pos);
 	virtual bool readSHT();
 	virtual bool readMLX();
+	virtual bool readSQM();
 	virtual bool readDS18B20();
 	virtual bool readPower();
 
@@ -152,6 +153,7 @@ private:
 	bool DSavailable = false;
 	bool SHTavailable = false;
 	bool MLXavailable = false;
+	bool SQMavailable = false;
 
 	int backlashTicksRemaining;
 	int lastDirection = 0;
