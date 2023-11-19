@@ -84,6 +84,7 @@ private:
 	virtual bool readMLX();
 	virtual bool readSQM();
 	virtual bool readDS18B20();
+	virtual bool readPower();
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
@@ -102,6 +103,13 @@ private:
 	INumberVectorProperty FocuserInfoNP;
 	INumber FocuserTravelN[1];
 	INumberVectorProperty FocuserTravelNP;
+
+	INumber PowerReadingsN[6];
+	INumberVectorProperty PowerReadingsNP;
+    enum
+    {
+    POW_VIN, POW_VREG, POW_PTOT, POW_ITOT, POW_AH, POW_WH
+    };	
 
 	INumber ScopeParametersN[2];
 	INumberVectorProperty ScopeParametersNP;
@@ -159,6 +167,10 @@ private:
 	long int nextTemperatureCompensation = 0;
 	long int nextSystemRead = 0;
 
+	int powerIndex = 0;
+	float energyAs = 0.0;
+	float energyWs = 0.0;
+
 	std::thread _motionThread;
 	volatile bool _abort;
 
@@ -168,6 +180,7 @@ private:
 	int getDacValue(int current);
 	void systemUpdate();
 	int setDac(int chan, int value);
+	int getMotorPWM(int current);
 	int checkRevision(int handle);
 	long int millis();
 
