@@ -373,8 +373,8 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumberVector(&PWM2NP, PWM2N, 1, getDeviceName(), "PWMOUT2", RelayLabelsT[3].text, OUTPUTS_TAB, IP_RW, 60, IPS_IDLE);
 
 	// Power readings
-	IUFillNumber(&PowerReadingsN[POW_VIN], "POW_VIN", "Input voltage [V]", "%0.1f", 0, 15, 10, 0);
-	IUFillNumber(&PowerReadingsN[POW_VREG], "POW_VREG", "Regulated voltage [V]", "%0.1f", 0, 15, 10, 0);
+	IUFillNumber(&PowerReadingsN[POW_VIN], "POW_VIN", "Input voltage [V]", "%0.2f", 0, 15, 10, 0);
+	IUFillNumber(&PowerReadingsN[POW_VREG], "POW_VREG", "Regulated voltage [V]", "%0.2f", 0, 15, 10, 0);
 	IUFillNumber(&PowerReadingsN[POW_ITOT], "POW_ITOT", "Total current [A]", "%0.2f", 0, 20, 1, 0);
 	IUFillNumber(&PowerReadingsN[POW_PTOT], "POW_PTOT", "Total power [W]", "%0.1f", 0, 200, 1, 0);
 	IUFillNumber(&PowerReadingsN[POW_AH], "POW_AH", "Energy consumed [Ah]", "%0.2f", 0, 10000, 1, 0);
