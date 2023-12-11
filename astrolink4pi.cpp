@@ -1769,6 +1769,16 @@ bool AstroLink4Pi::readPower()
 
 int AstroLink4Pi::checkRevision(int handle)
 {
+
+	lgChipInfo_t cInfo;
+
+	status = lgGpioGetChipInfo(handle, &cInfo);
+
+	if (status == LG_OKAY)
+	{
+		DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi chip lines=%d name=%s label=%s\n", cInfo.lines, cInfo.name, cInfo.label);
+	}
+
 	int rev = 1;
 	// set_mode(handle, MOTOR_PWM, PI_INPUT);
 	// set_mode(handle, CHK_IN_PIN, PI_INPUT);
