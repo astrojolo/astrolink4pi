@@ -1840,6 +1840,7 @@ int AstroLink4Pi::checkRevision(int handle)
 	// {
 	checkPin(CHK_IN_PIN);
 	int result = lgGpioClaimOutput(handle, 0, CHK_IN_PIN, 1);
+	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check %d", result);
 	result = lgGpioWrite(handle, CHK_IN_PIN, 1);
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check %d", result);
 	usleep(10000);
