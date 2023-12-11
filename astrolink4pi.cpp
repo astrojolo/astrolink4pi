@@ -1635,7 +1635,7 @@ bool AstroLink4Pi::readSHT()
 	int written = lgI2cWriteByteData(i2cHandle, 0x2C, 0x06);
 		if (written == 0)
 		{
-			time_sleep(0.1);
+			usleep(100000);
 	// 		int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 6);
 			int read = lgI2cReadBlockData(i2cHandle, 0x00, i2cData);
 			if (read > 4)
