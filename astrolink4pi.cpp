@@ -301,7 +301,7 @@ bool AstroLink4Pi::initProperties()
 	int handle = gpiochip_open(sbc, 0);
 	if (handle < 0)
 	{
-		DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating properties of AstroLink 4 Pi - GPIO. %d ", pigpioHandle);
+		DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating properties of AstroLink 4 Pi - GPIO. %d ", handle);
 	}
 	else
 	{
