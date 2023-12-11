@@ -1821,20 +1821,15 @@ int AstroLink4Pi::checkRevision(int handle)
 	// if(rev == 1)
 	// {
 	// 	set_mode(handle, MOTOR_PWM, PI_OUTPUT);
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi handle result %d", handle);
-	int result = lgGpioClaimInput(handle, 0, CHK_IN_PIN);
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi pin result %d", result);
-	result = lgGpioClaimOutput(handle, 0, MOTOR_PWM, 1);
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi pin result %d", result);
+	int result = lgGpioClaimOutput(handle, 0, CHK_IN_PIN);
+	// result = lgGpioClaimOutput(handle, 0, MOTOR_PWM, 1);
 	// lgTxPwm(handle, MOTOR_PWM, 8000, 100, 0, 0);
 	// 	set_PWM_frequency(handle, MOTOR_PWM, 8000);
 	// 	set_PWM_range(handle, MOTOR_PWM, 100);
 	// 	set_PWM_dutycycle(handle, MOTOR_PWM, 100);		
-	result = lgGpioWrite(handle, MOTOR_PWM, 1);
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi pin result %d", result);
+	result = lgGpioWrite(handle, CHK_IN_PIN, 1);
 	usleep(10000);
 	result = lgGpioRead(handle, CHK_IN_PIN);
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi pin result %d", result);
 	if (result == 1) rev = 4;
 	// lgTxPwm(handle, MOTOR_PWM, 8000, 0, 0, 0);
 	// 	if (gpio_read(handle, CHK_IN_PIN) == 1)
