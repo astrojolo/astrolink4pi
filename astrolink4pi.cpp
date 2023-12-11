@@ -82,7 +82,7 @@ void ISSnoopDevice(XMLEle *root)
 AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
-	sbc = rgpiod_start(NULL,NULL);
+	pigpioHandle = lgGpiochipOpen(0);
 }
 
 AstroLink4Pi::~AstroLink4Pi()
@@ -104,35 +104,35 @@ void AstroLink4Pi::checkPin(int pin)
 	lgLineInfo_t lInfo;
 	int handle = pigpioHandle;
 
-	int status = gpio_get_line_info(sbc, handle, pin, &lInfo);
+	int status = lgGpioGetLineInfo(handle, pin, &lInfo);
 	if (status == LG_OKAY)
 	{
 		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", pin, lInfo.lFlags, lInfo.name, lInfo.user);
 	}		
-	status = gpio_get_mode(sbc, handle, pin);
+	status = lgGpioGetMode(handle, pin);
 	DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin mode %d\n", status);
 
-	int result = gpio_claim_output(sbc, handle, 0, pin, 1);
-	status = gpio_get_mode(sbc, handle, pin);
+	int result = lgGpioClaimOutput(handle, 0, pin, 1);
+	status = lgGpioGetMode(handle, pin);
 	DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin mode %d\n", status);
-	result = gpio_write(sbc, handle, pin, 1);
+	result = lgGpioWrite(handle, pin, 1);
 	if(result >= 0)
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Write OK");
 	}
 
-	result = gpio_claim_input(sbc, handle, 0, pin);
-	status = gpio_get_mode(sbc, handle, pin);
+	result = lgGpioClaimInput(handle, 0, pin);
+	status = lgGpioGetMode(handle, pin);
 	DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin mode %d\n", status);
-	result = gpio_read(sbc, handle, pin);
+	result = lgGpioRead(handle, pin);
 	if(result >= 0)
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Read OK");
 	}	
-	result = gpio_claim_output(sbc, handle, 0, pin, 1);
-	status = gpio_get_mode(sbc, handle, pin);
+	result = lgGpioClaimOutput(handle, 0, pin, 1);
+	status = lgGpioGetMode(handle, pin);
 	DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin mode %d\n", status);
-	result = tx_pwm(sbc, handle, pin, 8000, 100, 0, 0);
+	result = lgTxPwm(handle, pin, 8000, 100, 0, 0);
 	if(result >= 0)
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "PWM OK");
@@ -141,7 +141,6 @@ void AstroLink4Pi::checkPin(int pin)
 
 bool AstroLink4Pi::Connect()
 {
-	pigpioHandle = gpiochip_open(sbc, 0);
 	if (pigpioHandle < 0)
 	{
 		DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi - GPIO. %d ", pigpioHandle);
@@ -266,8 +265,7 @@ bool AstroLink4Pi::Disconnect()
 	// }
 
 	// pigpio_stop(pigpioHandle);
-	gpiochip_close(sbc, pigpioHandle);
-	rgpiod_stop(sbc);
+	lgGpiochipClose(pigpioHandle);
 
 	// Unlock Relay Labels setting
 	RelayLabelsTP.s = IPS_IDLE;
@@ -297,19 +295,19 @@ bool AstroLink4Pi::initProperties()
 	// addSimulationControl();
 	addConfigurationControl();
 
-	// sbc = rgpiod_start(NULL, NULL);
-	// int handle = gpiochip_open(sbc, 0);
-	// if (handle < 0)
-	// {
-	// 	DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating properties of AstroLink 4 Pi - GPIO. %d ", handle);
-	// }
-	// else
-	// {
-	// // 	set_mode(handle, MOTOR_PWM, PI_INPUT);
-	// // 	revision = checkRevision(pigpioHandle);
-	// 	gpiochip_close(sbc, handle);
-	// 	rgpiod_stop(sbc);
-	// }
+	// int handle = pigpio_start(NULL, NULL);
+	int handle = lgGpiochipOpen(0);
+	if (handle < 0)
+	{
+		DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating properties of AstroLink 4 Pi - GPIO. %d ", pigpioHandle);
+	}
+	else
+	{
+	// 	set_mode(handle, MOTOR_PWM, PI_INPUT);
+	// 	revision = checkRevision(pigpioHandle);
+	// 	pigpio_stop(handle);
+		lgGpiochipClose(handle);
+	}
 
 	// Focuser Resolution
 	IUFillSwitch(&FocusResolutionS[0], "FOCUS_RESOLUTION_1", "Full Step", ISS_ON);
@@ -1814,7 +1812,7 @@ int AstroLink4Pi::checkRevision(int handle)
 
 	lgChipInfo_t cInfo;
 
-	int status = gpio_get_chip_info(sbc, handle, &cInfo);
+	int status = lgGpioGetChipInfo(handle, &cInfo);
 
 	if (status == LG_OKAY)
 	{
@@ -1848,24 +1846,24 @@ int AstroLink4Pi::checkRevision(int handle)
 	// if(rev == 1)
 	// {
 	checkPin(M0_PIN);
-	int result = gpio_claim_output(sbc, handle, 0, M0_PIN, 0);
+	int result = lgGpioClaimOutput(handle, 0, M0_PIN, 0);
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 1 %d", result);
 
-	result = gpio_read(sbc, handle, M0_PIN);
+	result = lgGpioRead(handle, M0_PIN);
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 2 %d", result);
 
-	result = gpio_write(sbc, handle, M0_PIN, 1);
+	result = lgGpioWrite(handle, M0_PIN, 1);
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 3 %d", result);
 	usleep(10000);
 
-	result = gpio_read(sbc, handle, M0_PIN);
+	result = lgGpioRead(handle, M0_PIN);
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 4 %d", result);
 
-	result = gpio_write(sbc, handle, M0_PIN, 0);
+	result = lgGpioWrite(handle, M0_PIN, 0);
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 5 %d", result);
 	usleep(10000);
 
-	result = gpio_read(sbc, handle, M0_PIN);
+	result = lgGpioRead(handle, M0_PIN);
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 6 %d", result);
 
 	if (result == 0) rev = 4;

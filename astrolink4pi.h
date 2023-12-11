@@ -34,7 +34,7 @@
 #include <chrono>
 #include "config.h"
 
-#include <rgpio.h>
+#include <lgpio.h>
 
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
