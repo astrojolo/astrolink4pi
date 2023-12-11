@@ -1779,6 +1779,21 @@ int AstroLink4Pi::checkRevision(int handle)
 		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip lines=%d name=%s label=%s\n", cInfo.lines, cInfo.name, cInfo.label);
 	}
 
+	lgLineInfo_t lInfo;
+
+	status = lgGpioGetLineInfo(handle, CHK_IN_PIN, &lInfo);
+
+	if (status == LG_OKAY)
+	{
+		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip lFlags=%d name=%s user=%s\n", lInfo.lFlags, lInfo.name, lInfo.user);
+	}	
+	status = lgGpioGetLineInfo(handle, MOTOR_PWM, &lInfo);
+
+	if (status == LG_OKAY)
+	{
+		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip lFlags=%d name=%s user=%s\n", lInfo.lFlags, lInfo.name, lInfo.user);
+	}	
+
 	int rev = 1;
 	// set_mode(handle, MOTOR_PWM, PI_INPUT);
 	// set_mode(handle, CHK_IN_PIN, PI_INPUT);
