@@ -19,7 +19,7 @@ include_directories(${INDI_INCLUDE_DIR})
 
 include(CMakeCommon)
 
-# set(GPIO_LIBRARIES "libgpiod.so")
+set(GPIO_LIBRARIES "liblgpio.so")
 # set(PIGPIO_LIBRARIES "libpigpiod_if2.so")
 
 ################ AstroLink 4 Pi ################
@@ -34,7 +34,7 @@ ENDIF ()
 add_executable(indi_astrolink4pi ${indi_astrolink4pi_SRCS})
 #find_library(PIGPIO_LIBRARIES NAMES pigpiod_if2)
 # target_link_libraries(indi_astrolink4pi ${INDI_LIBRARIES} ${GPIO_LIBRARIES} ${PIGPIO_LIBRARIES} pthread)
-target_link_libraries(indi_astrolink4pi ${INDI_LIBRARIES} pthread)
+target_link_libraries(indi_astrolink4pi ${INDI_LIBRARIES}  ${GPIO_LIBRARIES} pthread)
 install(TARGETS indi_astrolink4pi RUNTIME DESTINATION bin )
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/indi_astrolink4pi.xml DESTINATION ${INDI_DATA_DIR})
 
