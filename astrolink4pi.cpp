@@ -1858,12 +1858,12 @@ int AstroLink4Pi::checkRevision(int handle)
 	result = lgGpioRead(handle, CHK_IN_PIN);
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 4 %d", result);
 
-	result = lgGpioWrite(handle, CHK_IN_PIN, 0);
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 5 %d", result);
-	usleep(10000);
+	// result = lgGpioWrite(handle, CHK_IN_PIN, 0);
+	// DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 5 %d", result);
+	// usleep(10000);
 
-	result = lgGpioRead(handle, CHK_IN_PIN);
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 6 %d", result);
+	// result = lgGpioRead(handle, CHK_IN_PIN);
+	// DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 6 %d", result);
 
 	if (result == 0) rev = 4;
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
