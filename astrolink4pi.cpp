@@ -1625,47 +1625,50 @@ bool AstroLink4Pi::readMLX()
 
 bool AstroLink4Pi::readSHT()
 {
-	// char i2cData[6];
+	char i2cData[32];
 
 	// int i2cHandle = i2c_open(pigpioHandle, 1, 0x44, 0);
-	// if (i2cHandle >= 0)
-	// {
+	int i2cHandle = lgI2cOpen(1, 0x44, 0);
+	if (i2cHandle >= 0)
+	{
 	// 	int written = i2c_write_byte_data(pigpioHandle, i2cHandle, 0x2C, 0x06);
-	// 	if (written == 0)
-	// 	{
-	// 		time_sleep(0.5);
+	int written = lgI2cWriteByteData(i2cHandle, 0x2C, 0x06);
+		if (written == 0)
+		{
+			time_sleep(0.1);
 	// 		int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 6);
-	// 		if (read > 4)
-	// 		{
-	// 			int temp = i2cData[0] * 256 + i2cData[1];
-	// 			double cTemp = -45.0 + (175.0 * temp / 65535.0);
-	// 			double humidity = 100.0 * (i2cData[3] * 256.0 + i2cData[4]) / 65535.0;
+			int read = lgI2cReadBlockData(i2cHandle, 0x00, i2cData);
+			if (read > 4)
+			{
+				int temp = i2cData[0] * 256 + i2cData[1];
+				double cTemp = -45.0 + (175.0 * temp / 65535.0);
+				double humidity = 100.0 * (i2cData[3] * 256.0 + i2cData[4]) / 65535.0;
 
-	// 			double a = 17.271;
-	// 			double b = 237.7;
-	// 			double tempAux = (a * cTemp) / (b + cTemp) + log(humidity * 0.01);
-	// 			double Td = (b * tempAux) / (a - tempAux);
+				double a = 17.271;
+				double b = 237.7;
+				double tempAux = (a * cTemp) / (b + cTemp) + log(humidity * 0.01);
+				double Td = (b * tempAux) / (a - tempAux);
 
-	// 			setParameterValue("WEATHER_TEMPERATURE", cTemp);
-	// 			setParameterValue("WEATHER_HUMIDITY", humidity);
-	// 			setParameterValue("WEATHER_DEWPOINT", Td);
-	// 			if (!DSavailable)
-	// 				focuserTemperature = cTemp;
-	// 			SHTavailable = true;
-	// 		}
-	// 	}
-	// 	else
-	// 	{
-	// 		DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to SHT sensor");
-	// 		SHTavailable = false;
-	// 	}
-	// 	i2c_close(pigpioHandle, i2cHandle);
-	// }
-	// else
-	// {
-	// 	DEBUG(INDI::Logger::DBG_DEBUG, "No SHT sensor found.");
-	// 	SHTavailable = false;
-	// }
+				setParameterValue("WEATHER_TEMPERATURE", cTemp);
+				setParameterValue("WEATHER_HUMIDITY", humidity);
+				setParameterValue("WEATHER_DEWPOINT", Td);
+				if (!DSavailable)
+					focuserTemperature = cTemp;
+				SHTavailable = true;
+			}
+		}
+		else
+		{
+			DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to SHT sensor");
+			SHTavailable = false;
+		}
+		lgI2cClose(i2cHandle);
+	}
+	else
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "No SHT sensor found.");
+		SHTavailable = false;
+	}
 
 	if (!SHTavailable)
 	{
