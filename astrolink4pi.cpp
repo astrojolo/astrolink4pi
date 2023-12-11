@@ -1847,27 +1847,22 @@ int AstroLink4Pi::checkRevision(int handle)
 
 	// if(rev == 1)
 	// {
-	int result = lgGpioClaimOutput(handle, 0, MOTOR_PWM, 0);
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 1 %d", result);
+	lgGpioClaimOutput(handle, 0, MOTOR_PWM, 0);
+	lgGpioClaimInput(handle, 0, CHK_IN_PIN);
+	int result = lgGpioRead(handle, CHK_IN_PIN);
+	if (result == 0)
+	{
+		lgTxPwm(handle, MOTOR_PWM, 5000, 90, 0, 0);
+		result = lgGpioRead(handle, CHK_IN_PIN);
+		if(result == 1)
+		{
+			rev = 4;
+		}
+	}
+	lgTxPwm(handle, MOTOR_PWM, 5000, 0, 0, 0);
+	lgGpioFree(handle, MOTOR_PWM);
+	lgGpioFree(handle, CHK_IN_PWM);
 
-	result = lgGpioRead(handle, CHK_IN_PIN);
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 2 %d", result);
-
-	result = lgGpioWrite(handle, CHK_IN_PIN, 1);
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 3 %d", result);
-	usleep(10000);
-
-	result = lgGpioRead(handle, CHK_IN_PIN);
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 4 %d", result);
-
-	result = lgGpioWrite(handle, CHK_IN_PIN, 0);
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 5 %d", result);
-	usleep(10000);
-
-	result = lgGpioRead(handle, CHK_IN_PIN);
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 6 %d", result);
-
-	if (result == 0) rev = 4;
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;
 }
