@@ -1858,6 +1858,17 @@ int AstroLink4Pi::checkRevision(int handle)
 	result = lgGpioRead(handle, CHK_IN_PIN);
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 4 %d", result);
 
+	for (int i = 0; i < 50; i++)
+	{
+		result = lgGpioWrite(handle, CHK_IN_PIN, 1);
+		DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 3 %d", result);
+		usleep(500000);
+		result = lgGpioWrite(handle, CHK_IN_PIN, 0);
+		DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 3 %d", result);
+		usleep(50000);
+	}
+	
+
 	// result = lgGpioWrite(handle, CHK_IN_PIN, 0);
 	// DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 5 %d", result);
 	// usleep(10000);
