@@ -35,6 +35,7 @@
 #include "config.h"
 
 #include <lgpio.h>
+#include <rgpio.h>
 
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
@@ -144,6 +145,7 @@ private:
 	INumberVectorProperty StepperCurrentNP;
 
 	int revision = 1;
+	int sbc = -1;
 	int pigpioHandle = -1;
 	int resolution = 1;
 	int holdPower = 0;
