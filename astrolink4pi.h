@@ -144,7 +144,7 @@ private:
 	INumberVectorProperty StepperCurrentNP;
 
 	int revision = 1;
-	int sbc = -1;
+	int gpioChip = -1;
 	int pigpioHandle = -1;
 	int resolution = 1;
 	int holdPower = 0;
@@ -174,7 +174,6 @@ private:
 	std::thread _motionThread;
 	volatile bool _abort;
 
-	void checkPin(int pin);
 	void getFocuserInfo();
 	void temperatureCompensation();
 	void setCurrent(bool standby);

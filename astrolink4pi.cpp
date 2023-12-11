@@ -101,45 +101,6 @@ const char *AstroLink4Pi::getDefaultName()
 	return (char *)"AstroLink 4 Pi";
 }
 
-void AstroLink4Pi::checkPin(int pin)
-{
-	lgLineInfo_t lInfo;
-	int handle = pigpioHandle;
-
-	int status = lgGpioGetLineInfo(handle, pin, &lInfo);
-	if (status == LG_OKAY)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", pin, lInfo.lFlags, lInfo.name, lInfo.user);
-	}		
-	status = lgGpioGetMode(handle, pin);
-	DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin mode %d\n", status);
-
-	int result = lgGpioClaimOutput(handle, 0, pin, 1);
-	status = lgGpioGetMode(handle, pin);
-	DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin mode %d\n", status);
-	result = lgGpioWrite(handle, pin, 1);
-	if(result >= 0)
-	{
-		DEBUG(INDI::Logger::DBG_SESSION, "Write OK");
-	}
-
-	result = lgGpioClaimInput(handle, 0, pin);
-	status = lgGpioGetMode(handle, pin);
-	DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin mode %d\n", status);
-	result = lgGpioRead(handle, pin);
-	if(result >= 0)
-	{
-		DEBUG(INDI::Logger::DBG_SESSION, "Read OK");
-	}	
-	result = lgGpioClaimOutput(handle, 0, pin, 1);
-	status = lgGpioGetMode(handle, pin);
-	DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin mode %d\n", status);
-	result = lgTxPwm(handle, pin, 8000, 100, 0, 0);
-	if(result >= 0)
-	{
-		DEBUG(INDI::Logger::DBG_SESSION, "PWM OK");
-	}	
-}
 
 bool AstroLink4Pi::Connect()
 {
@@ -298,18 +259,18 @@ bool AstroLink4Pi::initProperties()
 	addConfigurationControl();
 
 	// int handle = pigpio_start(NULL, NULL);
-	int handle = lgGpiochipOpen(0);
-	if (handle < 0)
-	{
-		DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating properties of AstroLink 4 Pi - GPIO. %d ", pigpioHandle);
-	}
-	else
-	{
+	// int handle = lgGpiochipOpen(0);
+	// if (handle < 0)
+	// {
+	// 	DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating properties of AstroLink 4 Pi - GPIO. %d ", pigpioHandle);
+	// }
+	// else
+	// {
 	// 	set_mode(handle, MOTOR_PWM, PI_INPUT);
 	// 	revision = checkRevision(pigpioHandle);
 	// 	pigpio_stop(handle);
-		lgGpiochipClose(handle);
-	}
+	// 	lgGpiochipClose(handle);
+	// }
 
 	// Focuser Resolution
 	IUFillSwitch(&FocusResolutionS[0], "FOCUS_RESOLUTION_1", "Full Step", ISS_ON);
@@ -1864,9 +1825,9 @@ int AstroLink4Pi::checkRevision(int handle)
 			rev = 4;
 		}
 	}
-	// lgTxPwm(handle, MOTOR_PWM, 5000, 0, 0, 0);
-	// lgGpioFree(handle, MOTOR_PWM);
-	// lgGpioFree(handle, CHK_IN_PIN);
+	lgTxPwm(handle, MOTOR_PWM, 5000, 0, 0, 0);
+	lgGpioFree(handle, MOTOR_PWM);
+	lgGpioFree(handle, CHK_IN_PIN);
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;
