@@ -1635,9 +1635,10 @@ bool AstroLink4Pi::readSHT()
 	int written = lgI2cWriteByteData(i2cHandle, 0x2C, 0x06);
 		if (written == 0)
 		{
-			usleep(100000);
+			usleep(500000);
 	// 		int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 6);
 			int read = lgI2cReadBlockData(i2cHandle, 0x00, i2cData);
+			DEBUGF(INDI::Logger::DBG_SESSION, "SHT read %d", read);
 			if (read > 4)
 			{
 				int temp = i2cData[0] * 256 + i2cData[1];
@@ -1814,15 +1815,10 @@ int AstroLink4Pi::checkRevision(int handle)
 	lgGpioClaimOutput(handle, 0, MOTOR_PWM, 0);
 	lgGpioClaimInput(handle, 0, CHK_IN_PIN);
 	int result = lgGpioRead(handle, CHK_IN_PIN);
-	DEBUGF(INDI::Logger::DBG_SESSION, "Result 1 %d", result);
 	if (result == 0)
 	{
-		// result = lgTxPwm(handle, MOTOR_PWM, 5000, 100, 0, 0);
 		result = lgGpioWrite(handle, MOTOR_PWM, 1);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Result 2 %d", result);
-
 		result = lgGpioRead(handle, CHK_IN_PIN);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Result 3 %d", result);
 		if(result == 1)
 		{
 			rev = 4;
