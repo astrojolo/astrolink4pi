@@ -1772,7 +1772,7 @@ int AstroLink4Pi::checkRevision(int handle)
 
 	lgChipInfo_t cInfo;
 
-	status = lgGpioGetChipInfo(handle, &cInfo);
+	int status = lgGpioGetChipInfo(handle, &cInfo);
 
 	if (status == LG_OKAY)
 	{
