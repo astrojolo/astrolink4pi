@@ -1625,21 +1625,25 @@ bool AstroLink4Pi::readMLX()
 
 bool AstroLink4Pi::readSHT()
 {
-	char i2cData[32];
+	char i2cData[6];
+	char i2cWrite[2];
 
 	// int i2cHandle = i2c_open(pigpioHandle, 1, 0x44, 0);
 	int i2cHandle = lgI2cOpen(1, 0x44, 0);
 	DEBUGF(INDI::Logger::DBG_SESSION, "SHT i2cHandle  %d", i2cHandle);
 	if (i2cHandle >= 0)
 	{
+		i2cWrite[0] = 0x24;
+		i2cWrite[1] = 0x00;
 	// 	int written = i2c_write_byte_data(pigpioHandle, i2cHandle, 0x2C, 0x06);
-		int written = lgI2cWriteByteData(i2cHandle, 0x2C, 0x06);
+		int written = lgI2cWriteDevice(i2cHandle, i2cWrite, 2);
 		DEBUGF(INDI::Logger::DBG_SESSION, "SHT written  %d", written);
 		if (written == 0)
 		{
-			usleep(500000);
+			usleep(50000);
 	// 		int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 6);
-			int read = lgI2cReadBlockData(i2cHandle, 0x00, i2cData);
+			int read = lgI2cReadDevice(i2cHandle, i2cData, 6);
+			
 			DEBUGF(INDI::Logger::DBG_SESSION, "SHT read %d", read);
 			if (read > 4)
 			{
