@@ -1812,6 +1812,7 @@ int AstroLink4Pi::checkRevision(int handle)
 	// 	set_PWM_frequency(handle, MOTOR_PWM, 8000);
 	// 	set_PWM_range(handle, MOTOR_PWM, 100);
 	// 	set_PWM_dutycycle(handle, MOTOR_PWM, 100);		
+	lgGpioWrite(handle, MOTOR_PWM, 1);
 	usleep(10000);
 	if (lgGpioRead(handle, CHK_IN_PIN) == 1) rev = 4;
 	// lgTxPwm(handle, MOTOR_PWM, 8000, 0, 0, 0);
