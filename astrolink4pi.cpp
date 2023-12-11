@@ -1009,7 +1009,7 @@ void AstroLink4Pi::TimerHit()
 		focuserTemperature = -1000;
 		if (revision == 1 || revision == 2)
 		{
-			DSavailable = readDS18B20();
+			DSavailable = false;
 		}
 		else
 		{
@@ -1348,96 +1348,6 @@ void AstroLink4Pi::temperatureCompensation()
 	}
 }
 
-bool AstroLink4Pi::readDS18B20()
-{
-	if (!isConnected())
-		return false;
-
-	DIR *dir;
-	struct dirent *dirent;
-	char dev[16];			 // Dev ID
-	char devPath[128];		 // Path to device
-	char buf[256] = "";		 // Data from device
-	char temperatureData[6]; // Temp C * 1000 reported by device
-	char path[] = "/sys/bus/w1/devices";
-	float tempC;
-
-	dir = opendir(path);
-
-	// search for --the first-- DS18B20 device
-	if (dir != NULL)
-	{
-		while ((dirent = readdir(dir)))
-		{
-			// DS18B20 device is family code beginning with 28-
-			if (dirent->d_type == DT_LNK && strstr(dirent->d_name, "28-") != NULL)
-			{
-				strcpy(dev, dirent->d_name);
-				break;
-			}
-		}
-		(void)closedir(dir);
-	}
-	else
-	{
-		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor disabled. 1-Wire interface is not available.");
-		return false;
-	}
-
-	// Assemble path to --the first-- DS18B20 device
-	sprintf(devPath, "%s/%s/w1_slave", path, dev);
-
-	// We use fgetc to support EOF. This prevents driver crash when hot plug/unplug the sensor
-	FILE *pFile;
-	int c;
-	pFile = fopen(devPath, "r");
-	if (pFile == NULL)
-	{
-		DEBUG(INDI::Logger::DBG_DEBUG, "Temperature sensor not available.");
-		return false;
-	}
-	else
-	{
-		do
-		{
-			c = fgetc(pFile);
-			if (c != EOF)
-			{
-				int len = strlen(buf);
-				buf[len] = (char)c;
-				buf[len + 1] = '\0';
-			}
-
-		} while (c != EOF);
-		fclose(pFile);
-	}
-
-	if (strlen(buf) < 10)
-	{
-		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor read error.");
-		return false;
-	}
-
-	// parse temperature value from sensor output
-	strncpy(temperatureData, strstr(buf, "t=") + 2, 6);
-	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature sensor raw output: %s", buf);
-	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature string: %s", temperatureData);
-
-	tempC = strtof(temperatureData, NULL) / 1000;
-	// tempF = (tempC / 1000) * 9 / 5 + 32;
-
-	// check if temperature is reasonable
-	if (abs(tempC) > 100)
-	{
-		DEBUG(INDI::Logger::DBG_DEBUG, "Temperature reading out of range.");
-		return false;
-	}
-
-	setParameterValue("WEATHER_TEMPERATURE", tempC);
-	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature: %.2f°C", tempC);
-	focuserTemperature = tempC;
-	return true;
-}
 
 void AstroLink4Pi::setCurrent(bool standby)
 {
