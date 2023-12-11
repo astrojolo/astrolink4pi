@@ -584,7 +584,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 
 bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n)
 {
-	int rv;
+	// int rv;
 
 	// first we check if it's for our device
 	if (!strcmp(dev, getDeviceName()))
