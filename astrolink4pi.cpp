@@ -1854,7 +1854,7 @@ int AstroLink4Pi::checkRevision(int handle)
 	if (result == 0)
 	{
 		// result = lgTxPwm(handle, MOTOR_PWM, 5000, 100, 0, 0);
-		result = lgGpioWrite(handle, 0, MOTOR_PWM, 1);
+		result = lgGpioWrite(handle, MOTOR_PWM, 1);
 		DEBUGF(INDI::Logger::DBG_SESSION, "Result 2 %d", result);
 
 		result = lgGpioRead(handle, CHK_IN_PIN);
