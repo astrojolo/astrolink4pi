@@ -113,18 +113,25 @@ void AstroLink4Pi::checkPin(int pin)
 	DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin mode %d\n", status);
 
 	int result = lgGpioClaimOutput(handle, 0, pin, 1);
+	status = lgGpioGetMode(handle, pin);
+	DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin mode %d\n", status);
 	result = lgGpioWrite(handle, pin, 1);
 	if(result >= 0)
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Write OK");
 	}
+
 	result = lgGpioClaimInput(handle, 0, pin);
+	status = lgGpioGetMode(handle, pin);
+	DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin mode %d\n", status);
 	result = lgGpioRead(handle, pin);
 	if(result >= 0)
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Read OK");
 	}	
 	result = lgGpioClaimOutput(handle, 0, pin, 1);
+	status = lgGpioGetMode(handle, pin);
+	DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin mode %d\n", status);
 	result = lgTxPwm(handle, pin, 8000, 100, 0, 0);
 	if(result >= 0)
 	{
