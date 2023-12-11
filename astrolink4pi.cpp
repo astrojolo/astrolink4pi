@@ -1776,7 +1776,7 @@ int AstroLink4Pi::checkRevision(int handle)
 
 	if (status == LG_OKAY)
 	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi chip lines=%d name=%s label=%s\n", cInfo.lines, cInfo.name, cInfo.label);
+		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip lines=%d name=%s label=%s\n", cInfo.lines, cInfo.name, cInfo.label);
 	}
 
 	int rev = 1;
@@ -1806,14 +1806,14 @@ int AstroLink4Pi::checkRevision(int handle)
 	// if(rev == 1)
 	// {
 	// 	set_mode(handle, MOTOR_PWM, PI_OUTPUT);
-	lgGpioClaimOutput(handle, 0, MOTOR_PWM, 0);
-	lgTxPwm(handle, MOTOR_PWM, 8000, 100, 0, 0);
+	lgGpioClaimOutput(handle, 0, MOTOR_PWM, 1);
+	// lgTxPwm(handle, MOTOR_PWM, 8000, 100, 0, 0);
 	// 	set_PWM_frequency(handle, MOTOR_PWM, 8000);
 	// 	set_PWM_range(handle, MOTOR_PWM, 100);
 	// 	set_PWM_dutycycle(handle, MOTOR_PWM, 100);		
 	usleep(10000);
 	if (lgGpioRead(handle, CHK_IN_PIN) == 1) rev = 4;
-	lgTxPwm(handle, MOTOR_PWM, 8000, 0, 0, 0);
+	// lgTxPwm(handle, MOTOR_PWM, 8000, 0, 0, 0);
 	// 	if (gpio_read(handle, CHK_IN_PIN) == 1)
 	// 	{
 	// 		rev = 4;
