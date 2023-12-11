@@ -1853,7 +1853,7 @@ int AstroLink4Pi::checkRevision(int handle)
 	DEBUGF(INDI::Logger::DBG_SESSION, "Result 1 %d", result);
 	if (result == 0)
 	{
-		result = lgTxPwm(handle, MOTOR_PWM, 5000, 90, 0, 0);
+		result = lgTxPwm(handle, MOTOR_PWM, 5000, 100, 0, 0);
 		DEBUGF(INDI::Logger::DBG_SESSION, "Result 2 %d", result);
 
 		result = lgGpioRead(handle, CHK_IN_PIN);
@@ -1863,9 +1863,9 @@ int AstroLink4Pi::checkRevision(int handle)
 			rev = 4;
 		}
 	}
-	// lgTxPwm(handle, MOTOR_PWM, 5000, 0, 0, 0);
-	// lgGpioFree(handle, MOTOR_PWM);
-	// lgGpioFree(handle, CHK_IN_PIN);
+	lgTxPwm(handle, MOTOR_PWM, 5000, 0, 0, 0);
+	lgGpioFree(handle, MOTOR_PWM);
+	lgGpioFree(handle, CHK_IN_PIN);
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;
