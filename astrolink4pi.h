@@ -34,7 +34,6 @@
 #include <chrono>
 #include "config.h"
 
-#include <lgpio.h>
 #include <rgpio.h>
 
 #include <defaultdevice.h>
