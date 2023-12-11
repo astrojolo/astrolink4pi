@@ -121,7 +121,7 @@ void AstroLink4Pi::checkPin(int pin)
 		DEBUG(INDI::Logger::DBG_SESSION, "Write OK");
 	}
 
-	result = gpio_claim_input(handle, 0, pin);
+	result = gpio_claim_input(sbc, handle, 0, pin);
 	status = gpio_get_mode(sbc, handle, pin);
 	DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin mode %d\n", status);
 	result = gpio_read(sbc, handle, pin);
