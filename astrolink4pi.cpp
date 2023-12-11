@@ -119,7 +119,7 @@ void AstroLink4Pi::checkPin(int pin)
 		DEBUG(INDI::Logger::DBG_SESSION, "Write OK");
 	}
 	result = lgGpioClaimInput(handle, 0, pin);
-	result = lgGpioRead(handle, pin;
+	result = lgGpioRead(handle, pin);
 	if(result >= 0)
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Read OK");
