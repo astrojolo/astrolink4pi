@@ -1643,7 +1643,7 @@ bool AstroLink4Pi::readSHT()
 			usleep(50000);
 	// 		int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 6);
 			int read = lgI2cReadDevice(i2cHandle, i2cData, 6);
-			
+
 			DEBUGF(INDI::Logger::DBG_SESSION, "SHT read %d", read);
 			if (read > 4)
 			{
@@ -1659,8 +1659,7 @@ bool AstroLink4Pi::readSHT()
 				setParameterValue("WEATHER_TEMPERATURE", cTemp);
 				setParameterValue("WEATHER_HUMIDITY", humidity);
 				setParameterValue("WEATHER_DEWPOINT", Td);
-				if (!DSavailable)
-					focuserTemperature = cTemp;
+				focuserTemperature = cTemp;
 				SHTavailable = true;
 			}
 		}
