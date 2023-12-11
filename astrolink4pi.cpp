@@ -1629,10 +1629,12 @@ bool AstroLink4Pi::readSHT()
 
 	// int i2cHandle = i2c_open(pigpioHandle, 1, 0x44, 0);
 	int i2cHandle = lgI2cOpen(1, 0x44, 0);
+	DEBUGF(INDI::Logger::DBG_SESSION, "SHT i2cHandle  %d", i2cHandle);
 	if (i2cHandle >= 0)
 	{
 	// 	int written = i2c_write_byte_data(pigpioHandle, i2cHandle, 0x2C, 0x06);
 	int written = lgI2cWriteByteData(i2cHandle, 0x2C, 0x06);
+		DEBUGF(INDI::Logger::DBG_SESSION, "SHT written  %d", written);
 		if (written == 0)
 		{
 			usleep(500000);
