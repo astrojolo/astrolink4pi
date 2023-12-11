@@ -1845,7 +1845,6 @@ int AstroLink4Pi::checkRevision(int handle)
 
 	// if(rev == 1)
 	// {
-	checkPin(M0_PIN);
 	int result = lgGpioClaimOutput(handle, 0, MOTOR_PWM, 0);
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 1 %d", result);
 
