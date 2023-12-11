@@ -143,22 +143,6 @@ bool AstroLink4Pi::Connect()
 	// set_mode(pigpioHandle, MOTOR_PWM, PI_INPUT);
 	revision = checkRevision(pigpioHandle);
 
-	checkPin(DECAY_PIN);
-	checkPin(EN_PIN);
-	checkPin(M0_PIN);
-	checkPin(M1_PIN);
-	checkPin(M2_PIN);
-	checkPin(RST_PIN);
-	checkPin(STP_PIN);
-	checkPin(DIR_PIN);
-	checkPin(OUT1_PIN);
-	checkPin(OUT2_PIN);
-	checkPin(PWM1_PIN);
-	checkPin(PWM2_PIN);
-	checkPin(HOLD_PIN);
-	checkPin(CHK_IN_PIN);
-	checkPin(MOTOR_PWM);
-
 	if(revision >= 4)
 	{
 		// set_mode(pigpioHandle, MOTOR_PWM, PI_OUTPUT);
@@ -1854,24 +1838,12 @@ int AstroLink4Pi::checkRevision(int handle)
 
 	// if(rev == 1)
 	// {
-	// 	set_mode(handle, MOTOR_PWM, PI_OUTPUT);
+	checkPin(CHK_IN_PIN);
 	int result = lgGpioClaimOutput(handle, 0, CHK_IN_PIN, 1);
-	// result = lgGpioClaimOutput(handle, 0, MOTOR_PWM, 1);
-	// lgTxPwm(handle, MOTOR_PWM, 8000, 100, 0, 0);
-	// 	set_PWM_frequency(handle, MOTOR_PWM, 8000);
-	// 	set_PWM_range(handle, MOTOR_PWM, 100);
-	// 	set_PWM_dutycycle(handle, MOTOR_PWM, 100);		
 	result = lgGpioWrite(handle, CHK_IN_PIN, 1);
 	usleep(10000);
 	result = lgGpioRead(handle, CHK_IN_PIN);
 	if (result == 1) rev = 4;
-	// lgTxPwm(handle, MOTOR_PWM, 8000, 0, 0, 0);
-	// 	if (gpio_read(handle, CHK_IN_PIN) == 1)
-	// 	{
-	// 		rev = 4;
-	// 	}
-	// 	set_PWM_dutycycle(handle, MOTOR_PWM, 0);	
-	// }
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;
 }
