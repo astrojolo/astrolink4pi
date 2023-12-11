@@ -297,19 +297,19 @@ bool AstroLink4Pi::initProperties()
 	// addSimulationControl();
 	addConfigurationControl();
 
-	sbc = rgpiod_start(NULL, NULL);
-	int handle = gpiochip_open(sbc, 0);
-	if (handle < 0)
-	{
-		DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating properties of AstroLink 4 Pi - GPIO. %d ", handle);
-	}
-	else
-	{
-	// 	set_mode(handle, MOTOR_PWM, PI_INPUT);
-	// 	revision = checkRevision(pigpioHandle);
-		gpiochip_close(sbc, handle);
-		rgpiod_stop(sbc);
-	}
+	// sbc = rgpiod_start(NULL, NULL);
+	// int handle = gpiochip_open(sbc, 0);
+	// if (handle < 0)
+	// {
+	// 	DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating properties of AstroLink 4 Pi - GPIO. %d ", handle);
+	// }
+	// else
+	// {
+	// // 	set_mode(handle, MOTOR_PWM, PI_INPUT);
+	// // 	revision = checkRevision(pigpioHandle);
+	// 	gpiochip_close(sbc, handle);
+	// 	rgpiod_stop(sbc);
+	// }
 
 	// Focuser Resolution
 	IUFillSwitch(&FocusResolutionS[0], "FOCUS_RESOLUTION_1", "Full Step", ISS_ON);
