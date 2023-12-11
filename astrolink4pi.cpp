@@ -297,8 +297,8 @@ bool AstroLink4Pi::initProperties()
 	// addSimulationControl();
 	addConfigurationControl();
 
-	// int handle = pigpio_start(NULL, NULL);
-	int handle = lgGpiochipOpen(0);
+	sbc = rgpiod_start(NULL, NULL);
+	int handle = gpiochip_open(sbc, 0);
 	if (handle < 0)
 	{
 		DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating properties of AstroLink 4 Pi - GPIO. %d ", pigpioHandle);
@@ -307,8 +307,8 @@ bool AstroLink4Pi::initProperties()
 	{
 	// 	set_mode(handle, MOTOR_PWM, PI_INPUT);
 	// 	revision = checkRevision(pigpioHandle);
-	// 	pigpio_stop(handle);
-		lgGpiochipClose(handle);
+		gpiochip_close(sbc, handle);
+		rgpiod_stop(sbc);
 	}
 
 	// Focuser Resolution
