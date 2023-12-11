@@ -1628,7 +1628,7 @@ bool AstroLink4Pi::readSHT()
 	char i2cData[32];
 
 	// int i2cHandle = i2c_open(pigpioHandle, 1, 0x44, 0);
-	int i2cHandle = lgI2cOpen(1, 0x44, 0);
+	int i2cHandle = lgI2cOpen(11, 0x44, 0);
 	DEBUGF(INDI::Logger::DBG_SESSION, "SHT i2cHandle  %d", i2cHandle);
 	if (i2cHandle >= 0)
 	{
