@@ -99,6 +99,39 @@ const char *AstroLink4Pi::getDefaultName()
 	return (char *)"AstroLink 4 Pi";
 }
 
+void AstroLink4Pi::checkPin(int pin)
+{
+	lgLineInfo_t lInfo;
+	int handle = pigpioHandle;
+
+	int status = lgGpioGetLineInfo(handle, pin, &lInfo);
+	if (status == LG_OKAY)
+	{
+		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", pin, lInfo.lFlags, lInfo.name, lInfo.user);
+	}		
+	status = lgGpioGetMode(handle, pin);
+	DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin mode %d\n", status);
+
+	int result = lgGpioClaimOutput(handle, 0, pin, 1);
+	result = lgGpioWrite(handle, pin, 1);
+	if(result >= 0)
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Write OK");
+	}
+	result = lgGpioClaimInput(handle, 0, pin);
+	result = lgGpioRead(handle, pin;
+	if(result >= 0)
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Read OK");
+	}	
+	result = lgGpioClaimOutput(handle, 0, pin, 1);
+	result = lgTxPwm(handle, pin, 8000, 100, 0, 0);
+	if(result >= 0)
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "PWM OK");
+	}	
+}
+
 bool AstroLink4Pi::Connect()
 {
 	if (pigpioHandle < 0)
@@ -109,87 +142,6 @@ bool AstroLink4Pi::Connect()
 
 	// set_mode(pigpioHandle, MOTOR_PWM, PI_INPUT);
 	revision = checkRevision(pigpioHandle);
-
-
-	lgLineInfo_t lInfo;
-	int handle = pigpioHandle;
-
-	int status = lgGpioGetLineInfo(handle, CHK_IN_PIN, &lInfo);
-	if (status == LG_OKAY)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", CHK_IN_PIN, lInfo.lFlags, lInfo.name, lInfo.user);
-	}	
-	status = lgGpioGetLineInfo(handle, MOTOR_PWM, &lInfo);
-	if (status == LG_OKAY)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", MOTOR_PWM, lInfo.lFlags, lInfo.name, lInfo.user);
-	}	
-	status = lgGpioGetLineInfo(handle, DECAY_PIN, &lInfo);
-	if (status == LG_OKAY)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", DECAY_PIN, lInfo.lFlags, lInfo.name, lInfo.user);
-	}	
-	status = lgGpioGetLineInfo(handle, EN_PIN, &lInfo);
-	if (status == LG_OKAY)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", EN_PIN, lInfo.lFlags, lInfo.name, lInfo.user);
-	}	
-	status = lgGpioGetLineInfo(handle, M0_PIN, &lInfo);
-	if (status == LG_OKAY)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", M0_PIN, lInfo.lFlags, lInfo.name, lInfo.user);
-	}	
-	status = lgGpioGetLineInfo(handle, M1_PIN, &lInfo);
-	if (status == LG_OKAY)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", M1_PIN, lInfo.lFlags, lInfo.name, lInfo.user);
-	}	
-	status = lgGpioGetLineInfo(handle, M2_PIN, &lInfo);
-	if (status == LG_OKAY)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", M2_PIN, lInfo.lFlags, lInfo.name, lInfo.user);
-	}	
-	status = lgGpioGetLineInfo(handle, RST_PIN, &lInfo);
-	if (status == LG_OKAY)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", RST_PIN, lInfo.lFlags, lInfo.name, lInfo.user);
-	}	
-	status = lgGpioGetLineInfo(handle, STP_PIN, &lInfo);
-	if (status == LG_OKAY)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", STP_PIN, lInfo.lFlags, lInfo.name, lInfo.user);
-	}	
-	status = lgGpioGetLineInfo(handle, DIR_PIN, &lInfo);
-	if (status == LG_OKAY)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", DIR_PIN, lInfo.lFlags, lInfo.name, lInfo.user);
-	}	
-	status = lgGpioGetLineInfo(handle, OUT1_PIN, &lInfo);
-	if (status == LG_OKAY)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", OUT1_PIN, lInfo.lFlags, lInfo.name, lInfo.user);
-	}	
-	status = lgGpioGetLineInfo(handle, OUT2_PIN, &lInfo);
-	if (status == LG_OKAY)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", OUT2_PIN, lInfo.lFlags, lInfo.name, lInfo.user);
-	}	
-	status = lgGpioGetLineInfo(handle, PWM1_PIN, &lInfo);
-	if (status == LG_OKAY)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", PWM1_PIN, lInfo.lFlags, lInfo.name, lInfo.user);
-	}	
-	status = lgGpioGetLineInfo(handle, PWM2_PIN, &lInfo);
-	if (status == LG_OKAY)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", PWM2_PIN, lInfo.lFlags, lInfo.name, lInfo.user);
-	}	
-	status = lgGpioGetLineInfo(handle, HOLD_PIN, &lInfo);
-	if (status == LG_OKAY)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", HOLD_PIN, lInfo.lFlags, lInfo.name, lInfo.user);
-	}	
-
 
 	if(revision >= 4)
 	{

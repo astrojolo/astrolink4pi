@@ -173,6 +173,7 @@ private:
 	std::thread _motionThread;
 	volatile bool _abort;
 
+	void checkPin(int pin);
 	void getFocuserInfo();
 	void temperatureCompensation();
 	void setCurrent(bool standby);
