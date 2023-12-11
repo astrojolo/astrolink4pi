@@ -114,7 +114,7 @@ bool AstroLink4Pi::Connect()
 	lgLineInfo_t lInfo;
 	int handle = pigpioHandle;
 
-	status = lgGpioGetLineInfo(handle, CHK_IN_PIN, &lInfo);
+	int status = lgGpioGetLineInfo(handle, CHK_IN_PIN, &lInfo);
 	if (status == LG_OKAY)
 	{
 		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip pin %d lFlags=%d name=%s user=%s\n", CHK_IN_PIN, lInfo.lFlags, lInfo.name, lInfo.user);
