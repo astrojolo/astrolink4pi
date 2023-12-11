@@ -26,6 +26,8 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define SYSTEM_UPDATE_PERIOD 1000
 #define POLL_PERIOD 200
 
+#define RP4_GPIO	0
+#define RP5_GPIO	4
 #define DECAY_PIN 	14
 #define EN_PIN 		15
 #define M0_PIN 		17
@@ -82,7 +84,7 @@ void ISSnoopDevice(XMLEle *root)
 AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
-	pigpioHandle = lgGpiochipOpen(0);
+	pigpioHandle = lgGpiochipOpen(RP5_GPIO);
 }
 
 AstroLink4Pi::~AstroLink4Pi()
@@ -1845,7 +1847,7 @@ int AstroLink4Pi::checkRevision(int handle)
 
 	// if(rev == 1)
 	// {
-	int result = lgGpioClaimOutput(handle, 0, CHK_IN_PIN, 0);
+	int result = lgGpioClaimOutput(handle, 0, MOTOR_PWM, 0);
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 1 %d", result);
 
 	result = lgGpioRead(handle, CHK_IN_PIN);
@@ -1858,25 +1860,12 @@ int AstroLink4Pi::checkRevision(int handle)
 	result = lgGpioRead(handle, CHK_IN_PIN);
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 4 %d", result);
 
-	for (int i = 0; i < 50; i++)
-	{
-		result = lgGpioWrite(handle, CHK_IN_PIN, 1);
-		result = lgGpioRead(handle, CHK_IN_PIN);
-		DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 3 %d", result);
-		usleep(500000);
-		result = lgGpioWrite(handle, CHK_IN_PIN, 0);
-		result = lgGpioRead(handle, CHK_IN_PIN);
-		DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 3 %d", result);
-		usleep(500000);
-	}
-	
+	result = lgGpioWrite(handle, CHK_IN_PIN, 0);
+	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 5 %d", result);
+	usleep(10000);
 
-	// result = lgGpioWrite(handle, CHK_IN_PIN, 0);
-	// DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 5 %d", result);
-	// usleep(10000);
-
-	// result = lgGpioRead(handle, CHK_IN_PIN);
-	// DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 6 %d", result);
+	result = lgGpioRead(handle, CHK_IN_PIN);
+	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi check 6 %d", result);
 
 	if (result == 0) rev = 4;
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
