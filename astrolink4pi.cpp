@@ -143,6 +143,22 @@ bool AstroLink4Pi::Connect()
 	// set_mode(pigpioHandle, MOTOR_PWM, PI_INPUT);
 	revision = checkRevision(pigpioHandle);
 
+	checkPin(DECAY_PIN);
+	checkPin(EN_PIN);
+	checkPin(M0_PIN);
+	checkPin(M1_PIN);
+	checkPin(M2_PIN);
+	checkPin(RST_PIN);
+	checkPin(STP_PIN);
+	checkPin(DIR_PIN);
+	checkPin(OUT1_PIN);
+	checkPin(OUT2_PIN);
+	checkPin(PWM1_PIN);
+	checkPin(PWM2_PIN);
+	checkPin(HOLD_PIN);
+	checkPin(CHK_IN_PIN);
+	checkPin(MOTOR_PWM);
+
 	if(revision >= 4)
 	{
 		// set_mode(pigpioHandle, MOTOR_PWM, PI_OUTPUT);
