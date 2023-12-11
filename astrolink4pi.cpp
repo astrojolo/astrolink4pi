@@ -82,8 +82,7 @@ void ISSnoopDevice(XMLEle *root)
 AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
-	pigpioHandle = 1;
-	// pigpioHandle = pigpio_start(NULL, NULL);
+	pigpioHandle = lgGpiochipOpen(0);
 }
 
 AstroLink4Pi::~AstroLink4Pi()
@@ -226,6 +225,7 @@ bool AstroLink4Pi::Disconnect()
 	// }
 
 	// pigpio_stop(pigpioHandle);
+	lgGpiochipClose(pigpioHandle);
 
 	// Unlock Relay Labels setting
 	RelayLabelsTP.s = IPS_IDLE;
@@ -256,16 +256,18 @@ bool AstroLink4Pi::initProperties()
 	addConfigurationControl();
 
 	// int handle = pigpio_start(NULL, NULL);
-	// if (handle < 0)
-	// {
-	// 	DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating properties of AstroLink 4 Pi - GPIO. %d ", pigpioHandle);
-	// }
-	// else
-	// {
+	int handle = lgGpiochipOpen(0);
+	if (handle < 0)
+	{
+		DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating properties of AstroLink 4 Pi - GPIO. %d ", pigpioHandle);
+	}
+	else
+	{
 	// 	set_mode(handle, MOTOR_PWM, PI_INPUT);
 	// 	revision = checkRevision(pigpioHandle);
 	// 	pigpio_stop(handle);
-	// }
+		lgGpiochipClose(handle);
+	}
 
 	// Focuser Resolution
 	IUFillSwitch(&FocusResolutionS[0], "FOCUS_RESOLUTION_1", "Full Step", ISS_ON);
