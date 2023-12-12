@@ -1325,62 +1325,28 @@ void AstroLink4Pi::setCurrent(bool standby)
 
 	if (standby)
 	{
-		// gpio_write(pigpioHandle, EN_PIN, (holdPower > 0) ? 0 : 1);
-		// gpio_write(pigpioHandle, DECAY_PIN, 0);
-		if (revision == 1)
+		lgGpioWrite(pigpioHandle, EN_PIN,  (holdPower > 0) ? 0 : 1);
+		lgGpioWrite(pigpioHandle, DECAY_PIN, 0);
+		// set_PWM_dutycycle(pigpioHandle, MOTOR_PWM, getMotorPWM(holdPower * stepperCurrent / 5));	
+		lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(holdPower * stepperCurrent / 5), 0, 0);
+		if (holdPower > 0)
 		{
-			if (holdPower == 5)
-			{
-				// gpio_write(pigpioHandle, HOLD_PIN, 0);
-				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 100%%.");
-			}
-			else if (holdPower > 0)
-			{
-				// gpio_write(pigpioHandle, HOLD_PIN, 1);
-				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 50%%.");
-			}
-			else
-			{
-				// gpio_write(pigpioHandle, HOLD_PIN, 1);
-				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
-			}
+			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", holdPower * 20);
 		}
-		if (revision > 1 && revision < 4)
+		else
 		{
-			// setDac(0, getDacValue(holdPower * stepperCurrent / 5));
-		}
-		if(revision >= 4)
-		{
-			// set_PWM_dutycycle(pigpioHandle, MOTOR_PWM, getMotorPWM(holdPower * stepperCurrent / 5));	
-		}		
-		if(revision > 1)
-		{
-			if (holdPower > 0)
-			{
-				DEBUGF(INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", holdPower * 20);
-			}
-			else
-			{
-				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
-			}			
-		}
+			DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
+		}			
 	}
 	else
 	{
 		// gpio_write(pigpioHandle, EN_PIN, 0);
 		// gpio_write(pigpioHandle, DECAY_PIN, 1);
-		if (revision == 1)
-		{
-			// gpio_write(pigpioHandle, HOLD_PIN, 0);
-		}
-		if (revision > 1 && revision < 4)
-		{
-			// setDac(0, getDacValue(stepperCurrent));
-		}
-		if(revision >= 4)
-		{
-			// set_PWM_dutycycle(pigpioHandle, MOTOR_PWM, getMotorPWM(stepperCurrent));	
-		}
+		lgGpioWrite(pigpioHandle, EN_PIN, 0);
+		lgGpioWrite(pigpioHandle, DECAY_PIN, 1);
+		// set_PWM_dutycycle(pigpioHandle, MOTOR_PWM, getMotorPWM(stepperCurrent));	
+		lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(stepperCurrent), 0, 0);
+
 	}
 }
 
