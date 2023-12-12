@@ -230,8 +230,7 @@ bool AstroLink4Pi::initProperties()
 	RefreshSP.setState(IPS_IDLE);
 	UpdatePeriodNP.setPermission(IP_RO);
 	UpdatePeriodNP.setState(IPS_IDLE);
-	UpdatePeriodNP.
-
+	
 	addDebugControl();
 	// addSimulationControl();
 	addConfigurationControl();
