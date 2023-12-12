@@ -84,7 +84,6 @@ void ISSnoopDevice(XMLEle *root)
 AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
-	pigpioHandle = lgGpiochipOpen(RP5_GPIO);
 }
 
 AstroLink4Pi::~AstroLink4Pi()
@@ -104,6 +103,7 @@ const char *AstroLink4Pi::getDefaultName()
 
 bool AstroLink4Pi::Connect()
 {
+	pigpioHandle = lgGpiochipOpen(RP5_GPIO);
 	if (pigpioHandle < 0)
 	{
 		DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi - GPIO. %d ", pigpioHandle);
