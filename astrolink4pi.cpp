@@ -978,17 +978,9 @@ void AstroLink4Pi::TimerHit()
 
 	if (nextTemperatureRead < timeMillis)
 	{
-		focuserTemperature = -1000;
-		if (revision == 1 || revision == 2)
-		{
-			DSavailable = false;
-		}
-		else
-		{
-			SHTavailable = readSHT();
-			MLXavailable = readMLX();
-			SQMavailable = readSQM();
-		}
+		SHTavailable = readSHT();
+		MLXavailable = readMLX();
+		SQMavailable = readSQM();
 
 		nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
 
