@@ -230,6 +230,7 @@ bool AstroLink4Pi::initProperties()
 	RefreshSP.setState(IPS_IDLE);
 	UpdatePeriodNP.setPermission(IP_RO);
 	UpdatePeriodNP.setState(IPS_IDLE);
+	UpdatePeriodNP.
 
 	addDebugControl();
 	// addSimulationControl();
@@ -450,6 +451,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 		// handle focus step delay
 		if (!strcmp(name, FocusStepDelayNP.name))
 		{
+			DEBUGF(INDI::Logger::DBG_SESSION, "val0 %f nam0 %s n %d\n", values[0], names[0], n);
 			IUUpdateNumber(&FocusStepDelayNP, values, names, n);
 			FocusStepDelayNP.s = IPS_BUSY;
 			IDSetNumber(&FocusStepDelayNP, nullptr);
