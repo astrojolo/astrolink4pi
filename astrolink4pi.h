@@ -177,9 +177,7 @@ private:
 	void getFocuserInfo();
 	void temperatureCompensation();
 	void setCurrent(bool standby);
-	int getDacValue(int current);
 	void systemUpdate();
-	int setDac(int chan, int value);
 	int getMotorPWM(int current);
 	int checkRevision(int handle);
 	long int millis();

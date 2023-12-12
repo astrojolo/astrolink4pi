@@ -1317,7 +1317,6 @@ void AstroLink4Pi::temperatureCompensation()
 	}
 }
 
-
 void AstroLink4Pi::setCurrent(bool standby)
 {
 	if (!isConnected())
@@ -1348,12 +1347,6 @@ void AstroLink4Pi::setCurrent(bool standby)
 		lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(stepperCurrent), 0, 0);
 
 	}
-}
-
-int AstroLink4Pi::getDacValue(int current)
-{
-	// for 0.1 ohm resistor Vref = iref / 2
-	return 255 * current / 4096;
 }
 
 void AstroLink4Pi::systemUpdate()
@@ -1458,30 +1451,6 @@ long int AstroLink4Pi::millis()
 		return 0;
 	}
 }
-
-int AstroLink4Pi::setDac(int chan, int value)
-{
-	char spiData[2];
-	uint8_t chanBits, dataBits;
-
-	if (chan == 0)
-		chanBits = 0x30;
-	else
-		chanBits = 0xB0;
-
-	chanBits |= ((value >> 4) & 0x0F);
-	dataBits = ((value << 4) & 0xF0);
-
-	spiData[0] = chanBits;
-	spiData[1] = dataBits;
-
-	// int spiHandle = spi_open(pigpioHandle, 1, 1000000, 0);
-	// int written = spi_write(pigpioHandle, spiHandle, spiData, 2);
-	int written = 2;
-	// spi_close(pigpioHandle, spiHandle);
-	return written;
-}
-
 
 int AstroLink4Pi::getMotorPWM(int current)
 {
@@ -1706,9 +1675,7 @@ bool AstroLink4Pi::readPower()
 
 int AstroLink4Pi::checkRevision(int handle)
 {
-
 	lgChipInfo_t cInfo;
-
 	int status = lgGpioGetChipInfo(handle, &cInfo);
 
 	if (status == LG_OKAY)
