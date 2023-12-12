@@ -504,7 +504,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&PWM1NP, values, names, n);
 			PWM1NP.s = IPS_OK;
 			IDSetNumber(&PWM1NP, nullptr);
-			lgTxPwm(pigpioHandle, PWM1_PIN, PWMcycleN[0].value, PWM1[0].value, 0, 0);
+			lgTxPwm(pigpioHandle, PWM1_PIN, PWMcycleN[0].value, PWM1N[0].value, 0, 0);
 			// set_PWM_dutycycle(pigpioHandle, PWM1_PIN, PWM1N[0].value);
 			pwmState[0] = PWM1N[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 1 set to %0.0f", PWM1N[0].value);
@@ -516,7 +516,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&PWM2NP, values, names, n);
 			PWM2NP.s = IPS_OK;
 			IDSetNumber(&PWM2NP, nullptr);
-			lgTxPwm(pigpioHandle, PWM2_PIN, PWMcycleN[0].value, PWM2[0].value, 0, 0);
+			lgTxPwm(pigpioHandle, PWM2_PIN, PWMcycleN[0].value, PWM1N[0].value, 0, 0);
 			// set_PWM_dutycycle(pigpioHandle, PWM2_PIN, PWM2N[0].value);
 			pwmState[1] = PWM2N[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 2 set to %0.0f", PWM2N[0].value);
@@ -529,8 +529,8 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&PWMcycleNP, values, names, n);
 			PWMcycleNP.s = IPS_OK;
 			IDSetNumber(&PWMcycleNP, nullptr);
-			lgTxPwm(pigpioHandle, PWM1_PIN, PWMcycleN[0].value, PWM1[0].value, 0, 0);
-			lgTxPwm(pigpioHandle, PWM2_PIN, PWMcycleN[0].value, PWM2[0].value, 0, 0);
+			lgTxPwm(pigpioHandle, PWM1_PIN, PWMcycleN[0].value, PWM1N[0].value, 0, 0);
+			lgTxPwm(pigpioHandle, PWM2_PIN, PWMcycleN[0].value, PWM1N[0].value, 0, 0);
 			// set_PWM_frequency(pigpioHandle, PWM1_PIN, PWMcycleN[0].value);
 			// set_PWM_frequency(pigpioHandle, PWM2_PIN, PWMcycleN[0].value);
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM frequency set to %0.0f Hz", PWMcycleN[0].value);
