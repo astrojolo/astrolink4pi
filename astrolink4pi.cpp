@@ -1598,7 +1598,7 @@ void *AstroLink4Pi::myfunc(void *arg)
 
 bool AstroLink4Pi::readSHT()
 {
-	sht_t = lgThreadStart(&myfunc, (void *)"thread 1");
+	sht_t = lgThreadStart(myfunc, (void *)"thread 1");
 	char i2cData[6];
 	char i2cWrite[2];
 
