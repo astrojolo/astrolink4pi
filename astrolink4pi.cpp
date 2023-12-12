@@ -124,7 +124,7 @@ bool AstroLink4Pi::Connect()
 	// RST_PIN start as wake up
 	// HOLD_PIN start as disabled
 
-	lgGroupClaimOutput(pigpioHandle, 0, outs, lvls);
+	lgGroupClaimOutput(pigpioHandle, 0, 14, outs, lvls);
 
 	// set_mode(pigpioHandle, PWM1_PIN, PI_OUTPUT);
 	// set_PWM_frequency(pigpioHandle, PWM1_PIN, 10);
