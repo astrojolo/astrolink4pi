@@ -176,7 +176,7 @@ private:
 
 	pthread_t *sht_t;	
 
-	void* myfunc(void *arg);
+	static void* myfunc(void *arg);
 	void getFocuserInfo();
 	void temperatureCompensation();
 	void setCurrent(bool standby);
