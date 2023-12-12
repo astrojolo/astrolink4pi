@@ -1593,7 +1593,7 @@ bool AstroLink4Pi::readMLX()
 
 void AstroLink4Pi::myfunc(void *arg)
 {
-    DEBUGF(INDI::Logger::DBG_SESSION, "Thread inside %s", (char *) arg);
+    sleep(1);
 }
 
 bool AstroLink4Pi::readSHT()
