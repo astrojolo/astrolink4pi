@@ -231,7 +231,7 @@ bool AstroLink4Pi::initProperties()
 	UpdatePeriodNP.setPermission(IP_RO);
 	UpdatePeriodNP.setState(IPS_IDLE);
 	double values[1] = {3.0};
-	const char* names[1] = "PERIOD";
+	const char* names[1] = {"PERIOD"};
 	UpdatePeriodNP.update(values, names, 1);
 	
 			// DEBUGF(INDI::Logger::DBG_SESSION, "val0 %f nam0 %s n %d\n", values[0], names[0], n);
