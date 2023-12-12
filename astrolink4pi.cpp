@@ -110,33 +110,22 @@ bool AstroLink4Pi::Connect()
 		return false;
 	}
 
-	// set_mode(pigpioHandle, MOTOR_PWM, PI_INPUT);
 	revision = checkRevision(pigpioHandle);
 
-	if(revision >= 4)
+	if(revision < 4)
 	{
-		// set_mode(pigpioHandle, MOTOR_PWM, PI_OUTPUT);
-		// set_PWM_frequency(pigpioHandle, MOTOR_PWM, 8000);
-		// set_PWM_range(pigpioHandle, MOTOR_PWM, 100);
-		// set_PWM_dutycycle(pigpioHandle, MOTOR_PWM, 0);			
+		DEBUGF(INDI::Logger::DBG_ERROR, "This INDI driver version works only with AstroLink 4 Pi revision 4 and higer.");		
+		return false;
 	}
 
-	lgGpioClaimOutput(pigpioHandle, 0, DECAY_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, EN_PIN, 1);		// start as disabled
-	lgGpioClaimOutput(pigpioHandle, 0, M0_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, M1_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, M2_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, RST_PIN, 1);		// start as wake up
-	lgGpioClaimOutput(pigpioHandle, 0, STP_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, DIR_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, OUT1_PIN, relayState[0]);
-	lgGpioClaimOutput(pigpioHandle, 0, OUT2_PIN, relayState[1]);
+	int outs[14] = {DECAY_PIN, EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN, MOTOR_PWM, HOLD_PIN};
+	int lvls[14] = {0, 1, 0, 0, 0, 1, 0, 0, relayState[0], relayState[1], 0, 0, 0, 1};
+	// EN_PIN start as disabled
+	// RST_PIN start as wake up
+	// HOLD_PIN start as disabled
 
-	lgGpioClaimOutput(pigpioHandle, 0, PWM1_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, PWM2_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, MOTOR_PWM, 0);
+	lgGroupClaimOutput(pigpioHandle, 0, outs, lvls);
 
-	lgGpioClaimOutput(pigpioHandle, 0, HOLD_PIN, 1);	// start as disabled
 	// set_mode(pigpioHandle, PWM1_PIN, PI_OUTPUT);
 	// set_PWM_frequency(pigpioHandle, PWM1_PIN, 10);
 	// set_PWM_range(pigpioHandle, PWM1_PIN, 100);
@@ -206,21 +195,21 @@ bool AstroLink4Pi::Connect()
 
 bool AstroLink4Pi::Disconnect()
 {
-	// Close device
-	// gpio_write(pigpioHandle, HOLD_PIN, 1);
-	// gpio_write(pigpioHandle, RST_PIN, 0);					// sleep
-	// int enabledState = gpio_write(pigpioHandle, EN_PIN, 1); // make disabled
+	lgGpioWrite(pigpioHandle, HOLD_PIN, 1);
+	lgGpioWrite(pigpioHandle, RST_PIN, 0);							// sleep
+	int enabledState = lgGpioWrite(pigpioHandle, EN_PIN, 1);		// make disabled
 
-	// if (enabledState != 0)
-	// {
-	// 	DEBUGF(INDI::Logger::DBG_ERROR, "Cannot set GPIO line %i to disable stepper motor driver. Focusing motor may still be powered.", EN_PIN);
-	// }
-	// else
-	// {
-	// 	DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
-	// }
+	if (enabledState != 0)
+	{
+		DEBUGF(INDI::Logger::DBG_ERROR, "Cannot set GPIO line %i to disable stepper motor driver. Focusing motor may still be powered.", EN_PIN);
+	}
+	else
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
+	}
 
-	// pigpio_stop(pigpioHandle);
+	lgGroupFree(pigpioHandle, DECAY_PIN);
+
 	lgGpiochipClose(pigpioHandle);
 
 	// Unlock Relay Labels setting
@@ -1556,11 +1545,9 @@ bool AstroLink4Pi::readSQM()
 {
 	char i2cData[7];
 
-	// int i2cHandle = i2c_open(pigpioHandle, 1, 0x33, 0);
 	int i2cHandle = lgI2cOpen(1, 0x33, 0);
 	if (i2cHandle >= 0)
 	{
-		// int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 7);
 		int read = lgI2cReadDevice(i2cHandle, i2cData, 7);
 		lgI2cClose(i2cHandle);
 		if (read > 6)
@@ -1585,14 +1572,10 @@ bool AstroLink4Pi::readSQM()
 bool AstroLink4Pi::readMLX()
 {
 	int i2cHandle = lgI2cOpen(1, 0x5A, 0);
-	// int i2cHandle = i2c_open(pigpioHandle, 1, 0x5A, 0);
 	if (i2cHandle >= 0)
 	{
 		int Tamb = lgI2cReadWordData(i2cHandle, 0x06); 
-		//i2c_read_word_data(pigpioHandle, i2cHandle, 0x06);
 		int Tobj = lgI2cReadWordData(i2cHandle, 0x07);
-		//i2c_read_word_data(pigpioHandle, i2cHandle, 0x07);
-		// i2c_close(pigpioHandle, i2cHandle);
 		lgI2cClose(i2cHandle);
 		if (Tamb >= 0 && Tobj >= 0)
 		{
@@ -1629,19 +1612,16 @@ bool AstroLink4Pi::readSHT()
 	char i2cWrite[2];
 
 	int i2cHandle = lgI2cOpen(1, 0x44, 0);
-	DEBUGF(INDI::Logger::DBG_SESSION, "SHT i2cHandle  %d", i2cHandle);
 	if (i2cHandle >= 0)
 	{
 		i2cWrite[0] = 0x24;
 		i2cWrite[1] = 0x00;
 		int written = lgI2cWriteDevice(i2cHandle, i2cWrite, 2);
-		DEBUGF(INDI::Logger::DBG_SESSION, "SHT written  %d", written);
 		if (written == 0)
 		{
 			usleep(30000);
 			int read = lgI2cReadDevice(i2cHandle, i2cData, 6);
 
-			DEBUGF(INDI::Logger::DBG_SESSION, "SHT read %d", read);
 			if (read > 4)
 			{
 				int temp = i2cData[0] * 256 + i2cData[1];
@@ -1689,7 +1669,6 @@ bool AstroLink4Pi::readPower()
 	char writeBuf[3];
 	char readBuf[2];
 
-	// int i2cHandle = i2c_open(pigpioHandle, 1, 0x48, 0);
 	int i2cHandle = lgI2cOpen(1, 0x48, 0);
 	if (i2cHandle >= 0)
 	{
@@ -1717,7 +1696,6 @@ bool AstroLink4Pi::readPower()
 				case 2: writeBuf[1] = 0b11010011; break;
 				case 4: writeBuf[1] = 0b10110011; break;
 			}
-			// int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 3);
 			int written = lgI2cWriteDevice(i2cHandle, writeBuf, 3);
 			if(written != 0)
 			{
@@ -1730,11 +1708,9 @@ bool AstroLink4Pi::readPower()
 			PowerReadingsNP.s = IPS_BUSY;
 
 			writeBuf[0] = 0x00;
-			// int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 1);
 			int written = lgI2cWriteDevice(i2cHandle, writeBuf, 1);
 			if(written == 0)
 			{
-				// int read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
 				int read = lgI2cReadDevice(i2cHandle, readBuf, 2);
 				if(read > 0)
 				{
@@ -1769,7 +1745,6 @@ bool AstroLink4Pi::readPower()
 		powerIndex++;
 		if(powerIndex > 5) powerIndex = 0;
 
-		// i2c_close(pigpioHandle, i2cHandle);
 		lgI2cClose(i2cHandle);
         IDSetNumber(&PowerReadingsNP, nullptr);		
 		return true;
@@ -1794,31 +1769,6 @@ int AstroLink4Pi::checkRevision(int handle)
 	}
 
 	int rev = 1;
-	// set_mode(handle, MOTOR_PWM, PI_INPUT);
-	// set_mode(handle, CHK_IN_PIN, PI_INPUT);
-	// setDac(1, 0);
-	// if (gpio_read(handle, MOTOR_PWM) == 0)
-	// {
-	// 	setDac(1, 255);
-	// 	if (gpio_read(handle, MOTOR_PWM) == 1)
-	// 	{
-
-	// 		rev = 2;
-	// 	}
-	// }
-	// setDac(1, 0);
-	// if (gpio_read(handle, CHK_IN_PIN) == 0)
-	// {
-	// 	setDac(1, 255);
-	// 	if (gpio_read(handle, CHK_IN_PIN) == 1)
-	// 	{
-	// 		rev = 3;
-	// 	}
-	// }
-	// setDac(1, 255);
-
-	// if(rev == 1)
-	// {
 	lgGpioClaimOutput(handle, 0, MOTOR_PWM, 0);
 	lgGpioClaimInput(handle, 0, CHK_IN_PIN);
 	int result = lgGpioRead(handle, CHK_IN_PIN);
