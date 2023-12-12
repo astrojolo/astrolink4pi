@@ -174,6 +174,9 @@ private:
 	std::thread _motionThread;
 	volatile bool _abort;
 
+	pthread_t *sht_t;
+	
+
 	void getFocuserInfo();
 	void temperatureCompensation();
 	void setCurrent(bool standby);
