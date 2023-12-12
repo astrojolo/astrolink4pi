@@ -125,7 +125,7 @@ bool AstroLink4Pi::Connect()
 	// HOLD_PIN start as disabled
 
 	lgGroupClaimOutput(pigpioHandle, 0, 14, outs, lvls);
-	lgGroupClaimInput(pigpioHandle, 0, DECAY_PIN);
+	lgGpioClaimInput(pigpioHandle, 0, DECAY_PIN);
 
 	// Lock Relay Labels setting
 	RelayLabelsTP.s = IPS_BUSY;
