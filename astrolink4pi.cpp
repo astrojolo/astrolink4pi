@@ -226,17 +226,10 @@ bool AstroLink4Pi::initProperties()
 
 	FI::initProperties(FOCUS_TAB);
 	WI::initProperties(ENVIRONMENT_TAB, ENVIRONMENT_TAB);
-	RefreshSP.setPermission(IP_RO);
-	RefreshSP.setState(IPS_IDLE);
-	UpdatePeriodNP.setPermission(IP_RO);
-	UpdatePeriodNP.setState(IPS_IDLE);
-	double values[1] = {3.0};
-	const char* names[1] = {"PERIOD"};
-	UpdatePeriodNP.update(values, names, 1);
 	
-			// DEBUGF(INDI::Logger::DBG_SESSION, "val0 %f nam0 %s n %d\n", values[0], names[0], n);
-			// 2023-12-12T22:51:31: [INFO] val0 4500.000000 nam0 FOCUS_STEPDELAY_VALUE n 1 
-
+	RefreshSP.setPermission(IP_RO);	RefreshSP.setState(IPS_IDLE);
+	UpdatePeriodNP.setPermission(IP_RO); UpdatePeriodNP.setState(IPS_IDLE);
+	double values[1] = {3.0}; const char* names[1] = {"PERIOD"}; UpdatePeriodNP.update(values, names, 1);
 
 	addDebugControl();
 	// addSimulationControl();
