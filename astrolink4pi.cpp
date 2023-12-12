@@ -126,17 +126,6 @@ bool AstroLink4Pi::Connect()
 
 	lgGroupClaimOutput(pigpioHandle, 0, 14, outs, lvls);
 
-	// set_mode(pigpioHandle, PWM1_PIN, PI_OUTPUT);
-	// set_PWM_frequency(pigpioHandle, PWM1_PIN, 10);
-	// set_PWM_range(pigpioHandle, PWM1_PIN, 100);
-	// set_PWM_dutycycle(pigpioHandle, PWM1_PIN, 0);
-
-	// set_mode(pigpioHandle, PWM2_PIN, PI_OUTPUT);
-	// set_PWM_frequency(pigpioHandle, PWM2_PIN, 10);
-	// set_PWM_range(pigpioHandle, PWM2_PIN, 100);
-	// set_PWM_dutycycle(pigpioHandle, PWM2_PIN, 0);
-
-
 	// Lock Relay Labels setting
 	RelayLabelsTP.s = IPS_BUSY;
 	IDSetText(&RelayLabelsTP, nullptr);
