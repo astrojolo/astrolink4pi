@@ -1591,7 +1591,7 @@ bool AstroLink4Pi::readMLX()
 	return MLXavailable;
 }
 
-void AstroLink4Pi::myfunc(void *arg)
+void *AstroLink4Pi::myfunc(void *arg)
 {
     sleep(1);
 }
