@@ -125,6 +125,7 @@ bool AstroLink4Pi::Connect()
 	// HOLD_PIN start as disabled
 
 	lgGroupClaimOutput(pigpioHandle, 0, 14, outs, lvls);
+	lgGroupClaimInput(pigpioHandle, 0, DECAY_PIN);
 
 	// Lock Relay Labels setting
 	RelayLabelsTP.s = IPS_BUSY;
@@ -1314,9 +1315,9 @@ void AstroLink4Pi::setCurrent(bool standby)
 	if (standby)
 	{
 		lgGpioWrite(pigpioHandle, EN_PIN,  (holdPower > 0) ? 0 : 1);
-		lgGpioWrite(pigpioHandle, DECAY_PIN, 0);
+		// lgGpioWrite(pigpioHandle, DECAY_PIN, 0);
 		// set_PWM_dutycycle(pigpioHandle, MOTOR_PWM, getMotorPWM(holdPower * stepperCurrent / 5));	
-		lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(holdPower * stepperCurrent / 5), 0, 0);
+		lgTxPwm(pigpioHandle, MOTOR_PWM, 10000, getMotorPWM(holdPower * stepperCurrent / 5), 0, 0);
 		if (holdPower > 0)
 		{
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", holdPower * 20);
@@ -1331,9 +1332,9 @@ void AstroLink4Pi::setCurrent(bool standby)
 		// gpio_write(pigpioHandle, EN_PIN, 0);
 		// gpio_write(pigpioHandle, DECAY_PIN, 1);
 		lgGpioWrite(pigpioHandle, EN_PIN, 0);
-		lgGpioWrite(pigpioHandle, DECAY_PIN, 1);
+		// lgGpioWrite(pigpioHandle, DECAY_PIN, 1);
 		// set_PWM_dutycycle(pigpioHandle, MOTOR_PWM, getMotorPWM(stepperCurrent));	
-		lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(stepperCurrent), 0, 0);
+		lgTxPwm(pigpioHandle, MOTOR_PWM, 10000, getMotorPWM(stepperCurrent), 0, 0);
 
 	}
 }
