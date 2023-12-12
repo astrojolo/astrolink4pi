@@ -1591,14 +1591,8 @@ bool AstroLink4Pi::readMLX()
 	return MLXavailable;
 }
 
-void* AstroLink4Pi::myfunc(void *arg)
-{
-    sleep(1);
-}
-
 bool AstroLink4Pi::readSHT()
 {
-	sht_t = lgThreadStart(myfunc, (void *)"thread 1");
 	char i2cData[6];
 	char i2cWrite[2];
 
