@@ -225,7 +225,10 @@ bool AstroLink4Pi::initProperties()
 					  FOCUSER_HAS_BACKLASH);
 
 	FI::initProperties(FOCUS_TAB);
-	WI::initProperties(ENVIRONMENT_TAB, ENVIRONMENT_TAB);
+	//WI::initProperties(ENVIRONMENT_TAB, ENVIRONMENT_TAB);
+    // Parameters
+    IUFillNumberVector(&ParametersNP, nullptr, 0, getDeviceName(), "WEATHER_PARAMETERS", "Parameters", ENVIRONMENT_TAB, IP_RO, 60, IPS_OK);
+
 	addDebugControl();
 	// addSimulationControl();
 	addConfigurationControl();
