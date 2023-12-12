@@ -209,7 +209,6 @@ bool AstroLink4Pi::Disconnect()
 	}
 
 	lgGroupFree(pigpioHandle, DECAY_PIN);
-
 	lgGpiochipClose(pigpioHandle);
 
 	// Unlock Relay Labels setting
@@ -236,23 +235,9 @@ bool AstroLink4Pi::initProperties()
 
 	FI::initProperties(FOCUS_TAB);
 	WI::initProperties(ENVIRONMENT_TAB, ENVIRONMENT_TAB);
-	// addDebugControl();
+	addDebugControl();
 	// addSimulationControl();
 	addConfigurationControl();
-
-	// int handle = pigpio_start(NULL, NULL);
-	// int handle = lgGpiochipOpen(0);
-	// if (handle < 0)
-	// {
-	// 	DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating properties of AstroLink 4 Pi - GPIO. %d ", pigpioHandle);
-	// }
-	// else
-	// {
-	// 	set_mode(handle, MOTOR_PWM, PI_INPUT);
-	// 	revision = checkRevision(pigpioHandle);
-	// 	pigpio_stop(handle);
-	// 	lgGpiochipClose(handle);
-	// }
 
 	// Focuser Resolution
 	IUFillSwitch(&FocusResolutionS[0], "FOCUS_RESOLUTION_1", "Full Step", ISS_ON);
@@ -604,7 +589,7 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 
 			if (SysControlS[0].s == ISS_ON)
 			{
-				DEBUG(INDI::Logger::DBG_SESSION, "Astroberry device is set to REBOOT. Confirm or Cancel operation.");
+				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink device is set to REBOOT. Confirm or Cancel operation.");
 				SysControlSP.s = IPS_BUSY;
 				IDSetSwitch(&SysControlSP, NULL);
 
@@ -615,7 +600,7 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			}
 			if (SysControlS[1].s == ISS_ON)
 			{
-				DEBUG(INDI::Logger::DBG_SESSION, "Astroberry device is set to SHUT DOWN. Confirm or Cancel operation.");
+				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink device is set to SHUT DOWN. Confirm or Cancel operation.");
 				SysControlSP.s = IPS_BUSY;
 				IDSetSwitch(&SysControlSP, NULL);
 
@@ -710,18 +695,17 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 
 			if (Switch1S[0].s == ISS_ON)
 			{
-				// rv = gpiod_line_set_value(gpio_out1, 1);
-				// rv = gpio_write(pigpioHandle, OUT1_PIN, 1);
-				// if (rv != 0)
-				// {
-				// 	DEBUG(INDI::Logger::DBG_ERROR, "Error setting Astroberry Relay #1");
-				// 	Switch1SP.s = IPS_ALERT;
-				// 	Switch1S[0].s = ISS_OFF;
-				// 	IDSetSwitch(&Switch1SP, NULL);
-				// 	return false;
-				// }
+				rv = lgGpioWrite(pigpioHandle, OUT1_PIN, 1);
+				if (rv != 0)
+				{
+					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #1");
+					Switch1SP.s = IPS_ALERT;
+					Switch1S[0].s = ISS_OFF;
+					IDSetSwitch(&Switch1SP, NULL);
+					return false;
+				}
 				relayState[0] = 1;
-				DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Relays #1 set to ON");
+				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #1 set to ON");
 				Switch1SP.s = IPS_OK;
 				Switch1S[1].s = ISS_OFF;
 				IDSetSwitch(&Switch1SP, NULL);
@@ -729,18 +713,17 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			}
 			if (Switch1S[1].s == ISS_ON)
 			{
-				// rv = gpiod_line_set_value(gpio_out1, 0);
-				// rv = gpio_write(pigpioHandle, OUT1_PIN, 0);
-				// if (rv != 0)
-				// {
-				// 	DEBUG(INDI::Logger::DBG_ERROR, "Error setting Astroberry Relay #1");
-				// 	Switch1SP.s = IPS_ALERT;
-				// 	Switch1S[1].s = ISS_OFF;
-				// 	IDSetSwitch(&Switch1SP, NULL);
-				// 	return false;
-				// }
+				rv = lgGpioWrite(pigpioHandle, OUT1_PIN, 0);
+				if (rv != 0)
+				{
+					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #1");
+					Switch1SP.s = IPS_ALERT;
+					Switch1S[1].s = ISS_OFF;
+					IDSetSwitch(&Switch1SP, NULL);
+					return false;
+				}
 				relayState[0] = 0;
-				DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Relays #1 set to OFF");
+				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #1 set to OFF");
 				Switch1SP.s = IPS_IDLE;
 				Switch1S[0].s = ISS_OFF;
 				IDSetSwitch(&Switch1SP, NULL);
@@ -755,18 +738,17 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 
 			if (Switch2S[0].s == ISS_ON)
 			{
-				// rv = gpiod_line_set_value(gpio_out2, 1);
-				// rv = gpio_write(pigpioHandle, OUT2_PIN, 1);
-				// if (rv != 0)
-				// {
-				// 	DEBUG(INDI::Logger::DBG_ERROR, "Error setting Astroberry Relay #2");
-				// 	Switch2SP.s = IPS_ALERT;
-				// 	Switch2S[0].s = ISS_OFF;
-				// 	IDSetSwitch(&Switch2SP, NULL);
-				// 	return false;
-				// }
+				rv = lgGpioWrite(pigpioHandle, OUT2_PIN, 1);
+				if (rv != 0)
+				{
+					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #2");
+					Switch2SP.s = IPS_ALERT;
+					Switch2S[0].s = ISS_OFF;
+					IDSetSwitch(&Switch2SP, NULL);
+					return false;
+				}
 				relayState[1] = 1;
-				DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Relays #2 set to ON");
+				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #2 set to ON");
 				Switch2SP.s = IPS_OK;
 				Switch2S[1].s = ISS_OFF;
 				IDSetSwitch(&Switch2SP, NULL);
@@ -774,18 +756,17 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			}
 			if (Switch2S[1].s == ISS_ON)
 			{
-				// rv = gpiod_line_set_value(gpio_out2, 0);
-				// rv = gpio_write(pigpioHandle, OUT2_PIN, 0);
-				// if (rv != 0)
-				// {
-				// 	DEBUG(INDI::Logger::DBG_ERROR, "Error setting Astroberry Relay #2");
-				// 	Switch2SP.s = IPS_ALERT;
-				// 	Switch2S[1].s = ISS_OFF;
-				// 	IDSetSwitch(&Switch2SP, NULL);
-				// 	return false;
-				// }
+				rv = lgGpioWrite(pigpioHandle, OUT2_PIN, 0);
+				if (rv != 0)
+				{
+					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #2");
+					Switch2SP.s = IPS_ALERT;
+					Switch2S[1].s = ISS_OFF;
+					IDSetSwitch(&Switch2SP, NULL);
+					return false;
+				}
 				relayState[1] = 0;
-				DEBUG(INDI::Logger::DBG_SESSION, "Astroberry Relays #2 set to OFF");
+				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #2 set to OFF");
 				Switch2SP.s = IPS_IDLE;
 				Switch2S[0].s = ISS_OFF;
 				IDSetSwitch(&Switch2SP, NULL);
