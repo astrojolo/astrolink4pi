@@ -118,7 +118,7 @@ bool AstroLink4Pi::Connect()
 		return false;
 	}
 
-	lgGpioClaimInput(pigpioHandle, 0, DECAY_PIN);
+	lgGpioClaimOutput(pigpioHandle, 0, DECAY_PIN);
 	int outs[13] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN, MOTOR_PWM, HOLD_PIN};
 	int lvls[13] = {1, 0, 0, 0, 1, 0, 0, relayState[0], relayState[1], 0, 0, 0, 1};
 	// EN_PIN start as disabled
@@ -1316,6 +1316,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 	if (standby)
 	{
 		lgGpioWrite(pigpioHandle, EN_PIN,  (holdPower > 0) ? 0 : 1);
+		lgGpioWrite(pigpioHandle, DECAY_PIN, 0);
 		lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(holdPower * stepperCurrent / 5), 0, 0);
 		if (holdPower > 0)
 		{
@@ -1329,6 +1330,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 	else
 	{
 		lgGpioWrite(pigpioHandle, EN_PIN, 0);
+		lgGpioWrite(pigpioHandle, DECAY_PIN, 1);
 		lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(stepperCurrent), 0, 0);
 	}
 }
