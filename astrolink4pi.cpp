@@ -1116,7 +1116,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 										// usleep(10);
 										// gpio_write(pigpioHandle, STP_PIN, 0);
 										lgGpioWrite(pigpioHandle, STP_PIN, 1);
-										usleep(1);
+										usleep(10);
 										lgGpioWrite(pigpioHandle, STP_PIN, 0);
 
 										if (backlashTicksRemaining <= 0)
