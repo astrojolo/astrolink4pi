@@ -226,8 +226,8 @@ bool AstroLink4Pi::initProperties()
 
 	FI::initProperties(FOCUS_TAB);
 	WI::initProperties(ENVIRONMENT_TAB, ENVIRONMENT_TAB);
-	RefreshSP.p = IP_RO;
-	RefreshSP.s = IPS_IDLE;
+	RefreshSP.setPermission(IP_RO);
+	RefreshSP.setState(IPS_IDLE);
 
 	addDebugControl();
 	// addSimulationControl();
