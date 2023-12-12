@@ -121,27 +121,22 @@ bool AstroLink4Pi::Connect()
 		// set_PWM_dutycycle(pigpioHandle, MOTOR_PWM, 0);			
 	}
 
-	// set_mode(pigpioHandle, DECAY_PIN, PI_OUTPUT);
-	// gpio_write(pigpioHandle, DECAY_PIN, 0); //  decay for DRV
-	// set_mode(pigpioHandle, EN_PIN, PI_OUTPUT);
-	// gpio_write(pigpioHandle, EN_PIN, 1); // start as disabled
-	// set_mode(pigpioHandle, M0_PIN, PI_OUTPUT);
-	// gpio_write(pigpioHandle, M0_PIN, 0);
-	// set_mode(pigpioHandle, M1_PIN, PI_OUTPUT);
-	// gpio_write(pigpioHandle, M1_PIN, 0);
-	// set_mode(pigpioHandle, M2_PIN, PI_OUTPUT);
-	// gpio_write(pigpioHandle, M2_PIN, 0);
-	// set_mode(pigpioHandle, RST_PIN, PI_OUTPUT);
-	// gpio_write(pigpioHandle, RST_PIN, 1); // start as wake up
-	// set_mode(pigpioHandle, STP_PIN, PI_OUTPUT);
-	// gpio_write(pigpioHandle, STP_PIN, 0);
-	// set_mode(pigpioHandle, DIR_PIN, PI_OUTPUT);
-	// gpio_write(pigpioHandle, DIR_PIN, 0);
-	// set_mode(pigpioHandle, OUT1_PIN, PI_OUTPUT);
-	// gpio_write(pigpioHandle, OUT1_PIN, relayState[0]);
-	// set_mode(pigpioHandle, OUT2_PIN, PI_OUTPUT);
-	// gpio_write(pigpioHandle, OUT2_PIN, relayState[1]);
+	lgGpioClaimOutput(pigpioHandle, 0, DECAY_PIN, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, EN_PIN, 1);		// start as disabled
+	lgGpioClaimOutput(pigpioHandle, 0, M0_PIN, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, M1_PIN, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, M2_PIN, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, RST_PIN, 1);		// start as wake up
+	lgGpioClaimOutput(pigpioHandle, 0, STP_PIN, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, DIR_PIN, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, OUT1_PIN, relayState[0]);
+	lgGpioClaimOutput(pigpioHandle, 0, OUT2_PIN, relayState[1]);
 
+	lgGpioClaimOutput(pigpioHandle, 0, PWM1_PIN, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, PWM2_PIN, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, MOTOR_PWM, 0);
+
+	lgGpioClaimOutput(pigpioHandle, 0, HOLD_PIN, 1);	// start as disabled
 	// set_mode(pigpioHandle, PWM1_PIN, PI_OUTPUT);
 	// set_PWM_frequency(pigpioHandle, PWM1_PIN, 10);
 	// set_PWM_range(pigpioHandle, PWM1_PIN, 100);
@@ -152,8 +147,6 @@ bool AstroLink4Pi::Connect()
 	// set_PWM_range(pigpioHandle, PWM2_PIN, 100);
 	// set_PWM_dutycycle(pigpioHandle, PWM2_PIN, 0);
 
-	// set_mode(pigpioHandle, HOLD_PIN, PI_OUTPUT);
-	// gpio_write(pigpioHandle, HOLD_PIN, 1); // start as disabled
 
 	// Lock Relay Labels setting
 	RelayLabelsTP.s = IPS_BUSY;
@@ -1561,58 +1554,65 @@ int AstroLink4Pi::getMotorPWM(int current)
 
 bool AstroLink4Pi::readSQM()
 {
-	// char i2cData[7];
+	char i2cData[7];
 
 	// int i2cHandle = i2c_open(pigpioHandle, 1, 0x33, 0);
-	// if (i2cHandle >= 0)
-	// {
-	// 	int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 7);
-	// 	if (read > 6)
-	// 	{
-	// 		int sqm = i2cData[5] * 256 + i2cData[6];
-	// 		setParameterValue("SQM_READING", 0.01 * sqm);
-	// 		//DEBUGF(INDI::Logger::DBG_SESSION, "SQM read %i %i", i2cData[5], i2cData[6]);
-	// 		SQMavailable = true;
-	// 	}
-	// 	else
-	// 	{
-	// 		SQMavailable = false;
-	// 	}
-	// }
-	// else
-	// {
-	// 	SQMavailable = false;
-	// }
+	int i2cHandle = lgI2cOpen(1, 0x33, 0);
+	if (i2cHandle >= 0)
+	{
+		// int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 7);
+		int read = lgI2cReadDevice(i2cHandle, i2cData, 7);
+		lgI2cClose(i2cHandle);
+		if (read > 6)
+		{
+			int sqm = i2cData[5] * 256 + i2cData[6];
+			setParameterValue("SQM_READING", 0.01 * sqm);
+			//DEBUGF(INDI::Logger::DBG_SESSION, "SQM read %i %i", i2cData[5], i2cData[6]);
+			SQMavailable = true;
+		}
+		else
+		{
+			SQMavailable = false;
+		}
+	}
+	else
+	{
+		SQMavailable = false;
+	}
 	return SQMavailable;
 }
 
 bool AstroLink4Pi::readMLX()
 {
+	int i2cHandle = lgI2cOpen(1, 0x5A, 0);
 	// int i2cHandle = i2c_open(pigpioHandle, 1, 0x5A, 0);
-	// if (i2cHandle >= 0)
-	// {
-	// 	int Tamb = i2c_read_word_data(pigpioHandle, i2cHandle, 0x06);
-	// 	int Tobj = i2c_read_word_data(pigpioHandle, i2cHandle, 0x07);
-	// 	i2c_close(pigpioHandle, i2cHandle);
-	// 	if (Tamb >= 0 && Tobj >= 0)
-	// 	{
-	// 		setParameterValue("WEATHER_SKY_TEMP", 0.02 * Tobj - 273.15);
-	// 		setParameterValue("WEATHER_SKY_DIFF", 0.02 * (Tobj - Tamb));
-	// 		if (!DSavailable && !SHTavailable)
-	// 			focuserTemperature = 0.02 * Tamb - 273.15;
-	// 		MLXavailable = true;
-	// 	}
-	// 	else
-	// 	{
-	// 		DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from MLX sensor.");
-	// 		MLXavailable = false;
-	// 	}
-	// }
-	// else
-	// {
-	// 	DEBUG(INDI::Logger::DBG_DEBUG, "No MLX sensor found.");
-	// 	MLXavailable = false;
-	// }
+	if (i2cHandle >= 0)
+	{
+		int Tamb = lgI2cReadWordData(i2cHandle, 0x06); 
+		//i2c_read_word_data(pigpioHandle, i2cHandle, 0x06);
+		int Tobj = lgI2cReadWordData(i2cHandle, 0x07);
+		//i2c_read_word_data(pigpioHandle, i2cHandle, 0x07);
+		// i2c_close(pigpioHandle, i2cHandle);
+		lgI2cClose(i2cHandle);
+		if (Tamb >= 0 && Tobj >= 0)
+		{
+			setParameterValue("WEATHER_SKY_TEMP", 0.02 * Tobj - 273.15);
+			setParameterValue("WEATHER_SKY_DIFF", 0.02 * (Tobj - Tamb));
+			if (!DSavailable && !SHTavailable)
+				focuserTemperature = 0.02 * Tamb - 273.15;
+			MLXavailable = true;
+		}
+		else
+		{
+			DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from MLX sensor.");
+			MLXavailable = false;
+		}
+	}
+	else
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "No MLX sensor found.");
+		MLXavailable = false;
+	}
 
 	if (!MLXavailable)
 	{
@@ -1628,20 +1628,17 @@ bool AstroLink4Pi::readSHT()
 	char i2cData[6];
 	char i2cWrite[2];
 
-	// int i2cHandle = i2c_open(pigpioHandle, 1, 0x44, 0);
 	int i2cHandle = lgI2cOpen(1, 0x44, 0);
 	DEBUGF(INDI::Logger::DBG_SESSION, "SHT i2cHandle  %d", i2cHandle);
 	if (i2cHandle >= 0)
 	{
 		i2cWrite[0] = 0x24;
 		i2cWrite[1] = 0x00;
-	// 	int written = i2c_write_byte_data(pigpioHandle, i2cHandle, 0x2C, 0x06);
 		int written = lgI2cWriteDevice(i2cHandle, i2cWrite, 2);
 		DEBUGF(INDI::Logger::DBG_SESSION, "SHT written  %d", written);
 		if (written == 0)
 		{
-			usleep(50000);
-	// 		int read = i2c_read_i2c_block_data(pigpioHandle, i2cHandle, 0x00, i2cData, 6);
+			usleep(30000);
 			int read = lgI2cReadDevice(i2cHandle, i2cData, 6);
 
 			DEBUGF(INDI::Logger::DBG_SESSION, "SHT read %d", read);
@@ -1687,14 +1684,15 @@ bool AstroLink4Pi::readSHT()
 
 bool AstroLink4Pi::readPower() 
 {
-	// if(revision < 4) return false;
+	if(revision < 4) return false;
 
-	// char writeBuf[3];
-	// char readBuf[2];
+	char writeBuf[3];
+	char readBuf[2];
 
 	// int i2cHandle = i2c_open(pigpioHandle, 1, 0x48, 0);
-	// if (i2cHandle >= 0)
-	// {
+	int i2cHandle = lgI2cOpen(1, 0x48, 0);
+	if (i2cHandle >= 0)
+	{
 		/*
 		powerIndex 0-1 Vin WR, 2-3 Vreg WR, 4-5 Itot WR
 
@@ -1708,75 +1706,79 @@ bool AstroLink4Pi::readPower()
 		1:0		- 11 comparator disable
 		*/
 
-	// 	writeBuf[0] = 0x01;
-	// 	writeBuf[1] = 0b11000011;
-	// 	writeBuf[2] = 0b00100011;
-	// 	if((powerIndex % 2) == 0)	// Trigger conversion
-	// 	{
-	// 		switch(powerIndex) 
-	// 		{
-	// 			case 0: writeBuf[1] = 0b11000011; break;
-	// 			case 2: writeBuf[1] = 0b11010011; break;
-	// 			case 4: writeBuf[1] = 0b10110011; break;
-	// 		}
-	// 		int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 3);
-	// 		if(written != 0)
-	// 		{
-	// 			DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor");
-	// 			PowerReadingsNP.s = IPS_ALERT;
-	// 		}
-	// 	}
-	// 	else						// Trigger read
-	// 	{
-	// 		PowerReadingsNP.s = IPS_BUSY;
+		writeBuf[0] = 0x01;
+		writeBuf[1] = 0b11000011;
+		writeBuf[2] = 0b00100011;
+		if((powerIndex % 2) == 0)	// Trigger conversion
+		{
+			switch(powerIndex) 
+			{
+				case 0: writeBuf[1] = 0b11000011; break;
+				case 2: writeBuf[1] = 0b11010011; break;
+				case 4: writeBuf[1] = 0b10110011; break;
+			}
+			// int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 3);
+			int written = lgI2cWriteDevice(i2cHandle, writeBuf, 3);
+			if(written != 0)
+			{
+				DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor");
+				PowerReadingsNP.s = IPS_ALERT;
+			}
+		}
+		else						// Trigger read
+		{
+			PowerReadingsNP.s = IPS_BUSY;
 
-	// 		writeBuf[0] = 0x00;
-	// 		int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 1);
-	// 		if(written == 0)
-	// 		{
-	// 			int read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
-	// 			if(read > 0)
-	// 			{
-	// 				int16_t val = readBuf[0] * 255 + readBuf[1];
+			writeBuf[0] = 0x00;
+			// int written = i2c_write_device(pigpioHandle, i2cHandle, writeBuf, 1);
+			int written = lgI2cWriteDevice(i2cHandle, writeBuf, 1);
+			if(written == 0)
+			{
+				// int read = i2c_read_device(pigpioHandle, i2cHandle, readBuf, 2);
+				int read = lgI2cReadDevice(i2cHandle, readBuf, 2);
+				if(read > 0)
+				{
+					int16_t val = readBuf[0] * 255 + readBuf[1];
 
-	// 				switch(powerIndex)
-	// 				{
-	// 					case 1: PowerReadingsN[POW_VIN].value = (float) val / 32768.0 * 4.096 * 6.6; break;
-	// 					case 3: PowerReadingsN[POW_VREG].value = (float) val / 32768.0 * 4.096 * 6.6; break;
-	// 					case 5: PowerReadingsN[POW_ITOT].value = (float) val / 32768.0 * 4.096 * 1 * 10; break;
-	// 				}
-	// 				PowerReadingsN[POW_PTOT].value = PowerReadingsN[POW_VIN].value * PowerReadingsN[POW_ITOT].value;
-	// 				energyAs += PowerReadingsN[POW_ITOT].value * 0.4;
-	// 				energyWs += PowerReadingsN[POW_VIN].value * PowerReadingsN[POW_ITOT].value * 0.4;
-	// 				PowerReadingsN[POW_AH].value = energyAs / 3600;
-	// 				PowerReadingsN[POW_WH].value = energyWs / 3600;
+					switch(powerIndex)
+					{
+						case 1: PowerReadingsN[POW_VIN].value = (float) val / 32768.0 * 4.096 * 6.6; break;
+						case 3: PowerReadingsN[POW_VREG].value = (float) val / 32768.0 * 4.096 * 6.6; break;
+						case 5: PowerReadingsN[POW_ITOT].value = (float) val / 32768.0 * 4.096 * 1 * 10; break;
+					}
+					PowerReadingsN[POW_PTOT].value = PowerReadingsN[POW_VIN].value * PowerReadingsN[POW_ITOT].value;
+					energyAs += PowerReadingsN[POW_ITOT].value * 0.4;
+					energyWs += PowerReadingsN[POW_VIN].value * PowerReadingsN[POW_ITOT].value * 0.4;
+					PowerReadingsN[POW_AH].value = energyAs / 3600;
+					PowerReadingsN[POW_WH].value = energyWs / 3600;
 
-	// 				PowerReadingsNP.s = IPS_OK;
-	// 			}
-	// 			else
-	// 			{
-	// 				DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from power sensor");
-	// 				PowerReadingsNP.s = IPS_ALERT;
-	// 			}	
-	// 		}
-	// 		else
-	// 		{
-	// 			DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor");
-	// 			PowerReadingsNP.s = IPS_ALERT;
-	// 		}			
-	// 	}
-	// 	powerIndex++;
-	// 	if(powerIndex > 5) powerIndex = 0;
+					PowerReadingsNP.s = IPS_OK;
+				}
+				else
+				{
+					DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from power sensor");
+					PowerReadingsNP.s = IPS_ALERT;
+				}	
+			}
+			else
+			{
+				DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor");
+				PowerReadingsNP.s = IPS_ALERT;
+			}			
+		}
+		powerIndex++;
+		if(powerIndex > 5) powerIndex = 0;
 
-	// 	i2c_close(pigpioHandle, i2cHandle);
-    //     IDSetNumber(&PowerReadingsNP, nullptr);		
-	// 	return true;
-	// }
-	// else
-	// {
+		// i2c_close(pigpioHandle, i2cHandle);
+		lgI2cClose(i2cHandle);
+        IDSetNumber(&PowerReadingsNP, nullptr);		
+		return true;
+	}
+	else
+	{
 		DEBUG(INDI::Logger::DBG_DEBUG, "No power sensor found.");
 		return false;
-	// }
+	}
 }
 
 int AstroLink4Pi::checkRevision(int handle)
