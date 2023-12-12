@@ -114,7 +114,7 @@ bool AstroLink4Pi::Connect()
 
 	if(revision < 4)
 	{
-		DEBUGF(INDI::Logger::DBG_ERROR, "This INDI driver version works only with AstroLink 4 Pi revision 4 and higer.");		
+		DEBUGF(INDI::Logger::DBG_ERROR, "This INDI driver version works only with AstroLink 4 Pi revision 4 and higer. Revision detected %d", revision);		
 		return false;
 	}
 
