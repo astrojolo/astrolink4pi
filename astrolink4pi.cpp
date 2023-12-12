@@ -1113,14 +1113,19 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 										if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
 										{
 											// gpio_write(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 1 : 0);
+											lgGpioWrite(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 1 : 0);
 										}
 										else
 										{
 											// gpio_write(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 0 : 1);
+											lgGpioWrite(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 0 : 1);
 										}
 										// gpio_write(pigpioHandle, STP_PIN, 1);
 										// usleep(10);
 										// gpio_write(pigpioHandle, STP_PIN, 0);
+										lgGpioWrite(pigpioHandle, STP_PIN, 1);
+										usleep(1);
+										lgGpioWrite(pigpioHandle, STP_PIN, 0);
 
 										if (backlashTicksRemaining <= 0)
 										{ // Only Count the position change if it is not due to backlash
