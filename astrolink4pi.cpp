@@ -1591,7 +1591,7 @@ bool AstroLink4Pi::readMLX()
 	return MLXavailable;
 }
 
-void *myfunc(void *arg)
+void *AstroLink4Pi::myfunc(void *arg)
 {
     DEBUGF(INDI::Logger::DBG_SESSION, "Thread inside %s", (char *) arg);
 }
