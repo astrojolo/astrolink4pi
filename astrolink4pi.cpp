@@ -1158,50 +1158,50 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 void AstroLink4Pi::SetResolution(int res)
 {
 	// Release lines
-	// gpio_write(pigpioHandle, M0_PIN, 1);
-	// gpio_write(pigpioHandle, M1_PIN, 1);
-	// gpio_write(pigpioHandle, M2_PIN, 1);
+	lgGpioWrite(pigpioHandle, M0_PIN, 1);
+	lgGpioWrite(pigpioHandle, M1_PIN, 1);
+	lgGpioWrite(pigpioHandle, M2_PIN, 1);
 
-	// switch (res)
-	// {
-	// case 1: // 1:1
+	switch (res)
+	{
+	case 1: // 1:1
 
-	// 	gpio_write(pigpioHandle, M0_PIN, 0);
-	// 	gpio_write(pigpioHandle, M1_PIN, 0);
-	// 	gpio_write(pigpioHandle, M2_PIN, 0);
-	// 	break;
-	// case 2: // 1:2
-	// 	gpio_write(pigpioHandle, M0_PIN, 1);
-	// 	gpio_write(pigpioHandle, M1_PIN, 0);
-	// 	gpio_write(pigpioHandle, M2_PIN, 0);
-	// 	break;
-	// case 4: // 1:4
-	// 	gpio_write(pigpioHandle, M0_PIN, 0);
-	// 	gpio_write(pigpioHandle, M1_PIN, 1);
-	// 	gpio_write(pigpioHandle, M2_PIN, 0);
-	// 	break;
-	// case 8: // 1:8
-	// 	gpio_write(pigpioHandle, M0_PIN, 1);
-	// 	gpio_write(pigpioHandle, M1_PIN, 1);
-	// 	gpio_write(pigpioHandle, M2_PIN, 0);
-	// 	break;
-	// case 16: // 1:16
-	// 	gpio_write(pigpioHandle, M0_PIN, 0);
-	// 	gpio_write(pigpioHandle, M1_PIN, 0);
-	// 	gpio_write(pigpioHandle, M2_PIN, 1);
-	// 	break;
-	// case 32: // 1:32
-	// 	gpio_write(pigpioHandle, M0_PIN, 1);
-	// 	gpio_write(pigpioHandle, M1_PIN, 1);
-	// 	gpio_write(pigpioHandle, M2_PIN, 1);
-	// 	break;
-	// default: // 1:1
-	// 	gpio_write(pigpioHandle, M0_PIN, 0);
-	// 	gpio_write(pigpioHandle, M1_PIN, 0);
-	// 	gpio_write(pigpioHandle, M2_PIN, 0);
+		lgGpioWrite(pigpioHandle, M0_PIN, 0);
+		lgGpioWrite(pigpioHandle, M1_PIN, 0);
+		lgGpioWrite(pigpioHandle, M2_PIN, 0);
+		break;
+	case 2: // 1:2
+		lgGpioWrite(pigpioHandle, M0_PIN, 1);
+		lgGpioWrite(pigpioHandle, M1_PIN, 0);
+		lgGpioWrite(pigpioHandle, M2_PIN, 0);
+		break;
+	case 4: // 1:4
+		lgGpioWrite(pigpioHandle, M0_PIN, 0);
+		lgGpioWrite(pigpioHandle, M1_PIN, 1);
+		lgGpioWrite(pigpioHandle, M2_PIN, 0);
+		break;
+	case 8: // 1:8
+		lgGpioWrite(pigpioHandle, M0_PIN, 1);
+		lgGpioWrite(pigpioHandle, M1_PIN, 1);
+		lgGpioWrite(pigpioHandle, M2_PIN, 0);
+		break;
+	case 16: // 1:16
+		lgGpioWrite(pigpioHandle, M0_PIN, 0);
+		lgGpioWrite(pigpioHandle, M1_PIN, 0);
+		lgGpioWrite(pigpioHandle, M2_PIN, 1);
+		break;
+	case 32: // 1:32
+		lgGpioWrite(pigpioHandle, M0_PIN, 1);
+		lgGpioWrite(pigpioHandle, M1_PIN, 1);
+		lgGpioWrite(pigpioHandle, M2_PIN, 1);
+		break;
+	default: // 1:1
+		lgGpioWrite(pigpioHandle, M0_PIN, 0);
+		lgGpioWrite(pigpioHandle, M1_PIN, 0);
+		lgGpioWrite(pigpioHandle, M2_PIN, 0);
 
-	// 	break;
-	// }
+		break;
+	}
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "Resolution set to 1 / %d.", res);
 }
