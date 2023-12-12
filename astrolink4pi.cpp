@@ -228,6 +228,8 @@ bool AstroLink4Pi::initProperties()
 	//WI::initProperties(ENVIRONMENT_TAB, ENVIRONMENT_TAB);
     // Parameters
     IUFillNumberVector(&ParametersNP, nullptr, 0, getDeviceName(), "WEATHER_PARAMETERS", "Parameters", ENVIRONMENT_TAB, IP_RO, 60, IPS_OK);
+    // Weather Status
+    IUFillLightVector(&critialParametersLP, nullptr, 0, getDeviceName(), "WEATHER_STATUS", "Status", ENVIRONMENT_TAB, IPS_IDLE);
 
 	addDebugControl();
 	// addSimulationControl();
