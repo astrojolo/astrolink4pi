@@ -25,7 +25,7 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define TEMPERATURE_COMPENSATION_TIMEOUT (30 * 1000) // 30 sec
 #define SYSTEM_UPDATE_PERIOD 1000
 #define POLL_PERIOD 200
-#define FAN_PERIOD	(60 * 1000)
+#define FAN_PERIOD	(10 * 1000)
 
 #define RP4_GPIO	0
 #define RP5_GPIO	4
@@ -1435,7 +1435,6 @@ long int AstroLink4Pi::millis()
 {
 	static uint64_t nsec_zero = lguTimestamp();
 	int millis = (int) ((lguTimestamp() - nsec_zero) / 1000000);
-	DEBUGF(INDI::Logger::DBG_SESSION, "Zero %ld millis %d \n", (int) (nsec_zero / 1000000), millis);
 	return millis;
 	// struct timespec clock;
 	// if (clock_gettime(CLOCK_MONOTONIC, &clock) == 0)
