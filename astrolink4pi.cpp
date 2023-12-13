@@ -229,7 +229,7 @@ bool AstroLink4Pi::initProperties()
 					  FOCUSER_HAS_BACKLASH);
 
 	FI::initProperties(FOCUS_TAB);
-	WI::initProperties(ENVIRONMENT_TAB, ENVIRONMENT_TAB);
+	WI::initProperties(SYSTEM_TAB, ENVIRONMENT_TAB);
 
 	// RefreshSP.setPermission(IP_RO);	RefreshSP.setState(IPS_IDLE);
 	// UpdatePeriodNP.setPermission(IP_RO); UpdatePeriodNP.setState(IPS_IDLE);
