@@ -25,7 +25,7 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define TEMPERATURE_COMPENSATION_TIMEOUT (30 * 1000) // 30 sec
 #define SYSTEM_UPDATE_PERIOD 1000
 #define POLL_PERIOD 200
-#define FAN_PERIOD	(10 * 1000)
+#define FAN_PERIOD	(20 * 1000)
 
 #define RP4_GPIO	0
 #define RP5_GPIO	4
@@ -354,6 +354,9 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&PowerReadingsN[POW_WH], "POW_WH", "Energy consumed [Wh]", "%0.2f", 0, 100000, 1, 0);
 	IUFillNumberVector(&PowerReadingsNP, PowerReadingsN, 6, getDeviceName(), "POWER_READINGS", "Power readings", OUTPUTS_TAB, IP_RO, 60, IPS_IDLE);	
 
+	IUFillNumber(&FanPowerN[0], "FAN_PWR", "Fan speed [%]", "%0.0f", 0, 100, 1, 0);
+	IUFillNumberVector(&FanPowerNP, FanPowerN, 1, getDeviceName(), "FAN_POWER", "Fan power", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);	
+
 	// Environment Group
 	addParameter("WEATHER_TEMPERATURE", "Temperature [C]", -15, 35, 15);
 	addParameter("WEATHER_HUMIDITY", "Humidity %", 0, 100, 15);
@@ -416,6 +419,7 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&TemperatureCoefNP);
 		defineProperty(&TemperatureCompensateSP);
 		defineProperty(&PowerReadingsNP);
+		defineProperty(&FanPowerNP);
 	}
 	else
 	{
@@ -439,6 +443,7 @@ bool AstroLink4Pi::updateProperties()
 		deleteProperty(PWMcycleNP.name);
 		deleteProperty(StepperCurrentNP.name);
 		deleteProperty(PowerReadingsNP.name);
+		deleteProperty(FanPowerNP.name);
 		FI::updateProperties();
 		WI::updateProperties();
 	}
@@ -1449,14 +1454,22 @@ void AstroLink4Pi::fanUpdate()
 	if(fanPinAvailable == 0)
 	{
 		int temp = std::stoi(SysInfoT[1].text);
-		int cycle = 0;
-		if(temp > 65) cycle = 50;
-		if(temp > 70) cycle = 100;
+		int cycle = 0; double fanPwr = 33.0;
+		if(temp > 65) 
+		{
+			cycle = 50; fanPwr = 66.0;
+		}
+		if(temp > 70) 
+		{
+			cycle = 100; fanPwr = 100.0;
+		}
 		lgTxPwm(pigpioHandle, FAN_PIN, 100, cycle, 0, 0);
-		// DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan set to %d\n", cycle);
+		FanPowerN[0].value = fanPwr;
+		FanPowerNP.s = IPS_OK;
 	}
 	else
 	{
+		FanPowerNP.s = IPS_IPS_ALERT;
 		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan pin not available %d\n", fanPinAvailable);
 	}
 }
