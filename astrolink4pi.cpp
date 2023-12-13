@@ -231,9 +231,9 @@ bool AstroLink4Pi::initProperties()
 	FI::initProperties(FOCUS_TAB);
 	WI::initProperties(ENVIRONMENT_TAB, ENVIRONMENT_TAB);
 
-	RefreshSP.setPermission(IP_RO);	RefreshSP.setState(IPS_IDLE);
-	UpdatePeriodNP.setPermission(IP_RO); UpdatePeriodNP.setState(IPS_IDLE);
-	double values[1] = {3.0}; const char* names[1] = {"PERIOD"}; UpdatePeriodNP.update(values, names, 1);
+	// RefreshSP.setPermission(IP_RO);	RefreshSP.setState(IPS_IDLE);
+	// UpdatePeriodNP.setPermission(IP_RO); UpdatePeriodNP.setState(IPS_IDLE);
+	// double values[1] = {3.0}; const char* names[1] = {"PERIOD"}; UpdatePeriodNP.update(values, names, 1);
 
 	addDebugControl();
 	// addSimulationControl();
