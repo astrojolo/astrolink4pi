@@ -309,6 +309,9 @@ bool AstroLink4Pi::initProperties()
 	IUFillText(&SysInfoT[6], "PUBLIC_IP", "Public IP", NULL);
 	IUFillTextVector(&SysInfoTP, SysInfoT, 7, getDeviceName(), "SYSTEM_INFO", "System Info", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);
 
+	IUFillNumber(&FanPowerN[0], "FAN_PWR", "Speed [%]", "%0.0f", 0, 100, 1, 33);
+	IUFillNumberVector(&FanPowerNP, FanPowerN, 1, getDeviceName(), "FAN_POWER", "Internal fan", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);	
+
 	IUFillSwitch(&SysControlS[0], "SYSCTRL_REBOOT", "Reboot", ISS_OFF);
 	IUFillSwitch(&SysControlS[1], "SYSCTRL_SHUTDOWN", "Shutdown", ISS_OFF);
 	IUFillSwitchVector(&SysControlSP, SysControlS, 2, getDeviceName(), "SYSCTRL", "System Ctrl", SYSTEM_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
@@ -353,9 +356,6 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&PowerReadingsN[POW_AH], "POW_AH", "Energy consumed [Ah]", "%0.2f", 0, 10000, 1, 0);
 	IUFillNumber(&PowerReadingsN[POW_WH], "POW_WH", "Energy consumed [Wh]", "%0.2f", 0, 100000, 1, 0);
 	IUFillNumberVector(&PowerReadingsNP, PowerReadingsN, 6, getDeviceName(), "POWER_READINGS", "Power readings", OUTPUTS_TAB, IP_RO, 60, IPS_IDLE);	
-
-	IUFillNumber(&FanPowerN[0], "FAN_PWR", "Speed [%]", "%0.0f", 0, 100, 1, 33);
-	IUFillNumberVector(&FanPowerNP, FanPowerN, 1, getDeviceName(), "FAN_POWER", "Internal fan", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);	
 
 	// Environment Group
 	addParameter("WEATHER_TEMPERATURE", "Temperature [C]", -15, 35, 15);
