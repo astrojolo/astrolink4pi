@@ -103,14 +103,14 @@ const char *AstroLink4Pi::getDefaultName()
 
 bool AstroLink4Pi::Connect()
 {
-	pigpioHandle = lgGpiochipOpen(RP5_GPIO);
+	revision = checkRevision();
+
+	pigpioHandle = lgGpiochipOpen(gpioType);
 	if (pigpioHandle < 0)
 	{
 		DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi - GPIO. %d ", pigpioHandle);
 		return false;
 	}
-
-	revision = checkRevision(pigpioHandle);
 
 	if(revision < 4)
 	{
@@ -226,7 +226,7 @@ bool AstroLink4Pi::initProperties()
 
 	FI::initProperties(FOCUS_TAB);
 	WI::initProperties(ENVIRONMENT_TAB, ENVIRONMENT_TAB);
-	
+
 	RefreshSP.setPermission(IP_RO);	RefreshSP.setState(IPS_IDLE);
 	UpdatePeriodNP.setPermission(IP_RO); UpdatePeriodNP.setState(IPS_IDLE);
 	double values[1] = {3.0}; const char* names[1] = {"PERIOD"}; UpdatePeriodNP.update(values, names, 1);
@@ -1664,8 +1664,27 @@ bool AstroLink4Pi::readPower()
 	}
 }
 
-int AstroLink4Pi::checkRevision(int handle)
+int AstroLink4Pi::checkRevision()
 {
+	int handle = lgGpiochipOpen(RP5_GPIO);
+
+	if(handle < 0)
+	{
+		handle = lgGpiochipOpen(RP4_GPIO);
+		if(handle < 0)
+		{
+			DEBUG(INDI::Logger::DBG_SESSION, "Neither RPi4 nor RPi5 GPIO was detected.\n");
+		}
+		else
+		{
+			gpioType = RP4_GPIO;
+		}
+	}
+	else
+	{
+		gpioType = RP5_GPIO;
+	}
+
 	lgChipInfo_t cInfo;
 	int status = lgGpioGetChipInfo(handle, &cInfo);
 
@@ -1690,6 +1709,8 @@ int AstroLink4Pi::checkRevision(int handle)
 	lgTxPwm(handle, MOTOR_PWM, 5000, 0, 0, 0);
 	lgGpioFree(handle, MOTOR_PWM);
 	lgGpioFree(handle, CHK_IN_PIN);
+
+	lgGpiochipClose(handle);
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;

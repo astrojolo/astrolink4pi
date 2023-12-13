@@ -162,6 +162,7 @@ private:
 	int relayState[2];
 	int pwmCounter = 0;
 	int stepperCurrent = 0;
+	int gpioType = 0;
 
 	long int nextTemperatureRead = 0;
 	long int nextTemperatureCompensation = 0;
@@ -179,7 +180,7 @@ private:
 	void setCurrent(bool standby);
 	void systemUpdate();
 	int getMotorPWM(int current);
-	int checkRevision(int handle);
+	int checkRevision();
 	long int millis();
 
     static constexpr const char *ENVIRONMENT_TAB {"Environment"};
