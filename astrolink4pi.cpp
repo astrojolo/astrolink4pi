@@ -1434,8 +1434,8 @@ void AstroLink4Pi::getFocuserInfo()
 long int AstroLink4Pi::millis()
 {
 	static uint64_t nsec_zero = lguTimestamp();
-	int millis = (int) (lguTimestamp() - nsec_zero) / 1000000;
-	DEBUGF(INDI::Logger::DBG_SESSION, "Zero %d millis %d \n", (int) (nsec_zero / 1000000), millis);
+	int millis = (int) ((lguTimestamp() - nsec_zero) / 1000000);
+	DEBUGF(INDI::Logger::DBG_SESSION, "Zero %ld millis %d \n", (int) (nsec_zero / 1000000), millis);
 	return millis;
 	// struct timespec clock;
 	// if (clock_gettime(CLOCK_MONOTONIC, &clock) == 0)
