@@ -355,7 +355,7 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumberVector(&PowerReadingsNP, PowerReadingsN, 6, getDeviceName(), "POWER_READINGS", "Power readings", OUTPUTS_TAB, IP_RO, 60, IPS_IDLE);	
 
 	IUFillNumber(&FanPowerN[0], "FAN_PWR", "Fan speed [%]", "%0.0f", 0, 100, 1, 33);
-	IUFillNumberVector(&FanPowerNP, FanPowerN, 1, getDeviceName(), "FAN_POWER", "Fan power", OUTPUTS_TAB, IP_RO, 60, IPS_IDLE);	
+	IUFillNumberVector(&FanPowerNP, FanPowerN, 1, getDeviceName(), "FAN_POWER", "Fan power", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);	
 
 	// Environment Group
 	addParameter("WEATHER_TEMPERATURE", "Temperature [C]", -15, 35, 15);
@@ -1474,6 +1474,7 @@ void AstroLink4Pi::fanUpdate()
 		FanPowerNP.s = IPS_ALERT;
 		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan pin not available %d\n", fanPinAvailable);
 	}
+	IDSetNumber(&FanPowerNP, nullptr);	
 }
 
 bool AstroLink4Pi::readSQM()
