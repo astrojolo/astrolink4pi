@@ -1469,7 +1469,7 @@ void AstroLink4Pi::fanUpdate()
 	}
 	else
 	{
-		FanPowerNP.s = IPS_IPS_ALERT;
+		FanPowerNP.s = IPS_ALERT;
 		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan pin not available %d\n", fanPinAvailable);
 	}
 }
