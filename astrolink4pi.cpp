@@ -1465,7 +1465,7 @@ void AstroLink4Pi::fanUpdate()
 			cycle = 100; fanPwr = 100.0;
 		}
 		lgTxPwm(pigpioHandle, FAN_PIN, 100, cycle, 0, 0);
-		FanPowerN[0].value = fanPwr;
+		FanPowerN[0].value = 66.0;
 		FanPowerNP.s = IPS_OK;
 		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan pwr %d\n", cycle);
 	}
