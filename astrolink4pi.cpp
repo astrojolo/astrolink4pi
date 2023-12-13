@@ -1013,7 +1013,7 @@ void AstroLink4Pi::TimerHit()
 	if (nextFanUpdate < timeMillis)
 	{
 		fanUpdate();
-		nextFanUpdate = timeMillis _ FAN_PERIOD;
+		nextFanUpdate = timeMillis + FAN_PERIOD;
 	}
 	readPower();
 
@@ -1460,7 +1460,7 @@ void AstroLink4Pi::fanUpdate()
 	int fanPinAvailable = lgGpioClaimOutput(pigpioHandle, 0, FAN_PIN, 0);
 	if(fanPinAvailable == 0)
 	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan set to %s\n", SysInfoT[1].value);
+		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan set to %s\n", SysInfoT[1].text);
 	}
 	else
 	{
