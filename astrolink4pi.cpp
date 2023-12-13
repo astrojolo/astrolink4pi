@@ -240,21 +240,21 @@ bool AstroLink4Pi::initProperties()
 	addConfigurationControl();
 
 	// Focuser Resolution
-	IUFillSwitch(&FocusResolutionS[0], "FOCUS_RESOLUTION_1", "Full Step", ISS_ON);
-	IUFillSwitch(&FocusResolutionS[1], "FOCUS_RESOLUTION_2", "Half Step", ISS_OFF);
-	IUFillSwitch(&FocusResolutionS[2], "FOCUS_RESOLUTION_4", "1/4 STEP", ISS_OFF);
-	IUFillSwitch(&FocusResolutionS[3], "FOCUS_RESOLUTION_8", "1/8 STEP", ISS_OFF);
-	IUFillSwitch(&FocusResolutionS[4], "FOCUS_RESOLUTION_16", "1/16 STEP", ISS_OFF);
-	IUFillSwitch(&FocusResolutionS[5], "FOCUS_RESOLUTION_32", "1/32 STEP", ISS_OFF);
+	IUFillSwitch(&FocusResolutionS[RES_1], "RES_1", "Full Step", ISS_ON);
+	IUFillSwitch(&FocusResolutionS[RES_2], "RES_2", "Half Step", ISS_OFF);
+	IUFillSwitch(&FocusResolutionS[RES_4], "RES_4", "1/4 STEP", ISS_OFF);
+	IUFillSwitch(&FocusResolutionS[RES_8], "RES_8", "1/8 STEP", ISS_OFF);
+	IUFillSwitch(&FocusResolutionS[RES_16], "RES_16", "1/16 STEP", ISS_OFF);
+	IUFillSwitch(&FocusResolutionS[RES_32], "RES_32", "1/32 STEP", ISS_OFF);
 	IUFillSwitchVector(&FocusResolutionSP, FocusResolutionS, 6, getDeviceName(), "FOCUS_RESOLUTION", "Resolution", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	// Focuser motor hold
-	IUFillSwitch(&FocusHoldS[0], "FOCUS_HOLD_0", "0%", ISS_ON);
-	IUFillSwitch(&FocusHoldS[1], "FOCUS_HOLD_1", "20%", ISS_OFF);
-	IUFillSwitch(&FocusHoldS[2], "FOCUS_HOLD_2", "40%", ISS_OFF);
-	IUFillSwitch(&FocusHoldS[3], "FOCUS_HOLD_3", "60%", ISS_OFF);
-	IUFillSwitch(&FocusHoldS[4], "FOCUS_HOLD_4", "80%", ISS_OFF);
-	IUFillSwitch(&FocusHoldS[5], "FOCUS_HOLD_5", "100%", ISS_OFF);
+	IUFillSwitch(&FocusHoldS[HOLD_0], "HOLD_0", "0%", ISS_ON);
+	IUFillSwitch(&FocusHoldS[HOLD_20], "HOLD_20", "20%", ISS_OFF);
+	IUFillSwitch(&FocusHoldS[HOLD_40], "HOLD_40", "40%", ISS_OFF);
+	IUFillSwitch(&FocusHoldS[HOLD_60], "HOLD_60", "60%", ISS_OFF);
+	IUFillSwitch(&FocusHoldS[HOLD_80], "HOLD_80", "80%", ISS_OFF);
+	IUFillSwitch(&FocusHoldS[HOLD_100], "HOLD_100", "100%", ISS_OFF);
 	IUFillSwitchVector(&FocusHoldSP, FocusHoldS, 6, getDeviceName(), "FOCUS_HOLD", "Hold power", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	// Step delay setting
@@ -278,9 +278,9 @@ bool AstroLink4Pi::initProperties()
 	IUFillSwitchVector(&TemperatureCompensateSP, TemperatureCompensateS, 2, getDeviceName(), "Temperature Compensate", "", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	// Focuser Info
-	IUFillNumber(&FocuserInfoN[0], "CFZ_STEP_ACT", "Step Size (μm)", "%0.2f", 0, 1000, 1, 0);
-	IUFillNumber(&FocuserInfoN[1], "CFZ", "Critical Focus Zone (μm)", "%0.2f", 0, 1000, 1, 0);
-	IUFillNumber(&FocuserInfoN[2], "STEPS_PER_CFZ", "Steps / Critical Focus Zone", "%0.0f", 0, 1000, 1, 0);
+	IUFillNumber(&FocuserInfoN[FOC_STEP_SIZE], "FOC_STEP_SIZE", "Step Size (μm)", "%0.2f", 0, 1000, 1, 0);
+	IUFillNumber(&FocuserInfoN[FOC_CFZ], "FOC_CFZ", "Critical Focus Zone (μm)", "%0.2f", 0, 1000, 1, 0);
+	IUFillNumber(&FocuserInfoN[FOC_STEPS_CFZ], "FOC_STEPS_CFZ", "Steps / Critical Focus Zone", "%0.0f", 0, 1000, 1, 0);
 	IUFillNumberVector(&FocuserInfoNP, FocuserInfoN, 3, getDeviceName(), "FOCUSER_PARAMETERS", "Focuser Info", MAIN_CONTROL_TAB, IP_RO, 0, IPS_IDLE);
 
 	// Maximum focuser travel
@@ -317,10 +317,10 @@ bool AstroLink4Pi::initProperties()
 	IUFillSwitch(&SysOpConfirmS[1], "SYSOPCONFIRM_CANCEL", "No", ISS_OFF);
 	IUFillSwitchVector(&SysOpConfirmSP, SysOpConfirmS, 2, getDeviceName(), "SYSOPCONFIRM", "Continue?", SYSTEM_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
-	IUFillText(&RelayLabelsT[0], "RELAYLABEL01", "OUT 1", "OUT 1");
-	IUFillText(&RelayLabelsT[1], "RELAYLABEL02", "OUT 2", "OUT 2");
-	IUFillText(&RelayLabelsT[2], "RELAYLABEL03", "PWM 1", "PWM 1");
-	IUFillText(&RelayLabelsT[3], "RELAYLABEL04", "PWM 2", "PWM 2");
+	IUFillText(&RelayLabelsT[LAB_OUT1], "LAB_OUT1", "OUT 1", "OUT 1");
+	IUFillText(&RelayLabelsT[LAB_OUT2], "LAB_OUT2", "OUT 2", "OUT 2");
+	IUFillText(&RelayLabelsT[LAB_PWM1], "LAB_PWM1", "PWM 1", "PWM 1");
+	IUFillText(&RelayLabelsT[LAB_PWM2], "LAB_PWM2", "PWM 2", "PWM 2");
 	IUFillTextVector(&RelayLabelsTP, RelayLabelsT, 4, getDeviceName(), "RELAYLABELS", "Relay Labels", OPTIONS_TAB, IP_RW, 60, IPS_IDLE);
 
 	// Load options before connecting
@@ -331,12 +331,12 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&StepperCurrentN[0], "STEPPER_CURRENT", "mA", "%0.0f", 200, 2000, 50, 400);
 	IUFillNumberVector(&StepperCurrentNP, StepperCurrentN, 1, getDeviceName(), "STEPPER_CURRENT", "Stepper current", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
-	IUFillSwitch(&Switch1S[0], "SW1ON", "ON", ISS_OFF);
-	IUFillSwitch(&Switch1S[1], "SW1OFF", "OFF", ISS_ON);
+	IUFillSwitch(&Switch1S[S1_ON], "S1_ON", "ON", ISS_OFF);
+	IUFillSwitch(&Switch1S[S1_OFF], "S1_OFF", "OFF", ISS_ON);
 	IUFillSwitchVector(&Switch1SP, Switch1S, 2, getDeviceName(), "SWITCH_1", RelayLabelsT[0].text, OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
-	IUFillSwitch(&Switch2S[0], "SW2ON", "ON", ISS_OFF);
-	IUFillSwitch(&Switch2S[1], "SW2OFF", "OFF", ISS_ON);
+	IUFillSwitch(&Switch2S[S2_ON], "S2_ON", "ON", ISS_OFF);
+	IUFillSwitch(&Switch2S[S2_OFF], "S2_OFF", "OFF", ISS_ON);
 	IUFillSwitchVector(&Switch2SP, Switch2S, 2, getDeviceName(), "SWITCH_2", RelayLabelsT[1].text, OUTPUTS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	IUFillNumber(&PWM1N[0], "PWMout1", "%", "%0.0f", 0, 100, 10, 0);
@@ -505,7 +505,6 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			PWM1NP.s = IPS_OK;
 			IDSetNumber(&PWM1NP, nullptr);
 			lgTxPwm(pigpioHandle, PWM1_PIN, PWMcycleN[0].value, PWM1N[0].value, 0, 0);
-			// set_PWM_dutycycle(pigpioHandle, PWM1_PIN, PWM1N[0].value);
 			pwmState[0] = PWM1N[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 1 set to %0.0f", PWM1N[0].value);
 			return true;
@@ -517,7 +516,6 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			PWM2NP.s = IPS_OK;
 			IDSetNumber(&PWM2NP, nullptr);
 			lgTxPwm(pigpioHandle, PWM2_PIN, PWMcycleN[0].value, PWM1N[0].value, 0, 0);
-			// set_PWM_dutycycle(pigpioHandle, PWM2_PIN, PWM2N[0].value);
 			pwmState[1] = PWM2N[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 2 set to %0.0f", PWM2N[0].value);
 			return true;
@@ -531,8 +529,6 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IDSetNumber(&PWMcycleNP, nullptr);
 			lgTxPwm(pigpioHandle, PWM1_PIN, PWMcycleN[0].value, PWM1N[0].value, 0, 0);
 			lgTxPwm(pigpioHandle, PWM2_PIN, PWMcycleN[0].value, PWM1N[0].value, 0, 0);
-			// set_PWM_frequency(pigpioHandle, PWM1_PIN, PWMcycleN[0].value);
-			// set_PWM_frequency(pigpioHandle, PWM2_PIN, PWMcycleN[0].value);
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM frequency set to %0.0f Hz", PWMcycleN[0].value);
 			return true;
 		}
@@ -697,39 +693,39 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 		{
 			IUUpdateSwitch(&Switch1SP, states, names, n);
 
-			if (Switch1S[0].s == ISS_ON)
+			if (Switch1S[S1_ON].s == ISS_ON)
 			{
 				rv = lgGpioWrite(pigpioHandle, OUT1_PIN, 1);
 				if (rv != 0)
 				{
 					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #1");
 					Switch1SP.s = IPS_ALERT;
-					Switch1S[0].s = ISS_OFF;
+					Switch1S[S1_ON].s = ISS_OFF;
 					IDSetSwitch(&Switch1SP, NULL);
 					return false;
 				}
 				relayState[0] = 1;
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #1 set to ON");
 				Switch1SP.s = IPS_OK;
-				Switch1S[1].s = ISS_OFF;
+				Switch1S[S1_OFF].s = ISS_OFF;
 				IDSetSwitch(&Switch1SP, NULL);
 				return true;
 			}
-			if (Switch1S[1].s == ISS_ON)
+			if (Switch1S[S1_OFF].s == ISS_ON)
 			{
 				rv = lgGpioWrite(pigpioHandle, OUT1_PIN, 0);
 				if (rv != 0)
 				{
 					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #1");
 					Switch1SP.s = IPS_ALERT;
-					Switch1S[1].s = ISS_OFF;
+					Switch1S[S1_OFF].s = ISS_OFF;
 					IDSetSwitch(&Switch1SP, NULL);
 					return false;
 				}
 				relayState[0] = 0;
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #1 set to OFF");
 				Switch1SP.s = IPS_IDLE;
-				Switch1S[0].s = ISS_OFF;
+				Switch1S[S1_ON].s = ISS_OFF;
 				IDSetSwitch(&Switch1SP, NULL);
 				return true;
 			}
@@ -740,39 +736,39 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 		{
 			IUUpdateSwitch(&Switch2SP, states, names, n);
 
-			if (Switch2S[0].s == ISS_ON)
+			if (Switch2S[S2_ON].s == ISS_ON)
 			{
 				rv = lgGpioWrite(pigpioHandle, OUT2_PIN, 1);
 				if (rv != 0)
 				{
 					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #2");
 					Switch2SP.s = IPS_ALERT;
-					Switch2S[0].s = ISS_OFF;
+					Switch2S[S2_ON].s = ISS_OFF;
 					IDSetSwitch(&Switch2SP, NULL);
 					return false;
 				}
 				relayState[1] = 1;
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #2 set to ON");
 				Switch2SP.s = IPS_OK;
-				Switch2S[1].s = ISS_OFF;
+				Switch2S[S2_OFF].s = ISS_OFF;
 				IDSetSwitch(&Switch2SP, NULL);
 				return true;
 			}
-			if (Switch2S[1].s == ISS_ON)
+			if (Switch2S[S2_OFF].s == ISS_ON)
 			{
 				rv = lgGpioWrite(pigpioHandle, OUT2_PIN, 0);
 				if (rv != 0)
 				{
 					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #2");
 					Switch2SP.s = IPS_ALERT;
-					Switch2S[1].s = ISS_OFF;
+					Switch2S[S2_OFF].s = ISS_OFF;
 					IDSetSwitch(&Switch2SP, NULL);
 					return false;
 				}
 				relayState[1] = 0;
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #2 set to OFF");
 				Switch2SP.s = IPS_IDLE;
-				Switch2S[0].s = ISS_OFF;
+				Switch2S[S2_ON].s = ISS_OFF;
 				IDSetSwitch(&Switch2SP, NULL);
 				return true;
 			}
@@ -783,22 +779,22 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 		{
 			IUUpdateSwitch(&FocusHoldSP, states, names, n);
 
-			if (FocusHoldS[0].s == ISS_ON)
+			if (FocusHoldS[HOLD_0].s == ISS_ON)
 				holdPower = 0;
 
-			if (FocusHoldS[1].s == ISS_ON)
+			if (FocusHoldS[HOLD_20].s == ISS_ON)
 				holdPower = 1;
 
-			if (FocusHoldS[2].s == ISS_ON)
+			if (FocusHoldS[HOLD_40].s == ISS_ON)
 				holdPower = 2;
 
-			if (FocusHoldS[3].s == ISS_ON)
+			if (FocusHoldS[HOLD_60].s == ISS_ON)
 				holdPower = 3;
 
-			if (FocusHoldS[4].s == ISS_ON)
+			if (FocusHoldS[HOLD_80].s == ISS_ON)
 				holdPower = 4;
 
-			if (FocusHoldS[5].s == ISS_ON)
+			if (FocusHoldS[HOLD_100].s == ISS_ON)
 				holdPower = 5;
 
 			FocusHoldSP.s = IPS_OK;
@@ -815,27 +811,27 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			IUUpdateSwitch(&FocusResolutionSP, states, names, n);
 
 			// Resolution 1/1
-			if (FocusResolutionS[0].s == ISS_ON)
+			if (FocusResolutionS[RES_1].s == ISS_ON)
 				resolution = 1;
 
 			// Resolution 1/2
-			if (FocusResolutionS[1].s == ISS_ON)
+			if (FocusResolutionS[RES_2].s == ISS_ON)
 				resolution = 2;
 
 			// Resolution 1/4
-			if (FocusResolutionS[2].s == ISS_ON)
+			if (FocusResolutionS[RES_4].s == ISS_ON)
 				resolution = 4;
 
 			// Resolution 1/8
-			if (FocusResolutionS[3].s == ISS_ON)
+			if (FocusResolutionS[RES_8].s == ISS_ON)
 				resolution = 8;
 
 			// Resolution 1/16
-			if (FocusResolutionS[4].s == ISS_ON)
+			if (FocusResolutionS[RES_16].s == ISS_ON)
 				resolution = 16;
 
 			// Resolution 1/32
-			if (FocusResolutionS[5].s == ISS_ON)
+			if (FocusResolutionS[RES_32].s == ISS_ON)
 				resolution = 32;
 
 			// Adjust position to a step in lower resolution
@@ -1414,9 +1410,9 @@ void AstroLink4Pi::getFocuserInfo()
 		FocuserInfoNP.s = IPS_ALERT;
 	}
 
-	FocuserInfoN[0].value = step_size;
-	FocuserInfoN[1].value = cfz;
-	FocuserInfoN[2].value = steps_per_cfz;
+	FocuserInfoN[FOC_STEP_SIZE].value = step_size;
+	FocuserInfoN[FOC_CFZ].value = cfz;
+	FocuserInfoN[FOC_STEPS_CFZ].value = steps_per_cfz;
 	IDSetNumber(&FocuserInfoNP, nullptr);
 
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Focuser Info: %0.2f %0.2f %0.2f.", FocuserInfoN[0].value, FocuserInfoN[1].value, FocuserInfoN[2].value);
