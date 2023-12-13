@@ -1461,7 +1461,12 @@ void AstroLink4Pi::fanUpdate()
 	int fanPinAvailable = lgGpioClaimOutput(pigpioHandle, 0, FAN_PIN, 0);
 	if(fanPinAvailable == 0)
 	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan set to %s\n", SysInfoT[1].text);
+		int temp = stoi(SysInfoT[1].text);
+		int cycle = 0;
+		if(temp > 65) cycle = 50;
+		if(temp > 70) cycle = 100;
+		lgTxPwm(pigpioHandle, FAN_PIN, 100, cycle, 0, 0);
+		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan set to %d\n", cycle);
 	}
 	else
 	{
