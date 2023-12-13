@@ -354,7 +354,7 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&PowerReadingsN[POW_WH], "POW_WH", "Energy consumed [Wh]", "%0.2f", 0, 100000, 1, 0);
 	IUFillNumberVector(&PowerReadingsNP, PowerReadingsN, 6, getDeviceName(), "POWER_READINGS", "Power readings", OUTPUTS_TAB, IP_RO, 60, IPS_IDLE);	
 
-	IUFillNumber(&FanPowerN[0], "FAN_PWR", "Fan speed [%]", "%0.0f", 0, 100, 1, 0);
+	IUFillNumber(&FanPowerN[0], "FAN_PWR", "Fan speed [%]", "%0.1f", 0, 100, 0, 0);
 	IUFillNumberVector(&FanPowerNP, FanPowerN, 1, getDeviceName(), "FAN_POWER", "Fan power", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);	
 
 	// Environment Group
@@ -1450,6 +1450,7 @@ int AstroLink4Pi::getMotorPWM(int current)
 
 void AstroLink4Pi::fanUpdate()
 {
+	FanPowerNP.s = IPS_BUSY;
 	int fanPinAvailable = lgGpioClaimOutput(pigpioHandle, 0, FAN_PIN, 0);
 	if(fanPinAvailable == 0)
 	{
