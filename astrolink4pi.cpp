@@ -176,7 +176,7 @@ bool AstroLink4Pi::Connect()
 	nextTemperatureRead = currentTime + TEMPERATURE_UPDATE_TIMEOUT;
 	nextTemperatureCompensation = currentTime + TEMPERATURE_COMPENSATION_TIMEOUT;
 	nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;
-	nextFanUpdate = currentTime + FAN_PERIOD;
+	nextFanUpdate = currentTime + 3000;
 
 	SetTimer(POLL_PERIOD);
 	setCurrent(true);
@@ -1467,7 +1467,6 @@ void AstroLink4Pi::fanUpdate()
 		lgTxPwm(pigpioHandle, FAN_PIN, 100, cycle, 0, 0);
 		FanPowerN[0].value = 66.0;
 		FanPowerNP.s = IPS_OK;
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan pwr %d\n", cycle);
 	}
 	else
 	{
