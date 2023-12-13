@@ -167,6 +167,7 @@ private:
 	long int nextTemperatureRead = 0;
 	long int nextTemperatureCompensation = 0;
 	long int nextSystemRead = 0;
+	long int nextFanUpdate = 0;
 
 	int powerIndex = 0;
 	float energyAs = 0.0;
@@ -179,6 +180,7 @@ private:
 	void temperatureCompensation();
 	void setCurrent(bool standby);
 	void systemUpdate();
+	void fanUpdate();
 	int getMotorPWM(int current);
 	int checkRevision();
 	long int millis();

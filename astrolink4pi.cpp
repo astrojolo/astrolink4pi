@@ -21,10 +21,11 @@
 std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 
 #define MAX_RESOLUTION 32							 // the highest resolution supported is 1/32 step
-#define TEMPERATURE_UPDATE_TIMEOUT (5 * 1000)		 // 3 sec
-#define TEMPERATURE_COMPENSATION_TIMEOUT (30 * 1000) // 60 sec
+#define TEMPERATURE_UPDATE_TIMEOUT (5 * 1000)		 // 5 sec
+#define TEMPERATURE_COMPENSATION_TIMEOUT (30 * 1000) // 30 sec
 #define SYSTEM_UPDATE_PERIOD 1000
 #define POLL_PERIOD 200
+#define FAN_PERIOD	(60 * 1000)
 
 #define RP4_GPIO	0
 #define RP5_GPIO	4
@@ -43,6 +44,7 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define HOLD_PIN 	10
 #define MOTOR_PWM 	20
 #define CHK_IN_PIN 	16
+#define FAN_PIN		13
 
 void ISPoll(void *p);
 
@@ -174,6 +176,7 @@ bool AstroLink4Pi::Connect()
 	nextTemperatureRead = currentTime + TEMPERATURE_UPDATE_TIMEOUT;
 	nextTemperatureCompensation = currentTime + TEMPERATURE_COMPENSATION_TIMEOUT;
 	nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;
+	nextFanUpdate = currentTime + FAN_PERIOD;
 
 	SetTimer(POLL_PERIOD);
 	setCurrent(true);
@@ -199,6 +202,7 @@ bool AstroLink4Pi::Disconnect()
 	}
 
 	lgGpioFree(pigpioHandle, DECAY_PIN);
+	lgGpioFree(pigpioHandle, FAN_PIN);
 	lgGroupFree(pigpioHandle, EN_PIN);
 	lgGpiochipClose(pigpioHandle);
 
@@ -1006,6 +1010,11 @@ void AstroLink4Pi::TimerHit()
 		systemUpdate();
 		nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
 	}
+	if (nextFanUpdate < timeMillis)
+	{
+		fanUpdate();
+		nextFanUpdate = timeMillis _ FAN_PERIOD;
+	}
 	readPower();
 
 	SetTimer(POLL_PERIOD);
@@ -1444,6 +1453,19 @@ int AstroLink4Pi::getMotorPWM(int current)
 {
 	// 100 = 1.03V = 2.06A, 1 = 20mA
 	return current / 20;
+}
+
+void AstroLink4Pi::fanUpdate()
+{
+	int fanPinAvailable = lgGpioClaimOutput(pigpioHandle, 0, FAN_PIN, 0);
+	if(fanPinAvailable == 0)
+	{
+		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan set to %s\n", SysInfoT[1].value);
+	}
+	else
+	{
+		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan pin not available %d\n", fanPinAvailable);
+	}
 }
 
 bool AstroLink4Pi::readSQM()
