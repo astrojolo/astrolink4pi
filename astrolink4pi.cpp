@@ -1128,15 +1128,6 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 											backlashTicksRemaining -= 1;
 										}
 										usleep(FocusStepDelayN[0].value);
-										// auto start = std::chrono::high_resolution_clock::now();
-										// for (;;)
-										// {
-										// 	auto later = std::chrono::high_resolution_clock::now();
-										// 	auto micros = std::chrono::duration_cast<std::chrono::microseconds>(later - start);
-										// 	if (micros.count() >= (int)FocusStepDelayN[0].value)
-										// 		break;
-										// }
-										// std::this_thread::sleep_for(std::chrono::microseconds((int) FocusStepDelayN[0].value));
 									}
 
 									// update abspos value and status
@@ -1466,7 +1457,7 @@ void AstroLink4Pi::fanUpdate()
 		if(temp > 65) cycle = 50;
 		if(temp > 70) cycle = 100;
 		lgTxPwm(pigpioHandle, FAN_PIN, 100, cycle, 0, 0);
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan set to %d\n", cycle);
+		// DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan set to %d\n", cycle);
 	}
 	else
 	{
