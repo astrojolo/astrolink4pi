@@ -32,6 +32,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <string>
 #include "config.h"
 
 #include <lgpio.h>

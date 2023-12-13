@@ -1461,7 +1461,7 @@ void AstroLink4Pi::fanUpdate()
 	int fanPinAvailable = lgGpioClaimOutput(pigpioHandle, 0, FAN_PIN, 0);
 	if(fanPinAvailable == 0)
 	{
-		int temp = stoi(SysInfoT[1].text);
+		int temp = std::stoi(SysInfoT[1].text);
 		int cycle = 0;
 		if(temp > 65) cycle = 50;
 		if(temp > 70) cycle = 100;
