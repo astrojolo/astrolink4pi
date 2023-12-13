@@ -1433,20 +1433,22 @@ void AstroLink4Pi::getFocuserInfo()
 
 long int AstroLink4Pi::millis()
 {
-	// static uint64_t nsec_zero = lguTimestamp();
-	// return (int) (lguTimestamp() - nsec_zero) / 1000000;
-	struct timespec clock;
-	if (clock_gettime(CLOCK_MONOTONIC, &clock) == 0)
-	{
-		static long int tv_sec_zero = clock.tv_sec;
-		int ret = 1000 * (clock.tv_sec - tv_sec_zero) + clock.tv_nsec / 1000000;
-		return ret;
-	}
-	else
-	{
-		DEBUG(INDI::Logger::DBG_ERROR, "CLOCK_MONOTONIC not available.");
-		return 0;
-	}
+	static uint64_t nsec_zero = lguTimestamp();
+	int millis = (int) (lguTimestamp() - nsec_zero) / 1000000;
+	DEBUGF(INDI::Logger::DBG_SESSION, "Zero %d millis %d \n", (int) (nsec_zero / 1000000), millis);
+	return millis;
+	// struct timespec clock;
+	// if (clock_gettime(CLOCK_MONOTONIC, &clock) == 0)
+	// {
+	// 	static long int tv_sec_zero = clock.tv_sec;
+	// 	int ret = 1000 * (clock.tv_sec - tv_sec_zero) + clock.tv_nsec / 1000000;
+	// 	return ret;
+	// }
+	// else
+	// {
+	// 	DEBUG(INDI::Logger::DBG_ERROR, "CLOCK_MONOTONIC not available.");
+	// 	return 0;
+	// }
 }
 
 int AstroLink4Pi::getMotorPWM(int current)
