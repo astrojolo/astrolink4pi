@@ -25,7 +25,7 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define TEMPERATURE_COMPENSATION_TIMEOUT (30 * 1000) // 30 sec
 #define SYSTEM_UPDATE_PERIOD 1000
 #define POLL_PERIOD 200
-#define FAN_PERIOD	(5 * 1000)
+#define FAN_PERIOD	(20 * 1000)
 
 #define RP4_GPIO	0
 #define RP5_GPIO	4
@@ -1465,9 +1465,8 @@ void AstroLink4Pi::fanUpdate()
 			cycle = 100; fanPwr = 100.0;
 		}
 		lgTxPwm(pigpioHandle, FAN_PIN, 100, cycle, 0, 0);
-		FanPowerN[0].value = 66.0;
+		FanPowerN[0].value = fanPwr;
 		FanPowerNP.s = IPS_OK;
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan power %d\n", cycle);
 	}
 	else
 	{
