@@ -48,10 +48,7 @@ https://shop.astrojolo.com/astrolink-4-computers/
 ### Stellarmate installation prerequisites
 ```
 sudo apt update
-sudo apt install git
-sudo apt install build-essential
-sudo apt install cmake
-sudo apt install libindi-dev
+sudo apt install git build-essential cmake libindi-dev
 ```
 
 ### Astroberry installation prerequisites
