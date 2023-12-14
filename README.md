@@ -83,7 +83,7 @@ hwclock -h
   - One adjustable DC output 3-10V, 1.5A max
   - Configurable labels
 * Other
-  - Internal fan controlled by GPIO pin - automatic work
+  - Internal fan controlled by GPIO pin - controlled automatically by INDI driver
 
 ## Source
 https://github.com/astrojolo/astrolink4pi
