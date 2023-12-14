@@ -32,9 +32,10 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <string>
 #include "config.h"
 
-#include <pigpiod_if2.h>
+#include <lgpio.h>
 
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
@@ -83,13 +84,14 @@ private:
 	virtual bool readSHT();
 	virtual bool readMLX();
 	virtual bool readSQM();
-	virtual bool readDS18B20();
 	virtual bool readPower();
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
+	enum {RES_1, RES_2, RES_4, RES_8, RES_16, RES_32};
 	ISwitch FocusHoldS[6];
 	ISwitchVectorProperty FocusHoldSP;
+	enum {HOLD_0, HOLD_20, HOLD_40, HOLD_60, HOLD_80, HOLD_100};
 	INumber FocusStepDelayN[1];
 	INumberVectorProperty FocusStepDelayNP;
 	INumber FocusTemperatureN[1];
@@ -101,15 +103,16 @@ private:
 
 	INumber FocuserInfoN[3];
 	INumberVectorProperty FocuserInfoNP;
+	enum {FOC_STEP_SIZE, FOC_CFZ, FOC_STEPS_CFZ};
 	INumber FocuserTravelN[1];
 	INumberVectorProperty FocuserTravelNP;
 
+	INumber FanPowerN[1];
+	INumberVectorProperty FanPowerNP;
+
 	INumber PowerReadingsN[6];
 	INumberVectorProperty PowerReadingsNP;
-    enum
-    {
-    POW_VIN, POW_VREG, POW_PTOT, POW_ITOT, POW_AH, POW_WH
-    };	
+    enum { POW_VIN, POW_VREG, POW_PTOT, POW_ITOT, POW_AH, POW_WH };	
 
 	INumber ScopeParametersN[2];
 	INumberVectorProperty ScopeParametersNP;
@@ -127,11 +130,14 @@ private:
 
 	IText RelayLabelsT[4];
 	ITextVectorProperty RelayLabelsTP;
+	enum {LAB_OUT1, LAB_OUT2, LAB_PWM1, LAB_PWM2};
 
 	ISwitch Switch1S[2];
 	ISwitchVectorProperty Switch1SP;
+	enum {S1_ON, S1_OFF};
 	ISwitch Switch2S[2];
 	ISwitchVectorProperty Switch2SP;
+	enum {S2_ON, S2_OFF};
 
 	INumber PWM1N[1];
 	INumberVectorProperty PWM1NP;
@@ -145,6 +151,7 @@ private:
 	INumberVectorProperty StepperCurrentNP;
 
 	int revision = 1;
+	int gpioChip = -1;
 	int pigpioHandle = -1;
 	int resolution = 1;
 	int holdPower = 0;
@@ -162,10 +169,12 @@ private:
 	int relayState[2];
 	int pwmCounter = 0;
 	int stepperCurrent = 0;
+	int gpioType = 0;
 
 	long int nextTemperatureRead = 0;
 	long int nextTemperatureCompensation = 0;
 	long int nextSystemRead = 0;
+	long int nextFanUpdate = 0;
 
 	int powerIndex = 0;
 	float energyAs = 0.0;
@@ -177,11 +186,10 @@ private:
 	void getFocuserInfo();
 	void temperatureCompensation();
 	void setCurrent(bool standby);
-	int getDacValue(int current);
 	void systemUpdate();
-	int setDac(int chan, int value);
+	void fanUpdate();
 	int getMotorPWM(int current);
-	int checkRevision(int handle);
+	int checkRevision();
 	long int millis();
 
     static constexpr const char *ENVIRONMENT_TAB {"Environment"};

@@ -1,7 +1,62 @@
 # AstroLink 4 Pi
-AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberry Pi module. Currently, the RPi 4 with 4 or 8GB RAM is used in AstroLink 4 Pi, but adaptation to the new RPi 5 is in progress.
+AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberry Pi module. It contains focusing motor controller, switchable power outputs, regulated dew-cap heaters outputs, regulated voltage output and power monitoring function. Selection of sensors can be connected to this device - temperature, humidity, dew point, sky temperature / cloud coverage and sky brightness.
+### AstroLink 4 Pi works both with Raspberry Pi 4 and 5. 
 
-AstroLink 4 Pi features:
+> [!NOTE]
+> The most recent driver version and Raspberry Pi 5 support is only for device revision 4 and later (starting from October 2023). For earlier revisions see the section below the AstroLink 4 Pi features.
+
+## Device
+https://shop.astrojolo.com/astrolink-4-computers/
+
+
+# AstroLink 4 Pi driver installation
+## Requirements
+* INDI http://indilib.org/download.html
+* lgpio https://abyz.me.uk/lg/download.html 
+
+### Required packages
+```
+sudo apt update
+sudo apt install git build-essential cmake libindi-dev
+```
+### INDI driver installation
+```
+git clone https://github.com/astrojolo/astrolink4pi
+cd astrolink4pi
+mkdir build && cd build
+cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+make
+```
+Or update to latest version:
+```
+cd ~/astrolink4pi/build/
+git pull
+cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+make
+```
+You can install the drivers by running:
+```
+sudo make install
+```
+
+After these steps AstroLink 4 Pi driver will be visible in the Aux devices lists under **Astrojolo** group.
+
+### Real-time clock
+To enable automatic synchronization of the RTC embedded in versions 2 and above of AstroLink 4 Pi you need to edit the file
+```
+sudo nano /etc/rc.local
+```
+and add the following line before the exit 0 statement at the file end
+```
+echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
+```
+After restarting the astroberry system time will be synchronized with embedded DS1307 clock.
+Check hwclock help to find more options, like time adjustments and synchronization:
+```
+hwclock -h
+```
+
+# AstroLink 4 Pi features:
 * Focuser
   - DRV8825 driver support for Moonlite / Robofocus / AstroLink geared unipolar steppers and bipolar microstepping up to 1/32
   - Absolute position control
@@ -27,74 +82,21 @@ AstroLink 4 Pi features:
 * Other
   - Internal fan controlled by GPIO pin - automatic work
 
-# Source
+## Source
 https://github.com/astrojolo/astrolink4pi
 
-# Device
-https://shop.astrojolo.com/astrolink-4-computers/
+![Photo](/images/astrolink4pi-banner.jpg)
 
-# Requirements
-* INDI available here http://indilib.org/download.html
-* CMake >= 2.4.7
+# Devices revision 3 and earlier
+INDI driver AstroLink 4 Pi revision 3 and earlier must be installed from the tag https://github.com/astrojolo/astrolink4pi/releases/tag/3.0.0
 
-# Stellarmate installation prerequisites
+> [!NOTE]
+> Revision 3 and earlier of AstroLink 4 Pi works only with Raspberry Pi 4
+
+Additional packages required:
 ```
-sudo apt update
-sudo apt install git
-sudo apt-get install build-essential
-sudo apt-get install cmake
-sudo apt-get install libindi-dev
-sudo apt-get install gpiod libgpiod-dev libgpiod-doc
+sudo apt install gpiod libgpiod-dev libgpiod-doc
 sudo systemctl enable pigpiod
-```
-
-# Astroberry installation prerequisites
-```
-sudo apt update
-sudo apt-get install cmake libindi-dev libgpiod-dev
-sudo systemctl enable pigpiod
-```
-
-# AstroLink 4 Pi driver installation
-```
-git clone https://github.com/astrojolo/astrolink4pi
-cd astrolink4pi
-mkdir build && cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr ..
-make
-```
-Or update to latest version:
-```
-cd ~/astrolink4pi/build/
-git pull
-cmake -DCMAKE_INSTALL_PREFIX=/usr ..
-make
-```
-You can install the drivers by running:
-```
-sudo make install
-```
-OR manually installing files by running:
-```
-sudo cp indi_astrolink4pi /usr/bin/
-sudo cp indi_astrolink4pi.xml /usr/share/indi/
-```
-After these steps AstroLink 4 Pi driver will be visible in the Aux devices lists under **Astrojolo** group.
-
-**Real Time clock enabling - version 2 and above**
-
-To enable automatic synchronization of the RTC embedded in versions 2 and above of AstroLink 4 Pi you need to edit the file
-```
-sudo nano /etc/rc.local
-```
-and add the following line before the exit 0 statement at the file end
-```
-echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
-```
-After restarting the astroberry system time will be synchronized with embedded DS1307 clock.
-Check hwclock help to find more options, like time adjustments and synchronization:
-```
-hwclock -h
 ```
 
 # How to use it?
@@ -116,7 +118,5 @@ astroberry ALL=(ALL) NOPASSWD: /sbin/reboot, /sbin/poweroff
 ```
 
 For custom labels, you need to save the configuration and restart the driver after changing the relays' labels.
-
-# AstroLink 4 Pi images
 
 ![Photo](/images/al4pi-interior-v3.JPG)
