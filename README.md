@@ -3,6 +3,7 @@ AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberr
 
 > [!NOTE]
 > The most recent driver version is for device revision 4 and later (2023.10)
+
 > For revision 3 and earlier use https://github.com/astrojolo/astrolink4pi/releases/tag/3.0.0 
 
 
