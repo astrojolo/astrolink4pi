@@ -3,7 +3,7 @@ AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberr
 ### AstroLink 4 Pi works both with Raspberry Pi 4 and 5. 
 
 > [!NOTE]
-> The most recent driver version and Raspberry Pi 5 support is only for device revision 4 and later (starting from October 2023). For earlier revisions see the section below the AstroLink 4 Pi features.
+> The most recent driver version and Raspberry Pi 5 support is available **only** for device revision 4 and later (manufactured after October 2023). For earlier revisions see the section below the AstroLink 4 Pi features.
 
 > [!NOTE]
 > Raspberry Pi 5 is based on new OS Bookworm. Make sure the software you use is available for this new OS before you upgrade to RPi5.
@@ -91,6 +91,7 @@ https://github.com/astrojolo/astrolink4pi
 ![Photo](/images/astrolink4pi-banner.jpg)
 
 # Devices revision 3 and earlier
+<details>
 INDI driver AstroLink 4 Pi revision 3 and earlier must be installed from the tag https://github.com/astrojolo/astrolink4pi/releases/tag/3.0.0
 
 > [!NOTE]
@@ -102,12 +103,28 @@ sudo apt install gpiod libgpiod-dev libgpiod-doc
 sudo systemctl enable pigpiod
 ```
 In AstroLink 4 Pi revision 3 and earlier internal fan is not controlled by the INDI driver. You need to open Raspberry configuration and switch on the fan on GPIO 13 (Performance tab).
+</details>
+
+# Revisions matrix
+<details>
+### Revision 4
+* Works with the most recent INDI driver version from _main_.
+* Works with Raspberry Pi 4 or 5.
+* Requires _lgpio_ library for GPIO control.
+* Requires I2C enabled.
+### Revision 3 and 2
+* Works with tag 3.0 of INDI driver.
+* Works with Rasbperry Pi 4 only.
+* Requires _pigpio_ library for GPIO control.
+* Requires I2C and SPI enabled.
+### Revision 1
+* Works with tag 3.0 of INDI driver.
+* Works with Rasbperry Pi 4 only.
+* Requires _pigpio_ library for GPIO control.
+* Requires 1-Wire enabled.
+</details>
 
 # How to use it?
-**version 1 and later** - Enable 1-Wire interface using raspi-config or adding 'dtoverlay=w1-gpio' to /boot/configure.txt for temperature compensation support (reboot required). 
-
-**version 2 and later** - Enable I2C interface using raspi-config for sensor support (reboot required)
-
 Run Kstars and select AstroLink 4 Pi (Aux section) in the Ekos profile editor. Then start the INDI server in Ekos with your profile, containing AstroLink 4 Pi drivers. Alternatively, you can start INDI server manually by running:
 ```
 indi_server indi_astrolink4pi
