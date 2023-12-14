@@ -1,6 +1,10 @@
 # AstroLink 4 Pi
 AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberry Pi module. 
 
+> [!NOTE]
+> The most recent driver version is for device revision 4 and later (2023.10)
+> For revision 3 and earlier use https://github.com/astrojolo/astrolink4pi/releases/tag/3.0.0 
+
 
 
 AstroLink 4 Pi features:
@@ -82,9 +86,6 @@ sudo cp indi_astrolink4pi /usr/bin/
 sudo cp indi_astrolink4pi.xml /usr/share/indi/
 ```
 After these steps AstroLink 4 Pi driver will be visible in the Aux devices lists under **Astrojolo** group.
-
-> [!NOTE]
-> Useful information that users should know, even when skimming content.
 
 **Real Time clock enabling - version 2 and above**
 
