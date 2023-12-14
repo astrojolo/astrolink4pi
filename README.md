@@ -31,22 +31,14 @@ mkdir build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr ..
 make
 ```
-Or update to latest version:
-```
-cd ~/astrolink4pi/build/
-git pull
-cmake -DCMAKE_INSTALL_PREFIX=/usr ..
-make
-```
 You can install the drivers by running:
 ```
 sudo make install
 ```
-
 After these steps AstroLink 4 Pi driver will be visible in the Aux devices lists under **Astrojolo** group.
 
 ### Real-time clock
-To enable automatic synchronization of the RTC embedded in versions 2 and above of AstroLink 4 Pi you need to edit the file
+To enable automatic synchronization of the RTC embedded in AstroLink 4 Pi you need to edit the file
 ```
 sudo nano /etc/rc.local
 ```
@@ -109,12 +101,12 @@ In AstroLink 4 Pi revision 3 and earlier internal fan is not controlled by the I
 * Works with the most recent INDI driver version from _main_.
 * Works with Raspberry Pi 4 or 5.
 * Requires _lgpio_ library for GPIO control.
-* Requires I2C enabled.
+* Requires I<sup>2</sup>C enabled.
 ### Revision 3 and 2
 * Works with tag 3.0 of INDI driver.
 * Works with Rasbperry Pi 4 only.
 * Requires _pigpio_ library for GPIO control.
-* Requires I2C and SPI enabled.
+* Requires I<sup>2</sup>C and SPI enabled.
 ### Revision 1
 * Works with tag 3.0 of INDI driver.
 * Works with Rasbperry Pi 4 only.
