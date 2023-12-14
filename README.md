@@ -91,7 +91,7 @@ https://github.com/astrojolo/astrolink4pi
 ![Photo](/images/astrolink4pi-banner.jpg)
 
 # Devices revision 3 and earlier
-INDI driver AstroLink 4 Pi revision 3 and earlier must be installed from the tag https://github.com/astrojolo/astrolink4pi/releases/tag/3.0.0
+INDI driver AstroLink 4 Pi revision 3 and earlier must be installed from the tag https://github.com/astrojolo/astrolink4pi/tree/3.0.0
 
 > [!NOTE]
 > Revision 3 and earlier of AstroLink 4 Pi works only with Raspberry Pi 4
