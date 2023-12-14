@@ -5,6 +5,9 @@ AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberr
 > [!NOTE]
 > The most recent driver version and Raspberry Pi 5 support is only for device revision 4 and later (starting from October 2023). For earlier revisions see the section below the AstroLink 4 Pi features.
 
+> [!NOTE]
+> Raspberry Pi 5 is based on new OS Bookworm. Make sure the software you use is available for this new OS before you upgrade to RPi5.
+
 ## Device
 https://shop.astrojolo.com/astrolink-4-computers/
 
