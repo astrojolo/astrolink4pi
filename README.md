@@ -8,7 +8,7 @@ For revision 3 and earlier use https://github.com/astrojolo/astrolink4pi/release
 
 
 
-AstroLink 4 Pi features:
+## AstroLink 4 Pi features:
 * Focuser
   - DRV8825 driver support for Moonlite / Robofocus / AstroLink geared unipolar steppers and bipolar microstepping up to 1/32
   - Absolute position control
@@ -34,35 +34,39 @@ AstroLink 4 Pi features:
 * Other
   - Internal fan controlled by GPIO pin - automatic work
 
-# Source
+## Source
 https://github.com/astrojolo/astrolink4pi
 
-# Device
+## Device
 https://shop.astrojolo.com/astrolink-4-computers/
 
-# Requirements
+## Requirements
 * INDI available here http://indilib.org/download.html
 * CMake >= 2.4.7
+* lgpio installed https://abyz.me.uk/lg/download.html 
 
-# Stellarmate installation prerequisites
+### Stellarmate installation prerequisites
 ```
 sudo apt update
 sudo apt install git
-sudo apt-get install build-essential
-sudo apt-get install cmake
-sudo apt-get install libindi-dev
-sudo apt-get install gpiod libgpiod-dev libgpiod-doc
-sudo systemctl enable pigpiod
+sudo apt install build-essential
+sudo apt install cmake
+sudo apt install libindi-dev
 ```
 
-# Astroberry installation prerequisites
+### Astroberry installation prerequisites
 ```
 sudo apt update
-sudo apt-get install cmake libindi-dev libgpiod-dev
+sudo apt install cmake libindi-dev
+```
+
+### Only for device revision 3 and earlier
+```
+sudo apt install gpiod libgpiod-dev libgpiod-doc
 sudo systemctl enable pigpiod
 ```
 
-# AstroLink 4 Pi driver installation
+## AstroLink 4 Pi driver installation
 ```
 git clone https://github.com/astrojolo/astrolink4pi
 cd astrolink4pi
@@ -81,11 +85,7 @@ You can install the drivers by running:
 ```
 sudo make install
 ```
-OR manually installing files by running:
-```
-sudo cp indi_astrolink4pi /usr/bin/
-sudo cp indi_astrolink4pi.xml /usr/share/indi/
-```
+
 After these steps AstroLink 4 Pi driver will be visible in the Aux devices lists under **Astrojolo** group.
 
 **Real Time clock enabling - version 2 and above**
