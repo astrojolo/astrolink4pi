@@ -3,7 +3,7 @@ AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberr
 ### AstroLink 4 Pi works both with Raspberry Pi 4 and 5. 
 
 > [!NOTE]
-> The most recent driver version and Raspberry Pi 5 support is available **only** for device revision 4 and later (manufactured after October 2023). For earlier revisions see the section below the AstroLink 4 Pi features.
+> This INDI driver works with revision 4 of AstroLink 4 Pi device (manufactured after October 2023). For earlier revisions see the section below the AstroLink 4 Pi features.
 
 > [!NOTE]
 > Raspberry Pi 5 is based on new OS Bookworm. Make sure the software you use is available for this new OS before you upgrade to RPi5. Currently, Stellarmate OS 1.8.0 supports RPi5. 
