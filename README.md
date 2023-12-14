@@ -91,7 +91,6 @@ https://github.com/astrojolo/astrolink4pi
 ![Photo](/images/astrolink4pi-banner.jpg)
 
 # Devices revision 3 and earlier
-<details>
 INDI driver AstroLink 4 Pi revision 3 and earlier must be installed from the tag https://github.com/astrojolo/astrolink4pi/releases/tag/3.0.0
 
 > [!NOTE]
@@ -103,10 +102,8 @@ sudo apt install gpiod libgpiod-dev libgpiod-doc
 sudo systemctl enable pigpiod
 ```
 In AstroLink 4 Pi revision 3 and earlier internal fan is not controlled by the INDI driver. You need to open Raspberry configuration and switch on the fan on GPIO 13 (Performance tab).
-</details>
 
 # Revisions matrix
-<details>
 ### Revision 4
 * Works with the most recent INDI driver version from _main_.
 * Works with Raspberry Pi 4 or 5.
@@ -122,7 +119,6 @@ In AstroLink 4 Pi revision 3 and earlier internal fan is not controlled by the I
 * Works with Rasbperry Pi 4 only.
 * Requires _pigpio_ library for GPIO control.
 * Requires 1-Wire enabled.
-</details>
 
 # How to use it?
 Run Kstars and select AstroLink 4 Pi (Aux section) in the Ekos profile editor. Then start the INDI server in Ekos with your profile, containing AstroLink 4 Pi drivers. Alternatively, you can start INDI server manually by running:
