@@ -1,9 +1,9 @@
 # AstroLink 4 Pi
 AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberry Pi module. It contains focusing motor controller, switchable power outputs, regulated dew-cap heaters outputs, regulated voltage output and power monitoring function. Selection of sensors can be connected to this device - temperature, humidity, dew point, sky temperature / cloud coverage and sky brightness.
-> AstroLink 4 Pi works both with Raspberry Pi 4 and 5. 
+### AstroLink 4 Pi works both with Raspberry Pi 4 and 5. 
 
 > [!NOTE]
-> The most recent driver version and Raspberry Pi 5 support is only for device revision 4 and later (2023.10). For earlier revisions see the section below the AstroLink 4 Pi features.
+> The most recent driver version and Raspberry Pi 5 support is only for device revision 4 and later (starting from October 2023). For earlier revisions see the section below the AstroLink 4 Pi features.
 
 ## Device
 https://shop.astrojolo.com/astrolink-4-computers/
@@ -85,6 +85,8 @@ hwclock -h
 ## Source
 https://github.com/astrojolo/astrolink4pi
 
+![Photo](/images/astrolink4pi-banner.jpg)
+
 # Devices revision 3 and earlier
 INDI driver AstroLink 4 Pi revision 3 and earlier must be installed from the tag https://github.com/astrojolo/astrolink4pi/releases/tag/3.0.0
 
@@ -116,7 +118,5 @@ astroberry ALL=(ALL) NOPASSWD: /sbin/reboot, /sbin/poweroff
 ```
 
 For custom labels, you need to save the configuration and restart the driver after changing the relays' labels.
-
-# AstroLink 4 Pi images
 
 ![Photo](/images/al4pi-interior-v3.JPG)
