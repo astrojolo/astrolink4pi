@@ -101,6 +101,7 @@ Additional packages required:
 sudo apt install gpiod libgpiod-dev libgpiod-doc
 sudo systemctl enable pigpiod
 ```
+In AstroLink 4 Pi revision 3 and earlier internal fan is not controlled by the INDI driver. You need to open Raspberry configuration and switch on the fan on GPIO 13 (Performance tab).
 
 # How to use it?
 **version 1 and later** - Enable 1-Wire interface using raspi-config or adding 'dtoverlay=w1-gpio' to /boot/configure.txt for temperature compensation support (reboot required). 
