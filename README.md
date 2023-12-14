@@ -83,7 +83,9 @@ sudo cp indi_astrolink4pi.xml /usr/share/indi/
 ```
 After these steps AstroLink 4 Pi driver will be visible in the Aux devices lists under **Astrojolo** group.
 
-[!NOTE]
+> [!NOTE]
+> Useful information that users should know, even when skimming content.
+
 **Real Time clock enabling - version 2 and above**
 
 To enable automatic synchronization of the RTC embedded in versions 2 and above of AstroLink 4 Pi you need to edit the file
