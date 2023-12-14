@@ -520,7 +520,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&PWM2NP, values, names, n);
 			PWM2NP.s = IPS_OK;
 			IDSetNumber(&PWM2NP, nullptr);
-			lgTxPwm(pigpioHandle, PWM2_PIN, PWMcycleN[0].value, PWM1N[0].value, 0, 0);
+			lgTxPwm(pigpioHandle, PWM2_PIN, PWMcycleN[0].value, PW2N[0].value, 0, 0);
 			pwmState[1] = PWM2N[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 2 set to %0.0f", PWM2N[0].value);
 			return true;
