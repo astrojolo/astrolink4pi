@@ -16,6 +16,7 @@ https://shop.astrojolo.com/astrolink-4-computers/
 ## Requirements
 * INDI http://indilib.org/download.html
 * lgpio https://abyz.me.uk/lg/download.html 
+* I<sup>2</sup>C support must be enabled in Raspberry configuration
 
 ### Required packages
 ```
