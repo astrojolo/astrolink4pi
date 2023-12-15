@@ -194,7 +194,7 @@ private:
 	static constexpr const char *SYSTEM_TAB{"System"};
 	static constexpr const char *OUTPUTS_TAB{"Outputs"};
 
-	void motorThread = [this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
+	auto motorThread = [this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
 	{
 		int motorDirection = direction;
 
