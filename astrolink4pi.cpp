@@ -1604,7 +1604,7 @@ int AstroLink4Pi::checkRevision()
 	}
 
 	int rev = 1;
-	lgGpioClaimOutput(handle, 0, MOTOR_PWM, 0);		// OLD CHK_PIN
+	lgGpioClaimInput(handle, 0, MOTOR_PWM, 0);		// OLD CHK_PIN
 	lgGpioClaimInput(handle, 0, CHK_IN_PIN);		// OLD CHK2_PIN
 
 	setDac(1, 0);
@@ -1619,16 +1619,18 @@ int AstroLink4Pi::checkRevision()
 		}
 	}
 	setDac(1, 0);
-	DEBUGF(INDI::Logger::DBG_SESSION, "Rev 3 check %d", lgGpioRead(handle, MOTOR_PWM));
+	DEBUGF(INDI::Logger::DBG_SESSION, "Rev 3 check %d", lgGpioRead(handle, CHK_IN_PIN));
 	if(lgGpioRead(handle, CHK_IN_PIN) == 0)
 	{
 		setDac(1, 255);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Rev 4 check %d", lgGpioRead(handle, MOTOR_PWM));
+		DEBUGF(INDI::Logger::DBG_SESSION, "Rev 4 check %d", lgGpioRead(handle, DBG_SESSION));
 		if(lgGpioRead(handle, CHK_IN_PIN) == 1)
 		{
 			rev = 3;
 		}
 	}
+
+	lgGpioClaimOutput(handle, 0, MOTOR_PWM, 0);
 	if(rev == 1)
 	{
 		if (lgGpioRead(handle, CHK_IN_PIN) == 0)
