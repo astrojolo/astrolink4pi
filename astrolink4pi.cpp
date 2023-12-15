@@ -1071,58 +1071,107 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	}
 
 	_abort = false;
-	_motionThread = std::thread([this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
-								{
-									int motorDirection = direction;
+	_motionThread = std::thread(motorThread, targetTicks, lastDirection, pigpioHandle, backlashTicksRemaining);
+	// _motionThread = std::thread([this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
+	// 							{
+	// 								int motorDirection = direction;
 
-									uint32_t currentPos = FocusAbsPosN[0].value;
-									while (currentPos != targetPos && !_abort)
-									{
-										if (currentPos % 100 == 0)
-										{
-											FocusAbsPosN[0].value = currentPos;
-											FocusAbsPosNP.s = IPS_BUSY;
-											IDSetNumber(&FocusAbsPosNP, nullptr);
-										}
-										if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
-										{
-											lgGpioWrite(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 1 : 0);
-										}
-										else
-										{
-											lgGpioWrite(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 0 : 1);
-										}
-										lgGpioWrite(pigpioHandle, STP_PIN, 1);
-										usleep(10);
-										lgGpioWrite(pigpioHandle, STP_PIN, 0);
+	// 								uint32_t currentPos = FocusAbsPosN[0].value;
+	// 								while (currentPos != targetPos && !_abort)
+	// 								{
+	// 									if (currentPos % 100 == 0)
+	// 									{
+	// 										FocusAbsPosN[0].value = currentPos;
+	// 										FocusAbsPosNP.s = IPS_BUSY;
+	// 										IDSetNumber(&FocusAbsPosNP, nullptr);
+	// 									}
+	// 									if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
+	// 									{
+	// 										lgGpioWrite(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 1 : 0);
+	// 									}
+	// 									else
+	// 									{
+	// 										lgGpioWrite(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 0 : 1);
+	// 									}
+	// 									lgGpioWrite(pigpioHandle, STP_PIN, 1);
+	// 									usleep(10);
+	// 									lgGpioWrite(pigpioHandle, STP_PIN, 0);
 
-										if (backlashTicksRemaining <= 0)
-										{ // Only Count the position change if it is not due to backlash
-											currentPos += motorDirection;
-										}
-										else
-										{ // Don't count the backlash position change, just decrement the counter
-											backlashTicksRemaining -= 1;
-										}
-										usleep(FocusStepDelayN[0].value);
-									}
+	// 									if (backlashTicksRemaining <= 0)
+	// 									{ // Only Count the position change if it is not due to backlash
+	// 										currentPos += motorDirection;
+	// 									}
+	// 									else
+	// 									{ // Don't count the backlash position change, just decrement the counter
+	// 										backlashTicksRemaining -= 1;
+	// 									}
+	// 									usleep(FocusStepDelayN[0].value);
+	// 								}
 
-									// update abspos value and status
-									DEBUGF(INDI::Logger::DBG_SESSION, "Focuser moved to position %i", (int)currentPos);
-									FocusAbsPosN[0].value = currentPos;
-									FocusAbsPosNP.s = IPS_OK;
-									IDSetNumber(&FocusAbsPosNP, nullptr);
-									FocusRelPosNP.s = IPS_OK;
-									IDSetNumber(&FocusRelPosNP, nullptr);
+	// 								// update abspos value and status
+	// 								DEBUGF(INDI::Logger::DBG_SESSION, "Focuser moved to position %i", (int)currentPos);
+	// 								FocusAbsPosN[0].value = currentPos;
+	// 								FocusAbsPosNP.s = IPS_OK;
+	// 								IDSetNumber(&FocusAbsPosNP, nullptr);
+	// 								FocusRelPosNP.s = IPS_OK;
+	// 								IDSetNumber(&FocusRelPosNP, nullptr);
 
-									savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
-									lastTemperature = FocusTemperatureN[0].value;							// register last temperature
-									setCurrent(true); },
-								targetTicks, lastDirection, pigpioHandle, backlashTicksRemaining);
+	// 								savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
+	// 								lastTemperature = FocusTemperatureN[0].value;							// register last temperature
+	// 								setCurrent(true); },
+	// 							targetTicks, lastDirection, pigpioHandle, backlashTicksRemaining);
 
 	return IPS_BUSY;
 }
 
+void AstroLink4Pi::motorThread[this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
+{
+	int motorDirection = direction;
+
+	uint32_t currentPos = FocusAbsPosN[0].value;
+	while (currentPos != targetPos && !_abort)
+	{
+		if (currentPos % 100 == 0)
+		{
+			FocusAbsPosN[0].value = currentPos;
+			FocusAbsPosNP.s = IPS_BUSY;
+			IDSetNumber(&FocusAbsPosNP, nullptr);
+		}
+		if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
+		{
+			lgGpioWrite(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 1 : 0);
+		}
+		else
+		{
+			lgGpioWrite(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 0 : 1);
+		}
+		lgGpioWrite(pigpioHandle, STP_PIN, 1);
+		usleep(10);
+		lgGpioWrite(pigpioHandle, STP_PIN, 0);
+
+		if (backlashTicksRemaining <= 0)
+		{ // Only Count the position change if it is not due to backlash
+			currentPos += motorDirection;
+		}
+		else
+		{ // Don't count the backlash position change, just decrement the counter
+			backlashTicksRemaining -= 1;
+		}
+		usleep(FocusStepDelayN[0].value);
+	}
+
+	// update abspos value and status
+	DEBUGF(INDI::Logger::DBG_SESSION, "Focuser moved to position %i", (int)currentPos);
+	FocusAbsPosN[0].value = currentPos;
+	FocusAbsPosNP.s = IPS_OK;
+	IDSetNumber(&FocusAbsPosNP, nullptr);
+	FocusRelPosNP.s = IPS_OK;
+	IDSetNumber(&FocusRelPosNP, nullptr);
+
+	savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
+	lastTemperature = FocusTemperatureN[0].value;							// register last temperature
+	setCurrent(true); 
+}
 
 void AstroLink4Pi::SetResolution(int res)
 {

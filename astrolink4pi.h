@@ -181,6 +181,7 @@ private:
 	std::thread _motionThread;
 	volatile bool _abort;
 
+	void motorThread[this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining);
 	void getFocuserInfo();
 	void temperatureCompensation();
 	void setCurrent(bool standby);
