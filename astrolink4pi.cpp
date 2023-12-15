@@ -452,6 +452,8 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&ScopeParametersNP, values, names, n);
 			IDSetNumber(&FocusStepDelayNP, nullptr);
 			ScopeParametersNP.s = IPS_OK;
+			IDSetNumber(&ScopeParametersNP, nullptr);
+			getFocuserInfo();
 			DEBUGF(INDI::Logger::DBG_SESSION, "Scope parameters set to %0.0f / %0.0f.", ScopeParametersN[SCOPE_DIAM].value, ScopeParametersN[SCOPE_FL].value);
 			return true;
 		}
@@ -463,6 +465,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&FocusStepDelayNP, values, names, n);
 			IDSetNumber(&FocusStepDelayNP, nullptr);
 			FocusStepDelayNP.s = IPS_OK;
+			IDSetNumber(&FocusStepDelayNP, nullptr);
 			DEBUGF(INDI::Logger::DBG_SESSION, "Step delay set to %0.0f us.", FocusStepDelayN[0].value);
 			return true;
 		}
