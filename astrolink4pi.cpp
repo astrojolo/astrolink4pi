@@ -188,23 +188,23 @@ bool AstroLink4Pi::Connect()
 
 bool AstroLink4Pi::Disconnect()
 {
-	lgGpioWrite(pigpioHandle, HOLD_PIN, 1);
-	lgGpioWrite(pigpioHandle, RST_PIN, 0);							// sleep
-	int enabledState = lgGpioWrite(pigpioHandle, EN_PIN, 1);		// make disabled
+	// lgGpioWrite(pigpioHandle, HOLD_PIN, 1);
+	// lgGpioWrite(pigpioHandle, RST_PIN, 0);							// sleep
+	// int enabledState = lgGpioWrite(pigpioHandle, EN_PIN, 1);		// make disabled
 
-	if (enabledState != 0)
-	{
-		DEBUGF(INDI::Logger::DBG_ERROR, "Cannot set GPIO line %i to disable stepper motor driver. Focusing motor may still be powered.", EN_PIN);
-	}
-	else
-	{
-		DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
-	}
+	// if (enabledState != 0)
+	// {
+	// 	DEBUGF(INDI::Logger::DBG_ERROR, "Cannot set GPIO line %i to disable stepper motor driver. Focusing motor may still be powered.", EN_PIN);
+	// }
+	// else
+	// {
+	// 	DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
+	// }
 
 	// lgGpioFree(pigpioHandle, DECAY_PIN);
 	// lgGpioFree(pigpioHandle, FAN_PIN);
 	// lgGroupFree(pigpioHandle, EN_PIN);
-	lgGpiochipClose(pigpioHandle);
+	// lgGpiochipClose(pigpioHandle);
 
 	// Unlock Relay Labels setting
 	RelayLabelsTP.s = IPS_IDLE;
