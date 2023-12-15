@@ -114,10 +114,10 @@ bool AstroLink4Pi::Connect()
 	}
 
 	lgGpioClaimOutput(pigpioHandle, 0, DECAY_PIN, 0);
-	// lgGpioClaimOutput(pigpioHandle, 0, EN_PIN, 1);		// EN_PIN start as disabled
-	// lgGpioClaimOutput(pigpioHandle, 0, M0_PIN, 0);
-	// lgGpioClaimOutput(pigpioHandle, 0, M1_PIN, 0);
-	// lgGpioClaimOutput(pigpioHandle, 0, M2_PIN, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, EN_PIN, 1);		// EN_PIN start as disabled
+	lgGpioClaimOutput(pigpioHandle, 0, M0_PIN, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, M1_PIN, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, M2_PIN, 0);
 	// lgGpioClaimOutput(pigpioHandle, 0, RST_PIN, 1);		// RST_PIN start as wake up
 	// lgGpioClaimOutput(pigpioHandle, 0, STP_PIN, 0);
 	// lgGpioClaimOutput(pigpioHandle, 0, DIR_PIN, 0);
@@ -201,6 +201,10 @@ bool AstroLink4Pi::Disconnect()
 	// }
 
 	lgGpioFree(pigpioHandle, DECAY_PIN);
+	lgGpioFree(pigpioHandle, EN_PIN);
+	lgGpioFree(pigpioHandle, M0_PIN);
+	lgGpioFree(pigpioHandle, M1_PIN);
+	lgGpioFree(pigpioHandle, M2_PIN);
 	// lgGpioFree(pigpioHandle, FAN_PIN);
 	// lgGroupFree(pigpioHandle, EN_PIN);
 	lgGpiochipClose(pigpioHandle);
