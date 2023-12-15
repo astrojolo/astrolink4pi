@@ -1198,6 +1198,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 		lgGpioWrite(pigpioHandle, DECAY_PIN, 1);
 		if(revision < 3)
 		{
+			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current %d", StepperCurrentN[0].value);
 			// for 0.1 ohm resistor Vref = iref / 2
 			setDac(0, 255 * StepperCurrentN[0].value / 4096);
 		}		
@@ -1310,6 +1311,7 @@ int AstroLink4Pi::getMotorPWM(int current)
 
 int AstroLink4Pi::setDac(int chan, int value)
 {
+	DEBUGF(INDI::Logger::DBG_SESSION, "DAC value %d", value);
 	char spiData[2];
 	uint8_t chanBits, dataBits;
 
