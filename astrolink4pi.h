@@ -194,7 +194,7 @@ private:
 	static constexpr const char *SYSTEM_TAB{"System"};
 	static constexpr const char *OUTPUTS_TAB{"Outputs"};
 
-	void motorThread[this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
+	void motorThread[](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
 	{
 		int motorDirection = direction;
 
@@ -241,7 +241,7 @@ private:
 		savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
 		lastTemperature = FocusTemperatureN[0].value;							// register last temperature
 		setCurrent(true); 
-	}	
+	};	
 };
 
 #endif
