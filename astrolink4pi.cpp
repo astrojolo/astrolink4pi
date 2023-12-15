@@ -113,14 +113,14 @@ bool AstroLink4Pi::Connect()
 		return false;
 	}
 
-	// lgGpioClaimOutput(pigpioHandle, 0, DECAY_PIN, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, DECAY_PIN, 0);
 	int outs[13] = {EN_PIN, M0_PIN, M1_PIN, M2_PIN, RST_PIN, STP_PIN, DIR_PIN, OUT1_PIN, OUT2_PIN, PWM1_PIN, PWM2_PIN, MOTOR_PWM, HOLD_PIN};
 	int lvls[13] = {1, 0, 0, 0, 1, 0, 0, relayState[0], relayState[1], 0, 0, 0, 1};
 	// EN_PIN start as disabled
 	// RST_PIN start as wake up
 	// HOLD_PIN start as disabled
 
-	// lgGroupClaimOutput(pigpioHandle, 0, 13, outs, lvls);
+	lgGroupClaimOutput(pigpioHandle, 0, 13, outs, lvls);
 
 	// Lock Relay Labels setting
 	RelayLabelsTP.s = IPS_BUSY;
