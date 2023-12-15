@@ -1336,8 +1336,9 @@ int AstroLink4Pi::setDac(int chan, int value)
 
 void AstroLink4Pi::fanUpdate()
 {
+	return;
 	FanPowerNP.s = IPS_BUSY;
-	// int fanPinAvailable = lgGpioClaimOutput(pigpioHandle, 0, FAN_PIN, 0);
+	int fanPinAvailable = lgGpioClaimOutput(pigpioHandle, 0, FAN_PIN, 0);
 	if(fanPinAvailable == 0)
 	{
 		int temp = std::stoi(SysInfoT[1].text);
