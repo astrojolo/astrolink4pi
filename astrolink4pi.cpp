@@ -304,14 +304,6 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&FanPowerN[0], "FAN_PWR", "Speed [%]", "%0.0f", 0, 100, 1, 33);
 	IUFillNumberVector(&FanPowerNP, FanPowerN, 1, getDeviceName(), "FAN_POWER", "Internal fan", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);	
 
-	IUFillSwitch(&SysControlS[0], "SYSCTRL_REBOOT", "Reboot", ISS_OFF);
-	IUFillSwitch(&SysControlS[1], "SYSCTRL_SHUTDOWN", "Shutdown", ISS_OFF);
-	IUFillSwitchVector(&SysControlSP, SysControlS, 2, getDeviceName(), "SYSCTRL", "System Ctrl", SYSTEM_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
-
-	IUFillSwitch(&SysOpConfirmS[0], "SYSOPCONFIRM_CONFIRM", "Yes", ISS_OFF);
-	IUFillSwitch(&SysOpConfirmS[1], "SYSOPCONFIRM_CANCEL", "No", ISS_OFF);
-	IUFillSwitchVector(&SysOpConfirmSP, SysOpConfirmS, 2, getDeviceName(), "SYSOPCONFIRM", "Continue?", SYSTEM_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
-
 	IUFillText(&RelayLabelsT[LAB_OUT1], "LAB_OUT1", "OUT 1", "OUT 1");
 	IUFillText(&RelayLabelsT[LAB_OUT2], "LAB_OUT2", "OUT 2", "OUT 2");
 	IUFillText(&RelayLabelsT[LAB_PWM1], "LAB_PWM1", "PWM 1", "PWM 1");
@@ -397,7 +389,6 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&FocusBacklashNP);
 		defineProperty(&SysTimeTP);
 		defineProperty(&SysInfoTP);
-		defineProperty(&SysControlSP);
 		defineProperty(&Switch1SP);
 		defineProperty(&Switch2SP);
 		defineProperty(&PWM1NP);
@@ -424,7 +415,6 @@ bool AstroLink4Pi::updateProperties()
 		deleteProperty(TemperatureCompensateSP.name);
 		deleteProperty(SysTimeTP.name);
 		deleteProperty(SysInfoTP.name);
-		deleteProperty(SysControlSP.name);
 		deleteProperty(Switch1SP.name);
 		deleteProperty(Switch2SP.name);
 		deleteProperty(PWM1NP.name);
@@ -586,112 +576,6 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 
 			IDSetSwitch(&TemperatureCompensateSP, nullptr);
 			return true;
-		}
-
-		// handle system control
-		if (!strcmp(name, SysControlSP.name))
-		{
-			IUUpdateSwitch(&SysControlSP, states, names, n);
-
-			if (SysControlS[0].s == ISS_ON)
-			{
-				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink device is set to REBOOT. Confirm or Cancel operation.");
-				SysControlSP.s = IPS_BUSY;
-				IDSetSwitch(&SysControlSP, NULL);
-
-				// confirm switch
-				defineProperty(&SysOpConfirmSP);
-
-				return true;
-			}
-			if (SysControlS[1].s == ISS_ON)
-			{
-				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink device is set to SHUT DOWN. Confirm or Cancel operation.");
-				SysControlSP.s = IPS_BUSY;
-				IDSetSwitch(&SysControlSP, NULL);
-
-				// confirm switch
-				defineProperty(&SysOpConfirmSP);
-
-				return true;
-			}
-		}
-
-		// handle system control confirmation
-		if (!strcmp(name, SysOpConfirmSP.name))
-		{
-			IUUpdateSwitch(&SysOpConfirmSP, states, names, n);
-
-			if (SysOpConfirmS[0].s == ISS_ON)
-			{
-				SysOpConfirmSP.s = IPS_IDLE;
-				IDSetSwitch(&SysOpConfirmSP, NULL);
-				SysOpConfirmS[0].s = ISS_OFF;
-				IDSetSwitch(&SysOpConfirmSP, NULL);
-
-				// execute system operation
-				if (SysControlS[0].s == ISS_ON)
-				{
-					DEBUG(INDI::Logger::DBG_SESSION, "System operation confirmed. System is going to REBOOT now");
-					FILE *pipe;
-					char buffer[512];
-					pipe = popen("sudo reboot", "r");
-					if (fgets(buffer, 512, pipe) == NULL)
-					{
-						DEBUGF(INDI::Logger::DBG_SESSION, "Failed open sudo reboot", buffer);
-					}
-					else
-					{
-						DEBUGF(INDI::Logger::DBG_SESSION, "System output: %s", buffer);
-					}
-					pclose(pipe);
-				}
-				if (SysControlS[1].s == ISS_ON)
-				{
-					DEBUG(INDI::Logger::DBG_SESSION, "System operation confirmed. System is going to SHUT DOWN now");
-					FILE *pipe;
-					char buffer[512];
-					pipe = popen("sudo poweroff", "r");
-					if (fgets(buffer, 512, pipe) == NULL)
-					{
-						DEBUGF(INDI::Logger::DBG_SESSION, "Failed open sudo poweroff", buffer);
-					}
-					else
-					{
-						DEBUGF(INDI::Logger::DBG_SESSION, "System output: %s", buffer);
-					}
-					pclose(pipe);
-				}
-
-				// reset system control buttons
-				SysControlSP.s = IPS_IDLE;
-				IDSetSwitch(&SysControlSP, NULL);
-				SysControlS[0].s = ISS_OFF;
-				SysControlS[1].s = ISS_OFF;
-				IDSetSwitch(&SysControlSP, NULL);
-
-				deleteProperty(SysOpConfirmSP.name);
-				return true;
-			}
-
-			if (SysOpConfirmS[1].s == ISS_ON)
-			{
-				DEBUG(INDI::Logger::DBG_SESSION, "System operation canceled.");
-				SysOpConfirmSP.s = IPS_IDLE;
-				IDSetSwitch(&SysOpConfirmSP, NULL);
-				SysOpConfirmS[1].s = ISS_OFF;
-				IDSetSwitch(&SysOpConfirmSP, NULL);
-
-				// reset system control buttons
-				SysControlSP.s = IPS_IDLE;
-				IDSetSwitch(&SysControlSP, NULL);
-				SysControlS[0].s = ISS_OFF;
-				SysControlS[1].s = ISS_OFF;
-				IDSetSwitch(&SysControlSP, NULL);
-
-				deleteProperty(SysOpConfirmSP.name);
-				return true;
-			}
 		}
 
 		// handle relay 1

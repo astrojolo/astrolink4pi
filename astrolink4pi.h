@@ -121,10 +121,6 @@ private:
 	ITextVectorProperty SysTimeTP;
 	IText SysInfoT[7];
 	ITextVectorProperty SysInfoTP;
-	ISwitch SysControlS[2];
-	ISwitchVectorProperty SysControlSP;
-	ISwitch SysOpConfirmS[2];
-	ISwitchVectorProperty SysOpConfirmSP;
 
 	IText RelayLabelsT[4];
 	ITextVectorProperty RelayLabelsTP;
