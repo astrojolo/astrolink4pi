@@ -1604,7 +1604,7 @@ int AstroLink4Pi::checkRevision()
 	}
 
 	int rev = 1;
-	lgGpioClaimInput(handle, 0, MOTOR_PWM, 0);		// OLD CHK_PIN
+	lgGpioClaimInput(handle, 0, MOTOR_PWM);		// OLD CHK_PIN
 	lgGpioClaimInput(handle, 0, CHK_IN_PIN);		// OLD CHK2_PIN
 
 	setDac(1, 0);
