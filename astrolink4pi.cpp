@@ -114,19 +114,19 @@ bool AstroLink4Pi::Connect()
 	}
 
 	lgGpioClaimOutput(pigpioHandle, 0, DECAY_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, EN_PIN, 1);		// EN_PIN start as disabled
-	lgGpioClaimOutput(pigpioHandle, 0, M0_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, M1_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, M2_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, RST_PIN, 1);		// RST_PIN start as wake up
-	lgGpioClaimOutput(pigpioHandle, 0, STP_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, DIR_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, OUT1_PIN, relayState[0]);
-	lgGpioClaimOutput(pigpioHandle, 0, OUT2_PIN, relayState[1]);
-	lgGpioClaimOutput(pigpioHandle, 0, PWM1_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, PWM2_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, MOTOR_PWM, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, HOLD_PIN, 1);	// HOLD_PIN start as disabled
+	// lgGpioClaimOutput(pigpioHandle, 0, EN_PIN, 1);		// EN_PIN start as disabled
+	// lgGpioClaimOutput(pigpioHandle, 0, M0_PIN, 0);
+	// lgGpioClaimOutput(pigpioHandle, 0, M1_PIN, 0);
+	// lgGpioClaimOutput(pigpioHandle, 0, M2_PIN, 0);
+	// lgGpioClaimOutput(pigpioHandle, 0, RST_PIN, 1);		// RST_PIN start as wake up
+	// lgGpioClaimOutput(pigpioHandle, 0, STP_PIN, 0);
+	// lgGpioClaimOutput(pigpioHandle, 0, DIR_PIN, 0);
+	// lgGpioClaimOutput(pigpioHandle, 0, OUT1_PIN, relayState[0]);
+	// lgGpioClaimOutput(pigpioHandle, 0, OUT2_PIN, relayState[1]);
+	// lgGpioClaimOutput(pigpioHandle, 0, PWM1_PIN, 0);
+	// lgGpioClaimOutput(pigpioHandle, 0, PWM2_PIN, 0);
+	// lgGpioClaimOutput(pigpioHandle, 0, MOTOR_PWM, 0);
+	// lgGpioClaimOutput(pigpioHandle, 0, HOLD_PIN, 1);	// HOLD_PIN start as disabled
 
 	// Lock Relay Labels setting
 	RelayLabelsTP.s = IPS_BUSY;
@@ -200,7 +200,7 @@ bool AstroLink4Pi::Disconnect()
 	// 	DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
 	// }
 
-	// lgGpioFree(pigpioHandle, DECAY_PIN);
+	lgGpioFree(pigpioHandle, DECAY_PIN);
 	// lgGpioFree(pigpioHandle, FAN_PIN);
 	// lgGroupFree(pigpioHandle, EN_PIN);
 	lgGpiochipClose(pigpioHandle);
