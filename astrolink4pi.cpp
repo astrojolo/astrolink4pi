@@ -784,25 +784,6 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 		if (!strcmp(name, FocusHoldSP.name))
 		{
 			IUUpdateSwitch(&FocusHoldSP, states, names, n);
-
-			if (FocusHoldS[HOLD_0].s == ISS_ON)
-				holdPower = 0;
-
-			if (FocusHoldS[HOLD_20].s == ISS_ON)
-				holdPower = 1;
-
-			if (FocusHoldS[HOLD_40].s == ISS_ON)
-				holdPower = 2;
-
-			if (FocusHoldS[HOLD_60].s == ISS_ON)
-				holdPower = 3;
-
-			if (FocusHoldS[HOLD_80].s == ISS_ON)
-				holdPower = 4;
-
-			if (FocusHoldS[HOLD_100].s == ISS_ON)
-				holdPower = 5;
-
 			FocusHoldSP.s = IPS_OK;
 			IDSetSwitch(&FocusHoldSP, nullptr);
 			setCurrent(true);
@@ -1288,6 +1269,16 @@ void AstroLink4Pi::temperatureCompensation()
 	}
 }
 
+int AstroLink4Pi::getHoldPower()
+{
+	if (FocusHoldS[HOLD_20].s == ISS_ON) return 1;
+	if (FocusHoldS[HOLD_40].s == ISS_ON) return 2;
+	if (FocusHoldS[HOLD_60].s == ISS_ON) return 3;
+	if (FocusHoldS[HOLD_80].s == ISS_ON) return 4;
+	if (FocusHoldS[HOLD_100].s == ISS_ON) return 5;
+	return 0;
+}
+
 void AstroLink4Pi::setCurrent(bool standby)
 {
 	if (!isConnected())
@@ -1295,12 +1286,12 @@ void AstroLink4Pi::setCurrent(bool standby)
 
 	if (standby)
 	{
-		lgGpioWrite(pigpioHandle, EN_PIN,  (holdPower > 0) ? 0 : 1);
+		lgGpioWrite(pigpioHandle, EN_PIN,  (getHoldPower() > 0) ? 0 : 1);
 		lgGpioWrite(pigpioHandle, DECAY_PIN, 0);
-		lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(holdPower * StepperCurrentN[0].value / 5), 0, 0);
-		if (holdPower > 0)
+		lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(getHoldPower() * StepperCurrentN[0].value / 5), 0, 0);
+		if (getHoldPower() > 0)
 		{
-			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", holdPower * 20);
+			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", getHoldPower() * 20);
 		}
 		else
 		{

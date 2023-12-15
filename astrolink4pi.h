@@ -154,7 +154,6 @@ private:
 	int pigpioHandle = -1;
 
 	int resolution = 1;
-	int holdPower = 0;
 
 	float lastTemperature;
 	float focuserTemperature;
@@ -180,6 +179,7 @@ private:
 	std::thread _motionThread;
 	volatile bool _abort;
 
+	int getHoldPower();
 	void getFocuserInfo();
 	void temperatureCompensation();
 	void setCurrent(bool standby);
