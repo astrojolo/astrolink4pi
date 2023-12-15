@@ -25,25 +25,25 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define TEMPERATURE_COMPENSATION_TIMEOUT (30 * 1000) // 30 sec
 #define SYSTEM_UPDATE_PERIOD 1000
 #define POLL_PERIOD 200
-#define FAN_PERIOD	(20 * 1000)
+#define FAN_PERIOD (20 * 1000)
 
-#define RP4_GPIO	0
-#define RP5_GPIO	4
-#define DECAY_PIN 	14
-#define EN_PIN 		15
-#define M0_PIN 		17
-#define M1_PIN 		18
-#define M2_PIN 		27
-#define RST_PIN 	22
-#define STP_PIN 	24
-#define DIR_PIN 	23
-#define OUT1_PIN 	5
-#define OUT2_PIN 	6
-#define PWM1_PIN 	26
-#define PWM2_PIN 	19
-#define MOTOR_PWM 	20
-#define CHK_IN_PIN 	16
-#define FAN_PIN		13
+#define RP4_GPIO 0
+#define RP5_GPIO 4
+#define DECAY_PIN 14
+#define EN_PIN 15
+#define M0_PIN 17
+#define M1_PIN 18
+#define M2_PIN 27
+#define RST_PIN 22
+#define STP_PIN 24
+#define DIR_PIN 23
+#define OUT1_PIN 5
+#define OUT2_PIN 6
+#define PWM1_PIN 26
+#define PWM2_PIN 19
+#define MOTOR_PWM 20
+#define CHK_IN_PIN 16
+#define FAN_PIN 13
 
 void ISPoll(void *p);
 
@@ -101,23 +101,28 @@ const char *AstroLink4Pi::getDefaultName()
 	return (char *)"AstroLink 4 Pi";
 }
 
-
 bool AstroLink4Pi::Connect()
 {
 	revision = checkRevision();
-
-	if(revision < 2)
+	if (revision < 2)
 	{
-		DEBUGF(INDI::Logger::DBG_ERROR, "This INDI driver version works only with AstroLink 4 Pi revision 4 and higer. Revision detected %d", revision);		
+		DEBUGF(INDI::Logger::DBG_ERROR, "This INDI driver version works only with AstroLink 4 Pi revision 4 and higer. Revision detected %d", revision);
+		return false;
+	}
+
+	pigpioHandle = lgGpiochipOpen(gpioType);
+	if(pigpioHandle < 0)
+	{
+		DEBUGF(INDI::Logger::DBG_ERROR, "Could not access GPIO. Error code %d , GPIO number %d", pigpioHandle, gpioType);
 		return false;
 	}
 
 	lgGpioClaimOutput(pigpioHandle, 0, DECAY_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, EN_PIN, 1);		// EN_PIN start as disabled
+	lgGpioClaimOutput(pigpioHandle, 0, EN_PIN, 1); // EN_PIN start as disabled
 	lgGpioClaimOutput(pigpioHandle, 0, M0_PIN, 0);
 	lgGpioClaimOutput(pigpioHandle, 0, M1_PIN, 0);
 	lgGpioClaimOutput(pigpioHandle, 0, M2_PIN, 0);
-	lgGpioClaimOutput(pigpioHandle, 0, RST_PIN, 1);		// RST_PIN start as wake up
+	lgGpioClaimOutput(pigpioHandle, 0, RST_PIN, 1); // RST_PIN start as wake up
 	lgGpioClaimOutput(pigpioHandle, 0, STP_PIN, 0);
 	lgGpioClaimOutput(pigpioHandle, 0, DIR_PIN, 0);
 	lgGpioClaimOutput(pigpioHandle, 0, OUT1_PIN, relayState[0]);
@@ -186,8 +191,8 @@ bool AstroLink4Pi::Connect()
 
 bool AstroLink4Pi::Disconnect()
 {
-	lgGpioWrite(pigpioHandle, RST_PIN, 0);							// sleep
-	int enabledState = lgGpioWrite(pigpioHandle, EN_PIN, 1);		// make disabled
+	lgGpioWrite(pigpioHandle, RST_PIN, 0);					 // sleep
+	int enabledState = lgGpioWrite(pigpioHandle, EN_PIN, 1); // make disabled
 
 	if (enabledState != 0)
 	{
@@ -312,7 +317,7 @@ bool AstroLink4Pi::initProperties()
 	IUFillTextVector(&SysInfoTP, SysInfoT, 7, getDeviceName(), "SYSTEM_INFO", "System Info", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);
 
 	IUFillNumber(&FanPowerN[0], "FAN_PWR", "Speed [%]", "%0.0f", 0, 100, 1, 33);
-	IUFillNumberVector(&FanPowerNP, FanPowerN, 1, getDeviceName(), "FAN_POWER", "Internal fan", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);	
+	IUFillNumberVector(&FanPowerNP, FanPowerN, 1, getDeviceName(), "FAN_POWER", "Internal fan", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);
 
 	IUFillText(&RelayLabelsT[LAB_OUT1], "LAB_OUT1", "OUT 1", "OUT 1");
 	IUFillText(&RelayLabelsT[LAB_OUT2], "LAB_OUT2", "OUT 2", "OUT 2");
@@ -349,7 +354,7 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&PowerReadingsN[POW_PTOT], "POW_PTOT", "Total power [W]", "%0.1f", 0, 200, 1, 0);
 	IUFillNumber(&PowerReadingsN[POW_AH], "POW_AH", "Energy consumed [Ah]", "%0.2f", 0, 10000, 1, 0);
 	IUFillNumber(&PowerReadingsN[POW_WH], "POW_WH", "Energy consumed [Wh]", "%0.2f", 0, 100000, 1, 0);
-	IUFillNumberVector(&PowerReadingsNP, PowerReadingsN, 6, getDeviceName(), "POWER_READINGS", "Power readings", OUTPUTS_TAB, IP_RO, 60, IPS_IDLE);	
+	IUFillNumberVector(&PowerReadingsNP, PowerReadingsN, 6, getDeviceName(), "POWER_READINGS", "Power readings", OUTPUTS_TAB, IP_RO, 60, IPS_IDLE);
 
 	// Environment Group
 	addParameter("WEATHER_TEMPERATURE", "Temperature [C]", -15, 35, 15);
@@ -952,7 +957,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 std::thread AstroLink4Pi::getMotorThread(uint32_t targetTicks, int lastDirection, int pigpioHandle, int backlashTicksRemaining)
 {
 	return std::thread([this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
-	{
+					   {
 		int motorDirection = direction;
 
 		uint32_t currentPos = FocusAbsPosN[0].value;
@@ -998,7 +1003,7 @@ std::thread AstroLink4Pi::getMotorThread(uint32_t targetTicks, int lastDirection
 		savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
 		lastTemperature = FocusTemperatureN[0].value;							// register last temperature
 		setCurrent(true); },
-	targetTicks, lastDirection, pigpioHandle, backlashTicksRemaining);
+					   targetTicks, lastDirection, pigpioHandle, backlashTicksRemaining);
 }
 
 void AstroLink4Pi::SetResolution(int res)
@@ -1165,11 +1170,16 @@ void AstroLink4Pi::temperatureCompensation()
 
 int AstroLink4Pi::getHoldPower()
 {
-	if (FocusHoldS[HOLD_20].s == ISS_ON) return 1;
-	if (FocusHoldS[HOLD_40].s == ISS_ON) return 2;
-	if (FocusHoldS[HOLD_60].s == ISS_ON) return 3;
-	if (FocusHoldS[HOLD_80].s == ISS_ON) return 4;
-	if (FocusHoldS[HOLD_100].s == ISS_ON) return 5;
+	if (FocusHoldS[HOLD_20].s == ISS_ON)
+		return 1;
+	if (FocusHoldS[HOLD_40].s == ISS_ON)
+		return 2;
+	if (FocusHoldS[HOLD_60].s == ISS_ON)
+		return 3;
+	if (FocusHoldS[HOLD_80].s == ISS_ON)
+		return 4;
+	if (FocusHoldS[HOLD_100].s == ISS_ON)
+		return 5;
 	return 0;
 }
 
@@ -1180,19 +1190,19 @@ void AstroLink4Pi::setCurrent(bool standby)
 
 	if (standby)
 	{
-		lgGpioWrite(pigpioHandle, EN_PIN,  (getHoldPower() > 0) ? 0 : 1);
+		lgGpioWrite(pigpioHandle, EN_PIN, (getHoldPower() > 0) ? 0 : 1);
 		lgGpioWrite(pigpioHandle, DECAY_PIN, 0);
 
-		if(revision < 3)
+		if (revision < 3)
 		{
 			// for 0.1 ohm resistor Vref = iref / 2
 			setDac(0, 255 * (getHoldPower() * StepperCurrentN[0].value / 5) / 4096);
 		}
-		if(revision >= 4)
+		if (revision >= 4)
 		{
 			lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(getHoldPower() * StepperCurrentN[0].value / 5), 0, 0);
 		}
-		
+
 		if (getHoldPower() > 0)
 		{
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", getHoldPower() * 20);
@@ -1200,19 +1210,19 @@ void AstroLink4Pi::setCurrent(bool standby)
 		else
 		{
 			DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
-		}			
+		}
 	}
 	else
 	{
 		lgGpioWrite(pigpioHandle, EN_PIN, 0);
 		lgGpioWrite(pigpioHandle, DECAY_PIN, 1);
-		if(revision < 3)
+		if (revision < 3)
 		{
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current %0.2f", StepperCurrentN[0].value);
 			// for 0.1 ohm resistor Vref = iref / 2
 			setDac(0, 255 * StepperCurrentN[0].value / 4096);
-		}		
-		if(revision >= 4)
+		}
+		if (revision >= 4)
 		{
 			lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(StepperCurrentN[0].value), 0, 0);
 		}
@@ -1309,7 +1319,7 @@ void AstroLink4Pi::getFocuserInfo()
 long int AstroLink4Pi::millis()
 {
 	static uint64_t nsec_zero = lguTimestamp();
-	int millis = (int) ((lguTimestamp() - nsec_zero) / 1000000);
+	int millis = (int)((lguTimestamp() - nsec_zero) / 1000000);
 	return millis;
 }
 
@@ -1348,17 +1358,20 @@ void AstroLink4Pi::fanUpdate()
 	return;
 	FanPowerNP.s = IPS_BUSY;
 	int fanPinAvailable = lgGpioClaimOutput(pigpioHandle, 0, FAN_PIN, 0);
-	if(fanPinAvailable == 0)
+	if (fanPinAvailable == 0)
 	{
 		int temp = std::stoi(SysInfoT[1].text);
-		int cycle = 0; double fanPwr = 33.0;
-		if(temp > 65) 
+		int cycle = 0;
+		double fanPwr = 33.0;
+		if (temp > 65)
 		{
-			cycle = 50; fanPwr = 66.0;
+			cycle = 50;
+			fanPwr = 66.0;
 		}
-		if(temp > 70) 
+		if (temp > 70)
 		{
-			cycle = 100; fanPwr = 100.0;
+			cycle = 100;
+			fanPwr = 100.0;
 		}
 		lgTxPwm(pigpioHandle, FAN_PIN, 100, cycle, 0, 0);
 		FanPowerN[0].value = fanPwr;
@@ -1369,7 +1382,7 @@ void AstroLink4Pi::fanUpdate()
 		FanPowerNP.s = IPS_ALERT;
 		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan pin not available %d\n", fanPinAvailable);
 	}
-	IDSetNumber(&FanPowerNP, nullptr);	
+	IDSetNumber(&FanPowerNP, nullptr);
 }
 
 bool AstroLink4Pi::readSQM()
@@ -1385,7 +1398,7 @@ bool AstroLink4Pi::readSQM()
 		{
 			int sqm = i2cData[5] * 256 + i2cData[6];
 			setParameterValue("SQM_READING", 0.01 * sqm);
-			//DEBUGF(INDI::Logger::DBG_SESSION, "SQM read %i %i", i2cData[5], i2cData[6]);
+			// DEBUGF(INDI::Logger::DBG_SESSION, "SQM read %i %i", i2cData[5], i2cData[6]);
 			SQMavailable = true;
 		}
 		else
@@ -1405,7 +1418,7 @@ bool AstroLink4Pi::readMLX()
 	int i2cHandle = lgI2cOpen(1, 0x5A, 0);
 	if (i2cHandle >= 0)
 	{
-		int Tamb = lgI2cReadWordData(i2cHandle, 0x06); 
+		int Tamb = lgI2cReadWordData(i2cHandle, 0x06);
 		int Tobj = lgI2cReadWordData(i2cHandle, 0x07);
 		lgI2cClose(i2cHandle);
 		if (Tamb >= 0 && Tobj >= 0)
@@ -1493,9 +1506,10 @@ bool AstroLink4Pi::readSHT()
 	return SHTavailable;
 }
 
-bool AstroLink4Pi::readPower() 
+bool AstroLink4Pi::readPower()
 {
-	if(revision < 4) return false;
+	if (revision < 4)
+		return false;
 
 	char writeBuf[3];
 	char readBuf[2];
@@ -1519,39 +1533,51 @@ bool AstroLink4Pi::readPower()
 		writeBuf[0] = 0x01;
 		writeBuf[1] = 0b11000011;
 		writeBuf[2] = 0b00100011;
-		if((powerIndex % 2) == 0)	// Trigger conversion
+		if ((powerIndex % 2) == 0) // Trigger conversion
 		{
-			switch(powerIndex) 
+			switch (powerIndex)
 			{
-				case 0: writeBuf[1] = 0b11000011; break;
-				case 2: writeBuf[1] = 0b11010011; break;
-				case 4: writeBuf[1] = 0b10110011; break;
+			case 0:
+				writeBuf[1] = 0b11000011;
+				break;
+			case 2:
+				writeBuf[1] = 0b11010011;
+				break;
+			case 4:
+				writeBuf[1] = 0b10110011;
+				break;
 			}
 			int written = lgI2cWriteDevice(i2cHandle, writeBuf, 3);
-			if(written != 0)
+			if (written != 0)
 			{
 				DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor");
 				PowerReadingsNP.s = IPS_ALERT;
 			}
 		}
-		else						// Trigger read
+		else // Trigger read
 		{
 			PowerReadingsNP.s = IPS_BUSY;
 
 			writeBuf[0] = 0x00;
 			int written = lgI2cWriteDevice(i2cHandle, writeBuf, 1);
-			if(written == 0)
+			if (written == 0)
 			{
 				int read = lgI2cReadDevice(i2cHandle, readBuf, 2);
-				if(read > 0)
+				if (read > 0)
 				{
 					int16_t val = readBuf[0] * 255 + readBuf[1];
 
-					switch(powerIndex)
+					switch (powerIndex)
 					{
-						case 1: PowerReadingsN[POW_VIN].value = (float) val / 32768.0 * 4.096 * 6.6; break;
-						case 3: PowerReadingsN[POW_VREG].value = (float) val / 32768.0 * 4.096 * 6.6; break;
-						case 5: PowerReadingsN[POW_ITOT].value = (float) val / 32768.0 * 4.096 * 1 * 10; break;
+					case 1:
+						PowerReadingsN[POW_VIN].value = (float)val / 32768.0 * 4.096 * 6.6;
+						break;
+					case 3:
+						PowerReadingsN[POW_VREG].value = (float)val / 32768.0 * 4.096 * 6.6;
+						break;
+					case 5:
+						PowerReadingsN[POW_ITOT].value = (float)val / 32768.0 * 4.096 * 1 * 10;
+						break;
 					}
 					PowerReadingsN[POW_PTOT].value = PowerReadingsN[POW_VIN].value * PowerReadingsN[POW_ITOT].value;
 					energyAs += PowerReadingsN[POW_ITOT].value * 0.4;
@@ -1565,19 +1591,20 @@ bool AstroLink4Pi::readPower()
 				{
 					DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from power sensor");
 					PowerReadingsNP.s = IPS_ALERT;
-				}	
+				}
 			}
 			else
 			{
 				DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to power sensor");
 				PowerReadingsNP.s = IPS_ALERT;
-			}			
+			}
 		}
 		powerIndex++;
-		if(powerIndex > 5) powerIndex = 0;
+		if (powerIndex > 5)
+			powerIndex = 0;
 
 		lgI2cClose(i2cHandle);
-        IDSetNumber(&PowerReadingsNP, nullptr);		
+		IDSetNumber(&PowerReadingsNP, nullptr);
 		return true;
 	}
 	else
@@ -1591,17 +1618,13 @@ int AstroLink4Pi::checkRevision()
 {
 	int handle = lgGpiochipOpen(RP5_GPIO);
 
-	if(handle < 0)
+	if (handle < 0)
 	{
 		handle = lgGpiochipOpen(RP4_GPIO);
-		if(handle < 0)
-		{
+		if (handle < 0)
 			DEBUG(INDI::Logger::DBG_SESSION, "Neither RPi4 nor RPi5 GPIO was detected.\n");
-		}
 		else
-		{
 			gpioType = RP4_GPIO;
-		}
 	}
 	else
 	{
@@ -1618,47 +1641,40 @@ int AstroLink4Pi::checkRevision()
 	}
 
 	int rev = 1;
-	lgGpioClaimInput(handle, 0, MOTOR_PWM);		// OLD CHK_PIN
-	lgGpioClaimInput(handle, 0, CHK_IN_PIN);	// OLD CHK2_PIN
+	lgGpioClaimInput(handle, 0, MOTOR_PWM);	 // OLD CHK_PIN
+	lgGpioClaimInput(handle, 0, CHK_IN_PIN); // OLD CHK2_PIN
 
 	setDac(1, 0);
-	DEBUGF(INDI::Logger::DBG_SESSION, "Rev 1 check %d", lgGpioRead(handle, MOTOR_PWM));
-	if(lgGpioRead(handle, MOTOR_PWM) == 0)
+	if (lgGpioRead(handle, MOTOR_PWM) == 0)
 	{
 		setDac(1, 255);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Rev 2 check %d", lgGpioRead(handle, MOTOR_PWM));
-		if(lgGpioRead(handle, MOTOR_PWM) == 1)
-		{
+		if (lgGpioRead(handle, MOTOR_PWM) == 1)
 			rev = 2;
-		}
 	}
+
 	setDac(1, 0);
-	DEBUGF(INDI::Logger::DBG_SESSION, "Rev 3 check %d", lgGpioRead(handle, CHK_IN_PIN));
-	if(lgGpioRead(handle, CHK_IN_PIN) == 0)
+	if (lgGpioRead(handle, CHK_IN_PIN) == 0)
 	{
 		setDac(1, 255);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Rev 4 check %d", lgGpioRead(handle, CHK_IN_PIN));
-		if(lgGpioRead(handle, CHK_IN_PIN) == 1)
-		{
+		if (lgGpioRead(handle, CHK_IN_PIN) == 1)
 			rev = 3;
-		}
 	}
 
 	lgGpioClaimOutput(handle, 0, MOTOR_PWM, 0);
-	if(rev == 1)
+	if (rev == 1)
 	{
 		if (lgGpioRead(handle, CHK_IN_PIN) == 0)
 		{
 			lgGpioWrite(handle, MOTOR_PWM, 1);
 			if (lgGpioRead(handle, CHK_IN_PIN) == 1)
-			{
 				rev = 4;
-			}
 		}
-		lgTxPwm(handle, MOTOR_PWM, 5000, 0, 0, 0);
 	}
 	lgGpioFree(handle, MOTOR_PWM);
 	lgGpioFree(handle, CHK_IN_PIN);
+
+	if (handle >= 0)
+		lgGpiochipClose(handle);
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;
