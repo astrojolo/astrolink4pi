@@ -189,6 +189,7 @@ private:
 	int getMotorPWM(int current);
 	int checkRevision();
 	long int millis();
+	std::thread getMotorThread(uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining);
 
     static constexpr const char *ENVIRONMENT_TAB {"Environment"};
 	static constexpr const char *SYSTEM_TAB{"System"};
