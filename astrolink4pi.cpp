@@ -1124,7 +1124,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	return IPS_BUSY;
 }
 
-std::thread AstroLink4Pi::getMotorThread(uint32_t targetTicks, int direction, int pigpioHandle, int backlashTicksRemaining)
+std::thread AstroLink4Pi::getMotorThread(uint32_t targetTicks, int lastDirection, int pigpioHandle, int backlashTicksRemaining)
 {
 	return std::thread([this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
 	{
