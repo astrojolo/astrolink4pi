@@ -1330,7 +1330,9 @@ int AstroLink4Pi::setDac(int chan, int value)
 	DEBUGF(INDI::Logger::DBG_SESSION, "DAC handle %d", spiHandle);
 	int written = lgSpiWrite(spiHandle, spiData, 2);
 	DEBUGF(INDI::Logger::DBG_SESSION, "DAC write %d", written);
-	lgSpiClose(spiHandle);
+	int closed = lgSpiClose(spiHandle);
+	DEBUGF(INDI::Logger::DBG_SESSION, "DAC close %d", closed);
+	
 	return written;
 }
 
