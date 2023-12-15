@@ -930,7 +930,7 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 	IUSaveConfigNumber(fp, &FocusStepDelayNP);
 	IUSaveConfigNumber(fp, &FocusBacklashNP);
 	IUSaveConfigNumber(fp, &FocuserTravelNP);
-	IUSaveConfigNUmber(fp, &ScopeParametersNP);
+	IUSaveConfigNumber(fp, &ScopeParametersNP);
 	IUSaveConfigNumber(fp, &TemperatureCoefNP);
 	IUSaveConfigNumber(fp, &PWMcycleNP);
 	IUSaveConfigText(fp, &RelayLabelsTP);
