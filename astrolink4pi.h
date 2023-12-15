@@ -194,7 +194,7 @@ private:
 	static constexpr const char *SYSTEM_TAB{"System"};
 	static constexpr const char *OUTPUTS_TAB{"Outputs"};
 
-	std::function<int()> motorThread = [this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
+	std::function<void(uint32_t, int, int, int)> motorThread = [this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
 	{
 		int motorDirection = direction;
 
