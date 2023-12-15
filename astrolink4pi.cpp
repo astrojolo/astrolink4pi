@@ -546,7 +546,6 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&StepperCurrentNP, values, names, n);
 			StepperCurrentNP.s = IPS_OK;
 			IDSetNumber(&StepperCurrentNP, nullptr);
-			stepperCurrent = StepperCurrentN[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current set to %0.0f mA", StepperCurrentN[0].value);
 			setCurrent(true);
 			return true;
@@ -961,7 +960,7 @@ void AstroLink4Pi::TimerHit()
 
 		nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
 
-		if (DSavailable || SHTavailable || MLXavailable)
+		if (SHTavailable || MLXavailable)
 		{
 			FocusTemperatureN[0].value = focuserTemperature;
 			FocusTemperatureNP.s = IPS_OK;
@@ -1072,55 +1071,6 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 
 	_abort = false;
 	_motionThread = getMotorThread(targetTicks, lastDirection, pigpioHandle, backlashTicksRemaining);
-	// _motionThread = std::thread([this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
-	// 							{
-	// 								int motorDirection = direction;
-
-	// 								uint32_t currentPos = FocusAbsPosN[0].value;
-	// 								while (currentPos != targetPos && !_abort)
-	// 								{
-	// 									if (currentPos % 100 == 0)
-	// 									{
-	// 										FocusAbsPosN[0].value = currentPos;
-	// 										FocusAbsPosNP.s = IPS_BUSY;
-	// 										IDSetNumber(&FocusAbsPosNP, nullptr);
-	// 									}
-	// 									if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
-	// 									{
-	// 										lgGpioWrite(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 1 : 0);
-	// 									}
-	// 									else
-	// 									{
-	// 										lgGpioWrite(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 0 : 1);
-	// 									}
-	// 									lgGpioWrite(pigpioHandle, STP_PIN, 1);
-	// 									usleep(10);
-	// 									lgGpioWrite(pigpioHandle, STP_PIN, 0);
-
-	// 									if (backlashTicksRemaining <= 0)
-	// 									{ // Only Count the position change if it is not due to backlash
-	// 										currentPos += motorDirection;
-	// 									}
-	// 									else
-	// 									{ // Don't count the backlash position change, just decrement the counter
-	// 										backlashTicksRemaining -= 1;
-	// 									}
-	// 									usleep(FocusStepDelayN[0].value);
-	// 								}
-
-	// 								// update abspos value and status
-	// 								DEBUGF(INDI::Logger::DBG_SESSION, "Focuser moved to position %i", (int)currentPos);
-	// 								FocusAbsPosN[0].value = currentPos;
-	// 								FocusAbsPosNP.s = IPS_OK;
-	// 								IDSetNumber(&FocusAbsPosNP, nullptr);
-	// 								FocusRelPosNP.s = IPS_OK;
-	// 								IDSetNumber(&FocusRelPosNP, nullptr);
-
-	// 								savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
-	// 								lastTemperature = FocusTemperatureN[0].value;							// register last temperature
-	// 								setCurrent(true); },
-	// 							targetTicks, lastDirection, pigpioHandle, backlashTicksRemaining);
-
 	return IPS_BUSY;
 }
 
@@ -1347,7 +1297,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 	{
 		lgGpioWrite(pigpioHandle, EN_PIN,  (holdPower > 0) ? 0 : 1);
 		lgGpioWrite(pigpioHandle, DECAY_PIN, 0);
-		lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(holdPower * stepperCurrent / 5), 0, 0);
+		lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(holdPower * StepperCurrentN[0].value / 5), 0, 0);
 		if (holdPower > 0)
 		{
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", holdPower * 20);
@@ -1361,7 +1311,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 	{
 		lgGpioWrite(pigpioHandle, EN_PIN, 0);
 		lgGpioWrite(pigpioHandle, DECAY_PIN, 1);
-		lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(stepperCurrent), 0, 0);
+		lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(StepperCurrentN[0].value), 0, 0);
 	}
 }
 
@@ -1545,7 +1495,7 @@ bool AstroLink4Pi::readMLX()
 		{
 			setParameterValue("WEATHER_SKY_TEMP", 0.02 * Tobj - 273.15);
 			setParameterValue("WEATHER_SKY_DIFF", 0.02 * (Tobj - Tamb));
-			if (!DSavailable && !SHTavailable)
+			if (!SHTavailable)
 				focuserTemperature = 0.02 * Tamb - 273.15;
 			MLXavailable = true;
 		}

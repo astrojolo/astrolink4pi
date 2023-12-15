@@ -149,13 +149,15 @@ private:
 	INumberVectorProperty StepperCurrentNP;
 
 	int revision = 1;
+	int gpioType = 0;
 	int gpioChip = -1;
 	int pigpioHandle = -1;
+
 	int resolution = 1;
 	int holdPower = 0;
+
 	float lastTemperature;
 	float focuserTemperature;
-	bool DSavailable = false;
 	bool SHTavailable = false;
 	bool MLXavailable = false;
 	bool SQMavailable = false;
@@ -165,9 +167,6 @@ private:
 
 	int pwmState[2];
 	int relayState[2];
-	int pwmCounter = 0;
-	int stepperCurrent = 0;
-	int gpioType = 0;
 
 	long int nextTemperatureRead = 0;
 	long int nextTemperatureCompensation = 0;
