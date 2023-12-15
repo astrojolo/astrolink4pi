@@ -1602,6 +1602,7 @@ int AstroLink4Pi::checkRevision()
 	if (status == LG_OKAY)
 	{
 		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip lines=%d name=%s label=%s\n", cInfo.lines, cInfo.name, cInfo.label);
+		pigpioHandle = handle;
 	}
 
 	int rev = 1;
@@ -1642,6 +1643,7 @@ int AstroLink4Pi::checkRevision()
 	lgGpioFree(handle, CHK_IN_PIN);
 
 	lgGpiochipClose(handle);
+	pigpioHandle = -1;
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;
