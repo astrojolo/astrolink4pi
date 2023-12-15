@@ -201,9 +201,9 @@ bool AstroLink4Pi::Disconnect()
 		DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
 	}
 
-	lgGpioFree(pigpioHandle, DECAY_PIN);
-	lgGpioFree(pigpioHandle, FAN_PIN);
-	lgGroupFree(pigpioHandle, EN_PIN);
+	// lgGpioFree(pigpioHandle, DECAY_PIN);
+	// lgGpioFree(pigpioHandle, FAN_PIN);
+	// lgGroupFree(pigpioHandle, EN_PIN);
 	lgGpiochipClose(pigpioHandle);
 
 	// Unlock Relay Labels setting
