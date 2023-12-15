@@ -125,7 +125,7 @@ bool AstroLink4Pi::Connect()
 	// lgGpioClaimOutput(pigpioHandle, 0, OUT2_PIN, relayState[1]);
 	// lgGpioClaimOutput(pigpioHandle, 0, PWM1_PIN, 0);
 	// lgGpioClaimOutput(pigpioHandle, 0, PWM2_PIN, 0);
-	// lgGpioClaimOutput(pigpioHandle, 0, MOTOR_PWM, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, MOTOR_PWM, 0);
 	// lgGpioClaimOutput(pigpioHandle, 0, HOLD_PIN, 1);	// HOLD_PIN start as disabled
 	// lgGpioClaimOutput(pigpioHandle, 0, FAN_PIN, 0);
 
@@ -214,7 +214,7 @@ bool AstroLink4Pi::Disconnect()
 	// lgGpioFree(pigpioHandle, OUT2_PIN);
 	// lgGpioFree(pigpioHandle, PWM1_PIN);
 	// lgGpioFree(pigpioHandle, PWM2_PIN);
-	// lgGpioFree(pigpioHandle, MOTOR_PWM);
+	lgGpioFree(pigpioHandle, MOTOR_PWM);
 	// lgGpioFree(pigpioHandle, HOLD_PIN);
 	// lgGpioFree(pigpioHandle, FAN_PIN);
 
