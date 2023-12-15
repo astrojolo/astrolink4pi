@@ -1606,11 +1606,11 @@ int AstroLink4Pi::checkRevision()
 	lgChipInfo_t cInfo;
 	// int status = lgGpioGetChipInfo(handle, &cInfo);
 
-	// if (status == LG_OKAY)
-	// {
-	// 	DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip lines=%d name=%s label=%s\n", cInfo.lines, cInfo.name, cInfo.label);
-	// 	pigpioHandle = handle;
-	// }
+	if (status == LG_OKAY)
+	{
+		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip lines=%d name=%s label=%s\n", cInfo.lines, cInfo.name, cInfo.label);
+		pigpioHandle = handle;
+	}
 
 	int rev = 1;
 	// lgGpioClaimInput(handle, 0, MOTOR_PWM);		// OLD CHK_PIN
