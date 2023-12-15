@@ -286,7 +286,7 @@ bool AstroLink4Pi::initProperties()
 	// Snooping params
 	IUFillNumber(&ScopeParametersN[SCOPE_DIAM], "SCOPE_DIAM", "Aperture (mm)", "%g", 10, 5000, 0, 0.0);
 	IUFillNumber(&ScopeParametersN[SCOPE_FL], "SCOPE_FL", "Focal Length (mm)", "%g", 10, 10000, 0, 0.0);
-	IUFillNumberVector(&ScopeParametersNP, ScopeParametersN, 2, ActiveTelescopeT[0].text, "TELESCOPE_INFO", "Scope Properties", OPTIONS_TAB, IP_RW, 60, IPS_OK);
+	IUFillNumberVector(&ScopeParametersNP, ScopeParametersN, 2, getDeviceName(), "TELESCOPE_INFO", "Scope Properties", OPTIONS_TAB, IP_RW, 60, IPS_OK);
 
 	IUFillText(&SysTimeT[0], "LOCAL_TIME", "Local Time", NULL);
 	IUFillText(&SysTimeT[1], "UTC_OFFSET", "UTC Offset", NULL);
@@ -887,20 +887,6 @@ bool AstroLink4Pi::ISNewText(const char *dev, const char *name, char *texts[], c
 	// first we check if it's for our device
 	if (!strcmp(dev, getDeviceName()))
 	{
-		// handle active devices
-		if (!strcmp(name, ActiveTelescopeTP.name))
-		{
-			IUUpdateText(&ActiveTelescopeTP, texts, names, n);
-
-			IUFillNumberVector(&ScopeParametersNP, ScopeParametersN, 2, ActiveTelescopeT[0].text, "TELESCOPE_INFO", "Scope Properties", OPTIONS_TAB, IP_RW, 60, IPS_OK);
-			IDSnoopDevice(ActiveTelescopeT[0].text, "TELESCOPE_INFO");
-
-			ActiveTelescopeTP.s = IPS_OK;
-			IDSetText(&ActiveTelescopeTP, nullptr);
-			DEBUGF(INDI::Logger::DBG_SESSION, "Active telescope set to %s.", ActiveTelescopeT[0].text);
-			return true;
-		}
-
 		// handle relay labels
 		if (!strcmp(name, RelayLabelsTP.name))
 		{
@@ -927,7 +913,6 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 {
 	FI::saveConfigItems(fp);
 	WI::saveConfigItems(fp);
-	IUSaveConfigText(fp, &ActiveTelescopeTP);
 	IUSaveConfigSwitch(fp, &FocusResolutionSP);
 	IUSaveConfigSwitch(fp, &FocusHoldSP);
 	IUSaveConfigSwitch(fp, &FocusReverseSP);
