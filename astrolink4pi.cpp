@@ -388,6 +388,7 @@ bool AstroLink4Pi::updateProperties()
 		FI::updateProperties();
 		WI::updateProperties();
 
+		defineProperty(&ScopeParametersNP);
 		defineProperty(&FocuserTravelNP);
 		defineProperty(&FocusResolutionSP);
 		defineProperty(&FocusHoldSP);
@@ -411,6 +412,7 @@ bool AstroLink4Pi::updateProperties()
 	}
 	else
 	{
+		deleteProperty(ScopeParametersNP.name);
 		deleteProperty(FocuserTravelNP.name);
 		deleteProperty(FocusResolutionSP.name);
 		deleteProperty(FocusHoldSP.name);
