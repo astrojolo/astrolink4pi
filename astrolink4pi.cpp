@@ -283,9 +283,9 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&FocuserTravelN[0], "FOCUSER_TRAVEL_VALUE", "mm", "%0.0f", 10, 200, 10, 10);
 	IUFillNumberVector(&FocuserTravelNP, FocuserTravelN, 1, getDeviceName(), "FOCUSER_TRAVEL", "Max Travel", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
-	// Snooping params
-	IUFillNumber(&ScopeParametersN[SCOPE_DIAM], "SCOPE_DIAM", "Aperture (mm)", "%g", 10, 5000, 0, 0.0);
-	IUFillNumber(&ScopeParametersN[SCOPE_FL], "SCOPE_FL", "Focal Length (mm)", "%g", 10, 10000, 0, 0.0);
+	// Scope params
+	IUFillNumber(&ScopeParametersN[SCOPE_DIAM], "SCOPE_DIAM", "Aperture (mm)", "%0.0f", 10, 5000, 0, 0.0);
+	IUFillNumber(&ScopeParametersN[SCOPE_FL], "SCOPE_FL", "Focal Length (mm)", "%0.0f", 10, 10000, 0, 0.0);
 	IUFillNumberVector(&ScopeParametersNP, ScopeParametersN, 2, getDeviceName(), "TELESCOPE_INFO", "Scope Properties", OPTIONS_TAB, IP_RW, 60, IPS_OK);
 
 	IUFillText(&SysTimeT[0], "LOCAL_TIME", "Local Time", NULL);
