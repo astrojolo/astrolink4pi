@@ -107,13 +107,6 @@ bool AstroLink4Pi::Connect()
 {
 	revision = checkRevision();
 
-	pigpioHandle = lgGpiochipOpen(gpioType);
-	if (pigpioHandle < 0)
-	{
-		DEBUGF(INDI::Logger::DBG_ERROR, "Problem initiating AstroLink 4 Pi - GPIO. %d ", pigpioHandle);
-		return false;
-	}
-
 	if(revision < 2)
 	{
 		DEBUGF(INDI::Logger::DBG_ERROR, "This INDI driver version works only with AstroLink 4 Pi revision 4 and higer. Revision detected %d", revision);		
@@ -1326,6 +1319,8 @@ int AstroLink4Pi::setDac(int chan, int value)
 	spiData[0] = chanBits;
 	spiData[1] = dataBits;
 
+	//lgGpioClaimOutput(pigpioHandle, 0, 7, 0);
+
 	int spiHandle = lgSpiOpen(pigpioHandle, 1, 100000, 0);
 	DEBUGF(INDI::Logger::DBG_SESSION, "DAC handle %d", spiHandle);
 	usleep(5000);
@@ -1658,9 +1653,6 @@ int AstroLink4Pi::checkRevision()
 	}
 	lgGpioFree(handle, MOTOR_PWM);
 	lgGpioFree(handle, CHK_IN_PIN);
-
-	lgGpiochipClose(handle);
-	pigpioHandle = -1;
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;
