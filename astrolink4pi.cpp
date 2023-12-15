@@ -204,7 +204,7 @@ bool AstroLink4Pi::Disconnect()
 	// lgGpioFree(pigpioHandle, DECAY_PIN);
 	// lgGpioFree(pigpioHandle, FAN_PIN);
 	// lgGroupFree(pigpioHandle, EN_PIN);
-	// lgGpiochipClose(pigpioHandle);
+	lgGpiochipClose(pigpioHandle);
 
 	// Unlock Relay Labels setting
 	RelayLabelsTP.s = IPS_IDLE;
