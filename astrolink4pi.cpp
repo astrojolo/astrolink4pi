@@ -41,7 +41,6 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define OUT2_PIN 	6
 #define PWM1_PIN 	26
 #define PWM2_PIN 	19
-#define HOLD_PIN 	10
 #define MOTOR_PWM 	20
 #define CHK_IN_PIN 	16
 #define FAN_PIN		13
@@ -126,7 +125,6 @@ bool AstroLink4Pi::Connect()
 	lgGpioClaimOutput(pigpioHandle, 0, PWM1_PIN, 0);
 	lgGpioClaimOutput(pigpioHandle, 0, PWM2_PIN, 0);
 	lgGpioClaimOutput(pigpioHandle, 0, MOTOR_PWM, 0);
-	// lgGpioClaimOutput(pigpioHandle, 0, HOLD_PIN, 1);	// HOLD_PIN start as disabled
 	lgGpioClaimOutput(pigpioHandle, 0, FAN_PIN, 0);
 
 	// Lock Relay Labels setting
@@ -188,18 +186,17 @@ bool AstroLink4Pi::Connect()
 
 bool AstroLink4Pi::Disconnect()
 {
-	// lgGpioWrite(pigpioHandle, HOLD_PIN, 1);
-	// lgGpioWrite(pigpioHandle, RST_PIN, 0);							// sleep
-	// int enabledState = lgGpioWrite(pigpioHandle, EN_PIN, 1);		// make disabled
+	lgGpioWrite(pigpioHandle, RST_PIN, 0);							// sleep
+	int enabledState = lgGpioWrite(pigpioHandle, EN_PIN, 1);		// make disabled
 
-	// if (enabledState != 0)
-	// {
-	// 	DEBUGF(INDI::Logger::DBG_ERROR, "Cannot set GPIO line %i to disable stepper motor driver. Focusing motor may still be powered.", EN_PIN);
-	// }
-	// else
-	// {
-	// 	DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
-	// }
+	if (enabledState != 0)
+	{
+		DEBUGF(INDI::Logger::DBG_ERROR, "Cannot set GPIO line %i to disable stepper motor driver. Focusing motor may still be powered.", EN_PIN);
+	}
+	else
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
+	}
 
 	lgGpioFree(pigpioHandle, DECAY_PIN);
 	lgGpioFree(pigpioHandle, EN_PIN);
@@ -215,7 +212,6 @@ bool AstroLink4Pi::Disconnect()
 	lgGpioFree(pigpioHandle, PWM1_PIN);
 	lgGpioFree(pigpioHandle, PWM2_PIN);
 	lgGpioFree(pigpioHandle, MOTOR_PWM);
-	// lgGpioFree(pigpioHandle, HOLD_PIN);
 	lgGpioFree(pigpioHandle, FAN_PIN);
 
 	lgGpiochipClose(pigpioHandle);
@@ -1635,7 +1631,7 @@ int AstroLink4Pi::checkRevision()
 
 	int rev = 1;
 	lgGpioClaimInput(handle, 0, MOTOR_PWM);		// OLD CHK_PIN
-	lgGpioClaimInput(handle, 0, CHK_IN_PIN);		// OLD CHK2_PIN
+	lgGpioClaimInput(handle, 0, CHK_IN_PIN);	// OLD CHK2_PIN
 
 	setDac(1, 0);
 	DEBUGF(INDI::Logger::DBG_SESSION, "Rev 1 check %d", lgGpioRead(handle, MOTOR_PWM));
@@ -1675,12 +1671,6 @@ int AstroLink4Pi::checkRevision()
 	}
 	lgGpioFree(handle, MOTOR_PWM);
 	lgGpioFree(handle, CHK_IN_PIN);
-
-	setDac(1,0);
-	lguSleep(0.5);
-	setDac(1,255);
-	lguSleep(0.5);
-	setDac(1,0);
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;
