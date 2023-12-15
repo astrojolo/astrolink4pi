@@ -1176,7 +1176,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 		if(revision == 3)
 		{
 			// for 0.1 ohm resistor Vref = iref / 2
-			setDac(0, 255 * (holdPower * stepperCurrent / 5) / 4096);
+			setDac(0, 255 * (getHoldPower() * StepperCurrentN[0].value / 5) / 4096);
 		}
 		if(revision >= 4)
 		{
@@ -1199,7 +1199,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 		if(revision == 3)
 		{
 			// for 0.1 ohm resistor Vref = iref / 2
-			setDac(0, 255 * stepperCurrent / 4096);
+			setDac(0, 255 * StepperCurrentN[0].value / 4096);
 		}		
 		if(revision >= 4)
 		{
