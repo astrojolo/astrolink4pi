@@ -403,9 +403,6 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&PWM2NP);
 		defineProperty(&PWMcycleNP);
 		defineProperty(&StepperCurrentNP);
-
-		IDSnoopDevice(ActiveTelescopeT[0].text, "TELESCOPE_INFO");
-
 		defineProperty(&FocusTemperatureNP);
 		defineProperty(&TemperatureCoefNP);
 		defineProperty(&TemperatureCompensateSP);
