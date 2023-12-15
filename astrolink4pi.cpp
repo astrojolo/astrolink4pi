@@ -445,14 +445,24 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 	// first we check if it's for our device
 	if (!strcmp(dev, getDeviceName()))
 	{
+		// handle scope params
+		if (!strcmp(name, ScopeParametersNP.name))
+		{
+			ScopeParametersNP.s = IPS_BUSY;
+			IUUpdateNumber(&ScopeParametersNP, values, names, n);
+			IDSetNumber(&FocusStepDelayNP, nullptr);
+			ScopeParametersNP.s = IPS_OK;
+			DEBUGF(INDI::Logger::DBG_SESSION, "Scope parameters set to %0.0f / %0.0f.", ScopeParametersN[SCOPE_DIAM].value, ScopeParametersN[SCOPE_FL].value);
+			return true;
+		}
+
 		// handle focus step delay
 		if (!strcmp(name, FocusStepDelayNP.name))
 		{
-			IUUpdateNumber(&FocusStepDelayNP, values, names, n);
 			FocusStepDelayNP.s = IPS_BUSY;
+			IUUpdateNumber(&FocusStepDelayNP, values, names, n);
 			IDSetNumber(&FocusStepDelayNP, nullptr);
 			FocusStepDelayNP.s = IPS_OK;
-			IDSetNumber(&FocusStepDelayNP, nullptr);
 			DEBUGF(INDI::Logger::DBG_SESSION, "Step delay set to %0.0f us.", FocusStepDelayN[0].value);
 			return true;
 		}
@@ -920,6 +930,7 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 	IUSaveConfigNumber(fp, &FocusStepDelayNP);
 	IUSaveConfigNumber(fp, &FocusBacklashNP);
 	IUSaveConfigNumber(fp, &FocuserTravelNP);
+	IUSaveConfigNUmber(fp, &ScopeParametersNP);
 	IUSaveConfigNumber(fp, &TemperatureCoefNP);
 	IUSaveConfigNumber(fp, &PWMcycleNP);
 	IUSaveConfigText(fp, &RelayLabelsTP);
