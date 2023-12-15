@@ -1325,9 +1325,7 @@ int AstroLink4Pi::setDac(int chan, int value)
 	spiData[1] = dataBits;
 
 	int spiHandle = lgSpiOpen(pigpioHandle, 1, 1000000, 0);
-	DEBUGF(INDI::Logger::DBG_SESSION, "SPI handle %d \n", spiHandle);
 	int written = lgSpiWrite(spiHandle, spiData, 2);
-	DEBUGF(INDI::Logger::DBG_SESSION, "SPI written %d \n", written);
 	lgSpiClose(spiHandle);
 	return written;
 }
@@ -1610,18 +1608,22 @@ int AstroLink4Pi::checkRevision()
 	lgGpioClaimInput(handle, 0, CHK_IN_PIN);		// OLD CHK2_PIN
 
 	setDac(1, 0);
+	DEBUGF(INDI::Logger::DBG_SESSION, "Rev 1 check %d", gGpioRead(handle, MOTOR_PWM));
 	if(lgGpioRead(handle, MOTOR_PWM) == 0)
 	{
 		setDac(1, 255);
+		DEBUGF(INDI::Logger::DBG_SESSION, "Rev 2 check %d", gGpioRead(handle, MOTOR_PWM));
 		if(lgGpioRead(handle, MOTOR_PWM) == 1)
 		{
 			rev = 2;
 		}
 	}
 	setDac(1, 0);
+	DEBUGF(INDI::Logger::DBG_SESSION, "Rev 3 check %d", gGpioRead(handle, MOTOR_PWM));
 	if(lgGpioRead(handle, CHK_IN_PIN) == 0)
 	{
 		setDac(1, 255);
+		DEBUGF(INDI::Logger::DBG_SESSION, "Rev 4 check %d", gGpioRead(handle, MOTOR_PWM));
 		if(lgGpioRead(handle, CHK_IN_PIN) == 1)
 		{
 			rev = 3;
