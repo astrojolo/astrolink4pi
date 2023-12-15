@@ -1623,7 +1623,7 @@ int AstroLink4Pi::checkRevision()
 	if(lgGpioRead(handle, CHK_IN_PIN) == 0)
 	{
 		setDac(1, 255);
-		DEBUGF(INDI::Logger::DBG_SESSION, "Rev 4 check %d", lgGpioRead(handle, DBG_SESSION));
+		DEBUGF(INDI::Logger::DBG_SESSION, "Rev 4 check %d", lgGpioRead(handle, CHK_IN_PIN));
 		if(lgGpioRead(handle, CHK_IN_PIN) == 1)
 		{
 			rev = 3;
