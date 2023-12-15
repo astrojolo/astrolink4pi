@@ -116,8 +116,7 @@ private:
 
 	INumber ScopeParametersN[2];
 	INumberVectorProperty ScopeParametersNP;
-	IText ActiveTelescopeT[1];
-	ITextVectorProperty ActiveTelescopeTP;
+	enum {SCOPE_DIAM, SCOPE_FL};
 
 	IText SysTimeT[2];
 	ITextVectorProperty SysTimeTP;

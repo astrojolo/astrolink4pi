@@ -283,13 +283,9 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&FocuserTravelN[0], "FOCUSER_TRAVEL_VALUE", "mm", "%0.0f", 10, 200, 10, 10);
 	IUFillNumberVector(&FocuserTravelNP, FocuserTravelN, 1, getDeviceName(), "FOCUSER_TRAVEL", "Max Travel", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
-	// Active telescope setting
-	IUFillText(&ActiveTelescopeT[0], "ACTIVE_TELESCOPE_NAME", "Telescope", "Telescope Simulator");
-	IUFillTextVector(&ActiveTelescopeTP, ActiveTelescopeT, 1, getDeviceName(), "ACTIVE_TELESCOPE", "Snoop devices", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
-
 	// Snooping params
-	IUFillNumber(&ScopeParametersN[0], "TELESCOPE_APERTURE", "Aperture (mm)", "%g", 10, 5000, 0, 0.0);
-	IUFillNumber(&ScopeParametersN[1], "TELESCOPE_FOCAL_LENGTH", "Focal Length (mm)", "%g", 10, 10000, 0, 0.0);
+	IUFillNumber(&ScopeParametersN[SCOPE_DIAM], "SCOPE_DIAM", "Aperture (mm)", "%g", 10, 5000, 0, 0.0);
+	IUFillNumber(&ScopeParametersN[SCOPE_FL], "SCOPE_FL", "Focal Length (mm)", "%g", 10, 10000, 0, 0.0);
 	IUFillNumberVector(&ScopeParametersNP, ScopeParametersN, 2, ActiveTelescopeT[0].text, "TELESCOPE_INFO", "Scope Properties", OPTIONS_TAB, IP_RW, 60, IPS_OK);
 
 	IUFillText(&SysTimeT[0], "LOCAL_TIME", "Local Time", NULL);
@@ -392,7 +388,6 @@ bool AstroLink4Pi::updateProperties()
 		FI::updateProperties();
 		WI::updateProperties();
 
-		defineProperty(&ActiveTelescopeTP);
 		defineProperty(&FocuserTravelNP);
 		defineProperty(&FocusResolutionSP);
 		defineProperty(&FocusHoldSP);
@@ -419,7 +414,6 @@ bool AstroLink4Pi::updateProperties()
 	}
 	else
 	{
-		deleteProperty(ActiveTelescopeTP.name);
 		deleteProperty(FocuserTravelNP.name);
 		deleteProperty(FocusResolutionSP.name);
 		deleteProperty(FocusHoldSP.name);
@@ -929,18 +923,6 @@ bool AstroLink4Pi::ISNewText(const char *dev, const char *name, char *texts[], c
 	return INDI::DefaultDevice::ISNewText(dev, name, texts, names, n);
 }
 
-bool AstroLink4Pi::ISSnoopDevice(XMLEle *root)
-{
-	if (IUSnoopNumber(root, &ScopeParametersNP) == 0)
-	{
-		getFocuserInfo();
-		DEBUGF(INDI::Logger::DBG_DEBUG, "Telescope parameters: %0.0f, %0.0f.", ScopeParametersN[0].value, ScopeParametersN[1].value);
-		return true;
-	}
-
-	return INDI::DefaultDevice::ISSnoopDevice(root);
-}
-
 bool AstroLink4Pi::saveConfigItems(FILE *fp)
 {
 	FI::saveConfigItems(fp);
@@ -1379,8 +1361,8 @@ void AstroLink4Pi::getFocuserInfo()
 {
 	// https://www.innovationsforesight.com/education/how-much-focus-error-is-too-much/
 	float travel_mm = (float)FocuserTravelN[0].value;
-	float aperture = (float)ScopeParametersN[0].value;
-	float focal = (float)ScopeParametersN[1].value;
+	float aperture = (float)ScopeParametersN[SCOPE_DIAM].value;
+	float focal = (float)ScopeParametersN[SCOPE_FL].value;
 	float f_ratio;
 
 	// handle no snooping data from telescope
