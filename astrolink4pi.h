@@ -182,6 +182,7 @@ private:
 	void systemUpdate();
 	void fanUpdate();
 	int getMotorPWM(int current);
+	int setDac(int chan, int value);
 	int checkRevision();
 	long int millis();
 	std::thread getMotorThread(uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining);

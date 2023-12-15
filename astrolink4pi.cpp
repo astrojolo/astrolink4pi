@@ -1172,7 +1172,17 @@ void AstroLink4Pi::setCurrent(bool standby)
 	{
 		lgGpioWrite(pigpioHandle, EN_PIN,  (getHoldPower() > 0) ? 0 : 1);
 		lgGpioWrite(pigpioHandle, DECAY_PIN, 0);
-		lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(getHoldPower() * StepperCurrentN[0].value / 5), 0, 0);
+
+		if(revision == 3)
+		{
+			// for 0.1 ohm resistor Vref = iref / 2
+			setDac(0, 255 * (holdPower * stepperCurrent / 5) / 4096);
+		}
+		if(revision >= 4)
+		{
+			lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(getHoldPower() * StepperCurrentN[0].value / 5), 0, 0);
+		}
+		
 		if (getHoldPower() > 0)
 		{
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", getHoldPower() * 20);
@@ -1186,7 +1196,15 @@ void AstroLink4Pi::setCurrent(bool standby)
 	{
 		lgGpioWrite(pigpioHandle, EN_PIN, 0);
 		lgGpioWrite(pigpioHandle, DECAY_PIN, 1);
-		lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(StepperCurrentN[0].value), 0, 0);
+		if(revision == 3)
+		{
+			// for 0.1 ohm resistor Vref = iref / 2
+			setDac(0, 255 * stepperCurrent / 4096);
+		}		
+		if(revision >= 4)
+		{
+			lgTxPwm(pigpioHandle, MOTOR_PWM, 5000, getMotorPWM(StepperCurrentN[0].value), 0, 0);
+		}
 	}
 }
 
@@ -1288,6 +1306,28 @@ int AstroLink4Pi::getMotorPWM(int current)
 {
 	// 100 = 1.03V = 2.06A, 1 = 20mA
 	return current / 20;
+}
+
+int AstroLink4Pi::setDac(int chan, int value)
+{
+	char spiData[2];
+	uint8_t chanBits, dataBits;
+
+	if (chan == 0)
+		chanBits = 0x30;
+	else
+		chanBits = 0xB0;
+
+	chanBits |= ((value >> 4) & 0x0F);
+	dataBits = ((value << 4) & 0xF0);
+
+	spiData[0] = chanBits;
+	spiData[1] = dataBits;
+
+	int spiHandle = lgSpiOpen(pigpioHandle, 1, 1000000, 0);
+	int written = lgSpiWrite(spiHandle, spiData, 2);
+	lgSpiClose(spiHandle);
+	return written;
 }
 
 void AstroLink4Pi::fanUpdate()
@@ -1563,19 +1603,30 @@ int AstroLink4Pi::checkRevision()
 	}
 
 	int rev = 1;
-	lgGpioClaimOutput(handle, 0, MOTOR_PWM, 0);
-	lgGpioClaimInput(handle, 0, CHK_IN_PIN);
-	int result = lgGpioRead(handle, CHK_IN_PIN);
-	if (result == 0)
+	lgGpioClaimOutput(handle, 0, MOTOR_PWM, 0);		// OLD CHK_PIN
+	lgGpioClaimInput(handle, 0, CHK_IN_PIN);		// OLD CHK2_PIN
+
+	setDac(1, 0);
+	if(lgGpioRead(handle, CHK_IN_PIN) == 0)
 	{
-		result = lgGpioWrite(handle, MOTOR_PWM, 1);
-		result = lgGpioRead(handle, CHK_IN_PIN);
-		if(result == 1)
+		setDac(1, 255);
+		if(lgGpioRead(handle, CHK_IN_PIN) == 1)
 		{
-			rev = 4;
+			rev = 3;
 		}
 	}
-	lgTxPwm(handle, MOTOR_PWM, 5000, 0, 0, 0);
+	if(rev == 1)
+	{
+		if (lgGpioRead(handle, CHK_IN_PIN) == 0)
+		{
+			lgGpioWrite(handle, MOTOR_PWM, 1);
+			if (lgGpioRead(handle, CHK_IN_PIN) == 1)
+			{
+				rev = 4;
+			}
+		}
+		lgTxPwm(handle, MOTOR_PWM, 5000, 0, 0, 0);
+	}
 	lgGpioFree(handle, MOTOR_PWM);
 	lgGpioFree(handle, CHK_IN_PIN);
 
