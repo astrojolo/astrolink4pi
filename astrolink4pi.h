@@ -121,10 +121,6 @@ private:
 	ITextVectorProperty SysTimeTP;
 	IText SysInfoT[7];
 	ITextVectorProperty SysInfoTP;
-	ISwitch SysControlS[2];
-	ISwitchVectorProperty SysControlSP;
-	ISwitch SysOpConfirmS[2];
-	ISwitchVectorProperty SysOpConfirmSP;
 
 	IText RelayLabelsT[4];
 	ITextVectorProperty RelayLabelsTP;
@@ -149,13 +145,14 @@ private:
 	INumberVectorProperty StepperCurrentNP;
 
 	int revision = 1;
+	int gpioType = 0;
 	int gpioChip = -1;
 	int pigpioHandle = -1;
+
 	int resolution = 1;
-	int holdPower = 0;
+
 	float lastTemperature;
 	float focuserTemperature;
-	bool DSavailable = false;
 	bool SHTavailable = false;
 	bool MLXavailable = false;
 	bool SQMavailable = false;
@@ -165,9 +162,6 @@ private:
 
 	int pwmState[2];
 	int relayState[2];
-	int pwmCounter = 0;
-	int stepperCurrent = 0;
-	int gpioType = 0;
 
 	long int nextTemperatureRead = 0;
 	long int nextTemperatureCompensation = 0;
@@ -181,6 +175,7 @@ private:
 	std::thread _motionThread;
 	volatile bool _abort;
 
+	int getHoldPower();
 	void getFocuserInfo();
 	void temperatureCompensation();
 	void setCurrent(bool standby);
@@ -189,6 +184,7 @@ private:
 	int getMotorPWM(int current);
 	int checkRevision();
 	long int millis();
+	std::thread getMotorThread(uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining);
 
     static constexpr const char *ENVIRONMENT_TAB {"Environment"};
 	static constexpr const char *SYSTEM_TAB{"System"};
