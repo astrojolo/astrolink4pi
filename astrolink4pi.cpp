@@ -114,7 +114,7 @@ bool AstroLink4Pi::Connect()
 		return false;
 	}
 
-	if(revision < 2)
+	if(revision < 4)
 	{
 		DEBUGF(INDI::Logger::DBG_ERROR, "This INDI driver version works only with AstroLink 4 Pi revision 4 and higer. Revision detected %d", revision);		
 		return false;
@@ -1173,7 +1173,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 		lgGpioWrite(pigpioHandle, EN_PIN,  (getHoldPower() > 0) ? 0 : 1);
 		lgGpioWrite(pigpioHandle, DECAY_PIN, 0);
 
-		if(revision < 4)
+		if(revision == 3)
 		{
 			// for 0.1 ohm resistor Vref = iref / 2
 			setDac(0, 255 * (getHoldPower() * StepperCurrentN[0].value / 5) / 4096);
@@ -1196,7 +1196,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 	{
 		lgGpioWrite(pigpioHandle, EN_PIN, 0);
 		lgGpioWrite(pigpioHandle, DECAY_PIN, 1);
-		if(revision < 4)
+		if(revision == 3)
 		{
 			// for 0.1 ohm resistor Vref = iref / 2
 			setDac(0, 255 * StepperCurrentN[0].value / 4096);
@@ -1608,18 +1608,22 @@ int AstroLink4Pi::checkRevision()
 	lgGpioClaimInput(handle, 0, CHK_IN_PIN);		// OLD CHK2_PIN
 
 	setDac(1, 0);
+	DEBUGF(INDI::Logger::DBG_SESSION, "Rev 1 check %d", lgGpioRead(handle, MOTOR_PWM));
 	if(lgGpioRead(handle, MOTOR_PWM) == 0)
 	{
 		setDac(1, 255);
+		DEBUGF(INDI::Logger::DBG_SESSION, "Rev 2 check %d", lgGpioRead(handle, MOTOR_PWM));
 		if(lgGpioRead(handle, MOTOR_PWM) == 1)
 		{
 			rev = 2;
 		}
 	}
 	setDac(1, 0);
+	DEBUGF(INDI::Logger::DBG_SESSION, "Rev 3 check %d", lgGpioRead(handle, CHK_IN_PIN));
 	if(lgGpioRead(handle, CHK_IN_PIN) == 0)
 	{
 		setDac(1, 255);
+		DEBUGF(INDI::Logger::DBG_SESSION, "Rev 4 check %d", lgGpioRead(handle, CHK_IN_PIN));
 		if(lgGpioRead(handle, CHK_IN_PIN) == 1)
 		{
 			rev = 3;
