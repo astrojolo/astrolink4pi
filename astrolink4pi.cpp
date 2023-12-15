@@ -1668,6 +1668,8 @@ int AstroLink4Pi::checkRevision()
 	lguSleep(2);
 	setDac(1,255);
 	lguSleep(2);
+	setDac(1,0);
+	lguSleep(2);
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return 2;
