@@ -118,15 +118,16 @@ bool AstroLink4Pi::Connect()
 	lgGpioClaimOutput(pigpioHandle, 0, M0_PIN, 0);
 	lgGpioClaimOutput(pigpioHandle, 0, M1_PIN, 0);
 	lgGpioClaimOutput(pigpioHandle, 0, M2_PIN, 0);
-	// lgGpioClaimOutput(pigpioHandle, 0, RST_PIN, 1);		// RST_PIN start as wake up
-	// lgGpioClaimOutput(pigpioHandle, 0, STP_PIN, 0);
-	// lgGpioClaimOutput(pigpioHandle, 0, DIR_PIN, 0);
-	// lgGpioClaimOutput(pigpioHandle, 0, OUT1_PIN, relayState[0]);
-	// lgGpioClaimOutput(pigpioHandle, 0, OUT2_PIN, relayState[1]);
-	// lgGpioClaimOutput(pigpioHandle, 0, PWM1_PIN, 0);
-	// lgGpioClaimOutput(pigpioHandle, 0, PWM2_PIN, 0);
-	// lgGpioClaimOutput(pigpioHandle, 0, MOTOR_PWM, 0);
-	// lgGpioClaimOutput(pigpioHandle, 0, HOLD_PIN, 1);	// HOLD_PIN start as disabled
+	lgGpioClaimOutput(pigpioHandle, 0, RST_PIN, 1);		// RST_PIN start as wake up
+	lgGpioClaimOutput(pigpioHandle, 0, STP_PIN, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, DIR_PIN, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, OUT1_PIN, relayState[0]);
+	lgGpioClaimOutput(pigpioHandle, 0, OUT2_PIN, relayState[1]);
+	lgGpioClaimOutput(pigpioHandle, 0, PWM1_PIN, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, PWM2_PIN, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, MOTOR_PWM, 0);
+	lgGpioClaimOutput(pigpioHandle, 0, HOLD_PIN, 1);	// HOLD_PIN start as disabled
+	lgGpioClaimOutput(pigpioHandle, 0, FAN_PIN, 0);
 
 	// Lock Relay Labels setting
 	RelayLabelsTP.s = IPS_BUSY;
@@ -205,8 +206,18 @@ bool AstroLink4Pi::Disconnect()
 	lgGpioFree(pigpioHandle, M0_PIN);
 	lgGpioFree(pigpioHandle, M1_PIN);
 	lgGpioFree(pigpioHandle, M2_PIN);
-	// lgGpioFree(pigpioHandle, FAN_PIN);
-	// lgGroupFree(pigpioHandle, EN_PIN);
+	lgGpioFree(pigpioHandle, M2_PIN);
+	lgGpioFree(pigpioHandle, RST_PIN);
+	lgGpioFree(pigpioHandle, STP_PIN);
+	lgGpioFree(pigpioHandle, DIR_PIN);
+	lgGpioFree(pigpioHandle, OUT1_PIN);
+	lgGpioFree(pigpioHandle, OUT2_PIN);
+	lgGpioFree(pigpioHandle, PWM1_PIN);
+	lgGpioFree(pigpioHandle, PWM2_PIN);
+	lgGpioFree(pigpioHandle, MOTOR_PWM);
+	lgGpioFree(pigpioHandle, HOLD_PIN);
+	lgGpioFree(pigpioHandle, FAN_PIN);
+
 	lgGpiochipClose(pigpioHandle);
 
 	// Unlock Relay Labels setting
