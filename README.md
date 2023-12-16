@@ -3,7 +3,7 @@ AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberr
 ### AstroLink 4 Pi works both with Raspberry Pi 4 and 5. 
 
 > [!NOTE]
-> This INDI driver works with revision 4 of AstroLink 4 Pi device (manufactured after October 2023). For earlier revisions see the section below the AstroLink 4 Pi features.
+> This INDI driver works with revisions 3 and newer of AstroLink 4 Pi device (the ones with RJ sensor socket). For earlier revisions see the section below the AstroLink 4 Pi features.
 
 > [!NOTE]
 > Raspberry Pi 5 is based on new OS Bookworm. Make sure the software you use is available for this new OS before you upgrade to RPi5. Currently, Stellarmate OS 1.8.0 supports RPi5. 
@@ -16,7 +16,7 @@ https://shop.astrojolo.com/astrolink-4-computers/
 ## Requirements
 * INDI http://indilib.org/download.html
 * lgpio https://abyz.me.uk/lg/download.html 
-* I<sup>2</sup>C support must be enabled in Raspberry configuration
+* I<sup>2</sup>C and SPI support must be enabled in Raspberry configuration
 
 ### Required packages
 ```
@@ -83,18 +83,27 @@ https://github.com/astrojolo/astrolink4pi
 
 ![Photo](/images/astrolink4pi-banner.jpg)
 
-# Devices revision 3 and earlier
+# Devices revision 2 and earlier
 INDI driver AstroLink 4 Pi revision 3 and earlier must be installed from the tag https://github.com/astrojolo/astrolink4pi/tree/3.0.0
 
 > [!NOTE]
-> Revision 3 and earlier of AstroLink 4 Pi works only with Raspberry Pi 4
+> Revision 2 and earlier of AstroLink 4 Pi works only with Raspberry Pi 4
 
 Additional packages required:
 ```
 sudo apt install gpiod libgpiod-dev libgpiod-doc
 sudo systemctl enable pigpiod
 ```
-In AstroLink 4 Pi revision 3 and earlier internal fan is not controlled by the INDI driver. You need to open Raspberry configuration and switch on the fan on GPIO 13 (Performance tab).
+AstroLink 4 Pi driver installation (for revisions 2 and older)
+```
+git clone https://github.com/astrojolo/astrolink4pi
+cd astrolink4pi
+mkdir build && cd build
+git checkout tags/3.0.0
+cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+sudo make install
+```
+In AstroLink 4 Pi revision 2 and earlier internal fan is not controlled by the INDI driver. You need to open Raspberry configuration and switch on the fan on GPIO 13 (Performance tab).
 
 # Revisions matrix
 ### Revision 4
@@ -102,7 +111,12 @@ In AstroLink 4 Pi revision 3 and earlier internal fan is not controlled by the I
 * Works with Raspberry Pi 4 or 5.
 * Requires _lgpio_ library for GPIO control.
 * Requires I<sup>2</sup>C enabled.
-### Revision 3 and 2
+### Revision 2
+* Works with the most recent INDI driver version from _main_.
+* Works with Raspberry Pi 4 or 5.
+* Requires _lgpio_ library for GPIO control.
+* Requires I<sup>2</sup>C and SPI enabled.
+### Revision 2
 * Works with tag 3.0 of INDI driver.
 * Works with Rasbperry Pi 4 only.
 * Requires _pigpio_ library for GPIO control.
