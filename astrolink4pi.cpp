@@ -99,14 +99,14 @@ const char *AstroLink4Pi::getDefaultName()
 bool AstroLink4Pi::Connect()
 {
 	revision = checkRevision();
-	if (revision < 2)
+	if (revision < 3)
 	{
-		DEBUGF(INDI::Logger::DBG_ERROR, "This INDI driver version works only with AstroLink 4 Pi revision 4 and higer. Revision detected %d", revision);
+		DEBUGF(INDI::Logger::DBG_ERROR, "This INDI driver version works only with AstroLink 4 Pi revision 3 and higer. Revision detected %d", revision);
 		return false;
 	}
 
 	pigpioHandle = lgGpiochipOpen(gpioType);
-	if(pigpioHandle < 0)
+	if (pigpioHandle < 0)
 	{
 		DEBUGF(INDI::Logger::DBG_ERROR, "Could not access GPIO. Error code %d , GPIO number %d", pigpioHandle, gpioType);
 		return false;
@@ -1635,13 +1635,13 @@ int AstroLink4Pi::checkRevision()
 	}
 
 	int spiHandle = lgSpiOpen(pigpioHandle, 1, 100000, 0);
-	if(spiHandle >= 0)
+	if (spiHandle >= 0)
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "SPI bus active.\n");
-		lgSpiClose(spiHandle);	
+		lgSpiClose(spiHandle);
 	}
 	int i2cHandle = lgI2cOpen(1, 0x68, 0);
-	if(i2cHandle >= 0)
+	if (i2cHandle >= 0)
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "I2C bus active.\n");
 		lgI2cClose(i2cHandle);
