@@ -1342,7 +1342,7 @@ int AstroLink4Pi::setDac(int chan, int value)
 
 	int spiHandle = lgSpiOpen(pigpioHandle, 1, 100000, 0);
 	int written = lgSpiWrite(spiHandle, spiData, 2);
-	int closed = lgSpiClose(spiHandle);
+	lgSpiClose(spiHandle);
 
 	return written;
 }
@@ -1646,7 +1646,7 @@ int AstroLink4Pi::checkRevision()
 		DEBUG(INDI::Logger::DBG_SESSION, "I2C bus active.\n");
 		lgI2cClose(i2cHandle);
 	}
-	
+
 	int rev = 1;
 	lgGpioClaimInput(handle, 0, MOTOR_PWM);	 // OLD CHK_PIN
 	lgGpioClaimInput(handle, 0, CHK_IN_PIN); // OLD CHK2_PIN
