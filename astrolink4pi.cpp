@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright(c) 2021 astrojolo.com
+ Copyright(c) 2023 astrojolo.com
  .
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Library General Public
@@ -1331,7 +1331,6 @@ int AstroLink4Pi::getMotorPWM(int current)
 
 int AstroLink4Pi::setDac(int chan, int value)
 {
-	DEBUGF(INDI::Logger::DBG_SESSION, "DAC value %d", value);
 	char spiData[2];
 	uint8_t chanBits, dataBits;
 
