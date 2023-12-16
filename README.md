@@ -111,7 +111,7 @@ In AstroLink 4 Pi revision 2 and earlier internal fan is not controlled by the I
 * Works with Raspberry Pi 4 or 5.
 * Requires _lgpio_ library for GPIO control.
 * Requires I<sup>2</sup>C enabled.
-### Revision 2
+### Revision 3
 * Works with the most recent INDI driver version from _main_.
 * Works with Raspberry Pi 4 or 5.
 * Requires _lgpio_ library for GPIO control.
