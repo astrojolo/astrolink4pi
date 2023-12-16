@@ -77,11 +77,6 @@ void ISNewNumber(const char *dev, const char *name, double values[], char *names
 	astroLink4Pi->ISNewNumber(dev, name, values, names, num);
 }
 
-void ISSnoopDevice(XMLEle *root)
-{
-	astroLink4Pi->ISSnoopDevice(root);
-}
-
 AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
@@ -1346,8 +1341,11 @@ int AstroLink4Pi::setDac(int chan, int value)
 	spiData[1] = dataBits;
 
 	int spiHandle = lgSpiOpen(pigpioHandle, 1, 100000, 0);
+	DEBUGF(INDI::Logger::DBG_SESSION, "SPI hanle", spiHandle);
 	int written = lgSpiWrite(spiHandle, spiData, 2);
-	lgSpiClose(spiHandle);
+	DEBUGF(INDI::Logger::DBG_SESSION, "SPI writ", written);
+	int closed = lgSpiClose(spiHandle);
+	DEBUGF(INDI::Logger::DBG_SESSION, "SPI clos", closed);
 
 	return written;
 }
