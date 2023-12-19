@@ -108,11 +108,11 @@ sudo make install
 ```
 In AstroLink 4 Pi revision 2 and earlier internal fan is not controlled by the INDI driver. You need to open Raspberry configuration and switch on the fan on GPIO 13 (Performance tab).
 
-### AstroArch only specific tasks
+# AstroArch only specific tasks
 Update system and install packages:
 ```
 update-astroarch
-pacman -S unzip cmake python python3 python-setuptools swig
+sudo pacman -S unzip cmake python python3 python-setuptools swig
 ```
 
 Add the following line to _/boot/config.txt_:
@@ -133,7 +133,7 @@ and update to
 prefix ?= /usr
 ```
 
-Create additional group and add user _astronaut_ to them:
+Create additional groups and add user _astronaut_ to them:
 ```
 sudo groupadd gpio
 sudo groupadd spi
