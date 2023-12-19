@@ -1341,13 +1341,6 @@ int AstroLink4Pi::setDac(int chan, int value)
 	spiData[1] = dataBits;
 
 	int spiHandle = lgSpiOpen(pigpioHandle, 1, 100000, 0);
-	DEBUGF(INDI::Logger::DBG_SESSION, "SPI handle %d \n", spiHandle);
-	if(spiHandle < 0)
-	{
-		// For AstroArch
-		spiHandle = lgSpiOpen(10, 1, 100000, 0);
-		DEBUGF(INDI::Logger::DBG_SESSION, "SPI handle %d \n", spiHandle);
-	}
 	int written = lgSpiWrite(spiHandle, spiData, 2);
 	lgSpiClose(spiHandle);
 
