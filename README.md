@@ -6,7 +6,7 @@ AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberr
 > This INDI driver works with revisions 3 and newer of AstroLink 4 Pi device (the ones with RJ sensor socket). For earlier revisions see the section below the AstroLink 4 Pi features.
 
 > [!NOTE]
-> Raspberry Pi 5 is based on new OS Bookworm. Make sure the software you use is available for this new OS before you upgrade to RPi5. Currently, Stellarmate OS 1.8.0 supports RPi5. 
+> Raspberry Pi 5 is based on new OS Bookworm. Make sure the software you use is available for this new OS before you upgrade to RPi5. Currently, Stellarmate OS 1.8.0 supports RPi5 and AstroArch was tested successfully.
 
 ## Device
 https://shop.astrojolo.com/astrolink-4-computers/
@@ -18,11 +18,14 @@ https://shop.astrojolo.com/astrolink-4-computers/
 * lgpio https://abyz.me.uk/lg/download.html 
 * I<sup>2</sup>C and SPI support must be enabled in Raspberry configuration
 
+For AstroArch system there are few additional steps required that are listed below the AstroLink 4 features section.
+
 ### Required packages
 ```
 sudo apt update
 sudo apt install git build-essential cmake libindi-dev
 ```
+
 ### INDI driver installation
 ```
 git clone https://github.com/astrojolo/astrolink4pi
@@ -104,6 +107,36 @@ cmake -DCMAKE_INSTALL_PREFIX=/usr ..
 sudo make install
 ```
 In AstroLink 4 Pi revision 2 and earlier internal fan is not controlled by the INDI driver. You need to open Raspberry configuration and switch on the fan on GPIO 13 (Performance tab).
+
+### AstroArch only specific tasks
+Update system and install packages:
+```
+update-astroarch
+pacman -S unzip cmake python python3 python-setuptools python3-setuptools swig
+```
+
+RTC clock enabling is described at https://github.com/devDucks/astroarch . RTC device name is _ds1307_. 
+
+Before compiling _lgpio_ find the following line in _Makefile_ file:
+```
+prefix ?= /usr/local
+```
+and update to
+```
+prefix ?= /usr
+```
+
+Create additional group and add user _astronaut_ to them:
+```
+sudo groupadd gpio
+sudo usermod -a -G gpio astronaut
+sudo usermod -a -G i2c astronaut
+```
+Create _/etc/udev/rules.d/99-gpio.rules_ file with content:
+```
+SUBSYSTEM=="gpio", KERNEL=="gpiochip*", GROUP:="gpio", MODE:="0660"
+```
+
 
 # Revisions matrix
 ### Revision 4
