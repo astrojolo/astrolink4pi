@@ -1356,12 +1356,12 @@ void AstroLink4Pi::fanUpdate()
 		int temp = std::stoi(SysInfoT[1].text);
 		int cycle = 0;
 		double fanPwr = 33.0;
-		if (temp > 60)
+		if (temp > 65)
 		{
 			cycle = 50;
 			fanPwr = 66.0;
 		}
-		if (temp > 63)
+		if (temp > 70)
 		{
 			cycle = 100;
 			fanPwr = 100.0;
