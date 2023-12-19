@@ -112,10 +112,17 @@ In AstroLink 4 Pi revision 2 and earlier internal fan is not controlled by the I
 Update system and install packages:
 ```
 update-astroarch
-pacman -S unzip cmake python python3 python-setuptools python3-setuptools swig
+pacman -S unzip cmake python python3 python-setuptools swig
 ```
 
-RTC clock enabling is described at https://github.com/devDucks/astroarch . RTC device name is _ds1307_. 
+Add the following line to _/boot/config.txt_:
+```
+dtparam=spi=on
+```
+and modify
+```
+dtoverlay=i2c-rtc,ds1307
+```
 
 Before compiling _lgpio_ find the following line in _Makefile_ file:
 ```
@@ -129,13 +136,17 @@ prefix ?= /usr
 Create additional group and add user _astronaut_ to them:
 ```
 sudo groupadd gpio
+sudo groupadd spi
 sudo usermod -a -G gpio astronaut
 sudo usermod -a -G i2c astronaut
+sudo usermod -a -G spi astronaut
 ```
 Create _/etc/udev/rules.d/99-gpio.rules_ file with content:
 ```
 SUBSYSTEM=="gpio", KERNEL=="gpiochip*", GROUP:="gpio", MODE:="0660"
+SUBSYSTEM=="spidev", KERNEL=="spidev*", GROUP:="spi", MODE:="0660"
 ```
+Then you may go directly to AstroLink 4 Pi INDI driver installation.
 
 
 # Revisions matrix
@@ -149,16 +160,8 @@ SUBSYSTEM=="gpio", KERNEL=="gpiochip*", GROUP:="gpio", MODE:="0660"
 * Works with Raspberry Pi 4 or 5.
 * Requires _lgpio_ library for GPIO control.
 * Requires I<sup>2</sup>C and SPI enabled.
-### Revision 2
-* Works with tag 3.0 of INDI driver.
-* Works with Rasbperry Pi 4 only.
-* Requires _pigpio_ library for GPIO control.
-* Requires I<sup>2</sup>C and SPI enabled.
-### Revision 1
-* Works with tag 3.0 of INDI driver.
-* Works with Rasbperry Pi 4 only.
-* Requires _pigpio_ library for GPIO control.
-* Requires 1-Wire enabled.
+### Revision 2 and 1
+Works with tag 3.0 of INDI driver - see the README inside this tag.
 
 # How to use it?
 Run Kstars and select AstroLink 4 Pi (Aux section) in the Ekos profile editor. Then start the INDI server in Ekos with your profile, containing AstroLink 4 Pi drivers. Alternatively, you can start INDI server manually by running:
