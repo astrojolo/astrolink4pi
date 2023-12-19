@@ -6,7 +6,7 @@ AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberr
 > This INDI driver works with revisions 3 and newer of AstroLink 4 Pi device (the ones with RJ sensor socket). For earlier revisions see the section below the AstroLink 4 Pi features.
 
 > [!NOTE]
-> Raspberry Pi 5 is based on new OS Bookworm. Make sure the software you use is available for this new OS before you upgrade to RPi5. Currently, Stellarmate OS 1.8.0 supports RPi5. 
+> Raspberry Pi 5 is based on new OS Bookworm. Make sure the software you use is available for this new OS before you upgrade to RPi5. Currently, Stellarmate OS 1.8.0 supports RPi5 and AstroArch was tested successfully.
 
 ## Device
 https://shop.astrojolo.com/astrolink-4-computers/
@@ -23,6 +23,20 @@ https://shop.astrojolo.com/astrolink-4-computers/
 sudo apt update
 sudo apt install git build-essential cmake libindi-dev
 ```
+
+### AstroArch only specific tasks
+clock acc to https://github.com/devDucks/astroarch
+create gpio group 
+add astronaut to gpio and i2c groups
+update gpiochips to gpio group in udev
+update makefile in lgpiod 
+to
+prefix ?= /usr/local no local
+update-astroarch
+pacman unzip cmake python python3 setuptools swig
+sudo groupadd editorial
+sudo usermod -a -G editorial olivia
+
 ### INDI driver installation
 ```
 git clone https://github.com/astrojolo/astrolink4pi

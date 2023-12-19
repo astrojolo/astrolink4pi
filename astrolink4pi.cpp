@@ -1341,6 +1341,11 @@ int AstroLink4Pi::setDac(int chan, int value)
 	spiData[1] = dataBits;
 
 	int spiHandle = lgSpiOpen(pigpioHandle, 1, 100000, 0);
+	if(spiHandle < 0)
+	{
+		// For AstroArch
+		spiHandle = lgSpiOpen(pigpioHandle, 10, 100000, 0);
+	}
 	int written = lgSpiWrite(spiHandle, spiData, 2);
 	lgSpiClose(spiHandle);
 
