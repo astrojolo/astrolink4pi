@@ -1349,7 +1349,6 @@ int AstroLink4Pi::setDac(int chan, int value)
 
 void AstroLink4Pi::fanUpdate()
 {
-	return;
 	FanPowerNP.s = IPS_BUSY;
 	int fanPinAvailable = lgGpioClaimOutput(pigpioHandle, 0, FAN_PIN, 0);
 	if (fanPinAvailable == 0)
@@ -1367,7 +1366,6 @@ void AstroLink4Pi::fanUpdate()
 			cycle = 100;
 			fanPwr = 100.0;
 		}
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan %d %d\n", cycle, fanPwr);
 		lgTxPwm(pigpioHandle, FAN_PIN, 100, cycle, 0, 0);
 		FanPowerN[0].value = fanPwr;
 		FanPowerNP.s = IPS_OK;
