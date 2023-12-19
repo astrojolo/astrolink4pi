@@ -1357,16 +1357,17 @@ void AstroLink4Pi::fanUpdate()
 		int temp = std::stoi(SysInfoT[1].text);
 		int cycle = 0;
 		double fanPwr = 33.0;
-		if (temp > 65)
+		if (temp > 60)
 		{
 			cycle = 50;
 			fanPwr = 66.0;
 		}
-		if (temp > 70)
+		if (temp > 63)
 		{
 			cycle = 100;
 			fanPwr = 100.0;
 		}
+		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan %d %d\n", cycle, fanPwr);
 		lgTxPwm(pigpioHandle, FAN_PIN, 100, cycle, 0, 0);
 		FanPowerN[0].value = fanPwr;
 		FanPowerNP.s = IPS_OK;
