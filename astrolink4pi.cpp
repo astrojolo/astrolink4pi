@@ -139,25 +139,25 @@ bool AstroLink4Pi::Connect()
 	// https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
 	pipe = popen("cat /sys/firmware/devicetree/base/model", "r");
 	if (fgets(buffer, 128, pipe) != NULL)
-		IUSaveText(&SysInfoT[0], buffer);
+		IUSaveText(&SysInfoT[SYSI_HARDWARE], buffer);
 	pclose(pipe);
 
 	// update Hostname
 	pipe = popen("hostname", "r");
 	if (fgets(buffer, 128, pipe) != NULL)
-		IUSaveText(&SysInfoT[4], buffer);
+		IUSaveText(&SysInfoT[SYSI_HOST], buffer);
 	pclose(pipe);
 
 	// update Local IP
 	pipe = popen("hostname -I|awk -F' '  '{print $1}'|xargs", "r");
 	if (fgets(buffer, 128, pipe) != NULL)
-		IUSaveText(&SysInfoT[5], buffer);
+		IUSaveText(&SysInfoT[SYSI_LOCALIP], buffer);
 	pclose(pipe);
 
 	// update Public IP
 	pipe = popen("wget -qO- http://ipecho.net/plain|xargs", "r");
 	if (fgets(buffer, 128, pipe) != NULL)
-		IUSaveText(&SysInfoT[6], buffer);
+		IUSaveText(&SysInfoT[SYSI_PUBIP], buffer);
 	pclose(pipe);
 
 	// Update client
@@ -298,17 +298,17 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumber(&ScopeParametersN[SCOPE_FL], "SCOPE_FL", "Focal Length (mm)", "%0.0f", 10, 10000, 0, 0.0);
 	IUFillNumberVector(&ScopeParametersNP, ScopeParametersN, 2, getDeviceName(), "TELESCOPE_INFO", "Scope Properties", OPTIONS_TAB, IP_RW, 60, IPS_OK);
 
-	IUFillText(&SysTimeT[0], "LOCAL_TIME", "Local Time", NULL);
-	IUFillText(&SysTimeT[1], "UTC_OFFSET", "UTC Offset", NULL);
+	IUFillText(&SysTimeT[SYST_TIME], "SYST_TIME", "Local Time", NULL);
+	IUFillText(&SysTimeT[SYST_OFFSET], "SYST_OFFSET", "UTC Offset", NULL);
 	IUFillTextVector(&SysTimeTP, SysTimeT, 2, getDeviceName(), "SYSTEM_TIME", "System Time", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);
 
-	IUFillText(&SysInfoT[0], "HARDWARE", "Hardware", NULL);
-	IUFillText(&SysInfoT[1], "CPU TEMP", "CPU Temp (°C)", NULL);
-	IUFillText(&SysInfoT[2], "UPTIME", "Uptime (hh:mm)", NULL);
-	IUFillText(&SysInfoT[3], "LOAD", "Load (1 / 5 / 15 min.)", NULL);
-	IUFillText(&SysInfoT[4], "HOSTNAME", "Hostname", NULL);
-	IUFillText(&SysInfoT[5], "LOCAL_IP", "Local IP", NULL);
-	IUFillText(&SysInfoT[6], "PUBLIC_IP", "Public IP", NULL);
+	IUFillText(&SysInfoT[SYSI_HARDWARE], "SYSI_HARDWARE", "Hardware", NULL);
+	IUFillText(&SysInfoT[SYSI_CPUTEMP], "SYSI_CPUTEMP", "CPU Temp (°C)", NULL);
+	IUFillText(&SysInfoT[SYSI_UPTIME], "SYSI_UPTIME", "Uptime (hh:mm)", NULL);
+	IUFillText(&SysInfoT[SYSI_LOAD], "SYSI_LOAD", "Load (1 / 5 / 15 min.)", NULL);
+	IUFillText(&SysInfoT[SYSI_HOST], "SYSI_HOST", "Hostname", NULL);
+	IUFillText(&SysInfoT[SYSI_LOCALIP], "SYSI_LOCALIP", "Local IP", NULL);
+	IUFillText(&SysInfoT[SYSI_PUBIP], "SYSI_PUBIP", "Public IP", NULL);
 	IUFillTextVector(&SysInfoTP, SysInfoT, 7, getDeviceName(), "SYSTEM_INFO", "System Info", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);
 
 	IUFillNumber(&FanPowerN[0], "FAN_PWR", "Speed [%]", "%0.0f", 0, 100, 1, 33);
@@ -1233,9 +1233,9 @@ void AstroLink4Pi::systemUpdate()
 	time(&rawtime);
 	local_timeinfo = localtime(&rawtime);
 	strftime(ts, 20, "%Y-%m-%dT%H:%M:%S", local_timeinfo);
-	IUSaveText(&SysTimeT[0], ts);
+	IUSaveText(&SysTimeT[SYST_TIME], ts);
 	snprintf(ts, sizeof(ts), "%4.2f", (local_timeinfo->tm_gmtoff / 3600.0));
-	IUSaveText(&SysTimeT[1], ts);
+	IUSaveText(&SysTimeT[SYST_OFFSET], ts);
 	SysTimeTP.s = IPS_OK;
 	IDSetText(&SysTimeTP, NULL);
 
@@ -1248,19 +1248,19 @@ void AstroLink4Pi::systemUpdate()
 	// update CPU temp
 	pipe = popen("echo $(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))", "r");
 	if (fgets(buffer, 128, pipe) != NULL)
-		IUSaveText(&SysInfoT[1], buffer);
+		IUSaveText(&SysInfoT[SYSI_CPUTEMP], buffer);
 	pclose(pipe);
 
 	// update uptime
 	pipe = popen("uptime|awk -F, '{print $1}'|awk -Fup '{print $2}'|xargs", "r");
 	if (fgets(buffer, 128, pipe) != NULL)
-		IUSaveText(&SysInfoT[2], buffer);
+		IUSaveText(&SysInfoT[SYSI_UPTIME], buffer);
 	pclose(pipe);
 
 	// update load
 	pipe = popen("uptime|awk -F, '{print $3\" /\"$4\" /\"$5}'|awk -F: '{print $2}'|xargs", "r");
 	if (fgets(buffer, 128, pipe) != NULL)
-		IUSaveText(&SysInfoT[3], buffer);
+		IUSaveText(&SysInfoT[SYSI_LOAD], buffer);
 	pclose(pipe);
 
 	SysInfoTP.s = IPS_OK;
@@ -1353,7 +1353,7 @@ void AstroLink4Pi::fanUpdate()
 	int fanPinAvailable = lgGpioClaimOutput(pigpioHandle, 0, FAN_PIN, 0);
 	if (fanPinAvailable == 0)
 	{
-		int temp = std::stoi(SysInfoT[1].text);
+		int temp = std::stoi(SysInfoT[SYSI_CPUTEMP].text);
 		int cycle = 0;
 		double fanPwr = 33.0;
 		if (temp > 65)
