@@ -1188,7 +1188,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 		lgGpioWrite(pigpioHandle, EN_PIN, (getHoldPower() > 0) ? 0 : 1);
 		lgGpioWrite(pigpioHandle, DECAY_PIN, 0);
 
-		if (revision < 3)
+		if (revision < 4)
 		{
 			// for 0.1 ohm resistor Vref = iref / 2
 			setDac(0, 255 * (getHoldPower() * StepperCurrentN[0].value / 5) / 4096);
