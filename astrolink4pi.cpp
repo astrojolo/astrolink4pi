@@ -846,7 +846,6 @@ void AstroLink4Pi::TimerHit()
 			FocusTemperatureNP.s = IPS_ALERT;
 			IDSetNumber(&FocusTemperatureNP, nullptr);
 		}
-		IDSetNumber(&ParametersNP, nullptr);
 		IDSetNumber(&FocusTemperatureNP, nullptr);
 	}
 	if (nextTemperatureCompensation < timeMillis)
