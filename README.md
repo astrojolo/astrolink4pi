@@ -87,7 +87,7 @@ https://github.com/astrojolo/astrolink4pi
 ![Photo](/images/astrolink4pi-banner.jpg)
 
 # Devices revision 2 and earlier
-INDI driver AstroLink 4 Pi revision 2 and earlier must be installed from the tag https://github.com/astrojolo/astrolink4pi/tree/3.0.0
+INDI driver AstroLink 4 Pi revision 2 and earlier must be installed from the branch https://github.com/astrojolo/astrolink4pi/tree/3.0
 
 > [!NOTE]
 > Revision 2 and earlier of AstroLink 4 Pi works only with Raspberry Pi 4
@@ -102,7 +102,7 @@ AstroLink 4 Pi driver installation (for revisions 2 and older)
 git clone https://github.com/astrojolo/astrolink4pi
 cd astrolink4pi
 mkdir build && cd build
-git checkout tags/3.0.0
+git checkout 3.0
 cmake -DCMAKE_INSTALL_PREFIX=/usr ..
 sudo make install
 ```
