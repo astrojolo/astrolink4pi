@@ -82,7 +82,9 @@ private:
 	virtual int savePosition(int pos);
 	virtual bool readSHT();
 	virtual bool readMLX();
-	virtual bool readSQM();
+	virtual bool readSQM(bool triggerOldSensor);
+	virtual bool readTSL();
+	virtual bool readOLD();
 	virtual bool readPower();
 
 	ISwitch FocusResolutionS[6];
@@ -115,6 +117,15 @@ private:
 	INumberVectorProperty TemperatureCoefNP;
 	ISwitch TemperatureCompensateS[2];
 	ISwitchVectorProperty TemperatureCompensateSP;
+	
+    INumber SQMOffsetN[1];
+    INumberVectorProperty SQMOffsetNP;	
+    enum
+    {
+		TSL_NOTAVAILABLE,
+		TSL_AVAILABLE,
+		TSL_INITIALIZED
+	};
 
 	INumber FocuserInfoN[3];
 	INumberVectorProperty FocuserInfoNP;
@@ -218,6 +229,7 @@ private:
 	bool SHTavailable = false;
 	bool MLXavailable = false;
 	bool SQMavailable = false;
+	int TSLmode = TSL_NOTAVAILABLE;
 
 	int backlashTicksRemaining;
 	int lastDirection = 0;
@@ -229,6 +241,10 @@ private:
 	long int nextTemperatureCompensation = 0;
 	long int nextSystemRead = 0;
 	long int nextFanUpdate = 0;
+	long int adcStartTime = 0;
+	int niter = 0;
+	int fullCumulative = 0;
+	int irCumulative = 0;
 
 	int powerIndex = 0;
 	float energyAs = 0.0;

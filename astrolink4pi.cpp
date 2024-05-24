@@ -27,6 +27,19 @@ std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
 #define POLL_PERIOD 200
 #define FAN_PERIOD (20 * 1000)
 
+#define TSL2591_ADC_TIME 750  // integration time in ms for a single increment
+#define TSL2591_ADDR (0x29)
+#define TSL2591_COMMAND_BIT (0xA0)  // bits 7 and 5 for 'command normal'
+#define TSL2591_ENABLE_POWERON (0x01)
+#define TSL2591_ENABLE_POWEROFF (0x00)
+#define TSL2591_ENABLE_AEN (0x02)
+#define TSL2591_ENABLE_AIEN (0x10)
+#define TSL2591_REGISTER_ENABLE 0x00
+#define TSL2591_REGISTER_CONTROL 0x01
+#define TSL2591_REGISTER_CHAN0_LOW 0x14
+#define TSL2591_REGISTER_CHAN1_LOW 0x16
+#define FILTER_COEFF -1.2
+
 #define RP4_GPIO 0
 #define RP5_GPIO 4
 #define DECAY_PIN 14
@@ -271,11 +284,11 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumberVector(&PWMcycleNP, PWMcycleN, 1, getDeviceName(), "PWMCYCLE", "PWM frequency", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	// Focuser temperature
-	IUFillNumber(&FocusTemperatureN[0], "FOCUS_TEMPERATURE_VALUE", "°C", "%0.2f", -50, 50, 1, 0);
+	IUFillNumber(&FocusTemperatureN[0], "FOCUS_TEMPERATURE_VALUE", "Â°C", "%0.2f", -50, 50, 1, 0);
 	IUFillNumberVector(&FocusTemperatureNP, FocusTemperatureN, 1, getDeviceName(), "FOCUS_TEMPERATURE", "Temperature", MAIN_CONTROL_TAB, IP_RO, 0, IPS_IDLE);
 
 	// Temperature Coefficient
-	IUFillNumber(&TemperatureCoefN[0], "steps/°C", "", "%.1f", -1000, 1000, 1, 0);
+	IUFillNumber(&TemperatureCoefN[0], "steps/Â°C", "", "%.1f", -1000, 1000, 1, 0);
 	IUFillNumberVector(&TemperatureCoefNP, TemperatureCoefN, 1, getDeviceName(), "Temperature Coefficient", "", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	// Compensate for temperature
@@ -284,8 +297,8 @@ bool AstroLink4Pi::initProperties()
 	IUFillSwitchVector(&TemperatureCompensateSP, TemperatureCompensateS, 2, getDeviceName(), "Temperature Compensate", "", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	// Focuser Info
-	IUFillNumber(&FocuserInfoN[FOC_STEP_SIZE], "FOC_STEP_SIZE", "Step Size (μm)", "%0.2f", 0, 1000, 1, 0);
-	IUFillNumber(&FocuserInfoN[FOC_CFZ], "FOC_CFZ", "Critical Focus Zone (μm)", "%0.2f", 0, 1000, 1, 0);
+	IUFillNumber(&FocuserInfoN[FOC_STEP_SIZE], "FOC_STEP_SIZE", "Step Size (ÎĽm)", "%0.2f", 0, 1000, 1, 0);
+	IUFillNumber(&FocuserInfoN[FOC_CFZ], "FOC_CFZ", "Critical Focus Zone (ÎĽm)", "%0.2f", 0, 1000, 1, 0);
 	IUFillNumber(&FocuserInfoN[FOC_STEPS_CFZ], "FOC_STEPS_CFZ", "Steps / Critical Focus Zone", "%0.0f", 0, 1000, 1, 0);
 	IUFillNumberVector(&FocuserInfoNP, FocuserInfoN, 3, getDeviceName(), "FOCUSER_PARAMETERS", "Focuser Info", MAIN_CONTROL_TAB, IP_RO, 0, IPS_IDLE);
 
@@ -303,7 +316,7 @@ bool AstroLink4Pi::initProperties()
 	IUFillTextVector(&SysTimeTP, SysTimeT, 2, getDeviceName(), "SYSTEM_TIME", "System Time", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);
 
 	IUFillText(&SysInfoT[SYSI_HARDWARE], "SYSI_HARDWARE", "Hardware", NULL);
-	IUFillText(&SysInfoT[SYSI_CPUTEMP], "SYSI_CPUTEMP", "CPU Temp (°C)", NULL);
+	IUFillText(&SysInfoT[SYSI_CPUTEMP], "SYSI_CPUTEMP", "CPU Temp (Â°C)", NULL);
 	IUFillText(&SysInfoT[SYSI_UPTIME], "SYSI_UPTIME", "Uptime (hh:mm)", NULL);
 	IUFillText(&SysInfoT[SYSI_LOAD], "SYSI_LOAD", "Load (1 / 5 / 15 min.)", NULL);
 	IUFillText(&SysInfoT[SYSI_HOST], "SYSI_HOST", "Hostname", NULL);
@@ -319,6 +332,10 @@ bool AstroLink4Pi::initProperties()
 	IUFillText(&RelayLabelsT[LAB_PWM1], "LAB_PWM1", "PWM 1", "PWM 1");
 	IUFillText(&RelayLabelsT[LAB_PWM2], "LAB_PWM2", "PWM 2", "PWM 2");
 	IUFillTextVector(&RelayLabelsTP, RelayLabelsT, 4, getDeviceName(), "RELAYLABELS", "Relay Labels", OPTIONS_TAB, IP_RW, 60, IPS_IDLE);
+	
+	IUFillNumber(&SQMOffsetN[0], "SQMOffset", "mag/arcsec2", "%0.2f", -1, 1, 0.01, 0);
+	IUFillNumberVector(&SQMOffsetNP, SQMOffsetN, 1, getDeviceName(), "SQMOFFSET", "SQM calibration", OPTIONS_TAB, IP_RW, 60, IPS_IDLE);    
+	
 
 	// Load options before connecting
 	// load config before defining switches
@@ -410,9 +427,11 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&TemperatureCompensateSP);
 		defineProperty(&PowerReadingsNP);
 		defineProperty(&FanPowerNP);
+		defineProperty(&SQMOffsetNP);  
 	}
 	else
 	{
+		deleteProperty(SQMOffsetNP.name);
 		deleteProperty(ScopeParametersNP.name);
 		deleteProperty(FocuserTravelNP.name);
 		deleteProperty(FocusResolutionSP.name);
@@ -490,7 +509,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&TemperatureCoefNP, values, names, n);
 			TemperatureCoefNP.s = IPS_OK;
 			IDSetNumber(&TemperatureCoefNP, nullptr);
-			DEBUGF(INDI::Logger::DBG_SESSION, "Temperature coefficient set to %0.1f steps/°C", TemperatureCoefN[0].value);
+			DEBUGF(INDI::Logger::DBG_SESSION, "Temperature coefficient set to %0.1f steps/Â°C", TemperatureCoefN[0].value);
 			return true;
 		}
 
@@ -527,6 +546,16 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 2 set to %0.0f", PWM2N[0].value);
 			return true;
 		}
+		
+        // SQM calibration
+        if (!strcmp(name, SQMOffsetNP.name))
+        {
+            SQMOffsetNP.s = IPS_BUSY;
+            IUUpdateNumber(&SQMOffsetNP, values, names, n);
+            SQMOffsetNP.s = IPS_OK;
+            IDSetNumber(&SQMOffsetNP, nullptr);
+            return true;
+        }    		
 
 		// handle PWMcycle
 		if (!strcmp(name, PWMcycleNP.name))
@@ -818,6 +847,7 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 	IUSaveConfigNumber(fp, &StepperCurrentNP);
 	IUSaveConfigNumber(fp, &PWM1NP);
 	IUSaveConfigNumber(fp, &PWM2NP);
+	IUSaveConfigNumber(fp, &SQMOffsetNP);
 
 	return true;
 }
@@ -828,12 +858,12 @@ void AstroLink4Pi::TimerHit()
 		return;
 
 	long int timeMillis = millis();
+	SQMavailable = readSQM(nextTemperatureRead < timeMillis);
 
 	if (nextTemperatureRead < timeMillis)
 	{
 		SHTavailable = readSHT();
 		MLXavailable = readMLX();
-		SQMavailable = readSQM();
 
 		nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
 
@@ -1157,7 +1187,7 @@ void AstroLink4Pi::temperatureCompensation()
 			int thermalAdjustment = round(deltaPos);				   // adjust focuser by half number of steps to keep it in the center of cfz
 			MoveAbsFocuser(FocusAbsPosN[0].value + thermalAdjustment); // adjust focuser position
 			lastTemperature = FocusTemperatureN[0].value;			   // register last temperature
-			DEBUGF(INDI::Logger::DBG_SESSION, "Focuser adjusted by %d steps due to temperature change by %0.2f°C", thermalAdjustment, deltaTemperature);
+			DEBUGF(INDI::Logger::DBG_SESSION, "Focuser adjusted by %d steps due to temperature change by %0.2fÂ°C", thermalAdjustment, deltaTemperature);
 		}
 	}
 }
@@ -1285,7 +1315,7 @@ void AstroLink4Pi::getFocuserInfo()
 		DEBUG(INDI::Logger::DBG_DEBUG, "No telescope focal length and/or aperture info available.");
 	}
 
-	float cfz = 4.88 * 0.520 * pow(f_ratio, 2); // CFZ = 4.88 · λ · f^2
+	float cfz = 4.88 * 0.520 * pow(f_ratio, 2); // CFZ = 4.88 Â· Î» Â· f^2
 	float step_size = 1000.0 * travel_mm / FocusMaxPosN[0].value;
 	float steps_per_cfz = (int)cfz / step_size;
 
@@ -1377,10 +1407,94 @@ void AstroLink4Pi::fanUpdate()
 	IDSetNumber(&FanPowerNP, nullptr);
 }
 
-bool AstroLink4Pi::readSQM()
+bool AstroLink4Pi::readSQM(bool triggerOldSensor)
+{
+	SQMavailable = readTSL() || (triggerOldSensor && readOLD());
+	return SQMavailable;
+}
+
+bool AstroLink4Pi::readTSL()
+{
+	bool available = false;
+	int i2cHandle = lgI2cOpen(1, TSL2591_ADDR, 0);
+	
+	if(i2cHandle < 0)
+	{
+		TSLmode = TSL_NOTAVAILABLE;
+		return false;
+	}
+	
+	if(TSLmode == TSL_NOTAVAILABLE) 
+	{
+		int write = lgI2cWriteByte(i2cHandle, 0x80 | 0x20 | 0x12);
+		if(write == 0) {
+			TSLmode = TSL_AVAILABLE;
+			available = true;
+		}
+	}
+	else if(TSLmode == TSL_AVAILABLE)
+	{
+		int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
+        write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);
+
+		// Enable device - power down mode on boot
+        write += lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL); 
+        write += lgI2cWriteByte(i2cHandle, 0x05 | 0x30); 
+        
+        write += lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE); 
+        write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWEROFF); 
+        
+		TSLmode = (write == 0) ? TSL_INITIALIZED : TSL_NOTAVAILABLE;
+		available = (write == 0);
+	}
+	else if(TSLmode == TSL_INITIALIZED)
+	{
+		if(adcStartTime == 0)
+		{
+			int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
+			write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);	
+			adcStartTime = millis();
+			TSLmode = (write == 0) ? TSL_INITIALIZED : TSL_NOTAVAILABLE;
+			available = (write == 0);
+		}
+		else if(millis() > (adcStartTime + TSL2591_ADC_TIME))
+		{
+			int ir = lgI2cReadWordData(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN1_LOW);
+			int full = lgI2cReadWordData(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN0_LOW);
+
+	        int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE); 
+			write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWEROFF); 	
+			adcStartTime = 0;	
+
+			int visCumulative = fullCumulative - irCumulative;
+			if(full < ir) return true;
+			if(niter < 5 || (visCumulative < 500 && niter < 150))
+			{
+				niter++;
+				fullCumulative += full;
+				irCumulative += ir;
+			}
+			else
+			{
+				double VIS = (double) visCumulative / (29628.0 * niter);
+				double mpsas = 12.6 - 1.086 * log(VIS) + SQMOffsetN[0].value + FILTER_COEFF;
+				setParameterValue("SQM_READING", mpsas);
+				
+				niter = 0;
+				irCumulative = fullCumulative = 0;
+			}	
+
+			TSLmode = (write == 0) ? TSL_INITIALIZED : TSL_NOTAVAILABLE;
+			available = (write == 0);
+		}
+	}	
+	lgI2cClose(i2cHandle);
+	return available;
+}
+
+bool AstroLink4Pi::readOLD()
 {
 	char i2cData[7];
-
 	int i2cHandle = lgI2cOpen(1, 0x33, 0);
 	if (i2cHandle >= 0)
 	{
@@ -1391,18 +1505,10 @@ bool AstroLink4Pi::readSQM()
 			int sqm = i2cData[5] * 256 + i2cData[6];
 			setParameterValue("SQM_READING", 0.01 * sqm);
 			// DEBUGF(INDI::Logger::DBG_SESSION, "SQM read %i %i", i2cData[5], i2cData[6]);
-			SQMavailable = true;
+			return true;
 		}
-		else
-		{
-			SQMavailable = false;
-		}
-	}
-	else
-	{
-		SQMavailable = false;
-	}
-	return SQMavailable;
+	}	
+	return false;
 }
 
 bool AstroLink4Pi::readMLX()
@@ -1670,9 +1776,11 @@ int AstroLink4Pi::checkRevision()
 	{
 		if (lgGpioRead(handle, CHK_IN_PIN) == 0)
 		{
-			lgGpioWrite(handle, MOTOR_PWM, 1);
-			if (lgGpioRead(handle, CHK_IN_PIN) == 1)
+			lgGpioWrite(handle, MOTOR_PWM, 1);			// pin20
+			if (lgGpioRead(handle, CHK_IN_PIN) == 1)	// pin16
+			{
 				rev = 4;
+			}
 		}
 	}
 	lgGpioFree(handle, MOTOR_PWM);
