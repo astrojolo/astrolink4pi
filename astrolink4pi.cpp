@@ -396,7 +396,6 @@ bool AstroLink4Pi::updateProperties()
 		WI::updateProperties();
 
 		defineProperty(&ScopeParametersNP);
-		defineProperty(&ActiveTelescopeTP);
 		defineProperty(&FocuserTravelNP);
 		defineProperty(&FocusResolutionSP);
 		defineProperty(&FocusHoldSP);
@@ -933,7 +932,6 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 {
 	FI::saveConfigItems(fp);
 	WI::saveConfigItems(fp);
-	IUSaveConfigText(fp, &ActiveTelescopeTP);
 	IUSaveConfigSwitch(fp, &FocusResolutionSP);
 	IUSaveConfigSwitch(fp, &FocusHoldSP);
 	IUSaveConfigSwitch(fp, &FocusReverseSP);
