@@ -102,11 +102,6 @@ private:
 	INumber FocuserTravelN[1];
 	INumberVectorProperty FocuserTravelNP;
 
-	INumber ScopeParametersN[2];
-	INumberVectorProperty ScopeParametersNP;
-	IText ActiveTelescopeT[1];
-	ITextVectorProperty ActiveTelescopeTP;
-
 	IText SysTimeT[2];
 	ITextVectorProperty SysTimeTP;
 	IText SysInfoT[7];
