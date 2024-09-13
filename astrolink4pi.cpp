@@ -286,11 +286,11 @@ bool AstroLink4Pi::initProperties()
 	IUFillNumberVector(&PWMcycleNP, PWMcycleN, 1, getDeviceName(), "PWMCYCLE", "PWM frequency", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	// Focuser temperature
-	IUFillNumber(&FocusTemperatureN[0], "FOCUS_TEMPERATURE_VALUE", "Â°C", "%0.2f", -50, 50, 1, 0);
+	IUFillNumber(&FocusTemperatureN[0], "FOCUS_TEMPERATURE_VALUE", "°C", "%0.2f", -50, 50, 1, 0);
 	IUFillNumberVector(&FocusTemperatureNP, FocusTemperatureN, 1, getDeviceName(), "FOCUS_TEMPERATURE", "Temperature", MAIN_CONTROL_TAB, IP_RO, 0, IPS_IDLE);
 
 	// Temperature Coefficient
-	IUFillNumber(&TemperatureCoefN[0], "steps/Â°C", "", "%.1f", -1000, 1000, 1, 0);
+	IUFillNumber(&TemperatureCoefN[0], "steps/C", "", "%.1f", -1000, 1000, 1, 0);
 	IUFillNumberVector(&TemperatureCoefNP, TemperatureCoefN, 1, getDeviceName(), "Temperature Coefficient", "", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	// Compensate for temperature
@@ -299,8 +299,8 @@ bool AstroLink4Pi::initProperties()
 	IUFillSwitchVector(&TemperatureCompensateSP, TemperatureCompensateS, 2, getDeviceName(), "Temperature Compensate", "", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
 
 	// Focuser Info
-	IUFillNumber(&FocuserInfoN[FOC_STEP_SIZE], "FOC_STEP_SIZE", "Step Size (ÎĽm)", "%0.2f", 0, 1000, 1, 0);
-	IUFillNumber(&FocuserInfoN[FOC_CFZ], "FOC_CFZ", "Critical Focus Zone (ÎĽm)", "%0.2f", 0, 1000, 1, 0);
+	IUFillNumber(&FocuserInfoN[FOC_STEP_SIZE], "FOC_STEP_SIZE", "Step Size (um)", "%0.2f", 0, 1000, 1, 0);
+	IUFillNumber(&FocuserInfoN[FOC_CFZ], "FOC_CFZ", "Critical Focus Zone (um)", "%0.2f", 0, 1000, 1, 0);
 	IUFillNumber(&FocuserInfoN[FOC_STEPS_CFZ], "FOC_STEPS_CFZ", "Steps / Critical Focus Zone", "%0.0f", 0, 1000, 1, 0);
 	IUFillNumberVector(&FocuserInfoNP, FocuserInfoN, 3, getDeviceName(), "FOCUSER_PARAMETERS", "Focuser Info", MAIN_CONTROL_TAB, IP_RO, 0, IPS_IDLE);
 
@@ -318,7 +318,7 @@ bool AstroLink4Pi::initProperties()
 	IUFillTextVector(&SysTimeTP, SysTimeT, 2, getDeviceName(), "SYSTEM_TIME", "System Time", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);
 
 	IUFillText(&SysInfoT[SYSI_HARDWARE], "SYSI_HARDWARE", "Hardware", NULL);
-	IUFillText(&SysInfoT[SYSI_CPUTEMP], "SYSI_CPUTEMP", "CPU Temp (Â°C)", NULL);
+	IUFillText(&SysInfoT[SYSI_CPUTEMP], "SYSI_CPUTEMP", "CPU Temp (°C)", NULL);
 	IUFillText(&SysInfoT[SYSI_UPTIME], "SYSI_UPTIME", "Uptime (hh:mm)", NULL);
 	IUFillText(&SysInfoT[SYSI_LOAD], "SYSI_LOAD", "Load (1 / 5 / 15 min.)", NULL);
 	IUFillText(&SysInfoT[SYSI_HOST], "SYSI_HOST", "Hostname", NULL);
