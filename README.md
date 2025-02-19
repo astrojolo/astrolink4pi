@@ -1,9 +1,9 @@
 # AstroLink 4 Pi
-AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberry Pi module. It contains focusing motor controller, switchable power outputs, regulated dew-cap heaters outputs, regulated voltage output and power monitoring function. Selection of sensors can be connected to this device - temperature, humidity, dew point, sky temperature / cloud coverage and sky brightness.
+AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberry Pi module. It contains a focusing motor controller, switchable power outputs, regulated dew-cap heater outputs, regulated voltage output, and a power monitoring function. A selection of sensors can be connected to this device - temperature, humidity, dew point, sky temperature/cloud coverage, and sky brightness.
 ### AstroLink 4 Pi works both with Raspberry Pi 4 and 5. 
 
 > [!NOTE]
-> This INDI driver works with revisions 3 and newer of AstroLink 4 Pi device (the ones with RJ sensor socket). For earlier revisions see the section below the AstroLink 4 Pi features.
+> This INDI driver works with revisions 3 and newer of AstroLink 4 Pi devices (the ones with RJ sensor socket). For earlier revisions see the section below the AstroLink 4 Pi features.
 
 > [!NOTE]
 > Raspberry Pi 5 is based on new OS Bookworm. Make sure the software you use is available for this new OS before you upgrade to RPi5. Currently, Stellarmate OS 1.8.0 supports RPi5 and AstroArch was tested successfully.
@@ -32,7 +32,7 @@ git clone https://github.com/astrojolo/astrolink4pi
 cd astrolink4pi
 mkdir build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr ..
-sudo make install
+make
 ```
 You can install the drivers by running:
 ```
