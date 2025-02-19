@@ -32,7 +32,7 @@ git clone https://github.com/astrojolo/astrolink4pi
 cd astrolink4pi
 mkdir build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr ..
-make
+sudo make install
 ```
 You can install the drivers by running:
 ```
