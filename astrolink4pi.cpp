@@ -470,7 +470,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 		if (!strcmp(name, ScopeParametersNP.name))
 		{
 			ScopeParametersNP.s = IPS_BUSY;
-			ScopeParametersNP.update(values, names, n);
+			IUUpdateNumber(&ScopeParametersNP, values, names, n);
 			IDSetNumber(&FocusStepDelayNP, nullptr);
 			ScopeParametersNP.s = IPS_OK;
 			IDSetNumber(&ScopeParametersNP, nullptr);
