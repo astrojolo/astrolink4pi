@@ -179,7 +179,7 @@ bool AstroLink4Pi::Connect()
 	IDSetText(&SysInfoTP, NULL);
 
 	// read last position from file & convert from MAX_RESOLUTION to current resolution
-	FocusAbsPosN[0].value = savePosition(-1) != -1 ? (int)savePosition(-1) * resolution / MAX_RESOLUTION : 0;
+	FocusAbsPosNP[0].setValue(savePosition(-1) != -1 ? (int)savePosition(-1) * resolution / MAX_RESOLUTION : 0);
 
 	// preset resolution
 	SetResolution(resolution);
@@ -379,22 +379,22 @@ bool AstroLink4Pi::initProperties()
 	addParameter("SQM_READING", "Sky brightness [mag/arcsec2]", 10, 25, 15);
 
 	// initial values at resolution 1/1
-	FocusMaxPosN[0].min = 1000;
-	FocusMaxPosN[0].max = 100000;
-	FocusMaxPosN[0].step = 1000;
-	FocusMaxPosN[0].value = 10000;
+	FocusMaxPosNP[0].setMin(1000);
+	FocusMaxPosNP[0].setMax(100000);
+	FocusMaxPosNP[0].setStep(1000);
+	FocusMaxPosNP[0].setValue(10000);
 
-	FocusRelPosN[0].min = 0;
-	FocusRelPosN[0].max = 1000;
-	FocusRelPosN[0].step = 100;
-	FocusRelPosN[0].value = 100;
+	FocusRelPosNP[0].setMin(0);
+	FocusRelPosNP[0].setMax(10000);
+	FocusRelPosNP[0].setStep(100);
+	FocusRelPosNP[0].setValue(100);
 
-	FocusAbsPosN[0].min = 0;
-	FocusAbsPosN[0].max = FocusMaxPosN[0].value;
-	FocusAbsPosN[0].step = (int)FocusAbsPosN[0].max / 100;
+	FocusAbsPosNP[0].setMin(0);
+	FocusAbsPosNP[0].setMax(FocusMaxPosNP[0].getValue());
+	FocusAbsPosNP[0].setStep((int)FocusAbsPosNP[0].getMax() / 100);
 
-	FocusMotionS[FOCUS_OUTWARD].s = ISS_ON;
-	FocusMotionS[FOCUS_INWARD].s = ISS_OFF;
+	FocusMotionSP[FOCUS_OUTWARD].setState(ISS_ON);
+	FocusMotionSP[FOCUS_INWARD].setState(ISS_OFF);
 	IDSetSwitch(&FocusMotionSP, nullptr);
 
 	return true;
@@ -496,7 +496,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 		{
 			IUUpdateNumber(&FocusMaxPosNP, values, names, n);
 
-			FocusAbsPosN[0].max = FocusMaxPosN[0].value;
+			FocusAbsPosNP[0].setMax(FocusMaxPosNP[0].getValue());
 			IUUpdateMinMax(&FocusAbsPosNP); // This call is not INDI protocol compliant
 
 			FocusAbsPosNP.s = IPS_OK;
@@ -747,7 +747,7 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 				resolution = 32;
 
 			// Adjust position to a step in lower resolution
-			int position_adjustment = last_resolution * (FocusAbsPosN[0].value / last_resolution - (int)FocusAbsPosN[0].value / last_resolution);
+			int position_adjustment = last_resolution * (FocusAbsPosNP[0].getValue() / last_resolution - (int)FocusAbsPosNP[0].getValue() / last_resolution);
 			if (resolution < last_resolution && position_adjustment > 0)
 			{
 				if ((float)position_adjustment / last_resolution < 0.5)
@@ -915,19 +915,19 @@ bool AstroLink4Pi::AbortFocuser()
 
 IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
 {
-	uint32_t targetTicks = FocusAbsPosN[0].value + ((int32_t)ticks * (dir == FOCUS_INWARD ? -1 : 1));
+	uint32_t targetTicks = FocusAbsPosNP[0].getValue() + ((int32_t)ticks * (dir == FOCUS_INWARD ? -1 : 1));
 	return MoveAbsFocuser(targetTicks);
 }
 
 IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 {
-	if (targetTicks < FocusAbsPosN[0].min || targetTicks > FocusAbsPosN[0].max)
+	if (targetTicks < FocusAbsPosNP[0].getMin() || targetTicks > FocusAbsPosNP[0].getMax())
 	{
 		DEBUG(INDI::Logger::DBG_WARNING, "Requested position is out of range.");
 		return IPS_ALERT;
 	}
 
-	if (targetTicks == FocusAbsPosN[0].value)
+	if (targetTicks == FocusAbsPosNP[0].getValue())
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Already at the requested position.");
 		return IPS_OK;
@@ -941,7 +941,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	// set direction
 	const char *direction;
 	int newDirection;
-	if (targetTicks > FocusAbsPosN[0].value)
+	if (targetTicks > FocusAbsPosNP[0].getValue())
 	{
 		// OUTWARD
 		direction = "OUTWARD";
@@ -957,7 +957,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	// if direction changed do backlash adjustment
 	if (lastDirection != 0 && newDirection != lastDirection && FocusBacklashN[0].value != 0)
 	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "Backlash compensation by %0.0f steps.", FocusBacklashN[0].value);
+		DEBUGF(INDI::Logger::DBG_SESSION, "Backlash compensation by %0.0f steps.", FocusBacklashNP[0].getValue());
 		backlashTicksRemaining = FocusBacklashN[0].value;
 	}
 	else
@@ -986,16 +986,16 @@ std::thread AstroLink4Pi::getMotorThread(uint32_t targetTicks, int lastDirection
 					   {
 		int motorDirection = direction;
 
-		uint32_t currentPos = FocusAbsPosN[0].value;
+		uint32_t currentPos = FocusAbsPosNP[0].getValue();
 		while (currentPos != targetPos && !_abort)
 		{
 			if (currentPos % 100 == 0)
 			{
-				FocusAbsPosN[0].value = currentPos;
+				FocusAbsPosN[0].setValue(currentPos);
 				FocusAbsPosNP.s = IPS_BUSY;
 				IDSetNumber(&FocusAbsPosNP, nullptr);
 			}
-			if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
+			if (FocusReverseSP[INDI_ENABLED].getState() == ISS_ON)
 			{
 				lgGpioWrite(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 1 : 0);
 			}
@@ -1020,14 +1020,14 @@ std::thread AstroLink4Pi::getMotorThread(uint32_t targetTicks, int lastDirection
 
 		// update abspos value and status
 		DEBUGF(INDI::Logger::DBG_SESSION, "Focuser moved to position %i", (int)currentPos);
-		FocusAbsPosN[0].value = currentPos;
+		FocusAbsPosNP[0].setValue(currentPos);
 		FocusAbsPosNP.s = IPS_OK;
 		IDSetNumber(&FocusAbsPosNP, nullptr);
 		FocusRelPosNP.s = IPS_OK;
 		IDSetNumber(&FocusRelPosNP, nullptr);
 
-		savePosition((int)FocusAbsPosN[0].value * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
-		lastTemperature = FocusTemperatureN[0].value;							// register last temperature
+		savePosition((int)FocusAbsPosNP[0].getValue() * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
+		lastTemperature = FocusTemperatureNP[0].getValue();							// register last temperature
 		setCurrent(true); },
 					   targetTicks, lastDirection, pigpioHandle, backlashTicksRemaining);
 }
@@ -1180,15 +1180,15 @@ void AstroLink4Pi::temperatureCompensation()
 
 	if (TemperatureCompensateS[0].s == ISS_ON && FocusTemperatureN[0].value != lastTemperature)
 	{
-		float deltaTemperature = FocusTemperatureN[0].value - lastTemperature; // change of temperature from last focuser movement
-		float deltaPos = TemperatureCoefN[0].value * deltaTemperature;
+		float deltaTemperature = FocusTemperatureNP[0].getValue() - lastTemperature; // change of temperature from last focuser movement
+		float deltaPos = TemperatureCoefNP[0].getValue() * deltaTemperature;
 
 		// Move focuser once the compensation is larger than 1/2 CFZ
 		if (abs(deltaPos) > (FocuserInfoN[2].value / 2))
 		{
 			int thermalAdjustment = round(deltaPos);				   // adjust focuser by half number of steps to keep it in the center of cfz
-			MoveAbsFocuser(FocusAbsPosN[0].value + thermalAdjustment); // adjust focuser position
-			lastTemperature = FocusTemperatureN[0].value;			   // register last temperature
+			MoveAbsFocuser(FocusAbsPosNP[0].getValue() + thermalAdjustment); // adjust focuser position
+			lastTemperature = FocusTemperatureNP[0].getValue();			   // register last temperature
 			DEBUGF(INDI::Logger::DBG_SESSION, "Focuser adjusted by %d steps due to temperature change by %0.2fÂ°C", thermalAdjustment, deltaTemperature);
 		}
 	}
@@ -1318,7 +1318,7 @@ void AstroLink4Pi::getFocuserInfo()
 	}
 
 	float cfz = 4.88 * 0.520 * pow(f_ratio, 2); // CFZ = 4.88 Â· Î» Â· f^2
-	float step_size = 1000.0 * travel_mm / FocusMaxPosN[0].value;
+	float step_size = 1000.0 * travel_mm / FocusMaxPosNP[0].getValue();
 	float steps_per_cfz = (int)cfz / step_size;
 
 	if (steps_per_cfz >= 4)
