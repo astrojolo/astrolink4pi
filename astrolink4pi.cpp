@@ -415,7 +415,6 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&FocusHoldSP);
 		defineProperty(&FocuserInfoNP);
 		defineProperty(&FocusStepDelayNP);
-		//defineProperty(&FocusBacklashNP);
 		defineProperty(&SysTimeTP);
 		defineProperty(&SysInfoTP);
 		defineProperty(&Switch1SP);
@@ -440,7 +439,6 @@ bool AstroLink4Pi::updateProperties()
 		deleteProperty(FocusHoldSP.name);
 		deleteProperty(FocuserInfoNP.name);
 		deleteProperty(FocusStepDelayNP.name);
-		//deleteProperty(FocusBacklashNP.name);
 		deleteProperty(FocusTemperatureNP.name);
 		deleteProperty(TemperatureCoefNP.name);
 		deleteProperty(TemperatureCompensateSP.name);
@@ -834,11 +832,8 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 	WI::saveConfigItems(fp);
 	IUSaveConfigSwitch(fp, &FocusResolutionSP);
 	IUSaveConfigSwitch(fp, &FocusHoldSP);
-	//IUSaveConfigSwitch(fp, &FocusReverseSP);
 	IUSaveConfigSwitch(fp, &TemperatureCompensateSP);
-	//IUSaveConfigNumber(fp, &FocusMaxPosNP);
 	IUSaveConfigNumber(fp, &FocusStepDelayNP);
-	//IUSaveConfigNumber(fp, &FocusBacklashNP);
 	IUSaveConfigNumber(fp, &FocuserTravelNP);
 	IUSaveConfigNumber(fp, &ScopeParametersNP);
 	IUSaveConfigNumber(fp, &TemperatureCoefNP);
