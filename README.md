@@ -1,12 +1,16 @@
 # AstroLink 4 Pi
 AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberry Pi module. It contains a focusing motor controller, switchable power outputs, regulated dew-cap heater outputs, regulated voltage output, and a power monitoring function. A selection of sensors can be connected to this device - temperature, humidity, dew point, sky temperature/cloud coverage, and sky brightness.
-### AstroLink 4 Pi works both with Raspberry Pi 4 and 5. 
+
+### AstroLink 4 Pi works with both Raspberry Pi 4 and 5. 
 
 > [!NOTE]
-> This INDI driver works with revisions 3 and newer of AstroLink 4 Pi devices (the ones with RJ sensor socket). For earlier revisions see the section below the AstroLink 4 Pi features.
+> The current main branch is designed for INDI 2.1.3 and later. If you encounter compilation problems, please use tag 3.0 of the driver.
 
 > [!NOTE]
-> Raspberry Pi 5 is based on new OS Bookworm. Make sure the software you use is available for this new OS before you upgrade to RPi5. Currently, Stellarmate OS 1.8.0 supports RPi5 and AstroArch was tested successfully.
+> This INDI driver works with revisions 3 and newer of AstroLink 4 Pi devices (the ones with RJ sensor socket). For earlier revisions, please take a look at the section below the AstroLink 4 Pi features.
+
+> [!NOTE]
+> Raspberry Pi 5 is based on the new OS Bookworm. Make sure the software you use is available for this new OS before you upgrade to RPi5. Currently, Stellarmate OS 1.8.0 supports RPi5 and AstroArch was tested successfully.
 
 ## Device
 https://shop.astrojolo.com/astrolink-4-computers/
@@ -18,7 +22,7 @@ https://shop.astrojolo.com/astrolink-4-computers/
 * lgpio https://abyz.me.uk/lg/download.html 
 * I<sup>2</sup>C and SPI support must be enabled in Raspberry configuration
 
-For AstroArch system there are few additional steps required that are listed below the AstroLink 4 features section.
+For the AstroArch system, there area  few additional steps required that are listed below the AstroLink 4 features section.
 
 ### Required packages
 ```
@@ -49,7 +53,7 @@ and add the following line before the exit 0 statement at the file end
 ```
 echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
 ```
-After restarting the astroberry system time will be synchronized with embedded DS1307 clock.
+After restarting the astroberry system time will be synchronized with the embedded DS1307 clock.
 Check hwclock help to find more options, like time adjustments and synchronization:
 ```
 hwclock -h
@@ -67,7 +71,7 @@ hwclock -h
   - Speed control
   - Focuser info including: critical focus zone in μm, step size in μm, steps per critical focus zone
   - Automatic temperature compensation based on temperature sensor
-  - Humidity / dew point / sky temperature / cloud coverage / sky brighntess sensors support (version 3 and later)
+  - Humidity / dew point / sky temperature / cloud coverage / sky brightness sensors support (version 3 and later)
   - Stepper movement abort
   - 6-pin RJ12 stepper output
   - embedded real-time clock (version 2 and later)
@@ -90,7 +94,7 @@ https://github.com/astrojolo/astrolink4pi
 INDI driver AstroLink 4 Pi revision 2 and earlier must be installed from the branch https://github.com/astrojolo/astrolink4pi/tree/3.0
 
 > [!NOTE]
-> Revision 2 and earlier of AstroLink 4 Pi works only with Raspberry Pi 4
+> Revision 2 and earlier of AstroLink 4 Pi work only with Raspberry Pi 4
 
 Additional packages required:
 ```
@@ -106,7 +110,7 @@ git checkout 3.0.1
 cmake -DCMAKE_INSTALL_PREFIX=/usr ..
 sudo make install
 ```
-In AstroLink 4 Pi revision 2 and earlier internal fan is not controlled by the INDI driver. You need to open Raspberry configuration and switch on the fan on GPIO 13 (Performance tab).
+In AstroLink 4 Pi revision 2 and earlier internal fan is not controlled by the INDI driver. You need to open the Raspberry configuration and switch on the fan on GPIO 13 (Performance tab).
 
 # AstroArch only specific tasks
 Update system and install packages:
