@@ -859,7 +859,7 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 					position_adjustment = last_resolution - position_adjustment;
 				}
 				DEBUGF(INDI::Logger::DBG_SESSION, "Focuser position adjusted by %d steps at 1/%d resolution to sync with 1/%d resolution.", position_adjustment, last_resolution, resolution);
-				MoveAbsFocuser(FocusAbsPosN[0].value + position_adjustment);
+				MoveAbsFocuser(FocusAbsPosNP[0].getValue() + position_adjustment);
 			}
 
 			SetResolution(resolution);
@@ -932,9 +932,7 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 	WI::saveConfigItems(fp);
 	IUSaveConfigSwitch(fp, &FocusResolutionSP);
 	IUSaveConfigSwitch(fp, &FocusHoldSP);
-	IUSaveConfigSwitch(fp, &FocusReverseSP);
 	IUSaveConfigSwitch(fp, &TemperatureCompensateSP);
-	IUSaveConfigNumber(fp, &FocusMaxPosNP);
 	IUSaveConfigNumber(fp, &FocusStepDelayNP);
 	IUSaveConfigNumber(fp, &FocusBacklashNP);
 	IUSaveConfigNumber(fp, &FocuserTravelNP);
@@ -1040,7 +1038,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	// set direction
 	const char *direction;
 	int newDirection;
-	if (targetTicks > FocusAbsPosN[0].value)
+	if (targetTicks > FocusAbsPosNP[0].getValue())
 	{
 		// OUTWARD
 		direction = "OUTWARD";
@@ -1260,7 +1258,7 @@ bool AstroLink4Pi::SyncFocuser(uint32_t ticks)
 	FocusAbsPosNP.apply();
 	savePosition(ticks);
 
-	DEBUGF(INDI::Logger::DBG_SESSION, "Absolute Position reset to %0.0f", FocusAbsPosN[0].value);
+	DEBUGF(INDI::Logger::DBG_SESSION, "Absolute Position reset to %0.0f", FocusAbsPosNP[0].getValue());
 
 	return true;
 }
