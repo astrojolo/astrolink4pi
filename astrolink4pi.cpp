@@ -472,7 +472,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 		}
 
 		// handle focus maximum position
-		if (!strcmp(name, FocusMaxPosNP.name))
+		if (!strcmp(name, FocusMaxPosNP.getName()))
 		{
 			FocusMaxPosNP.update(values, names, n);
 
@@ -934,9 +934,8 @@ bool AstroLink4Pi::saveConfigItems(FILE *fp)
 	IUSaveConfigSwitch(fp, &FocusHoldSP);
 	IUSaveConfigSwitch(fp, &TemperatureCompensateSP);
 	IUSaveConfigNumber(fp, &FocusStepDelayNP);
-	IUSaveConfigNumber(fp, &FocusBacklashNP);
 	IUSaveConfigNumber(fp, &FocuserTravelNP);
-	IUSaveConfigNumber(fp, &ScopeParametersNP);	
+	IUSaveConfigNumber(fp, &ScopeParametersNP);
 	IUSaveConfigNumber(fp, &TemperatureCoefNP);
 	IUSaveConfigNumber(fp, &PWMcycleNP);
 	IUSaveConfigText(fp, &RelayLabelsTP);
@@ -1086,7 +1085,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 											FocusAbsPosNP.setState(IPS_BUSY);
 											FocusAbsPosNP.apply();
 										}
-										if (FocusReverseS[INDI_ENABLED].s == ISS_ON)
+										if (FocusReverseSP[INDI_ENABLED].getState() == ISS_ON)
 										{
 											gpio_write(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 1 : 0);
 										}
