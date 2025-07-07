@@ -1237,7 +1237,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 	{
 		lgGpioWrite(pigpioHandle, EN_PIN, 0);
 		lgGpioWrite(pigpioHandle, DECAY_PIN, 1);
-		if (revision < 3)
+		if (revision < 4)
 		{
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current %0.2f", StepperCurrentN[0].value);
 			// for 0.1 ohm resistor Vref = iref / 2
