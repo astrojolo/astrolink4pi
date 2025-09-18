@@ -2,11 +2,6 @@
 
 # AstroLink 4 Pi
 
-![Standalone Controller](https://img.shields.io/badge/Type-Standalone_Pi_Controller-lightgrey)  
-![INDI Compatible](https://img.shields.io/badge/Driver_Support-INDI-blue)  
-![12V Power Outputs](https://img.shields.io/badge/Power-12V_DC_Switches-orange)  
-![Sensor Support](https://img.shields.io/badge/Sensors-Temp%2FHumidity%2FSkyBrightness-green)
-
 ---
 
 ## Overview  
