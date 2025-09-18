@@ -1,3 +1,32 @@
+![AstroLink 4 Pi Banner](https://shop.astrojolo.com/wp-content/uploads/sites/2/2021/11/astrolink4pi-banner.jpg)
+
+# AstroLink 4 Pi
+
+![Standalone Controller](https://img.shields.io/badge/Standalone-Pi-Controller-lightgrey)  
+![INDI Compatible](https://img.shields.io/badge/Driver-Support-INDI-blue)  
+![12V Power Outputs](https://img.shields.io/badge/Power-12V-DC-Switches-orange)  
+![Sensor Support](https://img.shields.io/badge/Sensors-Temp%2FHumidity%2FSkyBrightness-green)
+
+---
+
+## Overview  
+AstroLink 4 Pi is a powerful, all-in-one astrophotography controller built around a Raspberry Pi 4 or 5. It combines motor focuser control, 12V power distribution, regulated dew heater outputs, and sensor support in a single compact device. Just attach a 12V DC power supply and your peripherals, and you're ready to go without the need for extra controllers. The unit supports an extra regulated output ideal for powering DSLRs, USB hubs, or other accessories. Real-time monitoring allows you to track voltage, current draw, power, and overall energy usage via the INDI driver panel. Multiple environmental sensors are supported, including temperature, humidity, sky brightness, cloud coverage / sky temperature, and dew point. It works with various astronomy distributions including StellarMate OS, AstroArch, Astroberry, or AstroPi3. Comes optionally with a Raspberry Pi module (4GB or higher), ready assembled. It includes protective features for reliable use in demanding setups, and protective covers for all device sockets. Available in multiple versions (hardware revisions), with increasing features across versions (e.g. power monitoring in later versions). Compact size (~13.7 × 8.3 × 3.2 cm) and modest weight (~0.23 kg) make it well suited to portable rigs.
+
+---
+
+## 🔧 Key Features  
+- Focuser motor controller compatible with AstroLink or other stepper motors  
+- Multiple 12V DC switchable power outputs + one permanent 12V output  
+- Regulated PWM outputs for dew heaters  
+- Extra regulated 3-10V output for peripherals  
+- Real-time monitoring of voltage, current, power, energy consumption  
+- Environmental sensors: temperature, humidity, sky brightness, cloud coverage / sky temperature, dew point  
+- Software compatibility: INDI driver; works with StellarMate OS, AstroArch, Astroberry, AstroPi3  
+- Option to include Raspberry Pi 4 or 5 module 
+- Protective housing, with covers for sockets  
+- Compact dimensions and portable form-factor
+
+
 # AstroLink 4 Pi
 AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberry Pi module. It contains a focusing motor controller, switchable power outputs, regulated dew-cap heater outputs, regulated voltage output, and a power monitoring function. A selection of sensors can be connected to this device: temperature, humidity, dew point, sky temperature/cloud coverage, and sky brightness.
 
@@ -16,7 +45,7 @@ AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberr
 > Raspberry Pi 5 is based on the new OS Bookworm. Make sure the software you use is available for this new OS before you upgrade to RPi5. Currently, Stellarmate OS 1.8.0 supports RPi5 and AstroArch was tested successfully.
 
 ## Device
-https://shop.astrojolo.com/astrolink-4-computers/
+https://shop.astrojolo.com/products-overview/astrolink-4-pi/
 
 
 # AstroLink 4 Pi driver installation
