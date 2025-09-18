@@ -1,5 +1,14 @@
 ![AstroLink 4 Pi Banner](https://shop.astrojolo.com/wp-content/uploads/sites/2/2021/11/astrolink4pi-banner.jpg)
 
+<img class="badge" alt="Size" src="https://img.shields.io/badge/Control-Integrated_Raspberry_Pi-lightblue">
+  <img class="badge" alt="12V Outputs" src="https://img.shields.io/badge/Power-3x12V-orange">
+  <img class="badge" alt="Regulated Output" src="https://img.shields.io/badge/Output-3--10V_DC-lightgrey">
+  <img class="badge" alt="Dew Control" src="https://img.shields.io/badge/Dew_Control-PWM-green">
+<img alt="Focuser" src="https://img.shields.io/badge/Focuser-Single_Motor-blue">
+  <img class="badge" alt="Temperature" src="https://img.shields.io/badge/Sensor-Temperature-red">
+  <img class="badge" alt="Humidity" src="https://img.shields.io/badge/Sensor-Humidity-teal">
+  <img class="badge" alt="Sky Brightness" src="https://img.shields.io/badge/Sensor-Sky_Brightness-yellow">
+
 # AstroLink 4 Pi
 
 ---
