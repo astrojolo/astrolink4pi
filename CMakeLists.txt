@@ -63,7 +63,7 @@ target_include_directories(indi_astrolink4pi PRIVATE ${PROJECT_INCLUDES})
 target_link_libraries(indi_astrolink4pi
     PRIVATE
         ${INDI_LIBRARIES}
-        ${GPIO_LIBRARIES}
+#        ${GPIO_LIBRARIES}
         pthread
 )
 
