@@ -94,7 +94,7 @@ void ISNewNumber(const char *dev, const char *name, double values[], char *names
 
 AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 {
-	setVersion(VERSION_MAJOR, VERSION_MINOR);
+	setVersion(1, 5);
 }
 
 AstroLink4Pi::~AstroLink4Pi()
