@@ -50,10 +50,10 @@ endif()
 
 # ====== Libraries ======
 # Proper detection of lgpio (do NOT link ".so")
-find_library(GPIO_LIBRARIES NAMES lgpio)
-if(NOT GPIO_LIBRARIES)
-    message(FATAL_ERROR "lgpio library not found")
-endif()
+# find_library(GPIO_LIBRARIES NAMES lgpio)
+# if(NOT GPIO_LIBRARIES)
+#     message(FATAL_ERROR "lgpio library not found")
+# endif()
 
 # ====== Build Executable ======
 add_executable(indi_astrolink4pi ${indi_astrolink4pi_SRCS})
