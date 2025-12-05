@@ -18,47 +18,48 @@
 
 #include "astrolink4pi.h"
 
-std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
+// std::unique_ptr<AstroLink4Pi> astroLink4Pi(new AstroLink4Pi());
+auto astroLink4Pi = std::make_unique<AstroLink4Pi>();
 
-#define ACS_TYPE 0		// 0 - 20A, 1 - 5A
+static constexpr uint8_t ACS_TYPE = 0; // 0 - 20A, 1 - 5A
 
-#define MAX_RESOLUTION 32							 // the highest resolution supported is 1/32 step
-#define TEMPERATURE_UPDATE_TIMEOUT (5 * 1000)		 // 5 sec
-#define TEMPERATURE_COMPENSATION_TIMEOUT (30 * 1000) // 30 sec
-#define SYSTEM_UPDATE_PERIOD 1000
-#define POLL_PERIOD 200
-#define FAN_PERIOD (20 * 1000)
+static constexpr int MAX_RESOLUTION = 32;							 // the highest resolution supported is 1/32 step
+static constexpr int TEMPERATURE_UPDATE_TIMEOUT = (5 * 1000);		 // 5 sec
+static constexpr int TEMPERATURE_COMPENSATION_TIMEOUT = (30 * 1000); // 30 sec
+static constexpr int SYSTEM_UPDATE_PERIOD = 1000;
+static constexpr int POLL_PERIOD = 200;
+static constexpr int FAN_PERIOD = (20 * 1000);
 
-#define TSL2591_ADC_TIME 750  // integration time in ms for a single increment
-#define TSL2591_ADDR (0x29)
-#define TSL2591_COMMAND_BIT (0xA0)  // bits 7 and 5 for 'command normal'
-#define TSL2591_ENABLE_POWERON (0x01)
-#define TSL2591_ENABLE_POWEROFF (0x00)
-#define TSL2591_ENABLE_AEN (0x02)
-#define TSL2591_ENABLE_AIEN (0x10)
-#define TSL2591_REGISTER_ENABLE 0x00
-#define TSL2591_REGISTER_CONTROL 0x01
-#define TSL2591_REGISTER_CHAN0_LOW 0x14
-#define TSL2591_REGISTER_CHAN1_LOW 0x16
-#define FILTER_COEFF -1.2
+static constexpr int TSL2591_ADC_TIME = 750; // integration time in ms for a single increment
+static constexpr uint8_t TSL2591_ADDR = 0x29;
+static constexpr uint8_t TSL2591_COMMAND_BIT = 0xA0; // bits 7 and 5 for 'command normal'
+static constexpr uint8_t TSL2591_ENABLE_POWERON = 0x01;
+static constexpr uint8_t TSL2591_ENABLE_POWEROFF = 0x00;
+static constexpr uint8_t TSL2591_ENABLE_AEN = 0x02;
+static constexpr uint8_t TSL2591_ENABLE_AIEN = 0x10;
+static constexpr uint8_t TSL2591_REGISTER_ENABLE = 0x00;
+static constexpr uint8_t TSL2591_REGISTER_CONTROL = 0x01;
+static constexpr uint8_t TSL2591_REGISTER_CHAN0_LOW = 0x14;
+static constexpr uint8_t TSL2591_REGISTER_CHAN1_LOW = 0x16;
+static constexpr uint8_t FILTER_COEFF = -1.2;
 
-#define RP4_GPIO 0
-#define RP5_GPIO 4
-#define DECAY_PIN 14
-#define EN_PIN 15
-#define M0_PIN 17
-#define M1_PIN 18
-#define M2_PIN 27
-#define RST_PIN 22
-#define STP_PIN 24
-#define DIR_PIN 23
-#define OUT1_PIN 5
-#define OUT2_PIN 6
-#define PWM1_PIN 26
-#define PWM2_PIN 19
-#define MOTOR_PWM 20
-#define CHK_IN_PIN 16
-#define FAN_PIN 13
+static constexpr int RP4_GPIO = 0;
+static constexpr int RP5_GPIO = 4;
+static constexpr int DECAY_PIN = 14;
+static constexpr int EN_PIN = 15;
+static constexpr int M0_PIN = 17;
+static constexpr int M1_PIN = 18;
+static constexpr int M2_PIN = 27;
+static constexpr int RST_PIN = 22;
+static constexpr int STP_PIN = 24;
+static constexpr int DIR_PIN = 23;
+static constexpr int OUT1_PIN = 5;
+static constexpr int OUT2_PIN = 6;
+static constexpr int PWM1_PIN = 26;
+static constexpr int PWM2_PIN = 19;
+static constexpr int MOTOR_PWM = 20;
+static constexpr int CHK_IN_PIN = 16;
+static constexpr int FAN_PIN = 13;
 
 void ISPoll(void *p);
 
@@ -101,7 +102,8 @@ AstroLink4Pi::~AstroLink4Pi()
 {
 	if (_motionThread.joinable())
 	{
-		_abort = true;
+		//_abort = true;
+		_abort.store(true, std::memory_order_relaxed);
 		_motionThread.join();
 	}
 }
@@ -185,7 +187,7 @@ bool AstroLink4Pi::Connect()
 	SetResolution(resolution);
 
 	getFocuserInfo();
-	long int currentTime = millis();
+	uint64_t currentTime = millis();
 	nextTemperatureRead = currentTime + TEMPERATURE_UPDATE_TIMEOUT;
 	nextTemperatureCompensation = currentTime + TEMPERATURE_COMPENSATION_TIMEOUT;
 	nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;
@@ -334,10 +336,9 @@ bool AstroLink4Pi::initProperties()
 	IUFillText(&RelayLabelsT[LAB_PWM1], "LAB_PWM1", "PWM 1", "PWM 1");
 	IUFillText(&RelayLabelsT[LAB_PWM2], "LAB_PWM2", "PWM 2", "PWM 2");
 	IUFillTextVector(&RelayLabelsTP, RelayLabelsT, 4, getDeviceName(), "RELAYLABELS", "Relay Labels", OPTIONS_TAB, IP_RW, 60, IPS_IDLE);
-	
+
 	IUFillNumber(&SQMOffsetN[0], "SQMOffset", "mag/arcsec2", "%0.2f", -1, 1, 0.01, 0);
-	IUFillNumberVector(&SQMOffsetNP, SQMOffsetN, 1, getDeviceName(), "SQMOFFSET", "SQM calibration", OPTIONS_TAB, IP_RW, 60, IPS_IDLE);    
-	
+	IUFillNumberVector(&SQMOffsetNP, SQMOffsetN, 1, getDeviceName(), "SQMOFFSET", "SQM calibration", OPTIONS_TAB, IP_RW, 60, IPS_IDLE);
 
 	// Load options before connecting
 	// load config before defining switches
@@ -428,7 +429,7 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&TemperatureCompensateSP);
 		defineProperty(&PowerReadingsNP);
 		defineProperty(&FanPowerNP);
-		defineProperty(&SQMOffsetNP);  
+		defineProperty(&SQMOffsetNP);
 	}
 	else
 	{
@@ -546,16 +547,16 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 2 set to %0.0f", PWM2N[0].value);
 			return true;
 		}
-		
-        // SQM calibration
-        if (!strcmp(name, SQMOffsetNP.name))
-        {
-            SQMOffsetNP.s = IPS_BUSY;
-            IUUpdateNumber(&SQMOffsetNP, values, names, n);
-            SQMOffsetNP.s = IPS_OK;
-            IDSetNumber(&SQMOffsetNP, nullptr);
-            return true;
-        }    		
+
+		// SQM calibration
+		if (!strcmp(name, SQMOffsetNP.name))
+		{
+			SQMOffsetNP.s = IPS_BUSY;
+			IUUpdateNumber(&SQMOffsetNP, values, names, n);
+			SQMOffsetNP.s = IPS_OK;
+			IDSetNumber(&SQMOffsetNP, nullptr);
+			return true;
+		}
 
 		// handle PWMcycle
 		if (!strcmp(name, PWMcycleNP.name))
@@ -792,8 +793,8 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 
 		if (strstr(name, "FOCUS"))
 			return FI::processSwitch(dev, name, states, names, n);
-        if (strstr(name, "WEATHER_")) 
-            return WI::processSwitch(dev, name, states, names, n);
+		if (strstr(name, "WEATHER_"))
+			return WI::processSwitch(dev, name, states, names, n);
 	}
 
 	return INDI::DefaultDevice::ISNewSwitch(dev, name, states, names, n);
@@ -854,7 +855,7 @@ void AstroLink4Pi::TimerHit()
 	if (!isConnected())
 		return;
 
-	long int timeMillis = millis();
+	uint64_t timeMillis = millis();
 	SQMavailable = readSQM(nextTemperatureRead < timeMillis);
 
 	if (nextTemperatureRead < timeMillis)
@@ -901,7 +902,8 @@ bool AstroLink4Pi::AbortFocuser()
 {
 	if (_motionThread.joinable())
 	{
-		_abort = true;
+		//_abort = true;
+		_abort.store(true, std::memory_order_relaxed);
 		_motionThread.join();
 	}
 	DEBUG(INDI::Logger::DBG_SESSION, "Focuser motion aborted.");
@@ -966,11 +968,13 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 
 	if (_motionThread.joinable())
 	{
-		_abort = true;
+		//_abort = true;
+		_abort.store(true, std::memory_order_relaxed);
 		_motionThread.join();
 	}
 
-	_abort = false;
+	//_abort = false;
+	_abort.store(false, std::memory_order_relaxed);
 	_motionThread = getMotorThread(targetTicks, lastDirection, pigpioHandle, backlashTicksRemaining);
 	return IPS_BUSY;
 }
@@ -980,16 +984,11 @@ std::thread AstroLink4Pi::getMotorThread(uint32_t targetTicks, int lastDirection
 	return std::thread([this](uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining)
 					   {
 		int motorDirection = direction;
+		std::mutex motionMutex;
 
 		uint32_t currentPos = FocusAbsPosNP[0].getValue();
-		while (currentPos != targetPos && !_abort)
+		while (currentPos != targetPos && !(_abort.load(std::memory_order_relaxed)))
 		{
-			if (currentPos % 100 == 0)
-			{
-				FocusAbsPosNP[0].setValue(currentPos);
-				FocusAbsPosNP.setState(IPS_BUSY);
-				FocusAbsPosNP.apply();
-			}
 			if (FocusReverseSP[INDI_ENABLED].getState() == ISS_ON)
 			{
 				lgGpioWrite(pigpioHandle, DIR_PIN, (motorDirection < 0) ? 1 : 0);
@@ -1010,7 +1009,15 @@ std::thread AstroLink4Pi::getMotorThread(uint32_t targetTicks, int lastDirection
 			{ // Don't count the backlash position change, just decrement the counter
 				backlashTicksRemaining -= 1;
 			}
-			usleep(FocusStepDelayN[0].value);
+			if (currentPos % 100 == 0)
+			{
+				std::lock_guard<std::mutex> lk(motionMutex);
+				FocusAbsPosNP[0].setValue(currentPos);
+				FocusAbsPosNP.setState(IPS_BUSY);
+				FocusAbsPosNP.apply();
+			}
+			//usleep(FocusStepDelayN[0].value);
+			std::this_thread::sleep_for(std::chrono::microseconds(FocusStepDelayN[0].value));
 		}
 
 		// update abspos value and status
@@ -1097,13 +1104,27 @@ int AstroLink4Pi::savePosition(int pos)
 	char posFileName[MAXRBUF];
 	char buf[100];
 
-	if (getenv("INDICONFIG"))
+	// if (getenv("INDICONFIG"))
+	// {
+	// 	snprintf(posFileName, MAXRBUF, "%s.position", getenv("INDICONFIG"));
+	// }
+	// else
+	// {
+	// 	snprintf(posFileName, MAXRBUF, "%s/.indi/%s.position", getenv("HOME"), getDeviceName());
+	// }
+	const char *indi_cfg = getenv("INDICONFIG");
+	if (indi_cfg)
 	{
-		snprintf(posFileName, MAXRBUF, "%s.position", getenv("INDICONFIG"));
+		snprintf(posFileName, MAXRBUF, "%s.position", indi_cfg);
 	}
 	else
 	{
-		snprintf(posFileName, MAXRBUF, "%s/.indi/%s.position", getenv("HOME"), getDeviceName());
+		const char *home = getenv("HOME");
+		if (!home)
+		{
+			DEBUGF(INDI::Logger::DBG_ERROR, "Neither INDICONFIG nor HOME env set.");
+		}
+		snprintf(posFileName, MAXRBUF, "%s/.indi/%s.position", home, getDeviceName());
 	}
 
 	if (pos == -1)
@@ -1115,9 +1136,10 @@ int AstroLink4Pi::savePosition(int pos)
 			return -1;
 		}
 
-		if (fgets(buf, 100, pFile) == NULL)
+		if (fgets(buf, sizeof(buf), pFile) == NULL)
 		{
 			DEBUGF(INDI::Logger::DBG_ERROR, "Failed to read file %s.", posFileName);
+			fclose(pFile);
 			return -1;
 		}
 		else
@@ -1181,9 +1203,9 @@ void AstroLink4Pi::temperatureCompensation()
 		// Move focuser once the compensation is larger than 1/2 CFZ
 		if (abs(deltaPos) > (FocuserInfoN[2].value / 2))
 		{
-			int thermalAdjustment = round(deltaPos);				   // adjust focuser by half number of steps to keep it in the center of cfz
+			int thermalAdjustment = round(deltaPos);						 // adjust focuser by half number of steps to keep it in the center of cfz
 			MoveAbsFocuser(FocusAbsPosNP[0].getValue() + thermalAdjustment); // adjust focuser position
-			lastTemperature = FocusTemperatureN[0].value;			   // register last temperature
+			lastTemperature = FocusTemperatureN[0].value;					 // register last temperature
 			DEBUGF(INDI::Logger::DBG_SESSION, "Focuser adjusted by %d steps due to temperature change by %0.2fÂ°C", thermalAdjustment, deltaTemperature);
 		}
 	}
@@ -1337,11 +1359,15 @@ void AstroLink4Pi::getFocuserInfo()
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Focuser Info: %0.2f %0.2f %0.2f.", FocuserInfoN[0].value, FocuserInfoN[1].value, FocuserInfoN[2].value);
 }
 
-long int AstroLink4Pi::millis()
+uint64_t AstroLink4Pi::millis()
 {
-	static uint64_t nsec_zero = lguTimestamp();
-	int millis = (int)((lguTimestamp() - nsec_zero) / 1000000);
-	return millis;
+	// static uint64_t nsec_zero = lguTimestamp();
+	// int millis = (int)((lguTimestamp() - nsec_zero) / 1000000);
+	// return millis;
+	static const auto start = std::chrono::steady_clock::now();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(
+			   std::chrono::steady_clock::now() - start)
+		.count();
 }
 
 int AstroLink4Pi::getMotorPWM(int current)
@@ -1395,6 +1421,8 @@ void AstroLink4Pi::fanUpdate()
 		lgTxPwm(pigpioHandle, FAN_PIN, 100, cycle, 0, 0);
 		FanPowerN[0].value = fanPwr;
 		FanPowerNP.s = IPS_OK;
+
+		lgGpioFree(pigpioHandle, FAN_PIN);
 	}
 	else
 	{
@@ -1414,58 +1442,60 @@ bool AstroLink4Pi::readTSL()
 {
 	bool available = false;
 	int i2cHandle = lgI2cOpen(1, TSL2591_ADDR, 0);
-	
-	if(i2cHandle < 0)
+
+	if (i2cHandle < 0)
 	{
-		TSLmode = TSL_NOTAVAILABLE;
+		TSLmode = NotAvailable;
 		return false;
 	}
-	
-	if(TSLmode == TSL_NOTAVAILABLE) 
+
+	if (TSLmode == NotAvailable)
 	{
 		int write = lgI2cWriteByte(i2cHandle, 0x80 | 0x20 | 0x12);
-		if(write == 0) {
-			TSLmode = TSL_AVAILABLE;
+		if (write == 0)
+		{
+			TSLmode = Available;
 			available = true;
 		}
 	}
-	else if(TSLmode == TSL_AVAILABLE)
+	else if (TSLmode == Available)
 	{
 		int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
-        write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);
+		write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);
 
 		// Enable device - power down mode on boot
-        write += lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL); 
-        write += lgI2cWriteByte(i2cHandle, 0x05 | 0x30); 
-        
-        write += lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE); 
-        write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWEROFF); 
-        
-		TSLmode = (write == 0) ? TSL_INITIALIZED : TSL_NOTAVAILABLE;
+		write += lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL);
+		write += lgI2cWriteByte(i2cHandle, 0x05 | 0x30);
+
+		write += lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
+		write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWEROFF);
+
+		TSLmode = (write == 0) ? Initialized : NotAvailable;
 		available = (write == 0);
 	}
-	else if(TSLmode == TSL_INITIALIZED)
+	else if (TSLmode == Initialized)
 	{
-		if(adcStartTime == 0)
+		if (adcStartTime == 0)
 		{
 			int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
-			write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);	
+			write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);
 			adcStartTime = millis();
-			TSLmode = (write == 0) ? TSL_INITIALIZED : TSL_NOTAVAILABLE;
+			TSLmode = (write == 0) ? Initialized : NotAvailable;
 			available = (write == 0);
 		}
-		else if(millis() > (adcStartTime + TSL2591_ADC_TIME))
+		else if (millis() > (adcStartTime + TSL2591_ADC_TIME))
 		{
 			int ir = lgI2cReadWordData(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN1_LOW);
 			int full = lgI2cReadWordData(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN0_LOW);
 
-	        int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE); 
-			write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWEROFF); 	
-			adcStartTime = 0;	
+			int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
+			write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWEROFF);
+			adcStartTime = 0;
 
 			int visCumulative = fullCumulative - irCumulative;
-			if(full < ir) return true;
-			if(niter < 5 || (visCumulative < 500 && niter < 150))
+			if (full < ir)
+				return true;
+			if (niter < 5 || (visCumulative < 500 && niter < 150))
 			{
 				niter++;
 				fullCumulative += full;
@@ -1473,18 +1503,18 @@ bool AstroLink4Pi::readTSL()
 			}
 			else
 			{
-				double VIS = (double) visCumulative / (29628.0 * niter);
+				double VIS = (double)visCumulative / (29628.0 * niter);
 				double mpsas = 12.6 - 1.086 * log(VIS) + SQMOffsetN[0].value + FILTER_COEFF;
 				setParameterValue("SQM_READING", mpsas);
-				
+
 				niter = 0;
 				irCumulative = fullCumulative = 0;
-			}	
+			}
 
-			TSLmode = (write == 0) ? TSL_INITIALIZED : TSL_NOTAVAILABLE;
+			TSLmode = (write == 0) ? Initialized : NotAvailable;
 			available = (write == 0);
 		}
-	}	
+	}
 	lgI2cClose(i2cHandle);
 	return available;
 }
@@ -1504,7 +1534,7 @@ bool AstroLink4Pi::readOLD()
 			// DEBUGF(INDI::Logger::DBG_SESSION, "SQM read %i %i", i2cData[5], i2cData[6]);
 			return true;
 		}
-	}	
+	}
 	return false;
 }
 
@@ -1660,7 +1690,8 @@ bool AstroLink4Pi::readPower()
 				int read = lgI2cReadDevice(i2cHandle, readBuf, 2);
 				if (read > 0)
 				{
-					int16_t val = readBuf[0] * 255 + readBuf[1];
+					// int16_t val = readBuf[0] * 255 + readBuf[1];
+					int16_t val = (static_cast<int16_t>(static_cast<unsigned char>(readBuf[0])) << 8) | static_cast<unsigned char>(readBuf[1]);
 
 					switch (powerIndex)
 					{
@@ -1773,8 +1804,8 @@ int AstroLink4Pi::checkRevision()
 	{
 		if (lgGpioRead(handle, CHK_IN_PIN) == 0)
 		{
-			lgGpioWrite(handle, MOTOR_PWM, 1);			// pin20
-			if (lgGpioRead(handle, CHK_IN_PIN) == 1)	// pin16
+			lgGpioWrite(handle, MOTOR_PWM, 1);		 // pin20
+			if (lgGpioRead(handle, CHK_IN_PIN) == 1) // pin16
 			{
 				rev = 4;
 			}
