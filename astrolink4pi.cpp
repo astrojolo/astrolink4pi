@@ -1132,7 +1132,7 @@ int AstroLink4Pi::savePosition(int pos)
 		pFile = fopen(posFileName, "r");
 		if (pFile == NULL)
 		{
-			DEBUGF(INDI::Logger::DBG_ERROR, "Failed to open file %s.", posFileName);
+			DEBUG(INDI::Logger::DBG_ERROR, "Failed to open file %s.", posFileName);
 			return -1;
 		}
 
