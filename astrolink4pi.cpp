@@ -1122,7 +1122,7 @@ int AstroLink4Pi::savePosition(int pos)
 		const char *home = getenv("HOME");
 		if (!home)
 		{
-			DEBUGF(INDI::Logger::DBG_ERROR, "Neither INDICONFIG nor HOME env set.");
+			DEBUG(INDI::Logger::DBG_ERROR, "Neither INDICONFIG nor HOME env set.");
 		}
 		snprintf(posFileName, MAXRBUF, "%s/.indi/%s.position", home, getDeviceName());
 	}
@@ -1132,7 +1132,7 @@ int AstroLink4Pi::savePosition(int pos)
 		pFile = fopen(posFileName, "r");
 		if (pFile == NULL)
 		{
-			DEBUG(INDI::Logger::DBG_ERROR, "Failed to open file %s.", posFileName);
+			DEBUGF(INDI::Logger::DBG_ERROR, "Failed to open file %s.", posFileName);
 			return -1;
 		}
 
