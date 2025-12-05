@@ -21,19 +21,21 @@
 #define ASTROLINK4PI_H
 
 #include <atomic>
-#include <stdio.h>
+#include <mutex>
+#include <chrono>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <memory>
+#include <cmath>
+#include <ctime>
+#include <thread>
+#include <chrono>
+
 #include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <string.h>
-#include <fstream>
-#include <math.h>
-#include <memory>
-#include <time.h>
-#include <iostream>
-#include <thread>
-#include <chrono>
-#include <string>
+
 #include "config.h"
 
 #include <lgpio.h>
@@ -230,7 +232,7 @@ private:
 	bool SHTavailable = false;
 	bool MLXavailable = false;
 	bool SQMavailable = false;
-	TSLState TSLmode = NotAvailable;
+	TSLState TSLmode = TSLState::NotAvailable;
 
 	int backlashTicksRemaining;
 	int lastDirection = 0;

@@ -41,7 +41,7 @@ static constexpr uint8_t TSL2591_REGISTER_ENABLE = 0x00;
 static constexpr uint8_t TSL2591_REGISTER_CONTROL = 0x01;
 static constexpr uint8_t TSL2591_REGISTER_CHAN0_LOW = 0x14;
 static constexpr uint8_t TSL2591_REGISTER_CHAN1_LOW = 0x16;
-static constexpr uint8_t FILTER_COEFF = -1.2;
+static constexpr float FILTER_COEFF = -1.2;
 
 static constexpr int RP4_GPIO = 0;
 static constexpr int RP5_GPIO = 4;
@@ -1445,20 +1445,20 @@ bool AstroLink4Pi::readTSL()
 
 	if (i2cHandle < 0)
 	{
-		TSLmode = NotAvailable;
+		TSLmode = TSLState::NotAvailable;
 		return false;
 	}
 
-	if (TSLmode == NotAvailable)
+	if (TSLmode == TSLState::NotAvailable)
 	{
 		int write = lgI2cWriteByte(i2cHandle, 0x80 | 0x20 | 0x12);
 		if (write == 0)
 		{
-			TSLmode = Available;
+			TSLmode = TSLState::Available;
 			available = true;
 		}
 	}
-	else if (TSLmode == Available)
+	else if (TSLmode == TSLState::Available)
 	{
 		int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
 		write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);
@@ -1470,17 +1470,17 @@ bool AstroLink4Pi::readTSL()
 		write += lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
 		write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWEROFF);
 
-		TSLmode = (write == 0) ? Initialized : NotAvailable;
+		TSLmode = (write == 0) ? TSLState::Initialized : TSLState::NotAvailable;
 		available = (write == 0);
 	}
-	else if (TSLmode == Initialized)
+	else if (TSLmode == TSLState::Initialized)
 	{
 		if (adcStartTime == 0)
 		{
 			int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
 			write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);
 			adcStartTime = millis();
-			TSLmode = (write == 0) ? Initialized : NotAvailable;
+			TSLmode = (write == 0) ? TSLState::Initialized : TSLState::NotAvailable;
 			available = (write == 0);
 		}
 		else if (millis() > (adcStartTime + TSL2591_ADC_TIME))
@@ -1511,7 +1511,7 @@ bool AstroLink4Pi::readTSL()
 				irCumulative = fullCumulative = 0;
 			}
 
-			TSLmode = (write == 0) ? Initialized : NotAvailable;
+			TSLmode = (write == 0) ? TSLState::Initialized : TSLState::NotAvailable;
 			available = (write == 0);
 		}
 	}
