@@ -43,6 +43,9 @@ static constexpr uint8_t TSL2591_REGISTER_CHAN0_LOW = 0x14;
 static constexpr uint8_t TSL2591_REGISTER_CHAN1_LOW = 0x16;
 static constexpr float FILTER_COEFF = -1.2;
 
+static constexpr uint8_t FAN_66_TEMP = 60;
+static constexpr uint8_t FANMAX_TEMP = 70;
+
 static constexpr int RP4_GPIO = 0;
 static constexpr int RP5_GPIO = 4;
 static constexpr int DECAY_PIN = 14;
@@ -1408,12 +1411,12 @@ void AstroLink4Pi::fanUpdate()
 		int temp = std::stoi(SysInfoT[SYSI_CPUTEMP].text);
 		int cycle = 0;
 		double fanPwr = 33.0;
-		if (temp > 65)
+		if (temp > FAN_66_TEMP)
 		{
 			cycle = 50;
 			fanPwr = 66.0;
 		}
-		if (temp > 70)
+		if (temp > FANMAX_TEMP)
 		{
 			cycle = 100;
 			fanPwr = 100.0;
@@ -1421,8 +1424,6 @@ void AstroLink4Pi::fanUpdate()
 		lgTxPwm(pigpioHandle, FAN_PIN, 100, cycle, 0, 0);
 		FanPowerN[0].value = fanPwr;
 		FanPowerNP.s = IPS_OK;
-
-		lgGpioFree(pigpioHandle, FAN_PIN);
 	}
 	else
 	{
