@@ -1017,7 +1017,7 @@ std::thread AstroLink4Pi::getMotorThread(uint32_t targetTicks, int lastDirection
 				FocusAbsPosNP.apply();
 			}
 			//usleep(FocusStepDelayN[0].value);
-			std::this_thread::sleep_for(std::chrono::microseconds(FocusStepDelayN[0].value));
+			std::this_thread::sleep_for(std::chrono::microseconds(static_cast<long>FocusStepDelayN[0].value));
 		}
 
 		// update abspos value and status
