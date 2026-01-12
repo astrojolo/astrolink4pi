@@ -83,7 +83,7 @@ echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
 After restarting the astroberry system time will be synchronized with the embedded DS1307 clock.
 Check hwclock help to find more options, like time adjustments and synchronization:
 ```
-hwclock -h
+sudo hwclock -r
 ```
 
 # AstroLink 4 Pi features:
