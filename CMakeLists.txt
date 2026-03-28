@@ -1,40 +1,51 @@
-cmake_minimum_required(VERSION 2.4.7)
-PROJECT(indi-astrolink4pi CXX C)
+cmake_minimum_required(VERSION 3.10)
+project(indi-astrolink4pi VERSION 1.5 LANGUAGES C CXX)
 
-LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
 include(GNUInstallDirs)
 
-set (VERSION_MAJOR 1)
-set (VERSION_MINOR 2)
-
 find_package(INDI REQUIRED)
+find_package(Threads REQUIRED)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/indi_astrolink4pi.xml.cmake ${CMAKE_CURRENT_BINARY_DIR}/indi_astrolink4pi.xml)
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${INDI_INCLUDE_DIR})
+include_directories(${INDI_INCLUDE_DIR}) # kept for any legacy includes; prefer target_include_directories below
 
 include(CMakeCommon)
 
-set(GPIO_LIBRARIES "libgpiod.so")
-set(PIGPIO_LIBRARIES "libpigpiod_if2.so")
+# Prefer finding the library instead of hard-coding the .so filename
+find_library(LGPIOLIB NAMES lgpio liblgpio)
+if(NOT LGPIOLIB)
+    message(FATAL_ERROR "lgpio library not found. Install liblgpio or set LGPIOLIB manually.")
+endif()
 
 ################ AstroLink 4 Pi ################
 set(indi_astrolink4pi_SRCS
-        ${CMAKE_CURRENT_SOURCE_DIR}/astrolink4pi.cpp
-   )
+    ${CMAKE_CURRENT_SOURCE_DIR}/astrolink4pi.cpp
+)
 
-IF (UNITY_BUILD)
+if (UNITY_BUILD)
     ENABLE_UNITY_BUILD(indi_astrolink4pi indi_astrolink4pi_SRCS 6 cpp)
-ENDIF ()
+endif()
 
 add_executable(indi_astrolink4pi ${indi_astrolink4pi_SRCS})
-#find_library(PIGPIO_LIBRARIES NAMES pigpiod_if2)
-target_link_libraries(indi_astrolink4pi ${INDI_LIBRARIES} ${GPIO_LIBRARIES} ${PIGPIO_LIBRARIES} pthread)
-install(TARGETS indi_astrolink4pi RUNTIME DESTINATION bin )
+
+# modern target-based usage
+target_include_directories(indi_astrolink4pi PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${INDI_INCLUDE_DIR}
+)
+
+target_compile_features(indi_astrolink4pi PRIVATE cxx_std_11)
+
+target_link_libraries(indi_astrolink4pi PRIVATE
+    ${INDI_LIBRARIES}
+    ${LGPIOLIB}
+    Threads::Threads
+)
+
+install(TARGETS indi_astrolink4pi RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/indi_astrolink4pi.xml DESTINATION ${INDI_DATA_DIR})
-
-
