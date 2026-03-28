@@ -20,19 +20,22 @@
 #ifndef ASTROLINK4PI_H
 #define ASTROLINK4PI_H
 
-#include <stdio.h>
+#include <atomic>
+#include <mutex>
+#include <chrono>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <memory>
+#include <cmath>
+#include <ctime>
+#include <thread>
+#include <chrono>
+
 #include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <string.h>
-#include <fstream>
-#include <math.h>
-#include <memory>
-#include <time.h>
-#include <iostream>
-#include <thread>
-#include <chrono>
-#include <string>
+
 #include "config.h"
 
 #include <lgpio.h>
@@ -117,14 +120,14 @@ private:
 	INumberVectorProperty TemperatureCoefNP;
 	ISwitch TemperatureCompensateS[2];
 	ISwitchVectorProperty TemperatureCompensateSP;
-	
-    INumber SQMOffsetN[1];
-    INumberVectorProperty SQMOffsetNP;	
-    enum
-    {
-		TSL_NOTAVAILABLE,
-		TSL_AVAILABLE,
-		TSL_INITIALIZED
+
+	INumber SQMOffsetN[1];
+	INumberVectorProperty SQMOffsetNP;
+	enum class TSLState
+	{
+		NotAvailable,
+		Available,
+		Initialized
 	};
 
 	INumber FocuserInfoN[3];
@@ -229,7 +232,7 @@ private:
 	bool SHTavailable = false;
 	bool MLXavailable = false;
 	bool SQMavailable = false;
-	int TSLmode = TSL_NOTAVAILABLE;
+	TSLState TSLmode = TSLState::NotAvailable;
 
 	int backlashTicksRemaining;
 	int lastDirection = 0;
@@ -237,21 +240,22 @@ private:
 	int pwmState[2];
 	int relayState[2];
 
-	long int nextTemperatureRead = 0;
-	long int nextTemperatureCompensation = 0;
-	long int nextSystemRead = 0;
-	long int nextFanUpdate = 0;
-	long int adcStartTime = 0;
+	uint64_t nextTemperatureRead = 0;
+	uint64_t nextTemperatureCompensation = 0;
+	uint64_t nextSystemRead = 0;
+	uint64_t nextFanUpdate = 0;
+	uint64_t adcStartTime = 0;
 	int niter = 0;
-	int fullCumulative = 0;
-	int irCumulative = 0;
+	uint64_t fullCumulative = 0;
+	uint64_t irCumulative = 0;
 
 	int powerIndex = 0;
 	float energyAs = 0.0;
 	float energyWs = 0.0;
 
 	std::thread _motionThread;
-	volatile bool _abort;
+	// volatile bool _abort;
+	std::atomic<bool> _abort{false};
 
 	int getHoldPower();
 	void getFocuserInfo();
@@ -262,7 +266,7 @@ private:
 	int getMotorPWM(int current);
 	int setDac(int chan, int value);
 	int checkRevision();
-	long int millis();
+	uint64_t millis();
 	std::thread getMotorThread(uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining);
 
 	static constexpr const char *ENVIRONMENT_TAB{"Environment"};
