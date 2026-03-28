@@ -872,7 +872,6 @@ void AstroLink4Pi::TimerHit()
 		{
 			SHTavailable = readSHT();
 			MLXavailable = readMLX();
-			SQMavailable = readSQM();
 		}
 
 		SHTavailable = readSHT();
