@@ -89,6 +89,7 @@ private:
 	virtual bool readTSL();
 	virtual bool readOLD();
 	virtual bool readPower();
+	virtual bool readDS18B20();
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
@@ -232,6 +233,7 @@ private:
 	bool SHTavailable = false;
 	bool MLXavailable = false;
 	bool SQMavailable = false;
+	bool DSavailable = false;
 	TSLState TSLmode = TSLState::NotAvailable;
 
 	int backlashTicksRemaining;

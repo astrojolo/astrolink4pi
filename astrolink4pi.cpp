@@ -63,6 +63,7 @@ static constexpr int PWM2_PIN = 19;
 static constexpr int MOTOR_PWM = 20;
 static constexpr int CHK_IN_PIN = 16;
 static constexpr int FAN_PIN = 13;
+static constexpr int HOLD_PIN = 13;
 
 void ISPoll(void *p);
 
@@ -863,12 +864,23 @@ void AstroLink4Pi::TimerHit()
 
 	if (nextTemperatureRead < timeMillis)
 	{
+		if (revision == 1 || revision == 2)
+		{
+			DSavailable = readDS18B20();
+		}
+		else
+		{
+			SHTavailable = readSHT();
+			MLXavailable = readMLX();
+			SQMavailable = readSQM();
+		}
+
 		SHTavailable = readSHT();
 		MLXavailable = readMLX();
 
 		nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
 
-		if (SHTavailable || MLXavailable)
+		if (DSavailable || SHTavailable || MLXavailable)
 		{
 			FocusTemperatureN[0].value = focuserTemperature;
 			FocusTemperatureNP.s = IPS_OK;
@@ -1214,6 +1226,98 @@ void AstroLink4Pi::temperatureCompensation()
 	}
 }
 
+bool AstroLink4Pi::readDS18B20()
+{
+	if (!isConnected())
+		return false;
+
+	DIR *dir;
+	struct dirent *dirent;
+	char dev[16];			 // Dev ID
+	char devPath[128];		 // Path to device
+	char buf[256] = "";		 // Data from device
+	char temperatureData[6]; // Temp C * 1000 reported by device
+	char path[] = "/sys/bus/w1/devices";
+	float tempC;
+
+	dir = opendir(path);
+
+	// search for --the first-- DS18B20 device
+	if (dir != NULL)
+	{
+		while ((dirent = readdir(dir)))
+		{
+			// DS18B20 device is family code beginning with 28-
+			if (dirent->d_type == DT_LNK && strstr(dirent->d_name, "28-") != NULL)
+			{
+				strcpy(dev, dirent->d_name);
+				break;
+			}
+		}
+		(void)closedir(dir);
+	}
+	else
+	{
+		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor disabled. 1-Wire interface is not available.");
+		return false;
+	}
+
+	// Assemble path to --the first-- DS18B20 device
+	sprintf(devPath, "%s/%s/w1_slave", path, dev);
+
+	// We use fgetc to support EOF. This prevents driver crash when hot plug/unplug the sensor
+	FILE *pFile;
+	int c;
+	pFile = fopen(devPath, "r");
+	if (pFile == NULL)
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "Temperature sensor not available.");
+		return false;
+	}
+	else
+	{
+		do
+		{
+			c = fgetc(pFile);
+			if (c != EOF)
+			{
+				int len = strlen(buf);
+				buf[len] = (char)c;
+				buf[len + 1] = '\0';
+			}
+
+		} while (c != EOF);
+		fclose(pFile);
+	}
+
+	if (strlen(buf) < 10)
+	{
+		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor read error.");
+		return false;
+	}
+
+	// parse temperature value from sensor output
+	strncpy(temperatureData, strstr(buf, "t=") + 2, 6);
+	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature sensor raw output: %s", buf);
+	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature string: %s", temperatureData);
+
+	tempC = strtof(temperatureData, NULL) / 1000;
+	// tempF = (tempC / 1000) * 9 / 5 + 32;
+
+	// check if temperature is reasonable
+	if (abs(tempC) > 100)
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "Temperature reading out of range.");
+		return false;
+	}
+
+	setParameterValue("WEATHER_TEMPERATURE", tempC);
+	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature: %.2f°C", tempC);
+	focuserTemperature = tempC;
+	return true;
+}
+
+
 int AstroLink4Pi::getHoldPower()
 {
 	if (FocusHoldS[HOLD_20].s == ISS_ON)
@@ -1239,7 +1343,26 @@ void AstroLink4Pi::setCurrent(bool standby)
 		lgGpioWrite(pigpioHandle, EN_PIN, (getHoldPower() > 0) ? 0 : 1);
 		lgGpioWrite(pigpioHandle, DECAY_PIN, 0);
 
-		if (revision < 4)
+
+		if (revision == 1)
+		{
+			if (getHoldPower() == 5)
+			{
+				lgGpioWrite(pigpioHandle, HOLD_PIN, 0);
+				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 100%%.");
+			}
+			else if (getHoldPower() > 0)
+			{
+				lgGpioWrite(pigpioHandle, HOLD_PIN, 1);
+				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 50%%.");
+			}
+			else
+			{
+				lgGpioWrite(pigpioHandle, HOLD_PIN, 1);
+				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
+			}
+		}		
+		if (revision > 1 && revision < 4)
 		{
 			// for 0.1 ohm resistor Vref = iref / 2
 			setDac(0, 255 * (getHoldPower() * StepperCurrentN[0].value / 5) / 4096);
@@ -1262,7 +1385,11 @@ void AstroLink4Pi::setCurrent(bool standby)
 	{
 		lgGpioWrite(pigpioHandle, EN_PIN, 0);
 		lgGpioWrite(pigpioHandle, DECAY_PIN, 1);
-		if (revision < 4)
+		if (revision == 1)
+		{
+			lgGpioWrite(pigpioHandle, HOLD_PIN, 0);
+		}		
+		if (revision > 1 && revision < 4)
 		{
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current %0.2f", StepperCurrentN[0].value);
 			// for 0.1 ohm resistor Vref = iref / 2
