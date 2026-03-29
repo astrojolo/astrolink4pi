@@ -21,6 +21,7 @@
 #define ASTROLINK4PI_H
 
 #include <atomic>
+#include <cstdio>
 #include <mutex>
 #include <chrono>
 #include <iostream>
@@ -31,6 +32,7 @@
 #include <ctime>
 #include <thread>
 #include <chrono>
+#include <algorithm>
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -228,19 +230,19 @@ private:
 
 	int resolution = 1;
 
-	float lastTemperature;
-	float focuserTemperature;
+	float lastTemperature = -1000.0;
+	float focuserTemperature = -1000.0;
 	bool SHTavailable = false;
 	bool MLXavailable = false;
 	bool SQMavailable = false;
 	bool DSavailable = false;
 	TSLState TSLmode = TSLState::NotAvailable;
 
-	int backlashTicksRemaining;
+	int backlashTicksRemaining = 0;
 	int lastDirection = 0;
 
-	int pwmState[2];
-	int relayState[2];
+	int pwmState[2] = {0};
+	int relayState[2] = {0};
 
 	uint64_t nextTemperatureRead = 0;
 	uint64_t nextTemperatureCompensation = 0;
@@ -269,6 +271,7 @@ private:
 	int setDac(int chan, int value);
 	int checkRevision();
 	uint64_t millis();
+	std::string runCommand(const char* cmd);
 	std::thread getMotorThread(uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining);
 
 	static constexpr const char *ENVIRONMENT_TAB{"Environment"};

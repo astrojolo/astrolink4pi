@@ -120,11 +120,11 @@ const char *AstroLink4Pi::getDefaultName()
 bool AstroLink4Pi::Connect()
 {
 	revision = checkRevision();
-	if (revision < 3)
+	/*if (revision < 3)
 	{
 		DEBUGF(INDI::Logger::DBG_ERROR, "This INDI driver version works only with AstroLink 4 Pi revision 3 and higer. Revision detected %d", revision);
 		return false;
-	}
+	}*/
 
 	pigpioHandle = lgGpiochipOpen(gpioType);
 	if (pigpioHandle < 0)
@@ -158,29 +158,16 @@ bool AstroLink4Pi::Connect()
 
 	// update Hardware
 	// https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
-	pipe = popen("cat /sys/firmware/devicetree/base/model", "r");
-	if (fgets(buffer, 128, pipe) != NULL)
-		IUSaveText(&SysInfoT[SYSI_HARDWARE], buffer);
-	pclose(pipe);
+	std::string hostname = runCommand("hostname");
+	std::string model = runCommand("cat /sys/firmware/devicetree/base/model");
+	std::string localIp = runCommand("hostname -I|awk -F' '  '{print $1}'|xargs");
+	std::string publicIp = runCommand("curl -s ifconfig.me");
 
-	// update Hostname
-	pipe = popen("hostname", "r");
-	if (fgets(buffer, 128, pipe) != NULL)
-		IUSaveText(&SysInfoT[SYSI_HOST], buffer);
-	pclose(pipe);
-
-	// update Local IP
-	pipe = popen("hostname -I|awk -F' '  '{print $1}'|xargs", "r");
-	if (fgets(buffer, 128, pipe) != NULL)
-		IUSaveText(&SysInfoT[SYSI_LOCALIP], buffer);
-	pclose(pipe);
-
-	// update Public IP
-	pipe = popen("wget -qO- http://ipecho.net/plain|xargs", "r");
-	if (fgets(buffer, 128, pipe) != NULL)
-		IUSaveText(&SysInfoT[SYSI_PUBIP], buffer);
-	pclose(pipe);
-
+	IUSaveText(&SysInfoT[SYSI_HARDWARE], model);
+	IUSaveText(&SysInfoT[SYSI_HOST], hostname);
+	IUSaveText(&SysInfoT[SYSI_LOCALIP], localIp);
+	IUSaveText(&SysInfoT[SYSI_PUBIP], publicIp);
+	
 	// Update client
 	IDSetText(&SysInfoTP, NULL);
 
@@ -223,7 +210,6 @@ bool AstroLink4Pi::Disconnect()
 	lgGpioFree(pigpioHandle, EN_PIN);
 	lgGpioFree(pigpioHandle, M0_PIN);
 	lgGpioFree(pigpioHandle, M1_PIN);
-	lgGpioFree(pigpioHandle, M2_PIN);
 	lgGpioFree(pigpioHandle, M2_PIN);
 	lgGpioFree(pigpioHandle, RST_PIN);
 	lgGpioFree(pigpioHandle, STP_PIN);
@@ -569,7 +555,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			PWMcycleNP.s = IPS_OK;
 			IDSetNumber(&PWMcycleNP, nullptr);
 			lgTxPwm(pigpioHandle, PWM1_PIN, PWMcycleN[0].value, PWM1N[0].value, 0, 0);
-			lgTxPwm(pigpioHandle, PWM2_PIN, PWMcycleN[0].value, PWM1N[0].value, 0, 0);
+			lgTxPwm(pigpioHandle, PWM2_PIN, PWMcycleN[0].value, PWM2N[0].value, 0, 0);
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM frequency set to %0.0f Hz", PWMcycleN[0].value);
 			return true;
 		}
@@ -874,9 +860,6 @@ void AstroLink4Pi::TimerHit()
 			MLXavailable = readMLX();
 		}
 
-		SHTavailable = readSHT();
-		MLXavailable = readMLX();
-
 		nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
 
 		if (DSavailable || SHTavailable || MLXavailable)
@@ -1118,14 +1101,6 @@ int AstroLink4Pi::savePosition(int pos)
 	char posFileName[MAXRBUF];
 	char buf[100];
 
-	// if (getenv("INDICONFIG"))
-	// {
-	// 	snprintf(posFileName, MAXRBUF, "%s.position", getenv("INDICONFIG"));
-	// }
-	// else
-	// {
-	// 	snprintf(posFileName, MAXRBUF, "%s/.indi/%s.position", getenv("HOME"), getDeviceName());
-	// }
 	const char *indi_cfg = getenv("INDICONFIG");
 	if (indi_cfg)
 	{
@@ -1946,4 +1921,24 @@ int AstroLink4Pi::checkRevision()
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;
+}
+
+
+std::string AstroLink4Pi::runCommand(const char* cmd)
+{
+    char buffer[128] = {0};
+    FILE* pipe = popen(cmd, "r");
+    if (pipe == nullptr)
+        return "";
+
+    std::string result;
+    if (fgets(buffer, sizeof(buffer), pipe) != nullptr)
+        result = buffer;
+
+    pclose(pipe);
+
+    while (!result.empty() && (result.back() == '\n' || result.back() == '\r'))
+        result.pop_back();
+
+    return result;
 }
