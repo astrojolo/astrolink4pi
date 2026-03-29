@@ -152,10 +152,6 @@ bool AstroLink4Pi::Connect()
 	RelayLabelsTP.s = IPS_BUSY;
 	IDSetText(&RelayLabelsTP, nullptr);
 
-	// Get basic system info
-	FILE *pipe;
-	char buffer[128];
-
 	// update Hardware
 	// https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
 	std::string hostname = runCommand("hostname");
@@ -1394,26 +1390,18 @@ void AstroLink4Pi::systemUpdate()
 	SysInfoTP.s = IPS_BUSY;
 	IDSetText(&SysInfoTP, NULL);
 
-	FILE *pipe;
-	char buffer[128];
-
 	// update CPU temp
-	pipe = popen("echo $(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))", "r");
-	if (fgets(buffer, 128, pipe) != NULL)
-		IUSaveText(&SysInfoT[SYSI_CPUTEMP], buffer);
-	pclose(pipe);
+	std::string cputemp = runCommand("echo $(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))");
+	IUSaveText(&SysInfoT[SYSI_CPUTEMP], cputemp);
 
 	// update uptime
-	pipe = popen("uptime|awk -F, '{print $1}'|awk -Fup '{print $2}'|xargs", "r");
-	if (fgets(buffer, 128, pipe) != NULL)
-		IUSaveText(&SysInfoT[SYSI_UPTIME], buffer);
-	pclose(pipe);
+	std::string uptime = runCommand("uptime|awk -F, '{print $1}'|awk -Fup '{print $2}'|xargs");
+	IUSaveText(&SysInfoT[SYSI_CPUTEMP], uptime);	
+
 
 	// update load
-	pipe = popen("uptime|awk -F, '{print $3\" /\"$4\" /\"$5}'|awk -F: '{print $2}'|xargs", "r");
-	if (fgets(buffer, 128, pipe) != NULL)
-		IUSaveText(&SysInfoT[SYSI_LOAD], buffer);
-	pclose(pipe);
+	std::string load = runCommand("uptime|awk -F, '{print $3\" /\"$4\" /\"$5}'|awk -F: '{print $2}'|xargs");
+	IUSaveText(&SysInfoT[SYSI_CPUTEMP], load);	
 
 	SysInfoTP.s = IPS_OK;
 	IDSetText(&SysInfoTP, NULL);
