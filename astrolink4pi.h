@@ -25,7 +25,9 @@
 #include <chrono>
 #include <iostream>
 #include <fstream>
+#include <cstdio>
 #include <string>
+#include <algorithm>
 #include <memory>
 #include <cmath>
 #include <ctime>
@@ -227,18 +229,18 @@ private:
 
 	int resolution = 1;
 
-	float lastTemperature;
-	float focuserTemperature;
+	float lastTemperature = -1000.0;
+	float focuserTemperature = -1000.0;
 	bool SHTavailable = false;
 	bool MLXavailable = false;
 	bool SQMavailable = false;
 	TSLState TSLmode = TSLState::NotAvailable;
 
-	int backlashTicksRemaining;
+	int backlashTicksRemaining = 0;
 	int lastDirection = 0;
 
-	int pwmState[2];
-	int relayState[2];
+	int pwmState[2] = {0};
+	int relayState[2] = {0};
 
 	uint64_t nextTemperatureRead = 0;
 	uint64_t nextTemperatureCompensation = 0;
@@ -267,6 +269,7 @@ private:
 	int setDac(int chan, int value);
 	int checkRevision();
 	uint64_t millis();
+	std::string AstroLink4Pi::runCommand(const char* cmd);
 	std::thread getMotorThread(uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining);
 
 	static constexpr const char *ENVIRONMENT_TAB{"Environment"};
