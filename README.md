@@ -118,26 +118,10 @@ https://github.com/astrojolo/astrolink4pi
 ![Photo](/images/astrolink4pi-banner.jpg)
 
 # Devices revision 2 and earlier
-INDI driver AstroLink 4 Pi revision 2 and earlier must be installed from the branch https://github.com/astrojolo/astrolink4pi/tree/3.0
 
 > [!NOTE]
 > Revision 2 and earlier of AstroLink 4 Pi work only with Raspberry Pi 4
 
-Additional packages required:
-```
-sudo apt install gpiod libgpiod-dev libgpiod-doc
-sudo systemctl enable pigpiod
-```
-AstroLink 4 Pi driver installation (for revisions 2 and older)
-```
-git clone https://github.com/astrojolo/astrolink4pi
-cd astrolink4pi
-mkdir build && cd build
-git checkout 3.0
-cmake -DCMAKE_INSTALL_PREFIX=/usr ..
-sudo make install
-```
-In AstroLink 4 Pi revision 2 and earlier internal fan is not controlled by the INDI driver. You need to open the Raspberry configuration and switch on the fan on GPIO 13 (Performance tab).
 
 # AstroArch only specific tasks
 Update system and install packages:
@@ -192,22 +176,6 @@ Then you may go directly to AstroLink 4 Pi INDI driver installation.
 * Requires _lgpio_ library for GPIO control.
 * Requires I<sup>2</sup>C and SPI enabled.
 ### Revision 2 and 1
-Works with tag 3.0 of INDI driver - see the README inside this tag.
+Works with Raspberry Pi 4 only.
 
-# How to use it?
-Run Kstars and select AstroLink 4 Pi (Aux section) in the Ekos profile editor. Then start the INDI server in Ekos with your profile, containing AstroLink 4 Pi drivers. Alternatively, you can start INDI server manually by running:
-```
-indi_server indi_astrolink4pi
-```
-Start KStars with Ekos, connect to your INDI server and enjoy!
 
-Note that your user account needs proper access rights to /dev/gpiochip0 device. By default, you can read/write only if you run the driver as root or a user who is a member of gpio group. Add your user to gpio group by running ```sudo usermod -a -G gpio $USER```
-
-To use restart/shutdown functionality add this line to your /etc/sudoers file or /etc/sudoers.d/010_astroberry-nopasswd (this assumes you run INDI server as an astroberry user):
-```
-astroberry ALL=(ALL) NOPASSWD: /sbin/reboot, /sbin/poweroff
-```
-
-For custom labels, you need to save the configuration and restart the driver after changing the relays' labels.
-
-![Photo](/images/al4pi-interior-v3.JPG)
