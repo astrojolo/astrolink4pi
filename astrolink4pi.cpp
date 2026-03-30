@@ -159,10 +159,10 @@ bool AstroLink4Pi::Connect()
 	std::string localIp = runCommand("hostname -I|awk -F' '  '{print $1}'|xargs");
 	std::string publicIp = runCommand("curl -s ifconfig.me");
 
-	IUSaveText(&SysInfoT[SYSI_HARDWARE], model);
-	IUSaveText(&SysInfoT[SYSI_HOST], hostname);
-	IUSaveText(&SysInfoT[SYSI_LOCALIP], localIp);
-	IUSaveText(&SysInfoT[SYSI_PUBIP], publicIp);
+	IUSaveText(&SysInfoT[SYSI_HARDWARE], model.c_str());
+	IUSaveText(&SysInfoT[SYSI_HOST], hostname.c_str());
+	IUSaveText(&SysInfoT[SYSI_LOCALIP], localIp.c_str());
+	IUSaveText(&SysInfoT[SYSI_PUBIP], publicIp.c_str());
 	
 	// Update client
 	IDSetText(&SysInfoTP, NULL);
@@ -1392,16 +1392,16 @@ void AstroLink4Pi::systemUpdate()
 
 	// update CPU temp
 	std::string cputemp = runCommand("echo $(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))");
-	IUSaveText(&SysInfoT[SYSI_CPUTEMP], cputemp);
+	IUSaveText(&SysInfoT[SYSI_CPUTEMP], cputemp.c_str());
 
 	// update uptime
 	std::string uptime = runCommand("uptime|awk -F, '{print $1}'|awk -Fup '{print $2}'|xargs");
-	IUSaveText(&SysInfoT[SYSI_CPUTEMP], uptime);	
+	IUSaveText(&SysInfoT[SYSI_CPUTEMP], uptime.c_str());	
 
 
 	// update load
 	std::string load = runCommand("uptime|awk -F, '{print $3\" /\"$4\" /\"$5}'|awk -F: '{print $2}'|xargs");
-	IUSaveText(&SysInfoT[SYSI_CPUTEMP], load);	
+	IUSaveText(&SysInfoT[SYSI_CPUTEMP], load.c_str());	
 
 	SysInfoTP.s = IPS_OK;
 	IDSetText(&SysInfoTP, NULL);
