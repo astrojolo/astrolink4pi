@@ -48,22 +48,23 @@ static constexpr uint8_t FANMAX_TEMP = 70;
 
 static constexpr int RP4_GPIO = 0;
 static constexpr int RP5_GPIO = 4;
-static constexpr int DECAY_PIN = 14;
-static constexpr int EN_PIN = 15;
-static constexpr int M0_PIN = 17;
-static constexpr int M1_PIN = 18;
-static constexpr int M2_PIN = 27;
-static constexpr int RST_PIN = 22;
-static constexpr int STP_PIN = 24;
-static constexpr int DIR_PIN = 23;
-static constexpr int OUT1_PIN = 5;
-static constexpr int OUT2_PIN = 6;
-static constexpr int PWM1_PIN = 26;
-static constexpr int PWM2_PIN = 19;
-static constexpr int MOTOR_PWM = 20;
-static constexpr int CHK_IN_PIN = 16;
-static constexpr int FAN_PIN = 13;
-static constexpr int HOLD_PIN = 13;
+static constexpr int DECAY_PIN = 14;		// pin 8
+static constexpr int EN_PIN = 15;			// pin 10
+static constexpr int M0_PIN = 17;			// pin 11
+static constexpr int M1_PIN = 18;			// pin 12
+static constexpr int M2_PIN = 27;			// pin 13
+static constexpr int RST_PIN = 22;			// pin 15
+static constexpr int STP_PIN = 24;			// pin 18
+static constexpr int DIR_PIN = 23;			// pin 16
+static constexpr int OUT1_PIN = 5;			// pin 29
+static constexpr int OUT2_PIN = 6;			// pin 31
+static constexpr int PWM1_PIN = 26;			// pin 37
+static constexpr int PWM2_PIN = 19;			// pin 35	
+static constexpr int MOTOR_PWM = 20;		// pin 38 VOUT
+static constexpr int CHK_IN_PIN = 16;		// pin 36
+static constexpr int CHK2_IN_PIN = 21;		// pin 40
+static constexpr int FAN_PIN = 13;			// pin 33
+static constexpr int HOLD_PIN = 10;			// pin 19 EN 
 
 void ISPoll(void *p);
 
@@ -1396,12 +1397,12 @@ void AstroLink4Pi::systemUpdate()
 
 	// update uptime
 	std::string uptime = runCommand("uptime|awk -F, '{print $1}'|awk -Fup '{print $2}'|xargs");
-	IUSaveText(&SysInfoT[SYSI_CPUTEMP], uptime.c_str());	
+	IUSaveText(&SysInfoT[SYSI_UPTIME], uptime.c_str());	
 
 
 	// update load
 	std::string load = runCommand("uptime|awk -F, '{print $3\" /\"$4\" /\"$5}'|awk -F: '{print $2}'|xargs");
-	IUSaveText(&SysInfoT[SYSI_CPUTEMP], load.c_str());	
+	IUSaveText(&SysInfoT[SYSI_LOAD], load.c_str());	
 
 	SysInfoTP.s = IPS_OK;
 	IDSetText(&SysInfoTP, NULL);
