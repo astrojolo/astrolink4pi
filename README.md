@@ -11,11 +11,11 @@ It provides control over power distribution, focuser operation, environmental mo
 ## ⚡ Quick Start
 
 **Supported hardware**
-- AstroLink 4 Pi (revision 3 and newer)
+- AstroLink 4 Pi
 
 **Supported platforms**
 - Raspberry Pi 4  
-- Raspberry Pi 5 *(Bookworm recommended)*
+- Raspberry Pi 5 *(Bookworm recommended)* - revisions 3 and newer
 
 **Required software**
 - INDI **2.1.3 or newer**
