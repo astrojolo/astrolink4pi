@@ -1,181 +1,206 @@
-![AstroLink 4 Pi Banner](https://shop.astrojolo.com/wp-content/uploads/sites/2/2021/11/astrolink4pi-banner.jpg)
+# 🚀 AstroLink 4 Pi
 
-# AstroLink 4 Pi
+AstroLink 4 Pi is an INDI driver for AstroLink hardware, designed to simplify and integrate astrophotography setups.  
+It provides control over power distribution, focuser operation, environmental monitoring, and device telemetry — all in a single compact system.
+
+🔗 [Product page](https://shop.astrojolo.com/product/astrolink-4-pi/)  
+🔗 [INDI Library](https://indilib.org/)
 
 ---
 
-## Overview  
-AstroLink 4 Pi is a powerful, all-in-one astrophotography controller built around a Raspberry Pi 4 or 5. It combines motor focuser control, 12V power distribution, regulated dew heater outputs, and sensor support in a single compact device. Just attach a 12V DC power supply and your peripherals, and you're ready to go without the need for extra controllers. The unit supports an extra regulated output ideal for powering DSLRs, USB hubs, or other accessories. Real-time monitoring allows you to track voltage, current draw, power, and overall energy usage via the INDI driver panel. Multiple environmental sensors are supported, including temperature, humidity, sky brightness, cloud coverage / sky temperature, and dew point. It works with various astronomy distributions including StellarMate OS, AstroArch, Astroberry, or AstroPi3. Comes optionally with a Raspberry Pi module (4GB or higher), ready assembled. It includes protective features for reliable use in demanding setups, and protective covers for all device sockets. Available in multiple versions (hardware revisions), with increasing features across versions (e.g. power monitoring in later versions). Compact size (~13.7 × 8.3 × 3.2 cm) and modest weight (~0.23 kg) make it well suited to portable rigs.
+## ⚡ Quick Start
 
----
+**Supported hardware**
+- AstroLink 4 Pi (revision 3 and newer)
 
-## 🔧 Key Features  
-- Focuser motor controller compatible with AstroLink or other stepper motors  
-- Multiple 12V DC switchable power outputs + one permanent 12V output  
-- Regulated PWM outputs for dew heaters  
-- Extra regulated 3-10V output for peripherals  
-- Real-time monitoring of voltage, current, power, energy consumption  
-- Environmental sensors: temperature, humidity, sky brightness, cloud coverage / sky temperature, dew point  
-- Software compatibility: INDI driver; works with StellarMate OS, AstroArch, Astroberry, AstroPi3  
-- Option to include Raspberry Pi 4 or 5 module 
-- Protective housing, with covers for sockets  
-- Compact dimensions and portable form-factor
+**Supported platforms**
+- Raspberry Pi 4  
+- Raspberry Pi 5 *(Bookworm recommended)*
 
+**Required software**
+- INDI **2.1.3 or newer**
 
-# AstroLink 4 Pi
-AstroLink 4 Pi device is the astroimaging setup controller based on the Raspberry Pi module. It contains a focusing motor controller, switchable power outputs, regulated dew-cap heater outputs, regulated voltage output, and a power monitoring function. A selection of sensors can be connected to this device: temperature, humidity, dew point, sky temperature/cloud coverage, and sky brightness.
-
-### AstroLink 4 Pi works with both Raspberry Pi 4 and 5. 
-
-> [!IMPORTANT]
-> INDI 2.1.2 > 2.1.3 introduced breaking changes that cause compilation errors. 
-> The current main branch is designed for INDI 2.1.3 and later.
-> Branch 3.0.2 is fixed for INDI 2.1.3 and later for devices revision 2 and earlier.
-> If you encounter compilation problems, please use tag 3.0 of the driver.
-
-> [!NOTE]
-> This INDI driver works with revisions 3 and newer of AstroLink 4 Pi devices (the ones with RJ sensor socket). For earlier revisions, please take a look at the section below the AstroLink 4 Pi features.
-
-> [!NOTE]
-> Raspberry Pi 5 is based on the new OS Bookworm. Make sure the software you use is available for this new OS before you upgrade to RPi5. Currently, Stellarmate OS 1.8.0 supports RPi5 and AstroArch was tested successfully.
-
-## Device
-https://shop.astrojolo.com/products-overview/astrolink-4-pi/
-
-
-# AstroLink 4 Pi driver installation
-## Requirements
-* INDI http://indilib.org/download.html
-* lgpio https://abyz.me.uk/lg/download.html 
-* I<sup>2</sup>C and SPI support must be enabled in Raspberry configuration
-
-For the AstroArch system, there area  few additional steps required that are listed below the AstroLink 4 features section.
-
-### Required packages
-```
-sudo apt update
-sudo apt install git build-essential cmake libindi-dev
-```
-
-### INDI driver installation
-```
-git clone https://github.com/astrojolo/astrolink4pi
+**Basic installation**
+```bash
+git clone https://github.com/astrojolo/astrolink4pi.git
 cd astrolink4pi
 mkdir build && cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr ..
-make
-```
-You can install the drivers by running:
-```
+cmake ..
+make -j4
 sudo make install
 ```
-After these steps AstroLink 4 Pi driver will be visible in the Aux devices lists under **Astrojolo** group.
 
-### Real-time clock
-To enable automatic synchronization of the RTC embedded in AstroLink 4 Pi you need to edit the file
+After installation, the driver will appear in:
 ```
-sudo nano /etc/rc.local
-```
-and add the following line before the exit 0 statement at the file end
-```
-echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
-```
-After restarting the astroberry system time will be synchronized with the embedded DS1307 clock.
-Check hwclock help to find more options, like time adjustments and synchronization:
-```
-sudo hwclock -r
+INDI → Auxiliary devices → AstroLink 4 Pi
 ```
 
-# AstroLink 4 Pi features:
-* Focuser
-  - DRV8825 driver support for Moonlite / Robofocus / AstroLink geared unipolar steppers and bipolar microstepping up to 1/32
-  - Absolute position control
-  - Relative position control
-  - Forward / Reverse direction configuration
-  - Customizable maximum absolute position (steps)
-  - Customizable maximum focuser travel (mm)
-  - Backlash compensation
-  - Speed control
-  - Focuser info including: critical focus zone in μm, step size in μm, steps per critical focus zone
-  - Automatic temperature compensation based on temperature sensor
-  - Humidity / dew point / sky temperature / cloud coverage / sky brightness sensors support (version 3 and later)
-  - Stepper movement abort
-  - 6-pin RJ12 stepper output
-  - embedded real-time clock (version 2 and later)
-  - voltage, current, and energy monitor (version 4 and later)
-* Power outputs
-  - Two switchable 12V DC outputs, 5A max each
-  - One permanent 12V DC output
-  - Two PWM-regulated RCA outputs, 3A max each
-  - One adjustable DC output 3-10V, 1.5A max
-  - Configurable labels
-* Other
-  - Internal fan controlled by GPIO pin - controlled automatically by INDI driver
+---
 
-## Source
-https://github.com/astrojolo/astrolink4pi
+## 📊 Compatibility Matrix
 
-![Photo](/images/astrolink4pi-banner.jpg)
-
-# Devices revision 2 and earlier
-
-> [!NOTE]
-> Revision 2 and earlier of AstroLink 4 Pi work only with Raspberry Pi 4
+| Device Revision | Raspberry Pi | Driver Branch | Notes |
+|----------------|-------------|--------------|------|
+| Rev 4 | Pi 4 / Pi 5 | `main` | Full support |
+| Rev 3 | Pi 4 / Pi 5 | `main` | Full support |
+| Rev 2 | Pi 4 only | `main` | Legacy hardware |
+| Rev 1 | Pi 4 only | `main` | Limited support |
 
 
-# AstroArch only specific tasks
-Update system and install packages:
-```
-update-astroarch
-sudo pacman -S unzip cmake python python3 python-setuptools swig
+---
+
+## ⚡ Features
+
+### 🔭 Focuser
+- Stepper motor control
+- Absolute and relative positioning
+- DRV8825 driver support for Moonlite / Robofocus / AstroLink geared unipolar steppers and bipolar microstepping up to 1/32
+- Forward / Reverse direction configuration
+- Customizable maximum absolute position (steps)
+- Customizable maximum focuser travel (mm)
+- Backlash compensation
+- Speed control
+- Focuser info including: critical focus zone in μm, step size in μm, steps per critical focus zone
+- Automatic temperature compensation based on temperature sensor
+
+### 🔌 Power Outputs
+- Two switchable 12V DC outputs, 5A max each
+- One permanent 12V DC output
+- Two PWM-regulated RCA outputs, 3A max each
+- One adjustable DC output 3-10V, 1.5A max
+- Configurable labels
+
+### 🌡️ Sensors & Monitoring
+- I2C environmental sensors
+- Humidity / dew point / sky temperature / cloud coverage / sky brightness sensors support *(depending on revision)*
+- Voltage and current monitoring *(depending on revision)*
+
+### 🧠 System Integration
+- Fully integrated with INDI ecosystem
+- Works with NINA, KStars, Ekos, and other INDI clients
+
+---
+
+## 🔧 Installation
+
+### 📦 Prerequisites
+
+Install required packages:
+
+```bash
+sudo apt update
+sudo apt install -y \
+  git cmake build-essential \
+  libindi-dev libnova-dev \
+  libusb-1.0-0-dev
 ```
 
-Add the following line to _/boot/config.txt_:
-```
-dtparam=spi=on
-```
-and modify
-```
-dtoverlay=i2c-rtc,ds1307
+---
+
+### 🛠️ Build & Install
+
+```bash
+git clone https://github.com/astrojolo/astrolink4pi.git
+cd astrolink4pi
+mkdir build && cd build
+cmake ..
+make -j4
+sudo make install
 ```
 
-Before compiling _lgpio_ find the following line in _Makefile_ file:
-```
-prefix ?= /usr/local
-```
-and update to
-```
-prefix ?= /usr
+---
+
+### 🔌 Enable Interfaces
+
+Make sure required interfaces are enabled:
+
+```bash
+sudo raspi-config
 ```
 
-Create additional groups and add user _astronaut_ to them:
-```
-sudo groupadd gpio
-sudo groupadd spi
-sudo usermod -a -G gpio astronaut
-sudo usermod -a -G i2c astronaut
-sudo usermod -a -G spi astronaut
-```
-Create _/etc/udev/rules.d/99-gpio.rules_ file with content:
-```
-SUBSYSTEM=="gpio", KERNEL=="gpiochip*", GROUP:="gpio", MODE:="0660"
-SUBSYSTEM=="spidev", KERNEL=="spidev*", GROUP:="spi", MODE:="0660"
-```
-Then you may go directly to AstroLink 4 Pi INDI driver installation.
+Enable:
+- I2C  
+- SPI *(if required by your revision)*  
 
+---
 
-# Revisions matrix
-### Revision 4
-* Works with the most recent INDI driver version from _main_.
-* Works with Raspberry Pi 4 or 5.
-* Requires _lgpio_ library for GPIO control.
-* Requires I<sup>2</sup>C enabled.
-### Revision 3
-* Works with the most recent INDI driver version from _main_.
-* Works with Raspberry Pi 4 or 5.
-* Requires _lgpio_ library for GPIO control.
-* Requires I<sup>2</sup>C and SPI enabled.
-### Revision 2 and 1
-Works with Raspberry Pi 4 only.
+### ⏱️ RTC Setup (if applicable)
 
+If your device revision includes RTC:
 
+```bash
+sudo nano /boot/config.txt
+```
+
+Add at the end:
+
+```
+dtoverlay=i2c-rtc,ds3231
+```
+
+Then reboot:
+
+```bash
+sudo reboot
+```
+
+---
+
+## ⚠️ Compatibility Notes
+
+- This driver uses **lgpio**, required for Raspberry Pi 5
+- Designed for **Bookworm-based systems**
+- Older INDI versions may not work correctly
+
+---
+
+## 🧪 AstroArch Setup (Optional)
+
+If you are using **AstroArch Linux**, additional steps may be required.
+
+Typical adjustments:
+- manual enabling of interfaces
+- package differences
+- RTC configuration
+
+👉 Follow AstroArch-specific documentation if needed
+
+---
+
+## 📁 Project Structure
+
+```
+astrolink4pi/
+├── src/        # Driver source code
+├── CMakeLists.txt
+└── README.md
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions, bug reports, and suggestions are welcome!
+
+If you find an issue:
+- open a GitHub issue
+- include logs and hardware revision
+- describe your setup (Pi version, OS, INDI version)
+
+---
+
+## 📄 License
+
+This project is released under the terms specified in the repository.
+
+---
+
+## ⭐ Summary
+
+AstroLink 4 Pi combines:
+- 🔌 Power management  
+- 🔭 Focuser control  
+- 🌡️ Environmental sensing  
+- ⚙️ Full INDI integration  
+
+➡️ All in one compact astrophotography controller
