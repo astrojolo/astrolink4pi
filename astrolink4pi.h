@@ -1,6 +1,6 @@
 
 /*******************************************************************************
- Copyright(c) 2021 astrojolo.com
+ Copyright(c) 2026 astrojolo.com
  .
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Library General Public
@@ -21,6 +21,7 @@
 #define ASTROLINK4PI_H
 
 #include <atomic>
+#include <cstdio>
 #include <mutex>
 #include <chrono>
 #include <iostream>
@@ -33,6 +34,7 @@
 #include <ctime>
 #include <thread>
 #include <chrono>
+#include <algorithm>
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -91,6 +93,7 @@ private:
 	virtual bool readTSL();
 	virtual bool readOLD();
 	virtual bool readPower();
+	virtual bool readDS18B20();
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
@@ -234,6 +237,7 @@ private:
 	bool SHTavailable = false;
 	bool MLXavailable = false;
 	bool SQMavailable = false;
+	bool DSavailable = false;
 	TSLState TSLmode = TSLState::NotAvailable;
 
 	int backlashTicksRemaining = 0;
@@ -269,7 +273,7 @@ private:
 	int setDac(int chan, int value);
 	int checkRevision();
 	uint64_t millis();
-	std::string AstroLink4Pi::runCommand(const char* cmd);
+	std::string runCommand(const char* cmd);
 	std::thread getMotorThread(uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining);
 
 	static constexpr const char *ENVIRONMENT_TAB{"Environment"};

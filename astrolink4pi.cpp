@@ -1,5 +1,5 @@
 /*******************************************************************************
- Copyright(c) 2023 astrojolo.com
+ Copyright(c) 2026 astrojolo.com
  .
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Library General Public
@@ -48,21 +48,23 @@ static constexpr uint8_t FANMAX_TEMP = 70;
 
 static constexpr int RP4_GPIO = 0;
 static constexpr int RP5_GPIO = 4;
-static constexpr int DECAY_PIN = 14;
-static constexpr int EN_PIN = 15;
-static constexpr int M0_PIN = 17;
-static constexpr int M1_PIN = 18;
-static constexpr int M2_PIN = 27;
-static constexpr int RST_PIN = 22;
-static constexpr int STP_PIN = 24;
-static constexpr int DIR_PIN = 23;
-static constexpr int OUT1_PIN = 5;
-static constexpr int OUT2_PIN = 6;
-static constexpr int PWM1_PIN = 26;
-static constexpr int PWM2_PIN = 19;
-static constexpr int MOTOR_PWM = 20;
-static constexpr int CHK_IN_PIN = 16;
-static constexpr int FAN_PIN = 13;
+static constexpr int DECAY_PIN = 14;		// pin 8
+static constexpr int EN_PIN = 15;			// pin 10
+static constexpr int M0_PIN = 17;			// pin 11
+static constexpr int M1_PIN = 18;			// pin 12
+static constexpr int M2_PIN = 27;			// pin 13
+static constexpr int RST_PIN = 22;			// pin 15
+static constexpr int STP_PIN = 24;			// pin 18
+static constexpr int DIR_PIN = 23;			// pin 16
+static constexpr int OUT1_PIN = 5;			// pin 29
+static constexpr int OUT2_PIN = 6;			// pin 31
+static constexpr int PWM1_PIN = 26;			// pin 37
+static constexpr int PWM2_PIN = 19;			// pin 35	
+static constexpr int MOTOR_PWM = 20;		// pin 38 VOUT
+static constexpr int CHK_IN_PIN = 16;		// pin 36
+static constexpr int CHK2_IN_PIN = 21;		// pin 40
+static constexpr int FAN_PIN = 13;			// pin 33
+static constexpr int HOLD_PIN = 10;			// pin 19 EN 
 
 void ISPoll(void *p);
 
@@ -119,11 +121,11 @@ const char *AstroLink4Pi::getDefaultName()
 bool AstroLink4Pi::Connect()
 {
 	revision = checkRevision();
-	if (revision < 3)
+	/*if (revision < 3)
 	{
 		DEBUGF(INDI::Logger::DBG_ERROR, "This INDI driver version works only with AstroLink 4 Pi revision 3 and higer. Revision detected %d", revision);
 		return false;
-	}
+	}*/
 
 	pigpioHandle = lgGpiochipOpen(gpioType);
 	if (pigpioHandle < 0)
@@ -845,12 +847,19 @@ void AstroLink4Pi::TimerHit()
 
 	if (nextTemperatureRead < timeMillis)
 	{
-		SHTavailable = readSHT();
-		MLXavailable = readMLX();
+		if (revision == 1 || revision == 2)
+		{
+			DSavailable = readDS18B20();
+		}
+		else
+		{
+			SHTavailable = readSHT();
+			MLXavailable = readMLX();
+		}
 
 		nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
 
-		if (SHTavailable || MLXavailable)
+		if (DSavailable || SHTavailable || MLXavailable)
 		{
 			FocusTemperatureN[0].value = focuserTemperature;
 			FocusTemperatureNP.s = IPS_OK;
@@ -1089,14 +1098,6 @@ int AstroLink4Pi::savePosition(int pos)
 	char posFileName[MAXRBUF];
 	char buf[100];
 
-	// if (getenv("INDICONFIG"))
-	// {
-	// 	snprintf(posFileName, MAXRBUF, "%s.position", getenv("INDICONFIG"));
-	// }
-	// else
-	// {
-	// 	snprintf(posFileName, MAXRBUF, "%s/.indi/%s.position", getenv("HOME"), getDeviceName());
-	// }
 	const char *indi_cfg = getenv("INDICONFIG");
 	if (indi_cfg)
 	{
@@ -1196,6 +1197,98 @@ void AstroLink4Pi::temperatureCompensation()
 	}
 }
 
+bool AstroLink4Pi::readDS18B20()
+{
+	if (!isConnected())
+		return false;
+
+	DIR *dir;
+	struct dirent *dirent;
+	char dev[16];			 // Dev ID
+	char devPath[128];		 // Path to device
+	char buf[256] = "";		 // Data from device
+	char temperatureData[6]; // Temp C * 1000 reported by device
+	char path[] = "/sys/bus/w1/devices";
+	float tempC;
+
+	dir = opendir(path);
+
+	// search for --the first-- DS18B20 device
+	if (dir != NULL)
+	{
+		while ((dirent = readdir(dir)))
+		{
+			// DS18B20 device is family code beginning with 28-
+			if (dirent->d_type == DT_LNK && strstr(dirent->d_name, "28-") != NULL)
+			{
+				strcpy(dev, dirent->d_name);
+				break;
+			}
+		}
+		(void)closedir(dir);
+	}
+	else
+	{
+		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor disabled. 1-Wire interface is not available.");
+		return false;
+	}
+
+	// Assemble path to --the first-- DS18B20 device
+	sprintf(devPath, "%s/%s/w1_slave", path, dev);
+
+	// We use fgetc to support EOF. This prevents driver crash when hot plug/unplug the sensor
+	FILE *pFile;
+	int c;
+	pFile = fopen(devPath, "r");
+	if (pFile == NULL)
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "Temperature sensor not available.");
+		return false;
+	}
+	else
+	{
+		do
+		{
+			c = fgetc(pFile);
+			if (c != EOF)
+			{
+				int len = strlen(buf);
+				buf[len] = (char)c;
+				buf[len + 1] = '\0';
+			}
+
+		} while (c != EOF);
+		fclose(pFile);
+	}
+
+	if (strlen(buf) < 10)
+	{
+		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor read error.");
+		return false;
+	}
+
+	// parse temperature value from sensor output
+	strncpy(temperatureData, strstr(buf, "t=") + 2, 6);
+	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature sensor raw output: %s", buf);
+	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature string: %s", temperatureData);
+
+	tempC = strtof(temperatureData, NULL) / 1000;
+	// tempF = (tempC / 1000) * 9 / 5 + 32;
+
+	// check if temperature is reasonable
+	if (abs(tempC) > 100)
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "Temperature reading out of range.");
+		return false;
+	}
+
+	setParameterValue("WEATHER_TEMPERATURE", tempC);
+	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature: %.2f°C", tempC);
+	focuserTemperature = tempC;
+	return true;
+}
+
+
 int AstroLink4Pi::getHoldPower()
 {
 	if (FocusHoldS[HOLD_20].s == ISS_ON)
@@ -1221,7 +1314,26 @@ void AstroLink4Pi::setCurrent(bool standby)
 		lgGpioWrite(pigpioHandle, EN_PIN, (getHoldPower() > 0) ? 0 : 1);
 		lgGpioWrite(pigpioHandle, DECAY_PIN, 0);
 
-		if (revision < 4)
+
+		if (revision == 1)
+		{
+			if (getHoldPower() == 5)
+			{
+				lgGpioWrite(pigpioHandle, HOLD_PIN, 0);
+				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 100%%.");
+			}
+			else if (getHoldPower() > 0)
+			{
+				lgGpioWrite(pigpioHandle, HOLD_PIN, 1);
+				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 50%%.");
+			}
+			else
+			{
+				lgGpioWrite(pigpioHandle, HOLD_PIN, 1);
+				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
+			}
+		}		
+		if (revision > 1 && revision < 4)
 		{
 			// for 0.1 ohm resistor Vref = iref / 2
 			setDac(0, 255 * (getHoldPower() * StepperCurrentN[0].value / 5) / 4096);
@@ -1244,7 +1356,11 @@ void AstroLink4Pi::setCurrent(bool standby)
 	{
 		lgGpioWrite(pigpioHandle, EN_PIN, 0);
 		lgGpioWrite(pigpioHandle, DECAY_PIN, 1);
-		if (revision < 4)
+		if (revision == 1)
+		{
+			lgGpioWrite(pigpioHandle, HOLD_PIN, 0);
+		}		
+		if (revision > 1 && revision < 4)
 		{
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current %0.2f", StepperCurrentN[0].value);
 			// for 0.1 ohm resistor Vref = iref / 2
@@ -1281,12 +1397,12 @@ void AstroLink4Pi::systemUpdate()
 
 	// update uptime
 	std::string uptime = runCommand("uptime|awk -F, '{print $1}'|awk -Fup '{print $2}'|xargs");
-	IUSaveText(&SysInfoT[SYSI_CPUTEMP], uptime.c_str());	
+	IUSaveText(&SysInfoT[SYSI_UPTIME], uptime.c_str());	
 
 
 	// update load
 	std::string load = runCommand("uptime|awk -F, '{print $3\" /\"$4\" /\"$5}'|awk -F: '{print $2}'|xargs");
-	IUSaveText(&SysInfoT[SYSI_CPUTEMP], load.c_str());	
+	IUSaveText(&SysInfoT[SYSI_LOAD], load.c_str());	
 
 	SysInfoTP.s = IPS_OK;
 	IDSetText(&SysInfoTP, NULL);
