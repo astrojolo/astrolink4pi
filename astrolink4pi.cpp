@@ -164,7 +164,7 @@ bool AstroLink4Pi::Connect()
 	IUSaveText(&SysInfoT[SYSI_HOST], hostname.c_str());
 	IUSaveText(&SysInfoT[SYSI_LOCALIP], localIp.c_str());
 	IUSaveText(&SysInfoT[SYSI_PUBIP], publicIp.c_str());
-	
+
 	// Update client
 	IDSetText(&SysInfoTP, NULL);
 
