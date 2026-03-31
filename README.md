@@ -91,8 +91,7 @@ Install required packages:
 sudo apt update
 sudo apt install -y \
   git cmake build-essential \
-  libindi-dev libnova-dev \
-  libusb-1.0-0-dev
+  libindi-dev 
 ```
 
 ---
@@ -129,13 +128,13 @@ Enable:
 If your device revision includes RTC:
 
 ```bash
-sudo nano /boot/config.txt
+sudo nano /etc/rc.local
 ```
 
 Add at the end:
 
 ```
-dtoverlay=i2c-rtc,ds3231
+echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
 ```
 
 Then reboot:
@@ -152,31 +151,9 @@ sudo reboot
 - Designed for **Bookworm-based systems**
 - Older INDI versions may not work correctly
 
----
-
-## 🧪 AstroArch Setup (Optional)
-
-If you are using **AstroArch Linux**, additional steps may be required.
-
-Typical adjustments:
-- manual enabling of interfaces
-- package differences
-- RTC configuration
-
-👉 Follow AstroArch-specific documentation if needed
 
 ---
 
-## 📁 Project Structure
-
-```
-astrolink4pi/
-├── src/        # Driver source code
-├── CMakeLists.txt
-└── README.md
-```
-
----
 
 ## 🤝 Contributing
 
@@ -204,3 +181,67 @@ AstroLink 4 Pi combines:
 - ⚙️ Full INDI integration  
 
 ➡️ All in one compact astrophotography controller
+
+---
+
+## 🧪 AstroArch Setup
+
+If you are using **AstroArch Linux**, additional steps may be required.
+
+Typical adjustments:
+- manual enabling of interfaces
+- package differences
+- RTC configuration
+
+👉 Follow AstroArch-specific documentation if needed
+
+
+Update system and install packages:
+
+```bash
+update-astroarch
+sudo pacman -S unzip cmake python python3 python-setuptools swig
+```
+
+Add the following line to /boot/config.txt:
+
+```bash
+dtparam=spi=on
+```
+
+and modify
+
+```bash
+dtoverlay=i2c-rtc,ds1307
+```
+
+Before compiling lgpio find the following line in Makefile file:
+
+```bash
+prefix ?= /usr/local
+```
+
+and update to
+
+```bash
+prefix ?= /usr
+```
+
+Create additional groups and add user astronaut to them:
+
+```bash
+sudo groupadd gpio
+sudo groupadd spi
+sudo usermod -a -G gpio astronaut
+sudo usermod -a -G i2c astronaut
+sudo usermod -a -G spi astronaut
+```
+
+Create /etc/udev/rules.d/99-gpio.rules file with content:
+
+```bash
+SUBSYSTEM=="gpio", KERNEL=="gpiochip*", GROUP:="gpio", MODE:="0660"
+SUBSYSTEM=="spidev", KERNEL=="spidev*", GROUP:="spi", MODE:="0660"
+```
+
+Then you may go directly to AstroLink 4 Pi INDI driver installation.
