@@ -19,6 +19,7 @@ It provides control over power distribution, focuser operation, environmental mo
 
 **Required software**
 - INDI **2.1.3 or newer**
+- lgpio https://abyz.me.uk/lg/download.html
 
 **Basic installation**
 ```bash
