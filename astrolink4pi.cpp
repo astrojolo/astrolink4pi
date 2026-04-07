@@ -140,6 +140,9 @@ bool AstroLink4Pi::Connect()
 		return false;
 	}
 	pinMode(DECAY_PIN, OUTPUT);
+	digitalWrite(DECAY_PIN, LOW);
+	pinMode(OUT1_PIN, OUTPUT);
+	digitalWrite(OUT1_PIN, relayState[0]);
 	// lgGpioClaimOutput(lgpioHandle, 0, DECAY_PIN, 0);
 	// lgGpioClaimOutput(lgpioHandle, 0, EN_PIN, 1); // EN_PIN start as disabled
 	// lgGpioClaimOutput(lgpioHandle, 0, M0_PIN, 0);
@@ -619,14 +622,15 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			if (Switch1S[S1_ON].s == ISS_ON)
 			{
 				// rv = lgGpioWrite(lgpioHandle, OUT1_PIN, 1);
-				if (rv != 0)
-				{
-					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #1");
-					Switch1SP.s = IPS_ALERT;
-					Switch1S[S1_ON].s = ISS_OFF;
-					IDSetSwitch(&Switch1SP, NULL);
-					return false;
-				}
+				digitalWrite(OUT1_PIN, 1);
+				// if (rv != 0)
+				// {
+				// 	DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #1");
+				// 	Switch1SP.s = IPS_ALERT;
+				// 	Switch1S[S1_ON].s = ISS_OFF;
+				// 	IDSetSwitch(&Switch1SP, NULL);
+				// 	return false;
+				// }
 				relayState[0] = 1;
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #1 set to ON");
 				Switch1SP.s = IPS_OK;
@@ -637,14 +641,15 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			if (Switch1S[S1_OFF].s == ISS_ON)
 			{
 				// rv = lgGpioWrite(lgpioHandle, OUT1_PIN, 0);
-				if (rv != 0)
-				{
-					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #1");
-					Switch1SP.s = IPS_ALERT;
-					Switch1S[S1_OFF].s = ISS_OFF;
-					IDSetSwitch(&Switch1SP, NULL);
-					return false;
-				}
+				digitalWrite(OUT1_PIN, 0);
+				// if (rv != 0)
+				// {
+				// 	DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #1");
+				// 	Switch1SP.s = IPS_ALERT;
+				// 	Switch1S[S1_OFF].s = ISS_OFF;
+				// 	IDSetSwitch(&Switch1SP, NULL);
+				// 	return false;
+				// }
 				relayState[0] = 0;
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #1 set to OFF");
 				Switch1SP.s = IPS_IDLE;
