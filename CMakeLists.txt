@@ -24,7 +24,6 @@ if(NOT WIRINGPI_LIB)
     message(FATAL_ERROR "wiringPi library not found!")
 endif()
 
-target_link_libraries(your_target ${WIRINGPI_LIB})
 
 ################ AstroLink 4 Pi ################
 set(indi_astrolink4pi_SRCS
@@ -48,7 +47,7 @@ target_compile_features(indi_astrolink4pi PRIVATE cxx_std_11)
 
 target_link_libraries(indi_astrolink4pi PRIVATE
     ${INDI_LIBRARIES}
-    ${WIRINGPI_LIBRARIES}
+    ${WIRINGPI_LIB}
     Threads::Threads
 )
 
