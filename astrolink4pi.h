@@ -42,8 +42,6 @@
 
 #include "config.h"
 
-#include <lgpio.h>
-
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
 #include <indiweatherinterface.h>
@@ -228,7 +226,7 @@ private:
 	int revision = 1;
 	int gpioType = 0;
 	int gpioChip = -1;
-	int lgpioHandle = -1;
+	//int lgpioHandle = -1;
 
 	int resolution = 1;
 
