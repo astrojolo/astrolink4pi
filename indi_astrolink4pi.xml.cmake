@@ -3,7 +3,7 @@
 <devGroup group="Auxiliary">
 	<device label="AstroLink 4 Pi" manufacturer="Astrojolo">
 		<driver name="AstroLink 4 Pi">indi_astrolink4pi</driver>
-		<version>@VERSION_MAJOR@.@VERSION_MINOR@</version>
+		<version>2.1</version>
 	</device>
 </devGroup>
 </driversList>
