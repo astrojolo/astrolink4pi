@@ -277,6 +277,7 @@ private:
 	int setDac(int chan, int value);
 	int checkRevision();
 	uint64_t millis();
+	void setPinModeValue(int pin, int mode, int value);
 	std::string runCommand(const char* cmd);
 	std::thread getMotorThread(uint32_t targetPos, int direction, int backlashTicksRemaining);
 

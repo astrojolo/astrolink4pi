@@ -48,23 +48,23 @@ static constexpr uint8_t FANMAX_TEMP = 70;
 
 static constexpr int RP4_GPIO = 0;
 static constexpr int RP5_GPIO = 4;
-static constexpr int DECAY_PIN = 14;		// pin 8
-static constexpr int EN_PIN = 15;			// pin 10
-static constexpr int M0_PIN = 17;			// pin 11
-static constexpr int M1_PIN = 18;			// pin 12
-static constexpr int M2_PIN = 27;			// pin 13
-static constexpr int RST_PIN = 22;			// pin 15
-static constexpr int STP_PIN = 24;			// pin 18
-static constexpr int DIR_PIN = 23;			// pin 16
-static constexpr int OUT1_PIN = 5;			// pin 29
-static constexpr int OUT2_PIN = 6;			// pin 31
-static constexpr int PWM1_PIN = 26;			// pin 37
-static constexpr int PWM2_PIN = 19;			// pin 35	
-static constexpr int MOTOR_PWM = 20;		// pin 38 VOUT
-static constexpr int CHK_IN_PIN = 16;		// pin 36
-static constexpr int CHK2_IN_PIN = 21;		// pin 40
-static constexpr int FAN_PIN = 13;			// pin 33
-static constexpr int HOLD_PIN = 10;			// pin 19 EN 
+static constexpr int DECAY_PIN = 14;   // pin 8
+static constexpr int EN_PIN = 15;	   // pin 10
+static constexpr int M0_PIN = 17;	   // pin 11
+static constexpr int M1_PIN = 18;	   // pin 12
+static constexpr int M2_PIN = 27;	   // pin 13
+static constexpr int RST_PIN = 22;	   // pin 15
+static constexpr int STP_PIN = 24;	   // pin 18
+static constexpr int DIR_PIN = 23;	   // pin 16
+static constexpr int OUT1_PIN = 5;	   // pin 29
+static constexpr int OUT2_PIN = 6;	   // pin 31
+static constexpr int PWM1_PIN = 26;	   // pin 37
+static constexpr int PWM2_PIN = 19;	   // pin 35
+static constexpr int MOTOR_PWM = 20;   // pin 38 VOUT
+static constexpr int CHK_IN_PIN = 16;  // pin 36
+static constexpr int CHK2_IN_PIN = 21; // pin 40
+static constexpr int FAN_PIN = 13;	   // pin 33
+static constexpr int HOLD_PIN = 10;	   // pin 19 EN
 
 void ISPoll(void *p);
 
@@ -139,20 +139,17 @@ bool AstroLink4Pi::Connect()
 		DEBUGF(INDI::Logger::DBG_ERROR, "Could not access GPIO. Error code %d", wiringPiSetup);
 		return false;
 	}
-	pinMode(DECAY_PIN, OUTPUT);
-	digitalWrite(DECAY_PIN, LOW);
-	pinMode(OUT1_PIN, OUTPUT);
-	digitalWrite(OUT1_PIN, relayState[0]);
-	// lgGpioClaimOutput(lgpioHandle, 0, DECAY_PIN, 0);
-	// lgGpioClaimOutput(lgpioHandle, 0, EN_PIN, 1); // EN_PIN start as disabled
-	// lgGpioClaimOutput(lgpioHandle, 0, M0_PIN, 0);
-	// lgGpioClaimOutput(lgpioHandle, 0, M1_PIN, 0);
-	// lgGpioClaimOutput(lgpioHandle, 0, M2_PIN, 0);
-	// lgGpioClaimOutput(lgpioHandle, 0, RST_PIN, 1); // RST_PIN start as wake up
-	// lgGpioClaimOutput(lgpioHandle, 0, STP_PIN, 0);
-	// lgGpioClaimOutput(lgpioHandle, 0, DIR_PIN, 0);
-	// lgGpioClaimOutput(lgpioHandle, 0, OUT1_PIN, relayState[0]);
-	// lgGpioClaimOutput(lgpioHandle, 0, OUT2_PIN, relayState[1]);
+
+	setPinModeValue(DECAY_PIN, OUTPUT, LOW);
+	setPinModeValue(EN_PIN, OUTPUT, HIGH); // EN_PIN start as disabled
+	setPinModeValue(M0_PIN, OUTPUT, LOW);
+	setPinModeValue(M1_PIN, OUTPUT, LOW);
+	setPinModeValue(M2_PIN, OUTPUT, LOW);
+	setPinModeValue(RST_PIN, OUTPUT, HIGH); // RST_PIN start as wake up
+	setPinModeValue(STP_PIN, OUTPUT, LOW);
+	setPinModeValue(DIR_PIN, OUTPUT, LOW);
+	setPinModeValue(OUT1_PIN, OUTPUT, relayState[0]);
+	setPinModeValue(OUT2_PIN, OUTPUT, relayState[1]);
 	// lgGpioClaimOutput(lgpioHandle, 0, PWM1_PIN, 0);
 	// lgGpioClaimOutput(lgpioHandle, 0, PWM2_PIN, 0);
 	// lgGpioClaimOutput(lgpioHandle, 0, MOTOR_PWM, 0);
@@ -200,28 +197,18 @@ bool AstroLink4Pi::Connect()
 
 bool AstroLink4Pi::Disconnect()
 {
-	// lgGpioWrite(lgpioHandle, RST_PIN, 0);					 // sleep
-	// int enabledState = lgGpioWrite(lgpioHandle, EN_PIN, 1); // make disabled
+	digitalWrite(RST_PIN, LOW); // sleep
+	digitalWrite(EN_PIN, HIGH); // make disabled
 
-	// if (enabledState != 0)
-	// {
-	// 	DEBUGF(INDI::Logger::DBG_ERROR, "Cannot set GPIO line %i to disable stepper motor driver. Focusing motor may still be powered.", EN_PIN);
-	// }
-	// else
-	// {
-	// 	DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
-	// }
+	if (digitalWrite(EN_PIN) != HIGH)
+	{
+		DEBUGF(INDI::Logger::DBG_ERROR, "Cannot set GPIO line %i to disable stepper motor driver. Focusing motor may still be powered.", EN_PIN);
+	}
+	else
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
+	}
 
-	// lgGpioFree(lgpioHandle, DECAY_PIN);
-	// lgGpioFree(lgpioHandle, EN_PIN);
-	// lgGpioFree(lgpioHandle, M0_PIN);
-	// lgGpioFree(lgpioHandle, M1_PIN);
-	// lgGpioFree(lgpioHandle, M2_PIN);
-	// lgGpioFree(lgpioHandle, RST_PIN);
-	// lgGpioFree(lgpioHandle, STP_PIN);
-	// lgGpioFree(lgpioHandle, DIR_PIN);
-	// lgGpioFree(lgpioHandle, OUT1_PIN);
-	// lgGpioFree(lgpioHandle, OUT2_PIN);
 	// lgGpioFree(lgpioHandle, PWM1_PIN);
 	// lgGpioFree(lgpioHandle, PWM2_PIN);
 	// lgGpioFree(lgpioHandle, MOTOR_PWM);
@@ -588,8 +575,6 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 
 bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n)
 {
-	int rv = 0;
-
 	// first we check if it's for our device
 	if (!strcmp(dev, getDeviceName()))
 	{
@@ -621,16 +606,15 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 
 			if (Switch1S[S1_ON].s == ISS_ON)
 			{
-				// rv = lgGpioWrite(lgpioHandle, OUT1_PIN, 1);
-				digitalWrite(OUT1_PIN, 1);
-				// if (rv != 0)
-				// {
-				// 	DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #1");
-				// 	Switch1SP.s = IPS_ALERT;
-				// 	Switch1S[S1_ON].s = ISS_OFF;
-				// 	IDSetSwitch(&Switch1SP, NULL);
-				// 	return false;
-				// }
+				digitalWrite(OUT1_PIN, HIGH);
+				if (digitalRead(OUT1_PIN) != HIGH)
+				{
+					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #1");
+					Switch1SP.s = IPS_ALERT;
+					Switch1S[S1_ON].s = ISS_OFF;
+					IDSetSwitch(&Switch1SP, NULL);
+					return false;
+				}
 				relayState[0] = 1;
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #1 set to ON");
 				Switch1SP.s = IPS_OK;
@@ -640,16 +624,15 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			}
 			if (Switch1S[S1_OFF].s == ISS_ON)
 			{
-				// rv = lgGpioWrite(lgpioHandle, OUT1_PIN, 0);
-				digitalWrite(OUT1_PIN, 0);
-				// if (rv != 0)
-				// {
-				// 	DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #1");
-				// 	Switch1SP.s = IPS_ALERT;
-				// 	Switch1S[S1_OFF].s = ISS_OFF;
-				// 	IDSetSwitch(&Switch1SP, NULL);
-				// 	return false;
-				// }
+				digitalWrite(OUT1_PIN, LOW);
+				if (digitalRead(OUT1_PIN) != LOW)
+				{
+					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #1");
+					Switch1SP.s = IPS_ALERT;
+					Switch1S[S1_OFF].s = ISS_OFF;
+					IDSetSwitch(&Switch1SP, NULL);
+					return false;
+				}
 				relayState[0] = 0;
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #1 set to OFF");
 				Switch1SP.s = IPS_IDLE;
@@ -666,8 +649,8 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 
 			if (Switch2S[S2_ON].s == ISS_ON)
 			{
-				// rv = lgGpioWrite(lgpioHandle, OUT2_PIN, 1);
-				if (rv != 0)
+				digitalWrite(OUT2_PIN, HIGH);
+				if (digitalRead(OUT2_PIN) != HIGH)
 				{
 					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #2");
 					Switch2SP.s = IPS_ALERT;
@@ -684,8 +667,8 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			}
 			if (Switch2S[S2_OFF].s == ISS_ON)
 			{
-				// rv = lgGpioWrite(lgpioHandle, OUT2_PIN, 0);
-				if (rv != 0)
+				digitalWrite(OUT2_PIN, LOW);
+				if (digitalRead(OUT2_PIN) != LOW)
 				{
 					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #2");
 					Switch2SP.s = IPS_ALERT;
@@ -994,17 +977,17 @@ std::thread AstroLink4Pi::getMotorThread(uint32_t targetTicks, int lastDirection
 		uint32_t currentPos = FocusAbsPosNP[0].getValue();
 		while (currentPos != targetPos && !(_abort.load(std::memory_order_relaxed)))
 		{
-			// if (FocusReverseSP[INDI_ENABLED].getState() == ISS_ON)
-			// {
-			// 	lgGpioWrite(lgpioHandle, DIR_PIN, (motorDirection < 0) ? 1 : 0);
-			// }
-			// else
-			// {
-			// 	lgGpioWrite(lgpioHandle, DIR_PIN, (motorDirection < 0) ? 0 : 1);
-			// }
-			// lgGpioWrite(lgpioHandle, STP_PIN, 1);
-			// usleep(10);
-			// lgGpioWrite(lgpioHandle, STP_PIN, 0);
+			if (FocusReverseSP[INDI_ENABLED].getState() == ISS_ON)
+			{
+				digitalWrite(DIR_PIN, (motorDirection < 0) ? HIGH : LOW);
+			}
+			else
+			{
+				digitalWrite(DIR_PIN, (motorDirection < 0) ? LOW : HIGH);
+			}
+			digitalWrite(STP_PIN, HIGH);
+			usleep(10);
+			digitalWrite(STP_PIN, LOW);
 
 			if (backlashTicksRemaining <= 0)
 			{ // Only Count the position change if it is not due to backlash
@@ -1042,50 +1025,50 @@ std::thread AstroLink4Pi::getMotorThread(uint32_t targetTicks, int lastDirection
 void AstroLink4Pi::SetResolution(int res)
 {
 	// Release lines
-	// lgGpioWrite(lgpioHandle, M0_PIN, 1);
-	// lgGpioWrite(lgpioHandle, M1_PIN, 1);
-	// lgGpioWrite(lgpioHandle, M2_PIN, 1);
+	digitalWrite(M0_PIN, HIGH);
+	digitalWrite(M1_PIN, HIGH);
+	digitalWrite(M2_PIN, HIGH);
 
-	// switch (res)
-	// {
-	// case 1: // 1:1
+	switch (res)
+	{
+	case 1: // 1:1
 
-	// 	lgGpioWrite(lgpioHandle, M0_PIN, 0);
-	// 	lgGpioWrite(lgpioHandle, M1_PIN, 0);
-	// 	lgGpioWrite(lgpioHandle, M2_PIN, 0);
-	// 	break;
-	// case 2: // 1:2
-	// 	lgGpioWrite(lgpioHandle, M0_PIN, 1);
-	// 	lgGpioWrite(lgpioHandle, M1_PIN, 0);
-	// 	lgGpioWrite(lgpioHandle, M2_PIN, 0);
-	// 	break;
-	// case 4: // 1:4
-	// 	lgGpioWrite(lgpioHandle, M0_PIN, 0);
-	// 	lgGpioWrite(lgpioHandle, M1_PIN, 1);
-	// 	lgGpioWrite(lgpioHandle, M2_PIN, 0);
-	// 	break;
-	// case 8: // 1:8
-	// 	lgGpioWrite(lgpioHandle, M0_PIN, 1);
-	// 	lgGpioWrite(lgpioHandle, M1_PIN, 1);
-	// 	lgGpioWrite(lgpioHandle, M2_PIN, 0);
-	// 	break;
-	// case 16: // 1:16
-	// 	lgGpioWrite(lgpioHandle, M0_PIN, 0);
-	// 	lgGpioWrite(lgpioHandle, M1_PIN, 0);
-	// 	lgGpioWrite(lgpioHandle, M2_PIN, 1);
-	// 	break;
-	// case 32: // 1:32
-	// 	lgGpioWrite(lgpioHandle, M0_PIN, 1);
-	// 	lgGpioWrite(lgpioHandle, M1_PIN, 1);
-	// 	lgGpioWrite(lgpioHandle, M2_PIN, 1);
-	// 	break;
-	// default: // 1:1
-	// 	lgGpioWrite(lgpioHandle, M0_PIN, 0);
-	// 	lgGpioWrite(lgpioHandle, M1_PIN, 0);
-	// 	lgGpioWrite(lgpioHandle, M2_PIN, 0);
+		digitalWrite(M0_PIN, LOW);
+		digitalWrite(M1_PIN, LOW);
+		digitalWrite(M2_PIN, LOW);
+		break;
+	case 2: // 1:2
+		digitalWrite(M0_PIN, HIGH);
+		digitalWrite(M1_PIN, LOW);
+		digitalWrite(M2_PIN, LOW);
+		break;
+	case 4: // 1:4
+		digitalWrite(M0_PIN, LOW);
+		digitalWrite(M1_PIN, HIGH);
+		digitalWrite(M2_PIN, LOW);
+		break;
+	case 8: // 1:8
+		digitalWrite(M0_PIN, HIGH);
+		digitalWrite(M1_PIN, HIGH);
+		digitalWrite(M2_PIN, LOW);
+		break;
+	case 16: // 1:16
+		digitalWrite(M0_PIN, LOW);
+		digitalWrite(M1_PIN, LOW);
+		digitalWrite(M2_PIN, HIGH);
+		break;
+	case 32: // 1:32
+		digitalWrite(M0_PIN, HIGH);
+		digitalWrite(M1_PIN, HIGH);
+		digitalWrite(M2_PIN, HIGH);
+		break;
+	default: // 1:1
+		digitalWrite(M0_PIN, LOW);
+		digitalWrite(M1_PIN, LOW);
+		digitalWrite(M2_PIN, LOW);
 
-	// 	break;
-	// }
+		break;
+	}
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "Resolution set to 1 / %d.", res);
 }
@@ -1299,7 +1282,6 @@ bool AstroLink4Pi::readDS18B20()
 	return true;
 }
 
-
 int AstroLink4Pi::getHoldPower()
 {
 	if (FocusHoldS[HOLD_20].s == ISS_ON)
@@ -1322,28 +1304,27 @@ void AstroLink4Pi::setCurrent(bool standby)
 
 	if (standby)
 	{
-		// lgGpioWrite(lgpioHandle, EN_PIN, (getHoldPower() > 0) ? 0 : 1);
-		// lgGpioWrite(lgpioHandle, DECAY_PIN, 0);
-
+		digitalWrite(EN_PIN, (getHoldPower() > 0) ? HIGH : LOW);
+		digitalWrite(DECAY_PIN, LOW);
 
 		if (revision == 1)
 		{
 			if (getHoldPower() == 5)
 			{
-				// lgGpioWrite(lgpioHandle, HOLD_PIN, 0);
+				digitalWrite(HOLD_PIN, LOW);
 				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 100%%.");
 			}
 			else if (getHoldPower() > 0)
 			{
-				// lgGpioWrite(lgpioHandle, HOLD_PIN, 1);
+				digitalWrite(HOLD_PIN, HIGH);
 				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 50%%.");
 			}
 			else
 			{
-				// lgGpioWrite(lgpioHandle, HOLD_PIN, 1);
+				digitalWrite(HOLD_PIN, HIGH);
 				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
 			}
-		}		
+		}
 		if (revision > 1 && revision < 4)
 		{
 			// for 0.1 ohm resistor Vref = iref / 2
@@ -1365,12 +1346,12 @@ void AstroLink4Pi::setCurrent(bool standby)
 	}
 	else
 	{
-		// lgGpioWrite(lgpioHandle, EN_PIN, 0);
-		// lgGpioWrite(lgpioHandle, DECAY_PIN, 1);
+		digitalWrite(EN_PIN, LOW);
+		digitalWrite(DECAY_PIN, HIGH);
 		if (revision == 1)
 		{
-			// lgGpioWrite(lgpioHandle, HOLD_PIN, 0);
-		}		
+			digitalWrite(HOLD_PIN, LOW);
+		}
 		if (revision > 1 && revision < 4)
 		{
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current %0.2f", StepperCurrentN[0].value);
@@ -1408,12 +1389,11 @@ void AstroLink4Pi::systemUpdate()
 
 	// update uptime
 	std::string uptime = runCommand("uptime|awk -F, '{print $1}'|awk -Fup '{print $2}'|xargs");
-	IUSaveText(&SysInfoT[SYSI_UPTIME], uptime.c_str());	
-
+	IUSaveText(&SysInfoT[SYSI_UPTIME], uptime.c_str());
 
 	// update load
 	std::string load = runCommand("uptime|awk -F, '{print $3\" /\"$4\" /\"$5}'|awk -F: '{print $2}'|xargs");
-	IUSaveText(&SysInfoT[SYSI_LOAD], load.c_str());	
+	IUSaveText(&SysInfoT[SYSI_LOAD], load.c_str());
 
 	SysInfoTP.s = IPS_OK;
 	IDSetText(&SysInfoTP, NULL);
@@ -1928,23 +1908,30 @@ int AstroLink4Pi::checkRevision()
 	return rev;
 }
 
-
-std::string AstroLink4Pi::runCommand(const char* cmd)
+std::string AstroLink4Pi::runCommand(const char *cmd)
 {
-    char buffer[128] = {0};
-    FILE* pipe = popen(cmd, "r");
-    if (pipe == nullptr)
-        return "";
+	char buffer[128] = {0};
+	FILE *pipe = popen(cmd, "r");
+	if (pipe == nullptr)
+		return "";
 
-    std::string result;
-    if (fgets(buffer, sizeof(buffer), pipe) != nullptr)
-        result = buffer;
+	std::string result;
+	if (fgets(buffer, sizeof(buffer), pipe) != nullptr)
+		result = buffer;
 
-    pclose(pipe);
+	pclose(pipe);
 
-    while (!result.empty() && (result.back() == '\n' || result.back() == '\r'))
-        result.pop_back();
+	while (!result.empty() && (result.back() == '\n' || result.back() == '\r'))
+		result.pop_back();
 
-    return result;
+	return result;
 }
 
+void AstroLink4Pi::setPinModeValue(int pin, int mode, int value)
+{
+	pinMode(pin, mode);
+	if (mode == OUTPUT)
+		digitalWrite(pin, value);
+	else
+		pullUpDnControl(pin, (value == 0) ? PUD_DOWN : PUD_UP);
+}
