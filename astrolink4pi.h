@@ -40,8 +40,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "config.h"
+#include <gpiod.h>
 
+#include "config.h"
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
 #include <indiweatherinterface.h>
@@ -260,6 +261,25 @@ private:
 	std::thread _motionThread;
 	// volatile bool _abort;
 	std::atomic<bool> _abort{false};
+
+    gpiod_chip *gpioChip = nullptr;
+
+    gpiod_line *lineDecay = nullptr;
+    gpiod_line *lineEnable = nullptr;
+    gpiod_line *lineM0 = nullptr;
+    gpiod_line *lineM1 = nullptr;
+    gpiod_line *lineM2 = nullptr;
+    gpiod_line *lineReset = nullptr;
+    gpiod_line *lineStep = nullptr;
+    gpiod_line *lineDir = nullptr;
+    gpiod_line *lineOut1 = nullptr;
+    gpiod_line *lineOut2 = nullptr;
+    gpiod_line *lineFan = nullptr;	
+
+
+    bool requestOutputLine(gpiod_line **line, unsigned int offset, int initialValue, const char *name);
+    int setLine(gpiod_line *line, int value, const char *name);
+    void releaseLine(gpiod_line *&line);	
 
 	int getHoldPower();
 	void getFocuserInfo();

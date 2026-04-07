@@ -134,6 +134,19 @@ bool AstroLink4Pi::Connect()
 	// 	return false;
 	// }
 
+    char chipPath[32];
+    std::snprintf(chipPath, sizeof(chipPath), "/dev/gpiochip%d", gpioType);
+
+    gpioChip = gpiod_chip_open(chipPath);
+    if (!gpioChip)
+    {
+        DEBUGF(INDI::Logger::DBG_ERROR, "Could not open GPIO chip %s", chipPath);
+        return false;
+    }	
+
+	bool success = true;
+	success |= requestOutputLine(&lineDecay,  DECAY_PIN, 0, "DECAY_PIN");
+
 	// lgGpioClaimOutput(lgpioHandle, 0, DECAY_PIN, 0);
 	// lgGpioClaimOutput(lgpioHandle, 0, EN_PIN, 1); // EN_PIN start as disabled
 	// lgGpioClaimOutput(lgpioHandle, 0, M0_PIN, 0);
@@ -1935,4 +1948,48 @@ std::string AstroLink4Pi::runCommand(const char* cmd)
         result.pop_back();
 
     return result;
+}
+
+
+bool AstroLink4Pi::requestOutputLine(gpiod_line **line, unsigned int offset, int initialValue, const char *name)
+{
+    *line = gpiod_chip_get_line(gpioChip, offset);
+    if (!*line)
+    {
+        DEBUGF(INDI::Logger::DBG_ERROR, "gpiod_chip_get_line(%u) failed for %s", offset, name);
+        return false;
+    }
+
+    if (gpiod_line_request_output(*line, "indi_astrolink4pi", initialValue) < 0)
+    {
+        DEBUGF(INDI::Logger::DBG_ERROR, "gpiod_line_request_output(%u) failed for %s", offset, name);
+        *line = nullptr;
+        return false;
+    }
+
+    return true;
+}
+
+int AstroLink4Pi::setLine(gpiod_line *line, int value, const char *name)
+{
+    if (!line)
+    {
+        DEBUGF(INDI::Logger::DBG_ERROR, "GPIO line %s is null", name);
+        return -1;
+    }
+
+    int rc = gpiod_line_set_value(line, value);
+    if (rc < 0)
+        DEBUGF(INDI::Logger::DBG_ERROR, "Failed to set GPIO %s to %d", name, value);
+
+    return rc;
+}
+
+void AstroLink4Pi::releaseLine(gpiod_line *&line)
+{
+    if (line)
+    {
+        gpiod_line_release(line);
+        line = nullptr;
+    }
 }
