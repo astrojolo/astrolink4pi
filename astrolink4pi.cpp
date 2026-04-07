@@ -162,6 +162,11 @@ bool AstroLink4Pi::Connect()
 	// lgGpioClaimOutput(lgpioHandle, 0, MOTOR_PWM, 0);
 	// lgGpioClaimOutput(lgpioHandle, 0, FAN_PIN, 0);
 
+	if(!success) {
+		Disconnect();
+		return false;
+	}
+
 	// Lock Relay Labels setting
 	RelayLabelsTP.s = IPS_BUSY;
 	IDSetText(&RelayLabelsTP, nullptr);
@@ -207,6 +212,9 @@ bool AstroLink4Pi::Disconnect()
 	// lgGpioWrite(lgpioHandle, RST_PIN, 0);					 // sleep
 	// int enabledState = lgGpioWrite(lgpioHandle, EN_PIN, 1); // make disabled
 
+	// setLine(lineReset, 0, "RST_PIN");     // sleep
+	// int enabledState = setLine(lineEnable, 1, "EN_PIN"); // make disabled
+
 	// if (enabledState != 0)
 	// {
 	// 	DEBUGF(INDI::Logger::DBG_ERROR, "Cannot set GPIO line %i to disable stepper motor driver. Focusing motor may still be powered.", EN_PIN);
@@ -216,6 +224,7 @@ bool AstroLink4Pi::Disconnect()
 	// 	DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
 	// }
 
+	releaseLine(lineDecay);
 	// lgGpioFree(lgpioHandle, DECAY_PIN);
 	// lgGpioFree(lgpioHandle, EN_PIN);
 	// lgGpioFree(lgpioHandle, M0_PIN);
@@ -232,6 +241,12 @@ bool AstroLink4Pi::Disconnect()
 	// lgGpioFree(lgpioHandle, FAN_PIN);
 
 	// lgGpiochipClose(lgpioHandle);
+
+    if (gpioChipHandle)
+    {
+        gpiod_chip_close(gpioChipHandle);
+        gpioChipHandle = nullptr;
+    }
 
 	// Unlock Relay Labels setting
 	RelayLabelsTP.s = IPS_IDLE;
@@ -1953,7 +1968,7 @@ std::string AstroLink4Pi::runCommand(const char* cmd)
 
 bool AstroLink4Pi::requestOutputLine(gpiod_line **line, unsigned int offset, int initialValue, const char *name)
 {
-    *line = gpiod_chip_get_line(gpioChip, offset);
+    *line = gpiod_chip_get_line(gpioChipHandle, offset);
     if (!*line)
     {
         DEBUGF(INDI::Logger::DBG_ERROR, "gpiod_chip_get_line(%u) failed for %s", offset, name);

@@ -41,7 +41,6 @@
 #include <unistd.h>
 
 #include <gpiod.h>
-#include <lgpio.h>
 
 #include "config.h"
 #include <defaultdevice.h>
@@ -263,7 +262,7 @@ private:
 	// volatile bool _abort;
 	std::atomic<bool> _abort{false};
 
-    gpiod_chip *gpioChip = nullptr;
+    gpiod_chip *gpioChipHandle = nullptr;
 
     gpiod_line *lineDecay = nullptr;
     gpiod_line *lineEnable = nullptr;
@@ -275,12 +274,7 @@ private:
     gpiod_line *lineDir = nullptr;
     gpiod_line *lineOut1 = nullptr;
     gpiod_line *lineOut2 = nullptr;
-    gpiod_line *lineFan = nullptr;	
-
-
-    bool requestOutputLine(gpiod_line **line, unsigned int offset, int initialValue, const char *name);
-    int setLine(gpiod_line *line, int value, const char *name);
-    void releaseLine(gpiod_line *&line);	
+    gpiod_line *lineFan = nullptr;
 
 	int getHoldPower();
 	void getFocuserInfo();
@@ -293,7 +287,11 @@ private:
 	int checkRevision();
 	uint64_t millis();
 	std::string runCommand(const char* cmd);
-	std::thread getMotorThread(uint32_t targetPos, int direction, int lgpioHandle, int backlashTicksRemaining);
+	std::thread getMotorThread(uint32_t targetPos, int direction, int backlashTicksRemaining);
+
+    bool requestOutputLine(gpiod_line **line, unsigned int offset, int initialValue, const char *name);
+    int setLine(gpiod_line *line, int value, const char *name);
+    void releaseLine(gpiod_line *&line);	
 
 	static constexpr const char *ENVIRONMENT_TAB{"Environment"};
 	static constexpr const char *SYSTEM_TAB{"System"};
