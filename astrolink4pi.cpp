@@ -975,7 +975,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 
 	//_abort = false;
 	_abort.store(false, std::memory_order_relaxed);
-	_motionThread = getMotorThread(targetTicks, lastDirection, 0, backlashTicksRemaining);
+	_motionThread = getMotorThread(targetTicks, lastDirection, backlashTicksRemaining);
 	return IPS_BUSY;
 }
 
@@ -1031,7 +1031,7 @@ std::thread AstroLink4Pi::getMotorThread(uint32_t targetTicks, int lastDirection
 		savePosition((int)FocusAbsPosNP[0].getValue() * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
 		lastTemperature = FocusTemperatureN[0].value;							// register last temperature
 		setCurrent(true); },
-					   targetTicks, lastDirection, lgpioHandle, backlashTicksRemaining);
+					   targetTicks, lastDirection, backlashTicksRemaining);
 }
 
 void AstroLink4Pi::SetResolution(int res)
