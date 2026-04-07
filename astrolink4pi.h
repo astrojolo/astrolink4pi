@@ -44,6 +44,7 @@
 
 #include "config.h"
 
+#include <wiringPi.h>
 //#include <gpiod.hpp>
 //#include <lgpio.h>
 
