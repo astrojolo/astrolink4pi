@@ -228,7 +228,7 @@ private:
 	int revision = 1;
 	int gpioType = 0;
 	int gpioChip = -1;
-	int pigpioHandle = -1;
+	int lgpioHandle = -1;
 
 	int resolution = 1;
 
@@ -274,7 +274,7 @@ private:
 	int checkRevision();
 	uint64_t millis();
 	std::string runCommand(const char* cmd);
-	std::thread getMotorThread(uint32_t targetPos, int direction, int pigpioHandle, int backlashTicksRemaining);
+	std::thread getMotorThread(uint32_t targetPos, int direction, int lgpioHandle, int backlashTicksRemaining);
 
 	static constexpr const char *ENVIRONMENT_TAB{"Environment"};
 	static constexpr const char *SYSTEM_TAB{"System"};
