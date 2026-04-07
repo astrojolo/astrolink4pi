@@ -969,7 +969,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 
 	//_abort = false;
 	_abort.store(false, std::memory_order_relaxed);
-	_motionThread = getMotorThread(targetTicks, lastDirection, lgpioHandle, backlashTicksRemaining);
+	_motionThread = getMotorThread(targetTicks, lastDirection, 0, backlashTicksRemaining);
 	return IPS_BUSY;
 }
 
