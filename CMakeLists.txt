@@ -16,10 +16,10 @@ include_directories(${INDI_INCLUDE_DIR}) # kept for any legacy includes; prefer 
 include(CMakeCommon)
 
 # Prefer finding the library instead of hard-coding the .so filename
-find_library(LGPIOLIB NAMES lgpio liblgpio)
-if(NOT LGPIOLIB)
-    message(FATAL_ERROR "lgpio library not found. Install liblgpio or set LGPIOLIB manually.")
-endif()
+#find_library(LGPIOLIB NAMES lgpio liblgpio)
+#if(NOT LGPIOLIB)
+#   message(FATAL_ERROR "lgpio library not found. Install liblgpio or set LGPIOLIB manually.")
+#endif()
 
 ################ AstroLink 4 Pi ################
 set(indi_astrolink4pi_SRCS
