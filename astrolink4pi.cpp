@@ -200,7 +200,7 @@ bool AstroLink4Pi::Disconnect()
 	digitalWrite(RST_PIN, LOW); // sleep
 	digitalWrite(EN_PIN, HIGH); // make disabled
 
-	if (digitalWrite(EN_PIN) != HIGH)
+	if (digitalRead(EN_PIN) != HIGH)
 	{
 		DEBUGF(INDI::Logger::DBG_ERROR, "Cannot set GPIO line %i to disable stepper motor driver. Focusing motor may still be powered.", EN_PIN);
 	}
