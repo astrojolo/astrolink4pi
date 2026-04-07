@@ -18,12 +18,13 @@ include_directories(${INDI_INCLUDE_DIR}) # kept for any legacy includes; prefer 
 
 include(CMakeCommon)
 
-if(NOT WIRINGPI_FOUND)
-    message(FATAL_ERROR "wiringPi not found! Please install wiringPi.")
+find_library(WIRINGPI_LIB wiringPi)
+
+if(NOT WIRINGPI_LIB)
+    message(FATAL_ERROR "wiringPi library not found!")
 endif()
 
-include_directories(${WIRINGPI_INCLUDE_DIRS})
-link_directories(${WIRINGPI_LIBRARY_DIRS})
+target_link_libraries(your_target ${WIRINGPI_LIB})
 
 ################ AstroLink 4 Pi ################
 set(indi_astrolink4pi_SRCS
