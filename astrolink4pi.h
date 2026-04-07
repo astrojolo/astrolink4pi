@@ -35,14 +35,18 @@
 #include <thread>
 #include <chrono>
 #include <algorithm>
+#include <cstdint>
+#include <vector>
 
 #include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <gpiod.h>
-
 #include "config.h"
+
+//#include <gpiod.hpp>
+//#include <lgpio.h>
+
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
 #include <indiweatherinterface.h>
@@ -226,8 +230,8 @@ private:
 
 	int revision = 1;
 	int gpioType = 0;
-	//int gpioChip = -1;
-	//int lgpioHandle = -1;
+	int gpioChip = -1;
+
 
 	int resolution = 1;
 
@@ -262,20 +266,6 @@ private:
 	// volatile bool _abort;
 	std::atomic<bool> _abort{false};
 
-    gpiod_chip *gpioChipHandle = nullptr;
-
-    gpiod_line *lineDecay = nullptr;
-    gpiod_line *lineEnable = nullptr;
-    gpiod_line *lineM0 = nullptr;
-    gpiod_line *lineM1 = nullptr;
-    gpiod_line *lineM2 = nullptr;
-    gpiod_line *lineReset = nullptr;
-    gpiod_line *lineStep = nullptr;
-    gpiod_line *lineDir = nullptr;
-    gpiod_line *lineOut1 = nullptr;
-    gpiod_line *lineOut2 = nullptr;
-    gpiod_line *lineFan = nullptr;
-
 	int getHoldPower();
 	void getFocuserInfo();
 	void temperatureCompensation();
@@ -288,10 +278,6 @@ private:
 	uint64_t millis();
 	std::string runCommand(const char* cmd);
 	std::thread getMotorThread(uint32_t targetPos, int direction, int backlashTicksRemaining);
-
-    bool requestOutputLine(gpiod_line **line, unsigned int offset, int initialValue, const char *name);
-    int setLine(gpiod_line *line, int value, const char *name);
-    void releaseLine(gpiod_line *&line);	
 
 	static constexpr const char *ENVIRONMENT_TAB{"Environment"};
 	static constexpr const char *SYSTEM_TAB{"System"};

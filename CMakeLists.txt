@@ -4,18 +4,26 @@ project(indi-astrolink4pi VERSION 1.6 LANGUAGES C CXX)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
 include(GNUInstallDirs)
-include(CMakeCommon)
 
 find_package(INDI REQUIRED)
 find_package(Threads REQUIRED)
-find_package(PkgConfig REQUIRED)
+find_package(PkgConfig)
 
-pkg_check_modules(GPIOD REQUIRED libgpiod)
+pkg_check_modules(WIRINGPI wiringPi)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/indi_astrolink4pi.xml.cmake ${CMAKE_CURRENT_BINARY_DIR}/indi_astrolink4pi.xml)
 
 include_directories(${INDI_INCLUDE_DIR}) # kept for any legacy includes; prefer target_include_directories below
+
+include(CMakeCommon)
+
+if(NOT WIRINGPI_FOUND)
+    message(FATAL_ERROR "wiringPi not found! Please install wiringPi.")
+endif()
+
+include_directories(${WIRINGPI_INCLUDE_DIRS})
+link_directories(${WIRINGPI_LIBRARY_DIRS})
 
 ################ AstroLink 4 Pi ################
 set(indi_astrolink4pi_SRCS
@@ -33,16 +41,13 @@ target_include_directories(indi_astrolink4pi PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${INDI_INCLUDE_DIR}
-    ${GPIOD_INCLUDE_DIRS}
 )
 
 target_compile_features(indi_astrolink4pi PRIVATE cxx_std_11)
 
-target_compile_options(indi_astrolink4pi PRIVATE ${GPIOD_CFLAGS_OTHER})
-
 target_link_libraries(indi_astrolink4pi PRIVATE
     ${INDI_LIBRARIES}
-    ${GPIOD_LIBRARIES}
+    ${WIRINGPI_LIBRARIES}
     Threads::Threads
 )
 

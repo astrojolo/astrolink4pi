@@ -133,20 +133,13 @@ bool AstroLink4Pi::Connect()
 	// 	DEBUGF(INDI::Logger::DBG_ERROR, "Could not access GPIO. Error code %d , GPIO number %d", lgpioHandle, gpioType);
 	// 	return false;
 	// }
-
-    char chipPath[32];
-    std::snprintf(chipPath, sizeof(chipPath), "/dev/gpiochip%d", gpioType);
-
-    gpioChip = gpiod_chip_open(chipPath);
-    if (!gpioChip)
-    {
-        DEBUGF(INDI::Logger::DBG_ERROR, "Could not open GPIO chip %s", chipPath);
-        return false;
-    }	
-
-	bool success = true;
-	success |= requestOutputLine(&lineDecay,  DECAY_PIN, 0, "DECAY_PIN");
-
+	int wiringPiSetup = wiringPiSetupPinType(WPI_PIN_BCM);
+	if (wiringPiSetup < 0)
+	{
+		DEBUGF(INDI::Logger::DBG_ERROR, "Could not access GPIO. Error code %d", wiringPiSetup);
+		return false;
+	}
+	pinMode(DECAY_PIN, OUTPUT);
 	// lgGpioClaimOutput(lgpioHandle, 0, DECAY_PIN, 0);
 	// lgGpioClaimOutput(lgpioHandle, 0, EN_PIN, 1); // EN_PIN start as disabled
 	// lgGpioClaimOutput(lgpioHandle, 0, M0_PIN, 0);
@@ -161,11 +154,6 @@ bool AstroLink4Pi::Connect()
 	// lgGpioClaimOutput(lgpioHandle, 0, PWM2_PIN, 0);
 	// lgGpioClaimOutput(lgpioHandle, 0, MOTOR_PWM, 0);
 	// lgGpioClaimOutput(lgpioHandle, 0, FAN_PIN, 0);
-
-	if(!success) {
-		Disconnect();
-		return false;
-	}
 
 	// Lock Relay Labels setting
 	RelayLabelsTP.s = IPS_BUSY;
@@ -212,9 +200,6 @@ bool AstroLink4Pi::Disconnect()
 	// lgGpioWrite(lgpioHandle, RST_PIN, 0);					 // sleep
 	// int enabledState = lgGpioWrite(lgpioHandle, EN_PIN, 1); // make disabled
 
-	// setLine(lineReset, 0, "RST_PIN");     // sleep
-	// int enabledState = setLine(lineEnable, 1, "EN_PIN"); // make disabled
-
 	// if (enabledState != 0)
 	// {
 	// 	DEBUGF(INDI::Logger::DBG_ERROR, "Cannot set GPIO line %i to disable stepper motor driver. Focusing motor may still be powered.", EN_PIN);
@@ -224,7 +209,6 @@ bool AstroLink4Pi::Disconnect()
 	// 	DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
 	// }
 
-	releaseLine(lineDecay);
 	// lgGpioFree(lgpioHandle, DECAY_PIN);
 	// lgGpioFree(lgpioHandle, EN_PIN);
 	// lgGpioFree(lgpioHandle, M0_PIN);
@@ -241,12 +225,6 @@ bool AstroLink4Pi::Disconnect()
 	// lgGpioFree(lgpioHandle, FAN_PIN);
 
 	// lgGpiochipClose(lgpioHandle);
-
-    if (gpioChipHandle)
-    {
-        gpiod_chip_close(gpioChipHandle);
-        gpioChipHandle = nullptr;
-    }
 
 	// Unlock Relay Labels setting
 	RelayLabelsTP.s = IPS_IDLE;
@@ -1965,46 +1943,3 @@ std::string AstroLink4Pi::runCommand(const char* cmd)
     return result;
 }
 
-
-bool AstroLink4Pi::requestOutputLine(gpiod_line **line, unsigned int offset, int initialValue, const char *name)
-{
-    *line = gpiod_chip_get_line(gpioChipHandle, offset);
-    if (!*line)
-    {
-        DEBUGF(INDI::Logger::DBG_ERROR, "gpiod_chip_get_line(%u) failed for %s", offset, name);
-        return false;
-    }
-
-    if (gpiod_line_request_output(*line, "indi_astrolink4pi", initialValue) < 0)
-    {
-        DEBUGF(INDI::Logger::DBG_ERROR, "gpiod_line_request_output(%u) failed for %s", offset, name);
-        *line = nullptr;
-        return false;
-    }
-
-    return true;
-}
-
-int AstroLink4Pi::setLine(gpiod_line *line, int value, const char *name)
-{
-    if (!line)
-    {
-        DEBUGF(INDI::Logger::DBG_ERROR, "GPIO line %s is null", name);
-        return -1;
-    }
-
-    int rc = gpiod_line_set_value(line, value);
-    if (rc < 0)
-        DEBUGF(INDI::Logger::DBG_ERROR, "Failed to set GPIO %s to %d", name, value);
-
-    return rc;
-}
-
-void AstroLink4Pi::releaseLine(gpiod_line *&line)
-{
-    if (line)
-    {
-        gpiod_line_release(line);
-        line = nullptr;
-    }
-}
