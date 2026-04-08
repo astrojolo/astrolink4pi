@@ -1,4 +1,4 @@
-#include "systeminfoservice.h"
+#include "systeminfo.h"
 
 #include <fstream>
 #include <sstream>
