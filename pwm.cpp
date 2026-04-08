@@ -1,4 +1,4 @@
-#include "pwmcontroller.h"
+#include "pwm.h"
 #include "boardio.h"
 
 #include <fstream>
