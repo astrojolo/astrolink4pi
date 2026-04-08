@@ -14,8 +14,8 @@
 PwmController::PwmController(BoardIO &boardIO)
     : m_BoardIO(boardIO)
 {
-    m_ChannelStates[Channel::P1]  = {};
-    m_ChannelStates[Channel::P2]  = {};
+    m_ChannelStates[Channel::P1] = {};
+    m_ChannelStates[Channel::P2] = {};
     m_ChannelStates[Channel::FAN] = {};
     m_ChannelStates[Channel::MOT] = {};
 }
@@ -32,20 +32,21 @@ bool PwmController::initialize(const Config &config)
 
     m_Config = config;
 
-    if (m_BoardIO.revision() >= 5)
-    {
-        if (!initializePi5())
-            return false;
+    // Lets use always soft PWM first to test
+    // if (m_BoardIO.revision() >= 5)
+    // {
+    //     if (!initializePi5())
+    //         return false;
 
-        m_Backend = Backend::SysfsPwm;
-    }
-    else
-    {
-        if (!initializePi4())
-            return false;
+    //     m_Backend = Backend::SysfsPwm;
+    // }
+    // else
+    // {
+    if (!initializePi4())
+        return false;
 
-        m_Backend = Backend::SoftPwm;
-    }
+    m_Backend = Backend::SoftPwm;
+    // }
 
     m_Initialized = true;
     return true;
@@ -233,10 +234,14 @@ int PwmController::bcmPin(Channel channel) const
 {
     switch (channel)
     {
-        case Channel::P1:  return 19;
-        case Channel::P2:  return 26;
-        case Channel::FAN: return 13;
-        case Channel::MOT: return 20;
+    case Channel::P1:
+        return 19;
+    case Channel::P2:
+        return 26;
+    case Channel::FAN:
+        return 13;
+    case Channel::MOT:
+        return 20;
     }
 
     return -1;
@@ -383,6 +388,6 @@ bool PwmController::SysfsPwm::writeFile(const std::string &path, const std::stri
 
 bool PwmController::SysfsPwm::pathExists(const std::string &path) const
 {
-    struct stat st {};
+    struct stat st{};
     return stat(path.c_str(), &st) == 0;
 }

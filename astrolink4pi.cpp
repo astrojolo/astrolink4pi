@@ -129,20 +129,17 @@ bool AstroLink4Pi::Connect()
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi %d, RPi version %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
 
 	PwmController::Config pwmConfig;
-	pwmConfig.defaultFrequencyHz = 5000;
+	//pwmConfig.defaultFrequencyHz = 5000;
 	pwmConfig.softPwmRange = 100;
 
-	// RPi5: pwm-pio -> pwmchipX
-	pwmConfig.pi5Channels[PwmController::Channel::P1] = {"/sys/class/pwm/pwmchip0", 0};	 // GPIO19
-	pwmConfig.pi5Channels[PwmController::Channel::P2] = {"/sys/class/pwm/pwmchip1", 0};	 // GPIO26
-	pwmConfig.pi5Channels[PwmController::Channel::FAN] = {"/sys/class/pwm/pwmchip2", 0}; // GPIO13
-	pwmConfig.pi5Channels[PwmController::Channel::MOT] = {"/sys/class/pwm/pwmchip3", 0}; // GPIO20
-
 	if (!m_PwmController.initialize(pwmConfig))
+	{
+		DEBUG(INDI::Logger::DBG_ERROR, "Could not initialize PWM.");
 		return false;
+	}
 
 	m_PwmController.setDutyPercent(PwmController::Channel::P1, 0.0);
-	m_PwmController.setDutyPercent(PwmController::Channel::P2, 0.0);
+	m_PwmController.setDutyPercent(PwmController::Channel::P2, 50.0);
 	m_PwmController.setDutyPercent(PwmController::Channel::FAN, 0.0);
 	m_PwmController.setDutyPercent(PwmController::Channel::MOT, 0.0);
 
