@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(indi-astrolink4pi VERSION 1.6 LANGUAGES C CXX)
+project(indi-astrolink4pi VERSION 2.1 LANGUAGES C CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
