@@ -42,7 +42,7 @@
 #include "config.h"
 
 #include "boardio.h"
-#include "pwmcontroller.h"
+#include "pwm.h"
 #include "systeminfo.h"
 
 #include <defaultdevice.h>
