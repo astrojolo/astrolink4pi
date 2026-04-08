@@ -1373,8 +1373,7 @@ void AstroLink4Pi::systemUpdate()
 	IUSaveText(&SysInfoT[SYSI_UPTIME], m_SystemInfo.getUptimeString().c_str());
 
 	// update load
-	std::string load = runCommand("uptime|awk -F, '{print $3\" /\"$4\" /\"$5}'|awk -F: '{print $2}'|xargs");
-	IUSaveText(&SysInfoT[SYSI_LOAD], load.c_str());
+	IUSaveText(&SysInfoT[SYSI_LOAD], m_SystemInfo.getLoad().c_str());
 
 	SysInfoTP.s = IPS_OK;
 	IDSetText(&SysInfoTP, NULL);

@@ -33,7 +33,7 @@ std::string SystemInfoService::getCpuTemp() const
 
 std::string SystemInfoService::getLoad() const
 {
-    return trim(runCommand("echo $(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))"));
+    return trim(runCommand("uptime|awk -F, '{print $3\" /\"$4\" /\"$5}'|awk -F: '{print $2}'|xargs"));
 }
 
 
