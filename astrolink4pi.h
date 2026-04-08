@@ -42,6 +42,7 @@
 #include "config.h"
 
 #include "boardio.h"
+#include "systeminfo.h"
 
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
@@ -95,6 +96,7 @@ private:
 	virtual bool readDS18B20();
 
 	BoardIO m_BoardIO;
+	SystemInfoService m_SystemInfo;
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
@@ -268,8 +270,6 @@ private:
 	void fanUpdate();
 	int getMotorPWM(int current);
 	int setDac(int chan, int value);
-	uint64_t millis();
-	std::string runCommand(const char* cmd);
 	std::thread getMotorThread(uint32_t targetPos, int direction, int backlashTicksRemaining);
 
 	static constexpr const char *ENVIRONMENT_TAB{"Environment"};

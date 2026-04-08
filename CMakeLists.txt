@@ -29,6 +29,7 @@ endif()
 set(indi_astrolink4pi_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/astrolink4pi.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/boardio.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/systeminfo.cpp
 )
 
 if (UNITY_BUILD)

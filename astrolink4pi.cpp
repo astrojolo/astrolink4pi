@@ -120,25 +120,19 @@ const char *AstroLink4Pi::getDefaultName()
 
 bool AstroLink4Pi::Connect()
 {
-	// if (m_BoardIO.revision() < 3)
-	// {
-	// 	DEBUGF(INDI::Logger::DBG_ERROR, "This INDI driver version works only with AstroLink 4 Pi m_BoardIO.revision() 3 and higer. Revision detected %d", revision);
-	// 	return false;
-	// }
-
-	// lgpioHandle = lgGpiochipOpen(gpioType);
-	// if (lgpioHandle < 0)
-	// {
-	// 	DEBUGF(INDI::Logger::DBG_ERROR, "Could not access GPIO. Error code %d , GPIO number %d", lgpioHandle, gpioType);
-	// 	return false;
-	// }
 	int wiringPiSetup = wiringPiSetupPinType(WPI_PIN_BCM);
 	if (!m_BoardIO.connect())
 	{
 		DEBUG(INDI::Logger::DBG_ERROR, "Could not access GPIO.");
 		return false;
 	}
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi m_BoardIO.revision() %d, RPi version %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
+	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi %d, RPi version %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
+
+    DEBUGF(INDI::Logger::DBG_SESSION,
+           "Connected on %s (%s), kernel %s",
+           m_SystemInfo.getHostname().c_str(),
+           m_SystemInfo.getModel().c_str(),
+           m_SystemInfo.getKernelVersion().c_str());	
 
 	m_BoardIO.initializePin(DECAY_PIN, OUTPUT, LOW);
 	m_BoardIO.initializePin(EN_PIN, OUTPUT, HIGH); // EN_PIN start as disabled
@@ -161,15 +155,11 @@ bool AstroLink4Pi::Connect()
 
 	// update Hardware
 	// https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
-	std::string hostname = runCommand("hostname");
-	std::string model = runCommand("cat /sys/firmware/devicetree/base/model");
-	std::string localIp = runCommand("hostname -I|awk -F' '  '{print $1}'|xargs");
-	std::string publicIp = runCommand("curl -s ifconfig.me");
 
-	IUSaveText(&SysInfoT[SYSI_HARDWARE], model.c_str());
-	IUSaveText(&SysInfoT[SYSI_HOST], hostname.c_str());
-	IUSaveText(&SysInfoT[SYSI_LOCALIP], localIp.c_str());
-	IUSaveText(&SysInfoT[SYSI_PUBIP], publicIp.c_str());
+	IUSaveText(&SysInfoT[SYSI_HARDWARE], m_SystemInfo.getHostname().c_str());
+	IUSaveText(&SysInfoT[SYSI_HOST], m_SystemInfo.getModel().c_str());
+	IUSaveText(&SysInfoT[SYSI_LOCALIP], m_SystemInfo.runCommand("hostname -I|awk -F' '  '{print $1}'|xargs").c_str());
+	IUSaveText(&SysInfoT[SYSI_PUBIP], m_SystemInfo.runCommand("curl -s ifconfig.me").c_str());
 
 	// Update client
 	IDSetText(&SysInfoTP, NULL);
@@ -181,7 +171,7 @@ bool AstroLink4Pi::Connect()
 	SetResolution(resolution);
 
 	getFocuserInfo();
-	uint64_t currentTime = millis();
+	uint64_t currentTime = m_SystemInfo.millis();
 	nextTemperatureRead = currentTime + TEMPERATURE_UPDATE_TIMEOUT;
 	nextTemperatureCompensation = currentTime + TEMPERATURE_COMPENSATION_TIMEOUT;
 	nextSystemRead = currentTime + SYSTEM_UPDATE_PERIOD;
@@ -208,13 +198,6 @@ bool AstroLink4Pi::Disconnect()
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
 	}
-
-	// lgGpioFree(lgpioHandle, PWM1_PIN);
-	// lgGpioFree(lgpioHandle, PWM2_PIN);
-	// lgGpioFree(lgpioHandle, MOTOR_PWM);
-	// lgGpioFree(lgpioHandle, FAN_PIN);
-
-	// lgGpiochipClose(lgpioHandle);
 
 	// Unlock Relay Labels setting
 	RelayLabelsTP.s = IPS_IDLE;
@@ -836,7 +819,7 @@ void AstroLink4Pi::TimerHit()
 	if (!isConnected())
 		return;
 
-	uint64_t timeMillis = millis();
+	uint64_t timeMillis = m_SystemInfo.millis();
 	SQMavailable = readSQM(nextTemperatureRead < timeMillis);
 
 	if (nextTemperatureRead < timeMillis)
@@ -1384,12 +1367,10 @@ void AstroLink4Pi::systemUpdate()
 	IDSetText(&SysInfoTP, NULL);
 
 	// update CPU temp
-	std::string cputemp = runCommand("echo $(($(cat /sys/class/thermal/thermal_zone0/temp)/1000))");
-	IUSaveText(&SysInfoT[SYSI_CPUTEMP], cputemp.c_str());
+	IUSaveText(&SysInfoT[SYSI_CPUTEMP], m_SystemInfo.getCpuTemp().c_str());
 
 	// update uptime
-	std::string uptime = runCommand("uptime|awk -F, '{print $1}'|awk -Fup '{print $2}'|xargs");
-	IUSaveText(&SysInfoT[SYSI_UPTIME], uptime.c_str());
+	IUSaveText(&SysInfoT[SYSI_UPTIME], m_SystemInfo.getUptimeString().c_str());
 
 	// update load
 	std::string load = runCommand("uptime|awk -F, '{print $3\" /\"$4\" /\"$5}'|awk -F: '{print $2}'|xargs");
@@ -1441,17 +1422,6 @@ void AstroLink4Pi::getFocuserInfo()
 	IDSetNumber(&FocuserInfoNP, nullptr);
 
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Focuser Info: %0.2f %0.2f %0.2f.", FocuserInfoN[0].value, FocuserInfoN[1].value, FocuserInfoN[2].value);
-}
-
-uint64_t AstroLink4Pi::millis()
-{
-	// static uint64_t nsec_zero = lguTimestamp();
-	// int millis = (int)((lguTimestamp() - nsec_zero) / 1000000);
-	// return millis;
-	static const auto start = std::chrono::steady_clock::now();
-	return std::chrono::duration_cast<std::chrono::milliseconds>(
-			   std::chrono::steady_clock::now() - start)
-		.count();
 }
 
 int AstroLink4Pi::getMotorPWM(int current)
@@ -1563,11 +1533,11 @@ bool AstroLink4Pi::readTSL()
 	// 	{
 	// 		int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
 	// 		write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);
-	// 		adcStartTime = millis();
+	// 		adcStartTime = m_SystemInfo.millis();
 	// 		TSLmode = (write == 0) ? TSLState::Initialized : TSLState::NotAvailable;
 	// 		available = (write == 0);
 	// 	}
-	// 	else if (millis() > (adcStartTime + TSL2591_ADC_TIME))
+	// 	else if (m_SystemInfo.millis() > (adcStartTime + TSL2591_ADC_TIME))
 	// 	{
 	// 		int ir = lgI2cReadWordData(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN1_LOW);
 	// 		int full = lgI2cReadWordData(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN0_LOW);
@@ -1827,22 +1797,3 @@ bool AstroLink4Pi::readPower()
 	// }
 }
 
-
-std::string AstroLink4Pi::runCommand(const char *cmd)
-{
-	char buffer[128] = {0};
-	FILE *pipe = popen(cmd, "r");
-	if (pipe == nullptr)
-		return "";
-
-	std::string result;
-	if (fgets(buffer, sizeof(buffer), pipe) != nullptr)
-		result = buffer;
-
-	pclose(pipe);
-
-	while (!result.empty() && (result.back() == '\n' || result.back() == '\r'))
-		result.pop_back();
-
-	return result;
-}
