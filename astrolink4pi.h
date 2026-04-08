@@ -42,6 +42,7 @@
 #include "config.h"
 
 #include "boardio.h"
+#include "pwmcontroller.h"
 #include "systeminfo.h"
 
 #include <defaultdevice.h>
@@ -96,6 +97,7 @@ private:
 	virtual bool readDS18B20();
 
 	BoardIO m_BoardIO;
+	PwmController m_PwmController;
 	SystemInfoService m_SystemInfo;
 
 	ISwitch FocusResolutionS[6];

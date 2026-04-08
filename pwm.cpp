@@ -1,309 +1,388 @@
-#pragma once
+#include "pwmcontroller.h"
+#include "boardio.h"
 
-#include <array>
-#include <cstdint>
 #include <fstream>
-#include <map>
-#include <memory>
-#include <stdexcept>
-#include <string>
+#include <sstream>
 #include <thread>
 #include <chrono>
+
+#include <sys/stat.h>
 
 #include <wiringPi.h>
 #include <softPwm.h>
 
-class AstroLinkPwm
+PwmController::PwmController(BoardIO &boardIO)
+    : m_BoardIO(boardIO)
 {
-public:
-    enum class Channel
-    {
-        P1,
-        P2,
-        FAN,
-        MOT
-    };
+    m_ChannelStates[Channel::P1]  = {};
+    m_ChannelStates[Channel::P2]  = {};
+    m_ChannelStates[Channel::FAN] = {};
+    m_ChannelStates[Channel::MOT] = {};
+}
 
-    enum class Board
-    {
-        Unknown,
-        RPi4,
-        RPi5
-    };
+PwmController::~PwmController()
+{
+    shutdown();
+}
 
-    struct Pi5PwmConfig
-    {
-        // Ścieżki trzeba dopasować do konkretnego systemu po restarcie,
-        // np. /sys/class/pwm/pwmchip0, pwmchip1, ...
-        std::map<Channel, std::string> chipPathByChannel;
-        uint32_t frequencyHz = 25000; // przykładowo dla FAN/PWM
-    };
+bool PwmController::initialize(const Config &config)
+{
+    if (m_Initialized)
+        return true;
 
-    AstroLinkPwm(const Pi5PwmConfig& pi5Config)
-        : board_(detectBoard()), pi5Config_(pi5Config)
+    m_Config = config;
+
+    if (m_BoardIO.revision() >= 5)
     {
-        if (board_ == Board::RPi4)
-        {
-            initPi4();
-        }
-        else if (board_ == Board::RPi5)
-        {
-            initPi5();
-        }
-        else
-        {
-            throw std::runtime_error("Unsupported Raspberry Pi model");
-        }
+        if (!initializePi5())
+            return false;
+
+        m_Backend = Backend::SysfsPwm;
+    }
+    else
+    {
+        if (!initializePi4())
+            return false;
+
+        m_Backend = Backend::SoftPwm;
     }
 
-    ~AstroLinkPwm()
+    m_Initialized = true;
+    return true;
+}
+
+void PwmController::shutdown()
+{
+    if (!m_Initialized)
+        return;
+
+    if (m_Backend == Backend::SoftPwm)
     {
-        try
-        {
-            shutdownAll();
-        }
-        catch (...)
-        {
-        }
+        for (const auto &it : m_ChannelStates)
+            softPwmWrite(bcmPin(it.first), 0);
+    }
+    else if (m_Backend == Backend::SysfsPwm)
+    {
+        for (auto &it : m_Pi5Pwm)
+            it.second.disable();
+
+        m_Pi5Pwm.clear();
     }
 
-    Board board() const
+    m_Backend = Backend::None;
+    m_Initialized = false;
+}
+
+bool PwmController::isInitialized() const
+{
+    return m_Initialized;
+}
+
+PwmController::Backend PwmController::backend() const
+{
+    return m_Backend;
+}
+
+bool PwmController::setDutyPercent(Channel channel, double dutyPercent)
+{
+    if (!m_Initialized)
+        return false;
+
+    if (dutyPercent < 0.0)
+        dutyPercent = 0.0;
+    if (dutyPercent > 100.0)
+        dutyPercent = 100.0;
+
+    m_ChannelStates[channel].dutyPercent = dutyPercent;
+
+    if (m_Backend == Backend::SoftPwm)
     {
-        return board_;
+        applyCachedStatePi4(channel);
+        return true;
     }
 
-    void setDutyPercent(Channel ch, double dutyPercent)
-    {
-        if (dutyPercent < 0.0)
-            dutyPercent = 0.0;
-        if (dutyPercent > 100.0)
-            dutyPercent = 100.0;
+    if (m_Backend == Backend::SysfsPwm)
+        return applyCachedStatePi5(channel);
 
-        if (board_ == Board::RPi4)
-        {
-            int pin = bcmPin(ch);
-            softPwmWrite(pin, static_cast<int>(dutyPercent + 0.5));
-        }
-        else if (board_ == Board::RPi5)
-        {
-            auto& pwm = pi5Pwm_.at(ch);
-            uint64_t dutyNs = static_cast<uint64_t>(
-                (pwm.periodNs * dutyPercent) / 100.0
-            );
-            pwm.setDutyNs(dutyNs);
-        }
+    return false;
+}
+
+bool PwmController::setFrequencyHz(Channel channel, uint32_t frequencyHz)
+{
+    if (!m_Initialized || frequencyHz == 0)
+        return false;
+
+    m_ChannelStates[channel].frequencyHz = frequencyHz;
+
+    if (m_Backend == Backend::SoftPwm)
+    {
+        // softPwm nie daje tu sensownej, niezależnej i precyzyjnej kontroli
+        // częstotliwości dla każdego kanału przez prosty interfejs wiringPi.
+        // Zostawiamy cache, ale nie próbujemy tego fizycznie przełączać.
+        return true;
     }
 
-    void setFrequencyHz(Channel ch, uint32_t frequencyHz)
-    {
-        if (frequencyHz == 0)
-            throw std::runtime_error("frequencyHz must be > 0");
+    if (m_Backend == Backend::SysfsPwm)
+        return applyCachedStatePi5(channel);
 
-        if (board_ == Board::RPi4)
-        {
-            // softPwm z wiringPi nie daje wygodnej, precyzyjnej kontroli częstotliwości
-            // per kanał. Tu zostawiamy stały softPwm range=100.
-            // Możesz dodać własny soft PWM jeśli potrzebujesz innych częstotliwości.
-            (void)ch;
-            (void)frequencyHz;
-        }
-        else if (board_ == Board::RPi5)
-        {
-            auto& pwm = pi5Pwm_.at(ch);
-            pwm.disable();
-            pwm.periodNs = 1'000'000'000ULL / frequencyHz;
-            pwm.setPeriodNs(pwm.periodNs);
-            pwm.enable();
-        }
+    return false;
+}
+
+bool PwmController::enable(Channel channel)
+{
+    if (!m_Initialized)
+        return false;
+
+    m_ChannelStates[channel].enabled = true;
+
+    if (m_Backend == Backend::SoftPwm)
+    {
+        applyCachedStatePi4(channel);
+        return true;
     }
 
-    void disable(Channel ch)
+    if (m_Backend == Backend::SysfsPwm)
+        return applyCachedStatePi5(channel);
+
+    return false;
+}
+
+bool PwmController::disable(Channel channel)
+{
+    if (!m_Initialized)
+        return false;
+
+    m_ChannelStates[channel].enabled = false;
+
+    if (m_Backend == Backend::SoftPwm)
     {
-        if (board_ == Board::RPi4)
-        {
-            softPwmWrite(bcmPin(ch), 0);
-        }
-        else if (board_ == Board::RPi5)
-        {
-            pi5Pwm_.at(ch).disable();
-        }
+        softPwmWrite(bcmPin(channel), 0);
+        return true;
     }
 
-private:
-    class SysfsPwm
+    if (m_Backend == Backend::SysfsPwm)
+        return m_Pi5Pwm[channel].disable();
+
+    return false;
+}
+
+double PwmController::getDutyPercent(Channel channel) const
+{
+    auto it = m_ChannelStates.find(channel);
+    if (it == m_ChannelStates.end())
+        return 0.0;
+
+    return it->second.dutyPercent;
+}
+
+uint32_t PwmController::getFrequencyHz(Channel channel) const
+{
+    auto it = m_ChannelStates.find(channel);
+    if (it == m_ChannelStates.end())
+        return 0;
+
+    return it->second.frequencyHz;
+}
+
+bool PwmController::initializePi4()
+{
+    if (wiringPiSetupGpio() < 0)
+        return false;
+
+    for (auto &it : m_ChannelStates)
     {
-    public:
-        SysfsPwm() = default;
+        const int pin = bcmPin(it.first);
 
-        SysfsPwm(const std::string& chipPath, int channel, uint64_t periodNs)
-            : chipPath_(chipPath),
-              channel_(channel),
-              pwmPath_(chipPath + "/pwm" + std::to_string(channel)),
-              periodNs(periodNs)
-        {
-            exportChannel();
-            disable();
-            setPeriodNs(periodNs);
-            setDutyNs(0);
-            enable();
-        }
+        if (softPwmCreate(pin, 0, m_Config.softPwmRange) != 0)
+            return false;
 
-        ~SysfsPwm()
-        {
-            try
-            {
-                disable();
-                unexportChannel();
-            }
-            catch (...)
-            {
-            }
-        }
-
-        void setPeriodNs(uint64_t ns)
-        {
-            writeFile(pwmPath_ + "/period", std::to_string(ns));
-        }
-
-        void setDutyNs(uint64_t ns)
-        {
-            if (ns > periodNs)
-                ns = periodNs;
-            writeFile(pwmPath_ + "/duty_cycle", std::to_string(ns));
-        }
-
-        void enable()
-        {
-            writeFile(pwmPath_ + "/enable", "1");
-        }
-
-        void disable()
-        {
-            writeFile(pwmPath_ + "/enable", "0");
-        }
-
-        uint64_t periodNs = 0;
-
-    private:
-        void exportChannel()
-        {
-            try
-            {
-                writeFile(chipPath_ + "/export", std::to_string(channel_));
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            }
-            catch (...)
-            {
-                // kanał może już być wyeksportowany
-            }
-        }
-
-        void unexportChannel()
-        {
-            try
-            {
-                writeFile(chipPath_ + "/unexport", std::to_string(channel_));
-            }
-            catch (...)
-            {
-            }
-        }
-
-        static void writeFile(const std::string& path, const std::string& value)
-        {
-            std::ofstream f(path);
-            if (!f)
-                throw std::runtime_error("Cannot open " + path);
-            f << value;
-            if (!f)
-                throw std::runtime_error("Cannot write " + path);
-        }
-
-        std::string chipPath_;
-        int channel_ = 0;
-        std::string pwmPath_;
-    };
-
-    static Board detectBoard()
-    {
-        std::ifstream f("/proc/device-tree/model", std::ios::binary);
-        if (!f)
-            return Board::Unknown;
-
-        std::string model((std::istreambuf_iterator<char>(f)),
-                          std::istreambuf_iterator<char>());
-
-        if (model.find("Raspberry Pi 5") != std::string::npos)
-            return Board::RPi5;
-        if (model.find("Raspberry Pi 4") != std::string::npos)
-            return Board::RPi4;
-
-        return Board::Unknown;
+        it.second.frequencyHz = m_Config.defaultFrequencyHz;
+        it.second.dutyPercent = 0.0;
+        it.second.enabled = false;
     }
 
-    static int bcmPin(Channel ch)
+    return true;
+}
+
+bool PwmController::initializePi5()
+{
+    for (auto &it : m_ChannelStates)
     {
-        switch (ch)
+        const auto cfgIt = m_Config.pi5Channels.find(it.first);
+        if (cfgIt == m_Config.pi5Channels.end())
+            return false;
+
+        SysfsPwm pwm(cfgIt->second.chipPath, cfgIt->second.pwmIndex);
+        if (!pwm.open())
+            return false;
+
+        m_Pi5Pwm[it.first] = pwm;
+
+        it.second.frequencyHz = m_Config.defaultFrequencyHz;
+        it.second.dutyPercent = 0.0;
+        it.second.enabled = false;
+
+        if (!applyCachedStatePi5(it.first))
+            return false;
+    }
+
+    return true;
+}
+
+int PwmController::bcmPin(Channel channel) const
+{
+    switch (channel)
+    {
+        case Channel::P1:  return 19;
+        case Channel::P2:  return 26;
+        case Channel::FAN: return 13;
+        case Channel::MOT: return 20;
+    }
+
+    return -1;
+}
+
+uint64_t PwmController::frequencyToPeriodNs(uint32_t frequencyHz) const
+{
+    return 1000000000ULL / static_cast<uint64_t>(frequencyHz);
+}
+
+void PwmController::applyCachedStatePi4(Channel channel)
+{
+    const auto &state = m_ChannelStates[channel];
+    const int pin = bcmPin(channel);
+
+    if (!state.enabled)
+    {
+        softPwmWrite(pin, 0);
+        return;
+    }
+
+    const int value = static_cast<int>((state.dutyPercent / 100.0) * m_Config.softPwmRange + 0.5);
+    softPwmWrite(pin, value);
+}
+
+bool PwmController::applyCachedStatePi5(Channel channel)
+{
+    auto pwmIt = m_Pi5Pwm.find(channel);
+    if (pwmIt == m_Pi5Pwm.end())
+        return false;
+
+    auto &pwm = pwmIt->second;
+    const auto &state = m_ChannelStates[channel];
+
+    const uint64_t periodNs = frequencyToPeriodNs(state.frequencyHz);
+    const uint64_t dutyNs =
+        static_cast<uint64_t>((periodNs * state.dutyPercent) / 100.0);
+
+    if (!pwm.disable())
+        return false;
+
+    if (!pwm.setPeriodNs(periodNs))
+        return false;
+
+    if (!pwm.setDutyNs(dutyNs))
+        return false;
+
+    if (state.enabled)
+        return pwm.enable();
+
+    return true;
+}
+
+// -------------------- SysfsPwm --------------------
+
+PwmController::SysfsPwm::SysfsPwm(const std::string &chipPath, int pwmIndex)
+    : m_ChipPath(chipPath),
+      m_PwmIndex(pwmIndex),
+      m_PwmPath(chipPath + "/pwm" + std::to_string(pwmIndex))
+{
+}
+
+PwmController::SysfsPwm::~SysfsPwm()
+{
+    close();
+}
+
+bool PwmController::SysfsPwm::open()
+{
+    if (m_IsOpen)
+        return true;
+
+    if (!exportChannel())
+        return false;
+
+    for (int i = 0; i < 20; i++)
+    {
+        if (pathExists(m_PwmPath))
         {
-            case Channel::P1:  return 19;
-            case Channel::P2:  return 26;
-            case Channel::FAN: return 13;
-            case Channel::MOT: return 20;
+            m_IsOpen = true;
+            return true;
         }
-        throw std::runtime_error("Invalid channel");
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 
-    void initPi4()
-    {
-        if (wiringPiSetupGpio() < 0)
-            throw std::runtime_error("wiringPiSetupGpio failed");
+    return false;
+}
 
-        for (Channel ch : allChannels())
-        {
-            int pin = bcmPin(ch);
-            if (softPwmCreate(pin, 0, 100) != 0)
-                throw std::runtime_error("softPwmCreate failed on GPIO " + std::to_string(pin));
-        }
-    }
+void PwmController::SysfsPwm::close()
+{
+    if (!m_IsOpen)
+        return;
 
-    void initPi5()
-    {
-        const uint64_t periodNs = 1'000'000'000ULL / pi5Config_.frequencyHz;
+    disable();
+    unexportChannel();
+    m_IsOpen = false;
+}
 
-        for (Channel ch : allChannels())
-        {
-            auto it = pi5Config_.chipPathByChannel.find(ch);
-            if (it == pi5Config_.chipPathByChannel.end())
-                throw std::runtime_error("Missing pwmchip path for channel");
+bool PwmController::SysfsPwm::isOpen() const
+{
+    return m_IsOpen;
+}
 
-            // dla pwm-pio zwykle kanał w danym chipie będzie 0
-            pi5Pwm_.emplace(ch, SysfsPwm(it->second, 0, periodNs));
-        }
-    }
+bool PwmController::SysfsPwm::setPeriodNs(uint64_t periodNs)
+{
+    return writeFile(m_PwmPath + "/period", std::to_string(periodNs));
+}
 
-    void shutdownAll()
-    {
-        for (Channel ch : allChannels())
-        {
-            if (board_ == Board::RPi4)
-            {
-                softPwmWrite(bcmPin(ch), 0);
-            }
-            else if (board_ == Board::RPi5)
-            {
-                auto it = pi5Pwm_.find(ch);
-                if (it != pi5Pwm_.end())
-                    it->second.disable();
-            }
-        }
-    }
+bool PwmController::SysfsPwm::setDutyNs(uint64_t dutyNs)
+{
+    return writeFile(m_PwmPath + "/duty_cycle", std::to_string(dutyNs));
+}
 
-    static std::array<Channel, 4> allChannels()
-    {
-        return { Channel::P1, Channel::P2, Channel::FAN, Channel::MOT };
-    }
+bool PwmController::SysfsPwm::enable()
+{
+    return writeFile(m_PwmPath + "/enable", "1");
+}
 
-    Board board_ = Board::Unknown;
-    Pi5PwmConfig pi5Config_;
-    std::map<Channel, SysfsPwm> pi5Pwm_;
-};
+bool PwmController::SysfsPwm::disable()
+{
+    return writeFile(m_PwmPath + "/enable", "0");
+}
+
+bool PwmController::SysfsPwm::exportChannel()
+{
+    return writeFile(m_ChipPath + "/export", std::to_string(m_PwmIndex));
+}
+
+bool PwmController::SysfsPwm::unexportChannel()
+{
+    return writeFile(m_ChipPath + "/unexport", std::to_string(m_PwmIndex));
+}
+
+bool PwmController::SysfsPwm::writeFile(const std::string &path, const std::string &value) const
+{
+    std::ofstream out(path);
+    if (!out)
+        return false;
+
+    out << value;
+    return static_cast<bool>(out);
+}
+
+bool PwmController::SysfsPwm::pathExists(const std::string &path) const
+{
+    struct stat st {};
+    return stat(path.c_str(), &st) == 0;
+}

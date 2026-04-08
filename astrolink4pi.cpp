@@ -98,7 +98,7 @@ void ISNewNumber(const char *dev, const char *name, double values[], char *names
 	astroLink4Pi->ISNewNumber(dev, name, values, names, num);
 }
 
-AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
+AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this), m_PwmController(m_BoardIO)
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
@@ -128,11 +128,34 @@ bool AstroLink4Pi::Connect()
 	}
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi %d, RPi version %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
 
-    DEBUGF(INDI::Logger::DBG_SESSION,
-           "Connected on %s (%s), kernel %s",
-           m_SystemInfo.getHostname().c_str(),
-           m_SystemInfo.getModel().c_str(),
-           m_SystemInfo.getKernelVersion().c_str());	
+	PwmController::Config pwmConfig;
+	pwmConfig.defaultFrequencyHz = 5000;
+	pwmConfig.softPwmRange = 100;
+
+	// RPi5: pwm-pio -> pwmchipX
+	pwmConfig.pi5Channels[PwmController::Channel::P1] = {"/sys/class/pwm/pwmchip0", 0};	 // GPIO19
+	pwmConfig.pi5Channels[PwmController::Channel::P2] = {"/sys/class/pwm/pwmchip1", 0};	 // GPIO26
+	pwmConfig.pi5Channels[PwmController::Channel::FAN] = {"/sys/class/pwm/pwmchip2", 0}; // GPIO13
+	pwmConfig.pi5Channels[PwmController::Channel::MOT] = {"/sys/class/pwm/pwmchip3", 0}; // GPIO20
+
+	if (!m_PwmController.initialize(pwmConfig))
+		return false;
+
+	m_PwmController.setDutyPercent(PwmController::Channel::P1, 0.0);
+	m_PwmController.setDutyPercent(PwmController::Channel::P2, 0.0);
+	m_PwmController.setDutyPercent(PwmController::Channel::FAN, 0.0);
+	m_PwmController.setDutyPercent(PwmController::Channel::MOT, 0.0);
+
+	m_PwmController.enable(PwmController::Channel::P1);
+	m_PwmController.enable(PwmController::Channel::P2);
+	m_PwmController.enable(PwmController::Channel::FAN);
+	m_PwmController.enable(PwmController::Channel::MOT);
+
+	DEBUGF(INDI::Logger::DBG_SESSION,
+		   "Connected on %s (%s), kernel %s",
+		   m_SystemInfo.getHostname().c_str(),
+		   m_SystemInfo.getModel().c_str(),
+		   m_SystemInfo.getKernelVersion().c_str());
 
 	m_BoardIO.initializePin(DECAY_PIN, OUTPUT, LOW);
 	m_BoardIO.initializePin(EN_PIN, OUTPUT, HIGH); // EN_PIN start as disabled
@@ -202,6 +225,7 @@ bool AstroLink4Pi::Disconnect()
 	// Unlock Relay Labels setting
 	RelayLabelsTP.s = IPS_IDLE;
 	IDSetText(&RelayLabelsTP, nullptr);
+	m_PwmController.shutdown();
 
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi disconnected successfully.");
 
@@ -1795,4 +1819,3 @@ bool AstroLink4Pi::readPower()
 	// 	return false;
 	// }
 }
-
