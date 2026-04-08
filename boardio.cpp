@@ -13,17 +13,17 @@ BoardIO::~BoardIO()
 
 bool BoardIO::connect()
 {
-    // if (isConnected())
-    //     return true;
+    if (isConnected())
+        return true;
 
-    // m_GpioChip = detectBoard();
-    // m_Revision = checkRevision();
+    m_GpioChip = detectBoard();
+    m_Revision = checkRevision();
 
-    // int wiringPiSetup = wiringPiSetupPinType(WPI_PIN_BCM);
-    // if (wiringPiSetup < 0)
-    // {
-    //     return false;
-    // }
+    int wiringPiSetup = wiringPiSetupPinType(WPI_PIN_BCM);
+    if (wiringPiSetup < 0)
+    {
+        return false;
+    }
 
     return true;
 }

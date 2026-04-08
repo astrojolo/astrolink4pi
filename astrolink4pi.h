@@ -26,27 +26,22 @@
 #include <chrono>
 #include <iostream>
 #include <fstream>
-#include <cstdio>
 #include <string>
 #include <algorithm>
 #include <memory>
 #include <cmath>
 #include <ctime>
 #include <thread>
-#include <chrono>
 #include <algorithm>
 #include <cstdint>
 #include <vector>
-
 #include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
 
 #include "config.h"
 
-#include <wiringPi.h>
-//#include <gpiod.hpp>
-//#include <lgpio.h>
+#include "boardio.h"
 
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
@@ -98,6 +93,8 @@ private:
 	virtual bool readOLD();
 	virtual bool readPower();
 	virtual bool readDS18B20();
+
+	BoardIO m_BoardIO;
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
@@ -229,10 +226,6 @@ private:
 	INumber StepperCurrentN[1];
 	INumberVectorProperty StepperCurrentNP;
 
-	int revision = 1;
-	int gpioType = 0;
-	int gpioChip = -1;
-
 
 	int resolution = 1;
 
@@ -275,9 +268,7 @@ private:
 	void fanUpdate();
 	int getMotorPWM(int current);
 	int setDac(int chan, int value);
-	int checkRevision();
 	uint64_t millis();
-	void setPinModeValue(int pin, int mode, int value);
 	std::string runCommand(const char* cmd);
 	std::thread getMotorThread(uint32_t targetPos, int direction, int backlashTicksRemaining);
 
