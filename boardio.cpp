@@ -52,23 +52,23 @@ int BoardIO::gpioChip() const
 void BoardIO::initializePin(int gpio, int mode, int value)
 {
     if(!isConnected()) return;
-	pinMode(pin, mode);
+	pinMode(gpio, mode);
 	if (mode == OUTPUT)
-		digitalWrite(pin, value);
+		digitalWrite(gpio, value);
 	else
-		pullUpDnControl(pin, (value == 0) ? PUD_DOWN : PUD_UP);
+		pullUpDnControl(gpio, (value == 0) ? PUD_DOWN : PUD_UP);
 }
 
 void BoardIO::write(int gpio, int value)
 {
     if(!isConnected()) return;
-    digitalWrite(pin, value);
+    digitalWrite(gpio, value);
 }
 
 int BoardIO::read(int gpio) const
 {
     if(!isConnected()) return -1;
-    return digitalRead(pin);
+    return digitalRead(gpio);
 }
 
 int BoardIO::detectBoard()
