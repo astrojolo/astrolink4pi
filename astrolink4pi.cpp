@@ -120,9 +120,9 @@ const char *AstroLink4Pi::getDefaultName()
 
 bool AstroLink4Pi::Connect()
 {
-	// if (revision < 3)
+	// if (m_BoardIO.revision() < 3)
 	// {
-	// 	DEBUGF(INDI::Logger::DBG_ERROR, "This INDI driver version works only with AstroLink 4 Pi revision 3 and higer. Revision detected %d", revision);
+	// 	DEBUGF(INDI::Logger::DBG_ERROR, "This INDI driver version works only with AstroLink 4 Pi m_BoardIO.revision() 3 and higer. Revision detected %d", revision);
 	// 	return false;
 	// }
 
@@ -135,10 +135,10 @@ bool AstroLink4Pi::Connect()
 	int wiringPiSetup = wiringPiSetupPinType(WPI_PIN_BCM);
 	if (!m_BoardIO.connect())
 	{
-		DEBUGF(INDI::Logger::DBG_ERROR, "Could not access GPIO.");
+		DEBUG(INDI::Logger::DBG_ERROR, "Could not access GPIO.");
 		return false;
 	}
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d, RPi version %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
+	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi m_BoardIO.revision() %d, RPi version %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
 
 	m_BoardIO.initializePin(DECAY_PIN, OUTPUT, LOW);
 	m_BoardIO.initializePin(EN_PIN, OUTPUT, HIGH); // EN_PIN start as disabled
@@ -841,7 +841,7 @@ void AstroLink4Pi::TimerHit()
 
 	if (nextTemperatureRead < timeMillis)
 	{
-		if (revision == 1 || revision == 2)
+		if (m_BoardIO.revision() == 1 || m_BoardIO.revision() == 2)
 		{
 			DSavailable = readDS18B20();
 		}
@@ -1307,7 +1307,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 		m_BoardIO.write(EN_PIN, (getHoldPower() > 0) ? HIGH : LOW);
 		m_BoardIO.write(DECAY_PIN, LOW);
 
-		if (revision == 1)
+		if (m_BoardIO.revision() == 1)
 		{
 			if (getHoldPower() == 5)
 			{
@@ -1325,12 +1325,12 @@ void AstroLink4Pi::setCurrent(bool standby)
 				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
 			}
 		}
-		if (revision > 1 && revision < 4)
+		if (m_BoardIO.revision() > 1 && m_BoardIO.revision() < 4)
 		{
 			// for 0.1 ohm resistor Vref = iref / 2
 			setDac(0, 255 * (getHoldPower() * StepperCurrentN[0].value / 5) / 4096);
 		}
-		if (revision >= 4)
+		if (m_BoardIO.revision() >= 4)
 		{
 			// lgTxPwm(lgpioHandle, MOTOR_PWM, 5000, getMotorPWM(getHoldPower() * StepperCurrentN[0].value / 5), 0, 0);
 		}
@@ -1348,17 +1348,17 @@ void AstroLink4Pi::setCurrent(bool standby)
 	{
 		m_BoardIO.write(EN_PIN, LOW);
 		m_BoardIO.write(DECAY_PIN, HIGH);
-		if (revision == 1)
+		if (m_BoardIO.revision() == 1)
 		{
 			m_BoardIO.write(HOLD_PIN, LOW);
 		}
-		if (revision > 1 && revision < 4)
+		if (m_BoardIO.revision() > 1 && m_BoardIO.revision() < 4)
 		{
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current %0.2f", StepperCurrentN[0].value);
 			// for 0.1 ohm resistor Vref = iref / 2
 			setDac(0, 255 * StepperCurrentN[0].value / 4096);
 		}
-		if (revision >= 4)
+		if (m_BoardIO.revision() >= 4)
 		{
 			// lgTxPwm(lgpioHandle, MOTOR_PWM, 5000, getMotorPWM(StepperCurrentN[0].value), 0, 0);
 		}
@@ -1720,7 +1720,7 @@ bool AstroLink4Pi::readSHT()
 bool AstroLink4Pi::readPower()
 {
 	return false;
-	// if (revision < 4)
+	// if (m_BoardIO.revision() < 4)
 	// 	return false;
 
 	// char writeBuf[3];
