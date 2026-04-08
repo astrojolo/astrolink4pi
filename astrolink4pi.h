@@ -26,18 +26,15 @@
 #include <chrono>
 #include <iostream>
 #include <fstream>
-#include <cstdio>
 #include <string>
 #include <algorithm>
 #include <memory>
 #include <cmath>
 #include <ctime>
 #include <thread>
-#include <chrono>
 #include <algorithm>
 #include <cstdint>
 #include <vector>
-
 #include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -45,8 +42,6 @@
 #include "config.h"
 
 #include "boardio.h"
-//#include <gpiod.hpp>
-//#include <lgpio.h>
 
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
