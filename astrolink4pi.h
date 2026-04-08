@@ -224,9 +224,6 @@ private:
 	INumber PWM2N[1];
 	INumberVectorProperty PWM2NP;
 
-	INumber PWMcycleN[1];
-	INumberVectorProperty PWMcycleNP;
-
 	INumber StepperCurrentN[1];
 	INumberVectorProperty StepperCurrentNP;
 

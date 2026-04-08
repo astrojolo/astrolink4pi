@@ -120,7 +120,6 @@ const char *AstroLink4Pi::getDefaultName()
 
 bool AstroLink4Pi::Connect()
 {
-	int wiringPiSetup = wiringPiSetupPinType(WPI_PIN_BCM);
 	if (!m_BoardIO.connect())
 	{
 		DEBUG(INDI::Logger::DBG_ERROR, "Could not access GPIO.");
@@ -128,8 +127,19 @@ bool AstroLink4Pi::Connect()
 	}
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi %d, RPi version %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
 
+	m_BoardIO.initializePin(DECAY_PIN, OUTPUT, LOW);
+	m_BoardIO.initializePin(EN_PIN, OUTPUT, HIGH); // EN_PIN start as disabled
+	m_BoardIO.initializePin(M0_PIN, OUTPUT, LOW);
+	m_BoardIO.initializePin(M1_PIN, OUTPUT, LOW);
+	m_BoardIO.initializePin(M2_PIN, OUTPUT, LOW);
+	m_BoardIO.initializePin(RST_PIN, OUTPUT, HIGH); // RST_PIN start as wake up
+	m_BoardIO.initializePin(STP_PIN, OUTPUT, LOW);
+	m_BoardIO.initializePin(DIR_PIN, OUTPUT, LOW);
+	m_BoardIO.initializePin(OUT1_PIN, OUTPUT, relayState[0]);
+	m_BoardIO.initializePin(OUT2_PIN, OUTPUT, relayState[1]);
+
 	PwmController::Config pwmConfig;
-	//pwmConfig.defaultFrequencyHz = 5000;
+	// pwmConfig.defaultFrequencyHz = 5000;
 	pwmConfig.softPwmRange = 100;
 
 	if (!m_PwmController.initialize(pwmConfig))
@@ -139,7 +149,7 @@ bool AstroLink4Pi::Connect()
 	}
 
 	m_PwmController.setDutyPercent(PwmController::Channel::P1, 0.0);
-	m_PwmController.setDutyPercent(PwmController::Channel::P2, 50.0);
+	m_PwmController.setDutyPercent(PwmController::Channel::P2, 0.0);
 	m_PwmController.setDutyPercent(PwmController::Channel::FAN, 0.0);
 	m_PwmController.setDutyPercent(PwmController::Channel::MOT, 0.0);
 
@@ -154,21 +164,6 @@ bool AstroLink4Pi::Connect()
 		   m_SystemInfo.getModel().c_str(),
 		   m_SystemInfo.getKernelVersion().c_str());
 
-	m_BoardIO.initializePin(DECAY_PIN, OUTPUT, LOW);
-	m_BoardIO.initializePin(EN_PIN, OUTPUT, HIGH); // EN_PIN start as disabled
-	m_BoardIO.initializePin(M0_PIN, OUTPUT, LOW);
-	m_BoardIO.initializePin(M1_PIN, OUTPUT, LOW);
-	m_BoardIO.initializePin(M2_PIN, OUTPUT, LOW);
-	m_BoardIO.initializePin(RST_PIN, OUTPUT, HIGH); // RST_PIN start as wake up
-	m_BoardIO.initializePin(STP_PIN, OUTPUT, LOW);
-	m_BoardIO.initializePin(DIR_PIN, OUTPUT, LOW);
-	m_BoardIO.initializePin(OUT1_PIN, OUTPUT, relayState[0]);
-	m_BoardIO.initializePin(OUT2_PIN, OUTPUT, relayState[1]);
-	// lgGpioClaimOutput(lgpioHandle, 0, PWM1_PIN, 0);
-	// lgGpioClaimOutput(lgpioHandle, 0, PWM2_PIN, 0);
-	// lgGpioClaimOutput(lgpioHandle, 0, MOTOR_PWM, 0);
-	// lgGpioClaimOutput(lgpioHandle, 0, FAN_PIN, 0);
-
 	// Lock Relay Labels setting
 	RelayLabelsTP.s = IPS_BUSY;
 	IDSetText(&RelayLabelsTP, nullptr);
@@ -178,8 +173,8 @@ bool AstroLink4Pi::Connect()
 
 	IUSaveText(&SysInfoT[SYSI_HARDWARE], m_SystemInfo.getHostname().c_str());
 	IUSaveText(&SysInfoT[SYSI_HOST], m_SystemInfo.getModel().c_str());
-	IUSaveText(&SysInfoT[SYSI_LOCALIP], m_SystemInfo.runCommand("hostname -I|awk -F' '  '{print $1}'|xargs").c_str());
-	IUSaveText(&SysInfoT[SYSI_PUBIP], m_SystemInfo.runCommand("curl -s ifconfig.me").c_str());
+	IUSaveText(&SysInfoT[SYSI_LOCALIP], m_SystemInfo.getLocalIP().c_str());
+	IUSaveText(&SysInfoT[SYSI_PUBIP], m_SystemInfo.getPublicIP().c_str());
 
 	// Update client
 	IDSetText(&SysInfoTP, NULL);
@@ -270,9 +265,6 @@ bool AstroLink4Pi::initProperties()
 	// Step delay setting
 	IUFillNumber(&FocusStepDelayN[0], "FOCUS_STEPDELAY_VALUE", "microseconds", "%0.0f", 200, 20000, 1, 2000);
 	IUFillNumberVector(&FocusStepDelayNP, FocusStepDelayN, 1, getDeviceName(), "FOCUS_STEPDELAY", "Step Delay", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
-
-	IUFillNumber(&PWMcycleN[0], "PWMcycle", "PWM freq. [Hz]", "%0.0f", 10, 1000, 10, 20);
-	IUFillNumberVector(&PWMcycleNP, PWMcycleN, 1, getDeviceName(), "PWMCYCLE", "PWM frequency", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	// Focuser temperature
 	IUFillNumber(&FocusTemperatureN[0], "FOCUS_TEMPERATURE_VALUE", "°C", "%0.2f", -50, 50, 1, 0);
@@ -409,7 +401,6 @@ bool AstroLink4Pi::updateProperties()
 		defineProperty(&Switch2SP);
 		defineProperty(&PWM1NP);
 		defineProperty(&PWM2NP);
-		defineProperty(&PWMcycleNP);
 		defineProperty(&StepperCurrentNP);
 		defineProperty(&FocusTemperatureNP);
 		defineProperty(&TemperatureCoefNP);
@@ -436,7 +427,6 @@ bool AstroLink4Pi::updateProperties()
 		deleteProperty(Switch2SP.name);
 		deleteProperty(PWM1NP.name);
 		deleteProperty(PWM2NP.name);
-		deleteProperty(PWMcycleNP.name);
 		deleteProperty(StepperCurrentNP.name);
 		deleteProperty(PowerReadingsNP.name);
 		deleteProperty(FanPowerNP.name);
@@ -518,7 +508,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&PWM1NP, values, names, n);
 			PWM1NP.s = IPS_OK;
 			IDSetNumber(&PWM1NP, nullptr);
-			// lgTxPwm(lgpioHandle, PWM1_PIN, PWMcycleN[0].value, PWM1N[0].value, 0, 0);
+			m_PwmController.setDutyPercent(PwmController::Channel::P2, PWM1N[0].value);
 			pwmState[0] = PWM1N[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 1 set to %0.0f", PWM1N[0].value);
 			return true;
@@ -529,7 +519,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&PWM2NP, values, names, n);
 			PWM2NP.s = IPS_OK;
 			IDSetNumber(&PWM2NP, nullptr);
-			// lgTxPwm(lgpioHandle, PWM2_PIN, PWMcycleN[0].value, PWM2N[0].value, 0, 0);
+			m_PwmController.setDutyPercent(PwmController::Channel::P2, PWM2N[0].value);
 			pwmState[1] = PWM2N[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 2 set to %0.0f", PWM2N[0].value);
 			return true;
@@ -542,18 +532,6 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&SQMOffsetNP, values, names, n);
 			SQMOffsetNP.s = IPS_OK;
 			IDSetNumber(&SQMOffsetNP, nullptr);
-			return true;
-		}
-
-		// handle PWMcycle
-		if (!strcmp(name, PWMcycleNP.name))
-		{
-			IUUpdateNumber(&PWMcycleNP, values, names, n);
-			PWMcycleNP.s = IPS_OK;
-			IDSetNumber(&PWMcycleNP, nullptr);
-			// lgTxPwm(lgpioHandle, PWM1_PIN, PWMcycleN[0].value, PWM1N[0].value, 0, 0);
-			// lgTxPwm(lgpioHandle, PWM2_PIN, PWMcycleN[0].value, PWM2N[0].value, 0, 0);
-			DEBUGF(INDI::Logger::DBG_SESSION, "PWM frequency set to %0.0f Hz", PWMcycleN[0].value);
 			return true;
 		}
 
@@ -1336,7 +1314,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 		}
 		if (m_BoardIO.revision() >= 4)
 		{
-			// lgTxPwm(lgpioHandle, MOTOR_PWM, 5000, getMotorPWM(getHoldPower() * StepperCurrentN[0].value / 5), 0, 0);
+			m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(getHoldPower() * StepperCurrentN[0].value / 5));
 		}
 
 		if (getHoldPower() > 0)
@@ -1364,7 +1342,7 @@ void AstroLink4Pi::setCurrent(bool standby)
 		}
 		if (m_BoardIO.revision() >= 4)
 		{
-			// lgTxPwm(lgpioHandle, MOTOR_PWM, 5000, getMotorPWM(StepperCurrentN[0].value), 0, 0);
+			m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(StepperCurrentN[0].value));
 		}
 	}
 }
@@ -1477,32 +1455,22 @@ int AstroLink4Pi::setDac(int chan, int value)
 void AstroLink4Pi::fanUpdate()
 {
 	FanPowerNP.s = IPS_BUSY;
-	// int fanPinAvailable = lgGpioClaimOutput(lgpioHandle, 0, FAN_PIN, 0);
-	int fanPinAvailable = 0;
-	if (fanPinAvailable == 0)
+	int temp = std::stoi(SysInfoT[SYSI_CPUTEMP].text);
+	int cycle = 0;
+	double fanPwr = 33.0;
+	if (temp > FAN_66_TEMP)
 	{
-		int temp = std::stoi(SysInfoT[SYSI_CPUTEMP].text);
-		int cycle = 0;
-		double fanPwr = 33.0;
-		if (temp > FAN_66_TEMP)
-		{
-			cycle = 50;
-			fanPwr = 66.0;
-		}
-		if (temp > FANMAX_TEMP)
-		{
-			cycle = 100;
-			fanPwr = 100.0;
-		}
-		// lgTxPwm(lgpioHandle, FAN_PIN, 100, cycle, 0, 0);
-		FanPowerN[0].value = fanPwr;
-		FanPowerNP.s = IPS_OK;
+		cycle = 50;
+		fanPwr = 66.0;
 	}
-	else
+	if (temp > FANMAX_TEMP)
 	{
-		FanPowerNP.s = IPS_ALERT;
-		DEBUGF(INDI::Logger::DBG_SESSION, "GPIO fan pin not available %d\n", fanPinAvailable);
+		cycle = 100;
+		fanPwr = 100.0;
 	}
+	m_PwmController.setDutyPercent(PwmController::Channel::FAN, cycle);
+	FanPowerN[0].value = fanPwr;
+	FanPowerNP.s = IPS_OK;
 	IDSetNumber(&FanPowerNP, nullptr);
 }
 

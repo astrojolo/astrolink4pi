@@ -16,6 +16,8 @@ public:
     std::string getUptimeString() const;
     std::string getCpuTemp() const;
     std::string getLoad() const;
+    std::string getLocalIP() const;
+    std::string getPublicIP() const;
 
     uint64_t millis() const;
 
