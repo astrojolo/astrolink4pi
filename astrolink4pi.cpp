@@ -22,6 +22,7 @@
 auto astroLink4Pi = std::make_unique<AstroLink4Pi>();
 
 static constexpr uint8_t ACS_TYPE = 0; // 0 - 20A, 1 - 5A
+static constexpr uint8_t ADS_ADDR = 0x48;
 
 static constexpr int MAX_RESOLUTION = 32;							 // the highest resolution supported is 1/32 step
 static constexpr int TEMPERATURE_UPDATE_TIMEOUT = (5 * 1000);		 // 5 sec
@@ -98,12 +99,7 @@ void ISNewNumber(const char *dev, const char *name, double values[], char *names
 	astroLink4Pi->ISNewNumber(dev, name, values, names, num);
 }
 
-AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
-, m_PwmController(m_BoardIO)
-, pow_I2CBus(0x48)
-, sht_I2CBus(0x44)
-, mlx_I2CBus(0x5A)
-, tls_I2CBus(0x29)
+AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this), m_PwmController(m_BoardIO), m_PowerMonitor(ADS_ADDR, ACS_TYPE)
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
@@ -163,13 +159,11 @@ bool AstroLink4Pi::Connect()
 	m_PwmController.enable(PwmController::Channel::FAN);
 	m_PwmController.enable(PwmController::Channel::MOT);
 
-	pow_I2CBus.open();
-	sht_I2CBus.open();
-	mlx_I2CBus.open();
-	tls_I2CBus.open();	
-
-	
-	DEBUGF(INDI::Logger::DBG_SESSION, "I2C open: ADS %d, SHT %d, MLX %d, TLS %d\n", pow_I2CBus.isOpen(), sht_I2CBus.isOpen(), mlx_I2CBus.isOpen(), tls_I2CBus.isOpen());
+	if (!m_PowerMonitor.open(1))
+	{
+		DEBUG(INDI::Logger::DBG_ERROR, "Could not initialize power monitor.");
+		return false;
+	}
 
 	DEBUGF(INDI::Logger::DBG_SESSION,
 		   "Connected on %s (%s), kernel %s",
@@ -231,6 +225,7 @@ bool AstroLink4Pi::Disconnect()
 	RelayLabelsTP.s = IPS_IDLE;
 	IDSetText(&RelayLabelsTP, nullptr);
 	m_PwmController.shutdown();
+	m_PowerMonitor.close();
 
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi disconnected successfully.");
 
@@ -1689,7 +1684,30 @@ bool AstroLink4Pi::readSHT()
 
 bool AstroLink4Pi::readPower()
 {
-	return false;
+	m_PowerMonitor.update();
+
+	switch (m_PowerMonitor.getStatus)
+	{
+	case PowerMonitor::Status::Ok:
+		PowerReadingsNP.s = IPS_OK;
+		break;
+	case PowerMonitor::Status::Busy:
+		PowerReadingsNP.s = IPS_BUSY;
+		break;
+	case PowerMonitor::Status::Alert:
+		PowerReadingsNP.s = IPS_ALERT;
+		break;
+	default:
+		PowerReadingsNP.s = IPS_ALERT;
+	}
+
+	PowerReadingsN[POW_VIN].value = m_PowerMonitor.getReadings.vin;
+	PowerReadingsN[POW_VREG].value = m_PowerMonitor.getReadings.vreg;
+	PowerReadingsN[POW_ITOT].value = m_PowerMonitor.getReadings.itot;
+	PowerReadingsN[POW_PTOT].value = m_PowerMonitor.getReadings.ptot;
+	PowerReadingsN[POW_AH].value = m_PowerMonitor.getReadings.ah;
+	PowerReadingsN[POW_WH].value = m_PowerMonitor.getReadings.wh;
+
 	// if (m_BoardIO.revision() < 4)
 	// 	return false;
 
@@ -1795,4 +1813,5 @@ bool AstroLink4Pi::readPower()
 	// 	DEBUG(INDI::Logger::DBG_DEBUG, "No power sensor found.");
 	// 	return false;
 	// }
+	// return false;
 }

@@ -40,17 +40,6 @@
 #include <unistd.h>
 
 
-#include <linux/i2c-dev.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <fcntl.h>
-
-#include <cerrno>
-#include <cstring>
-#include <sstream>
-#include <iomanip>
-#include <vector>
-
 #include "config.h"
 
 #include "boardio.h"
@@ -111,12 +100,9 @@ private:
 	virtual bool readDS18B20();
 
 	BoardIO m_BoardIO;
-	I2CBus pow_I2CBus;
-	I2CBus sht_I2CBus;
-	I2CBus mlx_I2CBus;
-	I2CBus tls_I2CBus;
 	PwmController m_PwmController;
 	SystemInfoService m_SystemInfo;
+	PowerMonitor m_PowerMonitor;
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;

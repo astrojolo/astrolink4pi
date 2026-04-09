@@ -1,87 +1,193 @@
 #include "powermonitor.h"
-#include "boardio.h"
 
-#include <algorithm>
-
-PowerMonitor::PowerMonitor(BoardIO &boardIO)
-    : m_BoardIO(boardIO)
+PowerMonitor::PowerMonitor(uint8_t deviceAddress, int acsType)
+    : bus_(deviceAddress),
+      powerIndex_(0),
+      acsType_(acsType),
+      energyAs_(0.0f),
+      energyWs_(0.0f),
+      status_(Status::Busy)
 {
 }
 
-PowerMonitor::~PowerMonitor() = default;
-
-void PowerMonitor::setCalibration(const Calibration &calibration)
+bool PowerMonitor::open(int busNumber)
 {
-    m_Calibration = calibration;
+    if (!bus_.open(busNumber))
+    {
+        setError(bus_.getLastError());
+        status_ = Status::Alert;
+        return false;
+    }
+
+    lastError_.clear();
+    return true;
 }
 
-PowerMonitor::Calibration PowerMonitor::calibration() const
+bool PowerMonitor::isOpen() const
 {
-    return m_Calibration;
+    return bus_.isOpen();
 }
 
-PowerMonitor::PowerReadout PowerMonitor::readPower(int voltageChannel, int currentChannel) const
+void PowerMonitor::close()
 {
-    PowerReadout result;
+    bus_.close();
+}
 
-    const int rawVoltage = readAdc(voltageChannel);
-    const int rawCurrent = readAdc(currentChannel);
+bool PowerMonitor::update()
+{
+    if (!bus_.isOpen())
+    {
+        setError("I2C bus is not open");
+        status_ = Status::Alert;
+        return false;
+    }
 
-    if (rawVoltage < 0 || rawCurrent < 0)
-        return result;
+    bool result = false;
 
-    result.rawVoltage = rawVoltage;
-    result.rawCurrent = rawCurrent;
+    if ((powerIndex_ % 2) == 0)
+    {
+        // Trigger conversion
+        uint8_t configMsb = 0b11000011;
 
-    result.sensedVoltage = adcToVoltage(rawVoltage);
-    result.inputVoltage = calculateInputVoltage(result.sensedVoltage);
+        switch (powerIndex_)
+        {
+            case 0: // Vin
+                configMsb = 0b11000011;
+                break;
+            case 2: // Vreg
+                configMsb = 0b11010011;
+                break;
+            case 4: // Itot
+                configMsb = 0b10110011;
+                break;
+            default:
+                configMsb = 0b11000011;
+                break;
+        }
 
-    const double currentSenseVoltage = adcToVoltage(rawCurrent);
-    result.current = calculateCurrent(currentSenseVoltage);
+        result = triggerConversion(configMsb);
+        status_ = result ? Status::Busy : Status::Alert;
+    }
+    else
+    {
+        // Read result
+        int16_t val = 0;
+        result = readConversionRegister(val);
 
-    if (result.current < 0.0)
-        result.current = 0.0;
+        if (result)
+        {
+            switch (powerIndex_)
+            {
+                case 1:
+                    readings_.vin = static_cast<float>(val) / 32768.0f * 4.096f * 6.6f;
+                    break;
 
-    result.power = result.inputVoltage * result.current;
-    result.valid = true;
+                case 3:
+                    readings_.vreg = static_cast<float>(val) / 32768.0f * 4.096f * 6.6f;
+                    break;
+
+                case 5:
+                    readings_.itot = static_cast<float>(val) / 32768.0f * 4.096f *
+                                     ((acsType_ == 0) ? 20.0f : 10.8f);
+                    break;
+
+                default:
+                    break;
+            }
+
+            readings_.ptot = readings_.vin * readings_.itot;
+
+            // analogicznie do Twojego kodu: krok 0.4 s
+            energyAs_ += readings_.itot * 0.4f;
+            energyWs_ += readings_.vin * readings_.itot * 0.4f;
+
+            readings_.ah = energyAs_ / 3600.0f;
+            readings_.wh = energyWs_ / 3600.0f;
+
+            status_ = Status::Ok;
+        }
+        else
+        {
+            status_ = Status::Alert;
+        }
+    }
+
+    powerIndex_++;
+    if (powerIndex_ > 5)
+        powerIndex_ = 0;
 
     return result;
 }
 
-int PowerMonitor::readAdc(int channel) const
+const PowerMonitor::Readings& PowerMonitor::getReadings() const
 {
-    // To jest celowo tylko wzorzec.
-    // Tu podmienisz logikę na swój realny odczyt ADC:
-    // - I2C ADC
-    // - SPI ADC
-    // - inny układ pomiarowy
-
-    if (!m_BoardIO.isConnected())
-        return -1;
-
-    // Przykład-szkielet:
-    // return m_BoardIO.readAdc(channel);
-
-    (void)channel;
-    return -1;
+    return readings_;
 }
 
-double PowerMonitor::adcToVoltage(int rawAdc) const
+PowerMonitor::Status PowerMonitor::getStatus() const
 {
-    if (m_Calibration.adcMaxValue <= 0)
-        return 0.0;
-
-    return (static_cast<double>(rawAdc) / static_cast<double>(m_Calibration.adcMaxValue))
-           * m_Calibration.adcReferenceVoltage;
+    return status_;
 }
 
-double PowerMonitor::calculateInputVoltage(double sensedVoltage) const
+std::string PowerMonitor::getLastError() const
 {
-    return sensedVoltage * m_Calibration.voltageDividerRatio;
+    return lastError_;
 }
 
-double PowerMonitor::calculateCurrent(double sensedVoltage) const
+void PowerMonitor::resetEnergy()
 {
-    const double correctedVoltage = sensedVoltage - m_Calibration.currentOffsetVoltage;
-    return correctedVoltage * m_Calibration.currentScaleAperV;
+    energyAs_ = 0.0f;
+    energyWs_ = 0.0f;
+    readings_.ah = 0.0f;
+    readings_.wh = 0.0f;
+}
+
+int PowerMonitor::getPowerIndex() const
+{
+    return powerIndex_;
+}
+
+bool PowerMonitor::triggerConversion(uint8_t configMsb)
+{
+    // Rejestr konfiguracyjny = 0x01
+    // LSB zgodnie z Twoim kodem = 0b00100011
+    char config[2];
+    config[0] = static_cast<char>(configMsb);
+    config[1] = static_cast<char>(0b00100011);
+
+    const int written = bus_.writeRegister(0x01, config, 2);
+    if (written != 2)
+    {
+        setError("Cannot write configuration to power sensor: " + bus_.getLastError());
+        return false;
+    }
+
+    lastError_.clear();
+    return true;
+}
+
+bool PowerMonitor::readConversionRegister(int16_t& value)
+{
+    char readBuf[2] = {0, 0};
+
+    // Rejestr konwersji = 0x00
+    const int read = bus_.readRegister(0x00, readBuf, 2);
+    if (read != 2)
+    {
+        setError("Cannot read conversion register from power sensor: " + bus_.getLastError());
+        return false;
+    }
+
+    value = static_cast<int16_t>(
+        (static_cast<uint16_t>(static_cast<unsigned char>(readBuf[0])) << 8) |
+         static_cast<uint16_t>(static_cast<unsigned char>(readBuf[1]))
+    );
+
+    lastError_.clear();
+    return true;
+}
+
+void PowerMonitor::setError(const std::string& error)
+{
+    lastError_ = error;
 }

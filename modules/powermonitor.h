@@ -1,68 +1,80 @@
-#ifndef POWERMONITOR_H
-#define POWERMONITOR_H
+#pragma once
 
+#include "i2cbus.h"
 #include <cstdint>
-
-class BoardIO;
+#include <string>
 
 class PowerMonitor
 {
 public:
-    struct Calibration
+    enum class Status
     {
-        // ADC reference voltage
-        double adcReferenceVoltage = 3.3;
-
-        // ADC full scale, np. 1023 dla 10-bit, 4095 dla 12-bit
-        int adcMaxValue = 1023;
-
-        // Dzielnik napięcia:
-        // Vout = Vin * (R2 / (R1 + R2))
-        // więc:
-        // Vin = Vout * voltageDividerRatio
-        double voltageDividerRatio = 1.0;
-
-        // Czułość toru pomiaru prądu:
-        // np. ile amperów przypada na 1 V na wyjściu pomiarowym
-        double currentScaleAperV = 1.0;
-
-        // Offset napięcia dla pomiaru prądu, np. 1.65V
-        double currentOffsetVoltage = 0.0;
+        Ok,
+        Busy,
+        Alert
     };
 
-    struct PowerReadout
+    struct Readings
     {
-        int rawVoltage = 0;
-        int rawCurrent = 0;
-
-        double sensedVoltage = 0.0;
-        double inputVoltage = 0.0;
-        double current = 0.0;
-        double power = 0.0;
-
-        bool valid = false;
+        float vin = 0.0f;
+        float vreg = 0.0f;
+        float itot = 0.0f;
+        float ptot = 0.0f;
+        float ah = 0.0f;
+        float wh = 0.0f;
     };
 
-    explicit PowerMonitor(BoardIO &boardIO);
-    ~PowerMonitor();
+    // acsType:
+    // 0 -> współczynnik 20
+    // 1 -> współczynnik 10.8
+    explicit PowerMonitor(uint8_t deviceAddress = 0x48, int acsType = 0);
 
-    void setCalibration(const Calibration &calibration);
-    Calibration calibration() const;
+    bool open(int busNumber = 1);
+    bool isOpen() const;
+    void close();
 
-    // Przykładowy odczyt z dwóch kanałów ADC:
-    // voltageChannel - kanał ADC dla napięcia
-    // currentChannel - kanał ADC dla prądu
-    PowerReadout readPower(int voltageChannel, int currentChannel) const;
+    // Jedno wywołanie wykonuje jeden krok sekwencji:
+    // 0 trigger Vin
+    // 1 read Vin
+    // 2 trigger Vreg
+    // 3 read Vreg
+    // 4 trigger Itot
+    // 5 read Itot
+    bool update();
+
+    const Readings& getReadings() const;
+    Status getStatus() const;
+    std::string getLastError() const;
+
+    void resetEnergy();
+    int getPowerIndex() const;
 
 private:
-    int readAdc(int channel) const;
-    double adcToVoltage(int rawAdc) const;
-    double calculateInputVoltage(double sensedVoltage) const;
-    double calculateCurrent(double sensedVoltage) const;
+    I2CBus bus_;
+    int powerIndex_;
+    int acsType_;
 
-private:
-    BoardIO &m_BoardIO;
-    Calibration m_Calibration;
+    float energyAs_;
+    float energyWs_;
+
+    Readings readings_;
+    Status status_;
+    std::string lastError_;
+
+    bool triggerConversion(uint8_t configMsb);
+    bool readConversionRegister(int16_t& value);
+    void setError(const std::string& error);
 };
 
-#endif
+	// 	/*
+	// 	powerIndex 0-1 Vin WR, 2-3 Vreg WR, 4-5 Itot WR
+
+	// 	15 		- 1 	start single conv
+	// 	14:12	- 100 	Vin, 101 Vreg, 110 Itot, 111 Iref, 011 Ireal
+	// 	11:9  	- 001	+-4.096V
+	// 	8		- 1 single
+
+	// 	7:5		- 010 32SPS, 011 64SPS, 001 16SPS
+	// 	4:2		- 000 comparator
+	// 	1:0		- 11 comparator disable
+	// 	*/
