@@ -169,7 +169,7 @@ bool AstroLink4Pi::Connect()
 	// tls_I2CBus.open();	
 
 
-    int fd_ = ::open(("/dev/i2c-1", O_RDWR);
+    int fd_ = ::open("/dev/i2c-1", O_RDWR);
     if (fd_ < 0)
     {
         DEBUGF(INDI::Logger::DBG_SESSION, "Nie można otworzyć " + std::string(std::strerror(errno)));
@@ -182,13 +182,10 @@ bool AstroLink4Pi::Connect()
             << std::hex << std::uppercase << static_cast<int>(0x48)
             << ": " << std::strerror(errno);
 
-        DEBUGF(INDI::Logger::DBG_SESSION, oss.c_str());
+        DEBUGF(INDI::Logger::DBG_SESSION, oss);
         ::close(fd_);
         fd_ = -1;
     }
-
-    lastError_.clear();
-    return true;
 
 	DEBUGF(INDI::Logger::DBG_SESSION,
 		   "Connected on %s (%s), kernel %s",
