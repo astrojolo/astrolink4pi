@@ -27,7 +27,7 @@ bool I2CBus::openBus()
     m_Fd = ::open(m_DevicePath.c_str(), O_RDWR);
     if (m_Fd < 0)
     {
-        DEBUGF(INDI::Logger::DBG_ERROR, "I2C: cannot open %s: %s",
+        DEBUGFDEVICE("AstroLink 4 Pi I2C", INDI::Logger::DBG_ERROR, "I2C: cannot open %s: %s",
                m_DevicePath.c_str(), std::strerror(errno));
         return false;
     }
@@ -62,7 +62,7 @@ bool I2CBus::selectSlave()
 
     if (::ioctl(m_Fd, I2C_SLAVE, m_Address) < 0)
     {
-        DEBUGF(INDI::Logger::DBG_ERROR, "I2C: ioctl(I2C_SLAVE, 0x%02X) failed: %s",
+        DEBUGFDEVICE("AstroLink 4 Pi I2C", INDI::Logger::DBG_ERROR, "I2C: ioctl(I2C_SLAVE, 0x%02X) failed: %s",
                m_Address, std::strerror(errno));
         return false;
     }
@@ -78,7 +78,7 @@ bool I2CBus::writeBytes(const uint8_t *data, size_t len)
     const ssize_t written = ::write(m_Fd, data, len);
     if (written != static_cast<ssize_t>(len))
     {
-        DEBUGF(INDI::Logger::DBG_ERROR, "I2C: write failed: %s", std::strerror(errno));
+        DEBUGFDEVICE("AstroLink 4 Pi I2C", INDI::Logger::DBG_ERROR, "I2C: write failed: %s", std::strerror(errno));
         return false;
     }
 
@@ -93,7 +93,7 @@ bool I2CBus::readBytes(uint8_t *data, size_t len)
     const ssize_t rd = ::read(m_Fd, data, len);
     if (rd != static_cast<ssize_t>(len))
     {
-        DEBUGF(INDI::Logger::DBG_ERROR, "I2C: read failed: %s", std::strerror(errno));
+        DEBUGFDEVICE("AstroLink 4 Pi I2C", INDI::Logger::DBG_ERROR, "I2C: read failed: %s", std::strerror(errno));
         return false;
     }
 
