@@ -163,24 +163,13 @@ bool AstroLink4Pi::Connect()
 	m_PwmController.enable(PwmController::Channel::FAN);
 	m_PwmController.enable(PwmController::Channel::MOT);
 
-	// pow_I2CBus.open();
-	// sht_I2CBus.open();
-	// mlx_I2CBus.open();
-	// tls_I2CBus.open();	
+	pow_I2CBus.open();
+	sht_I2CBus.open();
+	mlx_I2CBus.open();
+	tls_I2CBus.open();	
 
-
-    int fd_ = ::open("/dev/i2c-1", O_RDWR);
-    if (fd_ < 0)
-    {
-        DEBUG(INDI::Logger::DBG_SESSION, std::strerror(errno));
-    }
-
-    if (::ioctl(fd_, I2C_SLAVE, 0x48) < 0)
-    {
-        DEBUG(INDI::Logger::DBG_SESSION, std::strerror(errno));
-        ::close(fd_);
-        fd_ = -1;
-    }
+	
+	DEBUGF(INDI::Logger::DBG_SESSION, "I2C open: ADS %d, SHT %d, MLX %d, TLS %d\n", pow_I2CBus.isOpen(), sht_I2CBus.isOpen(), mlx_I2CBus.isOpen(), tls_I2CBus.isOpen());
 
 	DEBUGF(INDI::Logger::DBG_SESSION,
 		   "Connected on %s (%s), kernel %s",
