@@ -1701,7 +1701,7 @@ bool AstroLink4Pi::readPower()
 		PowerReadingsNP.s = IPS_ALERT;
 	}
 
-	// const auto& r = m_PowerMonitor.getReadings();
+	const auto& r = m_PowerMonitor.getReadings();
 
 	// PowerReadingsN[POW_VIN].value = r.vin;
 	// PowerReadingsN[POW_VREG].value = r.vreg;
