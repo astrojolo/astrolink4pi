@@ -1707,7 +1707,7 @@ bool AstroLink4Pi::readPower()
 	PowerReadingsN[POW_VREG].value = r.vreg;
 	PowerReadingsN[POW_ITOT].value = r.itot;
 	PowerReadingsN[POW_PTOT].value = r.ptot;
-	// PowerReadingsN[POW_AH].value = r.ah;
+	PowerReadingsN[POW_AH].value = r.ah;
 	// PowerReadingsN[POW_WH].value = r.wh;
 
 	return status;
