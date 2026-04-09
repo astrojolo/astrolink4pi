@@ -1,6 +1,7 @@
 #include "mlxsensor.h"
 
 #include <array>
+#include <unistd.h>
 
 namespace
 {
