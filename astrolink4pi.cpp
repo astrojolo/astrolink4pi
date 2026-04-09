@@ -1686,20 +1686,20 @@ bool AstroLink4Pi::readPower()
 {
 	bool status = m_PowerMonitor.update();
 
-	// switch (m_PowerMonitor.getStatus())
-	// {
-	// case PowerMonitor::Status::Ok:
-	// 	PowerReadingsNP.s = IPS_OK;
-	// 	break;
-	// case PowerMonitor::Status::Busy:
-	// 	PowerReadingsNP.s = IPS_BUSY;
-	// 	break;
-	// case PowerMonitor::Status::Alert:
-	// 	PowerReadingsNP.s = IPS_ALERT;
-	// 	break;
-	// default:
-	// 	PowerReadingsNP.s = IPS_ALERT;
-	// }
+	switch (m_PowerMonitor.getStatus())
+	{
+	case PowerMonitor::Status::Ok:
+		PowerReadingsNP.s = IPS_OK;
+		break;
+	case PowerMonitor::Status::Busy:
+		PowerReadingsNP.s = IPS_BUSY;
+		break;
+	case PowerMonitor::Status::Alert:
+		PowerReadingsNP.s = IPS_ALERT;
+		break;
+	default:
+		PowerReadingsNP.s = IPS_ALERT;
+	}
 
 	// const auto& r = m_PowerMonitor.getReadings();
 
