@@ -11,7 +11,7 @@ public:
 
     struct Config
     {
-        uint8_t controlValue = 0x01;      // low gain, 100 ms
+        uint8_t controlValue = 0x01;
         int integrationTimeMs = 200;
         double sqmOffset = 0.0;
         double filterCoeff = -1.2;
@@ -33,7 +33,9 @@ public:
     void close();
     bool isOpen() const;
 
-    bool initialize(const Config &config = Config{});
+    bool initialize();
+    bool initialize(const Config &config);
+
     Readout read() const;
     std::string lastError() const;
 

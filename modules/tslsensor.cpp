@@ -55,6 +55,11 @@ std::string TSLSensor::lastError() const
     return m_Bus.getLastError();
 }
 
+bool TSLSensor::initialize()
+{
+    return initialize(Config{});
+}
+
 bool TSLSensor::initialize(const Config &config)
 {
     if (!m_Bus.isOpen())

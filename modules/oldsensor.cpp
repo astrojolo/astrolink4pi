@@ -3,6 +3,11 @@
 #include <array>
 #include <cmath>
 
+OldSensor::OldSensor()
+    : OldSensor(Config{})
+{
+}
+
 OldSensor::OldSensor(const Config &config)
     : m_Bus(config.deviceAddress)
     , m_Config(config)

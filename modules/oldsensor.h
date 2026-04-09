@@ -23,7 +23,8 @@ public:
         bool valid = false;
     };
 
-    explicit OldSensor(const Config &config = Config{});
+    OldSensor();
+    explicit OldSensor(const Config &config);
     ~OldSensor();
 
     bool open(int busNumber = 1);
