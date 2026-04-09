@@ -164,11 +164,14 @@ bool AstroLink4Pi::Connect()
 	m_PwmController.enable(PwmController::Channel::MOT);
 
 	pow_I2CBus.open();
-	sht_I2CBus.open();
-	mlx_I2CBus.open();
-	tls_I2CBus.open();	
+	// sht_I2CBus.open();
+	// mlx_I2CBus.open();
+	// tls_I2CBus.open();	
 
-	DEBUGF(INDI::Logger::DBG_SESSION, "I2C open: ADS %d, SHT %d, MLX %d, TLS %d\n", pow_I2CBus.isOpen(), sht_I2CBus.isOpen(), mlx_I2CBus.isOpen(), tls_I2CBus.isOpen());
+	if(!pow_I2CBus.isOpen())
+	{
+		DEBUGF(INDI::Logger::DBG_SESSION, "POW I2C failed due to %s \n", pow_I2CBus.getLastError());
+	}
 
 	DEBUGF(INDI::Logger::DBG_SESSION,
 		   "Connected on %s (%s), kernel %s",
