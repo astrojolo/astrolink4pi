@@ -1686,7 +1686,7 @@ bool AstroLink4Pi::readPower()
 {
 	m_PowerMonitor.update();
 
-	switch (m_PowerMonitor.getStatus)
+	switch (m_PowerMonitor.getStatus())
 	{
 	case PowerMonitor::Status::Ok:
 		PowerReadingsNP.s = IPS_OK;
