@@ -163,15 +163,32 @@ bool AstroLink4Pi::Connect()
 	m_PwmController.enable(PwmController::Channel::FAN);
 	m_PwmController.enable(PwmController::Channel::MOT);
 
-	pow_I2CBus.open();
+	// pow_I2CBus.open();
 	// sht_I2CBus.open();
 	// mlx_I2CBus.open();
 	// tls_I2CBus.open();	
 
-	if(!pow_I2CBus.isOpen())
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "POW I2C failed due to %s \n", pow_I2CBus.getLastError());
-	}
+
+    int fd_ = ::open(("/dev/i2c-1", O_RDWR);
+    if (fd_ < 0)
+    {
+        DEBUGF(INDI::Logger::DBG_SESSION, "Nie można otworzyć " + devicePath_ + ": " + std::string(std::strerror(errno)));
+    }
+
+    if (::ioctl(fd_, I2C_SLAVE, deviceAddress_) < 0)
+    {
+        std::ostringstream oss;
+        oss << "Nie można ustawić adresu I2C 0x"
+            << std::hex << std::uppercase << static_cast<int>(deviceAddress_)
+            << ": " << std::strerror(errno);
+
+        DEBUGF(INDI::Logger::DBG_SESSION, oss.c_str());
+        ::close(fd_);
+        fd_ = -1;
+    }
+
+    lastError_.clear();
+    return true;
 
 	DEBUGF(INDI::Logger::DBG_SESSION,
 		   "Connected on %s (%s), kernel %s",
