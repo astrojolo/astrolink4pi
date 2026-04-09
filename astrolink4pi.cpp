@@ -1510,138 +1510,139 @@ bool AstroLink4Pi::readSQM(bool triggerOldSensor)
 
 bool AstroLink4Pi::readTSL()
 {
-	int i2cHandle = lgI2cOpen(1, TSL2591_ADDR, 0);
+	return false;
+	// int i2cHandle = lgI2cOpen(1, TSL2591_ADDR, 0);
 
-	if (i2cHandle < 0)
-	{
-		TSLmode = TSLState::NotAvailable;
-		return false;
-	}
+	// if (i2cHandle < 0)
+	// {
+	// 	TSLmode = TSLState::NotAvailable;
+	// 	return false;
+	// }
 
-	if (TSLmode == TSLState::NotAvailable)
-	{
-		int write = lgI2cWriteByte(i2cHandle, 0x80 | 0x20 | 0x12);
-		if (write == 0)
-		{
-			TSLmode = TSLState::Available;
-			available = true;
-		}
-	}
-	else if (TSLmode == TSLState::Available)
-	{
-		int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
-		write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);
+	// if (TSLmode == TSLState::NotAvailable)
+	// {
+	// 	int write = lgI2cWriteByte(i2cHandle, 0x80 | 0x20 | 0x12);
+	// 	if (write == 0)
+	// 	{
+	// 		TSLmode = TSLState::Available;
+	// 		available = true;
+	// 	}
+	// }
+	// else if (TSLmode == TSLState::Available)
+	// {
+	// 	int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
+	// 	write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);
 
-		// Enable device - power down mode on boot
-		write += lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL);
-		write += lgI2cWriteByte(i2cHandle, 0x05 | 0x30);
+	// 	// Enable device - power down mode on boot
+	// 	write += lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL);
+	// 	write += lgI2cWriteByte(i2cHandle, 0x05 | 0x30);
 
-		write += lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
-		write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWEROFF);
+	// 	write += lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
+	// 	write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWEROFF);
 
-		TSLmode = (write == 0) ? TSLState::Initialized : TSLState::NotAvailable;
-		available = (write == 0);
-	}
-	else if (TSLmode == TSLState::Initialized)
-	{
-		if (adcStartTime == 0)
-		{
-			int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
-			write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);
-			adcStartTime = m_SystemInfo.millis();
-			TSLmode = (write == 0) ? TSLState::Initialized : TSLState::NotAvailable;
-			available = (write == 0);
-		}
-		else if (m_SystemInfo.millis() > (adcStartTime + TSL2591_ADC_TIME))
-		{
-			int ir = lgI2cReadWordData(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN1_LOW);
-			int full = lgI2cReadWordData(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN0_LOW);
+	// 	TSLmode = (write == 0) ? TSLState::Initialized : TSLState::NotAvailable;
+	// 	available = (write == 0);
+	// }
+	// else if (TSLmode == TSLState::Initialized)
+	// {
+	// 	if (adcStartTime == 0)
+	// 	{
+	// 		int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
+	// 		write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);
+	// 		adcStartTime = m_SystemInfo.millis();
+	// 		TSLmode = (write == 0) ? TSLState::Initialized : TSLState::NotAvailable;
+	// 		available = (write == 0);
+	// 	}
+	// 	else if (m_SystemInfo.millis() > (adcStartTime + TSL2591_ADC_TIME))
+	// 	{
+	// 		int ir = lgI2cReadWordData(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN1_LOW);
+	// 		int full = lgI2cReadWordData(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN0_LOW);
 
-			int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
-			write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWEROFF);
-			adcStartTime = 0;
+	// 		int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
+	// 		write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWEROFF);
+	// 		adcStartTime = 0;
 
-			int visCumulative = fullCumulative - irCumulative;
-			if (full < ir)
-				return true;
-			if (niter < 5 || (visCumulative < 500 && niter < 150))
-			{
-				niter++;
-				fullCumulative += full;
-				irCumulative += ir;
-			}
-			else
-			{
-				double VIS = (double)visCumulative / (29628.0 * niter);
-				double mpsas = 12.6 - 1.086 * log(VIS) + SQMOffsetN[0].value + FILTER_COEFF;
-				setParameterValue("SQM_READING", mpsas);
+	// 		int visCumulative = fullCumulative - irCumulative;
+	// 		if (full < ir)
+	// 			return true;
+	// 		if (niter < 5 || (visCumulative < 500 && niter < 150))
+	// 		{
+	// 			niter++;
+	// 			fullCumulative += full;
+	// 			irCumulative += ir;
+	// 		}
+	// 		else
+	// 		{
+	// 			double VIS = (double)visCumulative / (29628.0 * niter);
+	// 			double mpsas = 12.6 - 1.086 * log(VIS) + SQMOffsetN[0].value + FILTER_COEFF;
+	// 			setParameterValue("SQM_READING", mpsas);
 
-				niter = 0;
-				irCumulative = fullCumulative = 0;
-			}
+	// 			niter = 0;
+	// 			irCumulative = fullCumulative = 0;
+	// 		}
 
-			TSLmode = (write == 0) ? TSLState::Initialized : TSLState::NotAvailable;
-			available = (write == 0);
-		}
-	}
-	lgI2cClose(i2cHandle);
-	return available;
+	// 		TSLmode = (write == 0) ? TSLState::Initialized : TSLState::NotAvailable;
+	// 		available = (write == 0);
+	// 	}
+	// }
+	// lgI2cClose(i2cHandle);
+	// return available;
 }
 
 bool AstroLink4Pi::readOLD()
 {
-	char i2cData[7];
-	int i2cHandle = lgI2cOpen(1, 0x33, 0);
-	if (i2cHandle >= 0)
-	{
-		int read = lgI2cReadDevice(i2cHandle, i2cData, 7);
-		lgI2cClose(i2cHandle);
-		if (read > 6)
-		{
-			int sqm = i2cData[5] * 256 + i2cData[6];
-			setParameterValue("SQM_READING", 0.01 * sqm);
-			// DEBUGF(INDI::Logger::DBG_SESSION, "SQM read %i %i", i2cData[5], i2cData[6]);
-			return true;
-		}
-	}
+	// char i2cData[7];
+	// int i2cHandle = lgI2cOpen(1, 0x33, 0);
+	// if (i2cHandle >= 0)
+	// {
+	// 	int read = lgI2cReadDevice(i2cHandle, i2cData, 7);
+	// 	lgI2cClose(i2cHandle);
+	// 	if (read > 6)
+	// 	{
+	// 		int sqm = i2cData[5] * 256 + i2cData[6];
+	// 		setParameterValue("SQM_READING", 0.01 * sqm);
+	// 		// DEBUGF(INDI::Logger::DBG_SESSION, "SQM read %i %i", i2cData[5], i2cData[6]);
+	// 		return true;
+	// 	}
+	// }
 	return false;
 }
 
 bool AstroLink4Pi::readMLX()
 {
-	int i2cHandle = lgI2cOpen(1, 0x5A, 0);
-	if (i2cHandle >= 0)
-	{
-		int Tamb = lgI2cReadWordData(i2cHandle, 0x06);
-		int Tobj = lgI2cReadWordData(i2cHandle, 0x07);
-		lgI2cClose(i2cHandle);
-		if (Tamb >= 0 && Tobj >= 0)
-		{
-			setParameterValue("WEATHER_SKY_TEMP", 0.02 * Tobj - 273.15);
-			setParameterValue("WEATHER_SKY_DIFF", 0.02 * (Tobj - Tamb));
-			if (!SHTavailable)
-				focuserTemperature = 0.02 * Tamb - 273.15;
-			MLXavailable = true;
-		}
-		else
-		{
-			DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from MLX sensor.");
-			MLXavailable = false;
-		}
-	}
-	else
-	{
-		DEBUG(INDI::Logger::DBG_DEBUG, "No MLX sensor found.");
-		MLXavailable = false;
-	}
+	// int i2cHandle = lgI2cOpen(1, 0x5A, 0);
+	// if (i2cHandle >= 0)
+	// {
+	// 	int Tamb = lgI2cReadWordData(i2cHandle, 0x06);
+	// 	int Tobj = lgI2cReadWordData(i2cHandle, 0x07);
+	// 	lgI2cClose(i2cHandle);
+	// 	if (Tamb >= 0 && Tobj >= 0)
+	// 	{
+	// 		setParameterValue("WEATHER_SKY_TEMP", 0.02 * Tobj - 273.15);
+	// 		setParameterValue("WEATHER_SKY_DIFF", 0.02 * (Tobj - Tamb));
+	// 		if (!SHTavailable)
+	// 			focuserTemperature = 0.02 * Tamb - 273.15;
+	// 		MLXavailable = true;
+	// 	}
+	// 	else
+	// 	{
+	// 		DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from MLX sensor.");
+	// 		MLXavailable = false;
+	// 	}
+	// }
+	// else
+	// {
+	// 	DEBUG(INDI::Logger::DBG_DEBUG, "No MLX sensor found.");
+	// 	MLXavailable = false;
+	// }
 
-	if (!MLXavailable)
-	{
-		setParameterValue("WEATHER_SKY_TEMP", 0.0);
-		setParameterValue("WEATHER_SKY_DIFF", 0.0);
-	}
+	// if (!MLXavailable)
+	// {
+	// 	setParameterValue("WEATHER_SKY_TEMP", 0.0);
+	// 	setParameterValue("WEATHER_SKY_DIFF", 0.0);
+	// }
 
-	return MLXavailable;
+	// return MLXavailable;
 	return false;
 }
 
