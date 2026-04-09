@@ -163,10 +163,10 @@ bool AstroLink4Pi::Connect()
 	m_PwmController.enable(PwmController::Channel::FAN);
 	m_PwmController.enable(PwmController::Channel::MOT);
 
-	pow_I2CBus.open();
-	sht_I2CBus.open();
-	mlx_I2CBus.open();
-	tls_I2CBus.open();	
+	pow_I2CBus.openBus();
+	sht_I2CBus.openBus();
+	mlx_I2CBus.openBus();
+	tls_I2CBus.openBus();	
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "I2C bus: ADS %d, SHT %d, MLX %d, TLS %d\n", pow_I2CBus.fd(), sht_I2CBus.fd(), mlx_I2CBus.fd(), tls_I2CBus.fd());
 
