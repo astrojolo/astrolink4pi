@@ -1703,7 +1703,7 @@ bool AstroLink4Pi::readPower()
 
 	const auto& r = m_PowerMonitor.getReadings();
 
-	// PowerReadingsN[POW_VIN].value = r.vin;
+	PowerReadingsN[POW_VIN].value = r.vin;
 	// PowerReadingsN[POW_VREG].value = r.vreg;
 	// PowerReadingsN[POW_ITOT].value = r.itot;
 	// PowerReadingsN[POW_PTOT].value = r.ptot;
