@@ -172,14 +172,14 @@ bool AstroLink4Pi::Connect()
     int fd_ = ::open(("/dev/i2c-1", O_RDWR);
     if (fd_ < 0)
     {
-        DEBUGF(INDI::Logger::DBG_SESSION, "Nie można otworzyć " + devicePath_ + ": " + std::string(std::strerror(errno)));
+        DEBUGF(INDI::Logger::DBG_SESSION, "Nie można otworzyć " + std::string(std::strerror(errno)));
     }
 
-    if (::ioctl(fd_, I2C_SLAVE, deviceAddress_) < 0)
+    if (::ioctl(fd_, I2C_SLAVE, 0x48) < 0)
     {
         std::ostringstream oss;
         oss << "Nie można ustawić adresu I2C 0x"
-            << std::hex << std::uppercase << static_cast<int>(deviceAddress_)
+            << std::hex << std::uppercase << static_cast<int>(0x48)
             << ": " << std::strerror(errno);
 
         DEBUGF(INDI::Logger::DBG_SESSION, oss.c_str());

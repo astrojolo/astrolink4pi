@@ -39,6 +39,18 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+
+#include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+#include <fcntl.h>
+
+#include <cerrno>
+#include <cstring>
+#include <sstream>
+#include <iomanip>
+#include <vector>
+
 #include "config.h"
 
 #include "boardio.h"
