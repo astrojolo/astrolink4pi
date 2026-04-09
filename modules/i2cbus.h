@@ -1,34 +1,36 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 #include <string>
-#include <vector>
 
 class I2CBus
 {
 public:
-    I2CBus(std::string devicePath, uint8_t address);
+    explicit I2CBus(uint8_t deviceAddress);
     ~I2CBus();
 
-    bool openBus();
-    void closeBus();
+    bool open(int busNumber = 1);
     bool isOpen() const;
+    void close();
 
-    bool writeBytes(const uint8_t *data, size_t len);
-    bool readBytes(uint8_t *data, size_t len);
+    int write(const char* data, std::size_t length);
+    int read(char* buffer, std::size_t length);
 
-    bool writeRegister(uint8_t reg, uint8_t value);
-    bool readRegister(uint8_t reg, uint8_t &value);
+    int writeRegister(uint8_t reg, const char* data, std::size_t length);
+    int readRegister(uint8_t reg, char* buffer, std::size_t length);
 
-    bool readRegister16(uint8_t reg, uint16_t &value, bool swapBytes = true);
+    int writeRegisterByte(uint8_t reg, uint8_t value);
+    int readRegisterByte(uint8_t reg, uint8_t& value);
 
-    int fd() const { return m_Fd; }
-    uint8_t address() const { return m_Address; }
+    uint8_t getDeviceAddress() const;
+    std::string getLastError() const;
 
 private:
-    bool selectSlave();
+    int fd_;
+    uint8_t deviceAddress_;
+    std::string devicePath_;
+    std::string lastError_;
 
-    std::string m_DevicePath;
-    uint8_t m_Address = 0;
-    int m_Fd = -1;
+    void setError(const std::string& msg);
 };

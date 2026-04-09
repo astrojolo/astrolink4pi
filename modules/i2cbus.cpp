@@ -1,134 +1,219 @@
 #include "i2cbus.h"
 
-#include <cerrno>
-#include <cstring>
-#include <fcntl.h>
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <fcntl.h>
 
-#include <indilogger.h>
+#include <cerrno>
+#include <cstring>
+#include <sstream>
+#include <iomanip>
+#include <vector>
 
-I2CBus::I2CBus(std::string devicePath, uint8_t address)
-    : m_DevicePath(std::move(devicePath)), m_Address(address)
+I2CBus::I2CBus(uint8_t deviceAddress)
+    : fd_(-1),
+      deviceAddress_(deviceAddress)
 {
 }
 
 I2CBus::~I2CBus()
 {
-    closeBus();
+    close();
 }
 
-bool I2CBus::openBus()
+bool I2CBus::open(int busNumber)
 {
-    if (m_Fd >= 0)
+    if (isOpen())
         return true;
 
-    m_Fd = ::open(m_DevicePath.c_str(), O_RDWR);
-    if (m_Fd < 0)
+    devicePath_ = "/dev/i2c-" + std::to_string(busNumber);
+
+    fd_ = ::open(devicePath_.c_str(), O_RDWR);
+    if (fd_ < 0)
     {
-        DEBUGFDEVICE("AstroLink 4 Pi I2C", INDI::Logger::DBG_SESSION, "I2C: cannot open %s: %s",
-               m_DevicePath.c_str(), std::strerror(errno));
+        setError("Nie można otworzyć " + devicePath_ + ": " + std::string(std::strerror(errno)));
         return false;
     }
 
-    if (!selectSlave())
+    if (::ioctl(fd_, I2C_SLAVE, deviceAddress_) < 0)
     {
-        closeBus();
+        std::ostringstream oss;
+        oss << "Nie można ustawić adresu I2C 0x"
+            << std::hex << std::uppercase << static_cast<int>(deviceAddress_)
+            << ": " << std::strerror(errno);
+
+        setError(oss.str());
+        ::close(fd_);
+        fd_ = -1;
         return false;
     }
 
+    lastError_.clear();
     return true;
-}
-
-void I2CBus::closeBus()
-{
-    if (m_Fd >= 0)
-    {
-        ::close(m_Fd);
-        m_Fd = -1;
-    }
 }
 
 bool I2CBus::isOpen() const
 {
-    return m_Fd >= 0;
+    return fd_ >= 0;
 }
 
-bool I2CBus::selectSlave()
+void I2CBus::close()
 {
-    if (m_Fd < 0)
-        return false;
-
-    if (::ioctl(m_Fd, I2C_SLAVE, m_Address) < 0)
+    if (fd_ >= 0)
     {
-        DEBUGFDEVICE("AstroLink 4 Pi I2C", INDI::Logger::DBG_ERROR, "I2C: ioctl(I2C_SLAVE, 0x%02X) failed: %s",
-               m_Address, std::strerror(errno));
-        return false;
+        ::close(fd_);
+        fd_ = -1;
+    }
+}
+
+int I2CBus::write(const char* data, std::size_t length)
+{
+    if (!isOpen())
+    {
+        setError("Magistrala I2C nie jest otwarta");
+        return -1;
     }
 
-    return true;
-}
-
-bool I2CBus::writeBytes(const uint8_t *data, size_t len)
-{
-    if (!openBus())
-        return false;
-
-    const ssize_t written = ::write(m_Fd, data, len);
-    if (written != static_cast<ssize_t>(len))
+    if (data == nullptr || length == 0)
     {
-        DEBUGFDEVICE("AstroLink 4 Pi I2C", INDI::Logger::DBG_ERROR, "I2C: write failed: %s", std::strerror(errno));
-        return false;
+        setError("Nieprawidłowe dane do zapisu");
+        return -1;
     }
 
-    return true;
-}
-
-bool I2CBus::readBytes(uint8_t *data, size_t len)
-{
-    if (!openBus())
-        return false;
-
-    const ssize_t rd = ::read(m_Fd, data, len);
-    if (rd != static_cast<ssize_t>(len))
+    const ssize_t written = ::write(fd_, data, length);
+    if (written < 0)
     {
-        DEBUGFDEVICE("AstroLink 4 Pi I2C", INDI::Logger::DBG_ERROR, "I2C: read failed: %s", std::strerror(errno));
-        return false;
+        setError("Błąd zapisu I2C: " + std::string(std::strerror(errno)));
+        return -1;
     }
 
-    return true;
+    return static_cast<int>(written);
 }
 
-bool I2CBus::writeRegister(uint8_t reg, uint8_t value)
+int I2CBus::read(char* buffer, std::size_t length)
 {
-    uint8_t buf[2] = {reg, value};
-    return writeBytes(buf, sizeof(buf));
+    if (!isOpen())
+    {
+        setError("Magistrala I2C nie jest otwarta");
+        return -1;
+    }
+
+    if (buffer == nullptr || length == 0)
+    {
+        setError("Nieprawidłowy bufor odczytu");
+        return -1;
+    }
+
+    const ssize_t received = ::read(fd_, buffer, length);
+    if (received < 0)
+    {
+        setError("Błąd odczytu I2C: " + std::string(std::strerror(errno)));
+        return -1;
+    }
+
+    return static_cast<int>(received);
 }
 
-bool I2CBus::readRegister(uint8_t reg, uint8_t &value)
+int I2CBus::writeRegister(uint8_t reg, const char* data, std::size_t length)
 {
-    if (!writeBytes(&reg, 1))
-        return false;
+    if (!isOpen())
+    {
+        setError("Magistrala I2C nie jest otwarta");
+        return -1;
+    }
 
-    return readBytes(&value, 1);
+    if (data == nullptr || length == 0)
+    {
+        setError("Nieprawidłowe dane do zapisu rejestru");
+        return -1;
+    }
+
+    std::vector<char> tx(length + 1);
+    tx[0] = static_cast<char>(reg);
+    std::memcpy(&tx[1], data, length);
+
+    const ssize_t written = ::write(fd_, tx.data(), tx.size());
+    if (written < 0)
+    {
+        setError("Błąd zapisu do rejestru I2C: " + std::string(std::strerror(errno)));
+        return -1;
+    }
+
+    // Zwracamy liczbę bajtów danych użytkownika, bez bajtu adresu rejestru.
+    if (written == 0)
+        return 0;
+
+    return static_cast<int>(written - 1);
 }
 
-bool I2CBus::readRegister16(uint8_t reg, uint16_t &value, bool swapBytes)
+int I2CBus::readRegister(uint8_t reg, char* buffer, std::size_t length)
 {
-    uint8_t data[2] = {0, 0};
+    if (!isOpen())
+    {
+        setError("Magistrala I2C nie jest otwarta");
+        return -1;
+    }
 
-    if (!writeBytes(&reg, 1))
-        return false;
+    if (buffer == nullptr || length == 0)
+    {
+        setError("Nieprawidłowy bufor odczytu rejestru");
+        return -1;
+    }
 
-    if (!readBytes(data, 2))
-        return false;
+    // Najpierw ustawiamy wskaźnik rejestru
+    const char regByte = static_cast<char>(reg);
+    const ssize_t regWritten = ::write(fd_, &regByte, 1);
+    if (regWritten < 0)
+    {
+        setError("Błąd ustawiania adresu rejestru I2C: " + std::string(std::strerror(errno)));
+        return -1;
+    }
 
-    uint16_t raw = static_cast<uint16_t>(data[0] << 8) | data[1];
+    if (regWritten != 1)
+    {
+        setError("Nie udało się wysłać adresu rejestru I2C");
+        return -1;
+    }
 
-    if (swapBytes)
-        raw = static_cast<uint16_t>((raw >> 8) | (raw << 8));
+    const ssize_t received = ::read(fd_, buffer, length);
+    if (received < 0)
+    {
+        setError("Błąd odczytu rejestru I2C: " + std::string(std::strerror(errno)));
+        return -1;
+    }
 
-    value = raw;
-    return true;
+    return static_cast<int>(received);
+}
+
+int I2CBus::writeRegisterByte(uint8_t reg, uint8_t value)
+{
+    const char data = static_cast<char>(value);
+    return writeRegister(reg, &data, 1);
+}
+
+int I2CBus::readRegisterByte(uint8_t reg, uint8_t& value)
+{
+    char data = 0;
+    const int result = readRegister(reg, &data, 1);
+    if (result == 1)
+    {
+        value = static_cast<uint8_t>(data);
+    }
+    return result;
+}
+
+uint8_t I2CBus::getDeviceAddress() const
+{
+    return deviceAddress_;
+}
+
+std::string I2CBus::getLastError() const
+{
+    return lastError_;
+}
+
+void I2CBus::setError(const std::string& msg)
+{
+    lastError_ = msg;
 }
