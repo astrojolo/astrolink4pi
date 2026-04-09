@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cmath>
+#include <unistd.h>
 
 OldSensor::OldSensor()
     : OldSensor(Config{})
