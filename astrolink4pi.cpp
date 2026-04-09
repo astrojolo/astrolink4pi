@@ -168,7 +168,7 @@ bool AstroLink4Pi::Connect()
 	mlx_I2CBus.open();
 	tls_I2CBus.open();	
 
-	DEBUGF(INDI::Logger::DBG_SESSION, "I2C open: ADS %s, SHT %s, MLX %s, TLS %s\n", pow_I2CBus.isOpen(), sht_I2CBus.isOpen(), mlx_I2CBus.isOpen(), tls_I2CBus.isOpen());
+	//DEBUGF(INDI::Logger::DBG_SESSION, "I2C open: ADS %s, SHT %s, MLX %s, TLS %s\n", pow_I2CBus.isOpen(), sht_I2CBus.isOpen(), mlx_I2CBus.isOpen(), tls_I2CBus.isOpen());
 
 	DEBUGF(INDI::Logger::DBG_SESSION,
 		   "Connected on %s (%s), kernel %s",
