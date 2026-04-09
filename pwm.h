@@ -5,6 +5,17 @@
 #include <map>
 #include <string>
 
+// dtoverlay=pwm-pio,gpio=19
+// dtoverlay=pwm-pio,gpio=26
+// dtoverlay=pwm-pio,gpio=13
+// dtoverlay=pwm-pio,gpio=20
+
+// pwmConfig.pi5Channels[PwmController::Channel::P1]  = {"/sys/class/pwm/pwmchip0", 0}; // GPIO19
+// pwmConfig.pi5Channels[PwmController::Channel::P2]  = {"/sys/class/pwm/pwmchip1", 0}; // GPIO26
+// pwmConfig.pi5Channels[PwmController::Channel::FAN] = {"/sys/class/pwm/pwmchip2", 0}; // GPIO13
+// pwmConfig.pi5Channels[PwmController::Channel::MOT] = {"/sys/class/pwm/pwmchip3", 0}; // GPIO20
+
+
 class BoardIO;
 
 class PwmController
