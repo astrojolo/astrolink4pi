@@ -44,6 +44,7 @@
 #include "boardio.h"
 #include "pwm.h"
 #include "systeminfo.h"
+#include "powermonitor.h"
 
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>

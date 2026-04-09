@@ -28,9 +28,10 @@ endif()
 ################ AstroLink 4 Pi ################
 set(indi_astrolink4pi_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/astrolink4pi.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/boardio.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/systeminfo.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/pwm.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/modules/boardio.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/modules/systeminfo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/modules/pwm.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/modules/powermonitor.cpp
 )
 
 if (UNITY_BUILD)
@@ -43,6 +44,7 @@ add_executable(indi_astrolink4pi ${indi_astrolink4pi_SRCS})
 target_include_directories(indi_astrolink4pi PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/modules
     ${INDI_INCLUDE_DIR}
 )
 
