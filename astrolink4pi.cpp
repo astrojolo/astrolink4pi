@@ -1686,29 +1686,29 @@ bool AstroLink4Pi::readPower()
 {
 	bool status = m_PowerMonitor.update();
 
-	switch (m_PowerMonitor.getStatus())
-	{
-	case PowerMonitor::Status::Ok:
-		PowerReadingsNP.s = IPS_OK;
-		break;
-	case PowerMonitor::Status::Busy:
-		PowerReadingsNP.s = IPS_BUSY;
-		break;
-	case PowerMonitor::Status::Alert:
-		PowerReadingsNP.s = IPS_ALERT;
-		break;
-	default:
-		PowerReadingsNP.s = IPS_ALERT;
-	}
+	// switch (m_PowerMonitor.getStatus())
+	// {
+	// case PowerMonitor::Status::Ok:
+	// 	PowerReadingsNP.s = IPS_OK;
+	// 	break;
+	// case PowerMonitor::Status::Busy:
+	// 	PowerReadingsNP.s = IPS_BUSY;
+	// 	break;
+	// case PowerMonitor::Status::Alert:
+	// 	PowerReadingsNP.s = IPS_ALERT;
+	// 	break;
+	// default:
+	// 	PowerReadingsNP.s = IPS_ALERT;
+	// }
 
-	const auto& r = m_PowerMonitor.getReadings();
+	// const auto& r = m_PowerMonitor.getReadings();
 
-	PowerReadingsN[POW_VIN].value = r.vin;
-	PowerReadingsN[POW_VREG].value = r.vreg;
-	PowerReadingsN[POW_ITOT].value = r.itot;
-	PowerReadingsN[POW_PTOT].value = r.ptot;
-	PowerReadingsN[POW_AH].value = r.ah;
-	PowerReadingsN[POW_WH].value = r.wh;
+	// PowerReadingsN[POW_VIN].value = r.vin;
+	// PowerReadingsN[POW_VREG].value = r.vreg;
+	// PowerReadingsN[POW_ITOT].value = r.itot;
+	// PowerReadingsN[POW_PTOT].value = r.ptot;
+	// PowerReadingsN[POW_AH].value = r.ah;
+	// PowerReadingsN[POW_WH].value = r.wh;
 
 	return status;
 	// if (m_BoardIO.revision() < 4)
