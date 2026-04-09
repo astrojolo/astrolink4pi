@@ -98,7 +98,12 @@ void ISNewNumber(const char *dev, const char *name, double values[], char *names
 	astroLink4Pi->ISNewNumber(dev, name, values, names, num);
 }
 
-AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this), m_PwmController(m_BoardIO)
+AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
+, m_PwmController(m_BoardIO)
+, pow_I2CBus("/dev/i2c-1", 0x48)
+, sht_I2CBus("/dev/i2c-1", 0x44)
+, mlx_I2CBus("/dev/i2c-1", 0x5A)
+, tls_I2CBus("/dev/i2c-1", 0x29)
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
@@ -157,6 +162,13 @@ bool AstroLink4Pi::Connect()
 	m_PwmController.enable(PwmController::Channel::P2);
 	m_PwmController.enable(PwmController::Channel::FAN);
 	m_PwmController.enable(PwmController::Channel::MOT);
+
+	pow_I2CBus.open();
+	sht_I2CBus.open();
+	mlx_I2CBus.open();
+	tls_I2CBus.open();	
+
+	DEBUGF(INDI::Logger::DBG_SESSION, "I2C bus: ADS %d, SHT %d, MLX %d, TLS %d\n", pow_I2CBus.fd(), sht_I2CBus.fd(), mlx_I2CBus.fd(), tls_I2CBus.fd());
 
 	DEBUGF(INDI::Logger::DBG_SESSION,
 		   "Connected on %s (%s), kernel %s",

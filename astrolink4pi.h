@@ -42,6 +42,7 @@
 #include "config.h"
 
 #include "boardio.h"
+#include "i2cbus.h"
 #include "pwm.h"
 #include "systeminfo.h"
 #include "powermonitor.h"
@@ -98,6 +99,10 @@ private:
 	virtual bool readDS18B20();
 
 	BoardIO m_BoardIO;
+	I2CBus pow_I2CBus;
+	I2CBus sht_I2CBus;
+	I2CBus mlx_I2CBus;
+	I2CBus tls_I2CBus;
 	PwmController m_PwmController;
 	SystemInfoService m_SystemInfo;
 
