@@ -165,6 +165,27 @@ bool AstroLink4Pi::Connect()
 		return false;
 	}
 
+	if (!m_SHTSensor.open(1))
+		DEBUGF(INDI::Logger::DBG_WARNING, "SHT open failed: %s", m_SHTSensor.lastError().c_str());
+
+	if (!m_MLXSensor.open(1))
+		DEBUGF(INDI::Logger::DBG_WARNING, "MLX open failed: %s", m_MLXSensor.lastError().c_str());
+
+	if (!m_TSLSensor.open(1))
+		DEBUGF(INDI::Logger::DBG_WARNING, "TSL open failed: %s", m_TSLSensor.lastError().c_str());
+	else
+	{
+		TSLSensor::Config tslCfg;
+		tslCfg.controlValue = 0x01;
+		tslCfg.integrationTimeMs = TSL2591_ADC_TIME;
+		tslCfg.sqmOffset = SQMOffsetN[0].value;
+		tslCfg.filterCoeff = FILTER_COEFF;
+		m_TSLSensor.initialize(tslCfg);
+	}
+
+	if (!m_OldSensor.open(1))
+		DEBUGF(INDI::Logger::DBG_WARNING, "OLD sensor open failed: %s", m_OldSensor.lastError().c_str());
+
 	DEBUGF(INDI::Logger::DBG_SESSION,
 		   "Connected on %s (%s), kernel %s",
 		   m_SystemInfo.getHostname().c_str(),
@@ -1488,7 +1509,7 @@ bool AstroLink4Pi::readSQM(bool triggerOldSensor)
 }
 
 bool AstroLink4Pi::readTSL()
-{	
+{
 	int i2cHandle = lgI2cOpen(1, TSL2591_ADDR, 0);
 
 	if (i2cHandle < 0)
@@ -1626,59 +1647,22 @@ bool AstroLink4Pi::readMLX()
 
 bool AstroLink4Pi::readSHT()
 {
-	char i2cData[6];
-	char i2cWrite[2];
-
-	int i2cHandle = lgI2cOpen(1, 0x44, 0);
-	if (i2cHandle >= 0)
-	{
-		i2cWrite[0] = 0x24;
-		i2cWrite[1] = 0x00;
-		int written = lgI2cWriteDevice(i2cHandle, i2cWrite, 2);
-		if (written == 0)
-		{
-			usleep(30000);
-			int read = lgI2cReadDevice(i2cHandle, i2cData, 6);
-
-			if (read > 4)
-			{
-				int temp = i2cData[0] * 256 + i2cData[1];
-				double cTemp = -45.0 + (175.0 * temp / 65535.0);
-				double humidity = 100.0 * (i2cData[3] * 256.0 + i2cData[4]) / 65535.0;
-
-				double a = 17.271;
-				double b = 237.7;
-				double tempAux = (a * cTemp) / (b + cTemp) + log(humidity * 0.01);
-				double Td = (b * tempAux) / (a - tempAux);
-
-				setParameterValue("WEATHER_TEMPERATURE", cTemp);
-				setParameterValue("WEATHER_HUMIDITY", humidity);
-				setParameterValue("WEATHER_DEWPOINT", Td);
-				focuserTemperature = cTemp;
-				SHTavailable = true;
-			}
-		}
-		else
-		{
-			DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to SHT sensor");
-			SHTavailable = false;
-		}
-		lgI2cClose(i2cHandle);
-	}
-	else
-	{
-		DEBUG(INDI::Logger::DBG_DEBUG, "No SHT sensor found.");
-		SHTavailable = false;
-	}
-
-	if (!SHTavailable)
+	const auto data = m_SHTSensor.read();
+	if (!data.valid)
 	{
 		setParameterValue("WEATHER_TEMPERATURE", 0.0);
 		setParameterValue("WEATHER_HUMIDITY", 0.0);
 		setParameterValue("WEATHER_DEWPOINT", 0.0);
+		return false;
 	}
-	return SHTavailable;
-	return false;
+
+
+    setParameterValue("WEATHER_TEMPERATURE", data.temperatureC);
+    setParameterValue("WEATHER_HUMIDITY", data.humidityRH);
+    setParameterValue("WEATHER_DEWPOINT", data.dewPointC);
+
+    focuserTemperature = data.temperatureC;
+	return true;
 }
 
 bool AstroLink4Pi::readPower()
@@ -1700,7 +1684,7 @@ bool AstroLink4Pi::readPower()
 		PowerReadingsNP.s = IPS_ALERT;
 	}
 
-	const auto& r = m_PowerMonitor.getReadings();
+	const auto &r = m_PowerMonitor.getReadings();
 
 	PowerReadingsN[POW_VIN].value = r.vin;
 	PowerReadingsN[POW_VREG].value = r.vreg;
@@ -1712,5 +1696,4 @@ bool AstroLink4Pi::readPower()
 	IDSetNumber(&PowerReadingsNP, nullptr);
 
 	return status;
-	
 }

@@ -47,6 +47,10 @@
 #include "pwm.h"
 #include "systeminfo.h"
 #include "powermonitor.h"
+#include "shtsensor.h"
+#include "mlxsensor.h"
+#include "tslsensor.h"
+#include "oldsensor.h"
 
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
@@ -103,6 +107,10 @@ private:
 	PwmController m_PwmController;
 	SystemInfoService m_SystemInfo;
 	PowerMonitor m_PowerMonitor;
+	SHTSensor m_SHTSensor;
+    MLXSensor m_MLXSensor;
+    TSLSensor m_TSLSensor;
+    OldSensor m_OldSensor;
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
