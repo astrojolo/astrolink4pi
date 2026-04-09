@@ -1684,7 +1684,7 @@ bool AstroLink4Pi::readSHT()
 
 bool AstroLink4Pi::readPower()
 {
-	m_PowerMonitor.update();
+	bool status = m_PowerMonitor.update();
 
 	switch (m_PowerMonitor.getStatus())
 	{
@@ -1710,6 +1710,7 @@ bool AstroLink4Pi::readPower()
 	PowerReadingsN[POW_AH].value = r.ah;
 	PowerReadingsN[POW_WH].value = r.wh;
 
+	return status;
 	// if (m_BoardIO.revision() < 4)
 	// 	return false;
 
