@@ -1710,7 +1710,7 @@ bool AstroLink4Pi::readPower()
 	PowerReadingsN[POW_AH].value = r.ah;
 	PowerReadingsN[POW_WH].value = r.wh;
 
-	DEBUGF(INDI::Logger::DBG_SESSION, "Vin %f \n", r.vin);
+	IDSetNumber(&PowerReadingsNP, nullptr);
 
 	return status;
 	// if (m_BoardIO.revision() < 4)
