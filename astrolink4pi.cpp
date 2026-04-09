@@ -1701,12 +1701,14 @@ bool AstroLink4Pi::readPower()
 		PowerReadingsNP.s = IPS_ALERT;
 	}
 
-	PowerReadingsN[POW_VIN].value = m_PowerMonitor.getReadings.vin;
-	PowerReadingsN[POW_VREG].value = m_PowerMonitor.getReadings.vreg;
-	PowerReadingsN[POW_ITOT].value = m_PowerMonitor.getReadings.itot;
-	PowerReadingsN[POW_PTOT].value = m_PowerMonitor.getReadings.ptot;
-	PowerReadingsN[POW_AH].value = m_PowerMonitor.getReadings.ah;
-	PowerReadingsN[POW_WH].value = m_PowerMonitor.getReadings.wh;
+	const auto& r = m_PowerMonitor.getReadings();
+
+	PowerReadingsN[POW_VIN].value = r.vin;
+	PowerReadingsN[POW_VREG].value = r.vreg;
+	PowerReadingsN[POW_ITOT].value = r.itot;
+	PowerReadingsN[POW_PTOT].value = r.ptot;
+	PowerReadingsN[POW_AH].value = r.ah;
+	PowerReadingsN[POW_WH].value = r.wh;
 
 	// if (m_BoardIO.revision() < 4)
 	// 	return false;
