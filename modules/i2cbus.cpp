@@ -27,7 +27,7 @@ bool I2CBus::openBus()
     m_Fd = ::open(m_DevicePath.c_str(), O_RDWR);
     if (m_Fd < 0)
     {
-        DEBUGFDEVICE("AstroLink 4 Pi I2C", INDI::Logger::DBG_ERROR, "I2C: cannot open %s: %s",
+        DEBUGFDEVICE("AstroLink 4 Pi I2C", INDI::Logger::DBG_SESSION, "I2C: cannot open %s: %s",
                m_DevicePath.c_str(), std::strerror(errno));
         return false;
     }
