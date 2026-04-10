@@ -22,18 +22,18 @@ PowerMonitor::~PowerMonitor()
 
 bool PowerMonitor::open(int bus)
 {
-    close();
-    // m_Fd = wiringPiI2CSetup(bus);
-    if (wiringPiSetup() == -1)
+    // close();
+    int wipi = wiringPiSetup(bus);
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "wipi %d", wipi);
+    if (wipi < 0)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Error %d", 1);
         return 0;
     }
 
-    int m_Fd = wiringPiI2CSetup(0x48);
+    int m_Fd = wiringPiI2CSetup(adsAddress);
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "m_Fd %d", m_Fd);
     if (m_Fd < 0)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Error %d", 2);
         return 0;
     }
 
@@ -69,10 +69,10 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
 
     DEBUGFDEVICE(getDeviceName().c_str(),
-             INDI::Logger::DBG_SESSION,
-             "I2C write failed: errno=%d (%s)",
-             errno,
-             std::strerror(errno));
+                 INDI::Logger::DBG_SESSION,
+                 "I2C write failed: errno=%d (%s)",
+                 errno,
+                 std::strerror(errno));
 
     // czekaj aż konwersja się skończy
     while (true)
