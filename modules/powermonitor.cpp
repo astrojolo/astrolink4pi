@@ -23,7 +23,7 @@ PowerMonitor::~PowerMonitor()
 bool PowerMonitor::open(int bus)
 {
     // close();
-    int wipi = wiringPiSetup(bus);
+    int wipi = wiringPiSetup();
     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "wipi %d", wipi);
     if (wipi < 0)
     {
