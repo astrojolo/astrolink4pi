@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string>
 
-class PowerMonitor
+class PowerMonitor : public BaseComponent
 {
 public:
     struct Readings
