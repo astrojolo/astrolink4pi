@@ -20,14 +20,8 @@ PowerMonitor::~PowerMonitor()
 
 bool PowerMonitor::open(int bus)
 {
-    DEBUGFDEVICE(getFullName().c_str(), INDI::Logger::DBG_SESSION, "Open %d", 1);
-
     close();
-
-    DEBUGFDEVICE(getFullName().c_str(), INDI::Logger::DBG_SESSION, "Open %d", 2);
     m_Fd = wiringPiI2CSetup(1);
-
-    DEBUGFDEVICE(getFullName().c_str(), INDI::Logger::DBG_SESSION, "Open %d %d", 3, m_Fd);
     return m_Fd >= 0;
 }
 
@@ -52,6 +46,7 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     if (!isOpen())
         return false;
 
+    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C opened");            
     uint8_t writeBuf[3];
     uint8_t readBuf[2];
 
