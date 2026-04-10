@@ -66,33 +66,33 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     // COMP_QUE=11 disable comparator
     // uint16_t config = 0xC383;
 
-    // int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
+    int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
 
-    // DEBUGFDEVICE(getDeviceName().c_str(),
-    //              INDI::Logger::DBG_SESSION,
-    //              "I2C write failed: errno=%d (%s)",
-    //              errno,
-    //              std::strerror(errno));
+    DEBUGFDEVICE(getDeviceName().c_str(),
+                 INDI::Logger::DBG_SESSION,
+                 "I2C write failed: errno=%d (%s)",
+                 errno,
+                 std::strerror(errno));
 
-    // // czekaj aż konwersja się skończy
-    // while (true)
-    // {
-    //     int16_t cfg = wiringPiI2CReadReg16(m_Fd, 0x01);
-    //     cfg = __bswap_16(cfg);
-    //     if (cfg & 0x8000)
-    //         break;
-    //     delayMicroseconds(100);
-    // }
+    // czekaj aż konwersja się skończy
+    while (true)
+    {
+        int16_t cfg = wiringPiI2CReadReg16(m_Fd, 0x01);
+        cfg = __bswap_16(cfg);
+        if (cfg & 0x8000)
+            break;
+        delayMicroseconds(100);
+    }
 
-    // int16_t raw = wiringPiI2CReadReg16(m_Fd, 0x00);
-    // raw = __bswap_16(raw);
+    int16_t raw = wiringPiI2CReadReg16(m_Fd, 0x00);
+    raw = __bswap_16(raw);
 
-    // if (raw < 0)
-    //     raw = 0; // dla single-ended bywa praktyczne
+    if (raw < 0)
+        raw = 0; // dla single-ended bywa praktyczne
 
-    // double voltage = raw * 4.096 / 32768.0;
+    double voltage = raw * 4.096 / 32768.0;
 
-    // DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Readings %d %d %d %f", m_Fd, written, raw, voltage);
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Readings %d %d %d %f", m_Fd, written, raw, voltage);
 
     if (!isOpen())
         return false;
@@ -113,74 +113,75 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     1:0		- 11 comparator disable
     */
 
-    writeBuf[0] = 0x01;
-    writeBuf[1] = 0b11000011;
-    writeBuf[2] = 0b00100011;
+    
+    // writeBuf[0] = 0x01;
+    // writeBuf[1] = 0b11000011;
+    // writeBuf[2] = 0b00100011;
 
-    if ((powerIndex % 2) == 0) // Trigger conversion
-    {
-        switch (powerIndex)
-        {
-        case 0:
-            writeBuf[1] = 0b11000011;
-            break;
-        case 2:
-            writeBuf[1] = 0b11010011;
-            break;
-        case 4:
-            writeBuf[1] = 0b10110011;
-            break;
-        }
-        uint16_t config = (writeBuf[1] << 8) | writeBuf[2];
-        int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
-        if (written < 2)
-        {
-            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C write failed: errno=%d (%s)", errno, std::strerror(errno));
-        }
-    }
-    else // Trigger read
-    {
-        writeBuf[0] = 0x00;
-        int written = wiringPiI2CWrite(m_Fd, writeBuf[0]);
-        if (written < 1)
-        {
-            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C write failed: errno=%d (%s)", errno, std::strerror(errno));
-        }
-        if (written == 0)
-        {
-            int16_t read = wiringPiI2CReadReg16(m_Fd, 0x00);
-            if (read == -1)
-            {
-                DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C read failed: errno=%d (%s)", errno, std::strerror(errno));
-            }
-            if (read > 0)
-            {
-                // int16_t val = readBuf[0] * 255 + readBuf[1];
-                int16_t val = (static_cast<int16_t>(static_cast<unsigned char>(readBuf[0])) << 8) | static_cast<unsigned char>(readBuf[1]);
+    // if ((powerIndex % 2) == 0) // Trigger conversion
+    // {
+    //     switch (powerIndex)
+    //     {
+    //     case 0:
+    //         writeBuf[1] = 0b11000011;
+    //         break;
+    //     case 2:
+    //         writeBuf[1] = 0b11010011;
+    //         break;
+    //     case 4:
+    //         writeBuf[1] = 0b10110011;
+    //         break;
+    //     }
+    //     uint16_t config = (writeBuf[1] << 8) | writeBuf[2];
+    //     int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
+    //     if (written < 2)
+    //     {
+    //         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C write failed: errno=%d (%s)", errno, std::strerror(errno));
+    //     }
+    // }
+    // else // Trigger read
+    // {
+    //     writeBuf[0] = 0x00;
+    //     int written = wiringPiI2CWrite(m_Fd, writeBuf[0]);
+    //     if (written < 1)
+    //     {
+    //         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C write failed: errno=%d (%s)", errno, std::strerror(errno));
+    //     }
+    //     if (written == 0)
+    //     {
+    //         int16_t read = wiringPiI2CReadReg16(m_Fd, 0x00);
+    //         if (read == -1)
+    //         {
+    //             DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C read failed: errno=%d (%s)", errno, std::strerror(errno));
+    //         }
+    //         if (read > 0)
+    //         {
+    //             // int16_t val = readBuf[0] * 255 + readBuf[1];
+    //             int16_t val = (static_cast<int16_t>(static_cast<unsigned char>(readBuf[0])) << 8) | static_cast<unsigned char>(readBuf[1]);
 
-                switch (powerIndex)
-                {
-                case 1:
-                    out.vin = (float)val / 32768.0 * 4.096 * 6.6;
-                    break;
-                case 3:
-                    out.vreg = (float)val / 32768.0 * 4.096 * 6.6;
-                    break;
-                case 5:
-                    out.current = (float)val / 32768.0 * 4.096 * 1 * ((m_AcsType == 0) ? 20 : 10.8);
-                    break;
-                }
-                out.power = out.vin * out.current;
-                energyAs += out.current * 0.4;
-                energyWs += out.vin * out.current * 0.4;
-                out.ah = energyAs / 3600;
-                out.wh = energyWs / 3600;
-            }
-        }
-    }
-    powerIndex++;
-    if (powerIndex > 5)
-        powerIndex = 0;
-
+    //             switch (powerIndex)
+    //             {
+    //             case 1:
+    //                 out.vin = (float)val / 32768.0 * 4.096 * 6.6;
+    //                 break;
+    //             case 3:
+    //                 out.vreg = (float)val / 32768.0 * 4.096 * 6.6;
+    //                 break;
+    //             case 5:
+    //                 out.current = (float)val / 32768.0 * 4.096 * 1 * ((m_AcsType == 0) ? 20 : 10.8);
+    //                 break;
+    //             }
+    //             out.power = out.vin * out.current;
+    //             energyAs += out.current * 0.4;
+    //             energyWs += out.vin * out.current * 0.4;
+    //             out.ah = energyAs / 3600;
+    //             out.wh = energyWs / 3600;
+    //         }
+    //     }
+    // }
+    // powerIndex++;
+    // if (powerIndex > 5)
+    //     powerIndex = 0;
+    
     return true;
 }
