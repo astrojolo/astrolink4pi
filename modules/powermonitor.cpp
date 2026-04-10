@@ -20,10 +20,14 @@ PowerMonitor::~PowerMonitor()
 
 bool PowerMonitor::open(int bus)
 {
+    DEBUGFDEVICE(getFullName().c_str(), INDI::Logger::DBG_SESSION, "Open %d", 1);
+
     close();
 
+    DEBUGFDEVICE(getFullName().c_str(), INDI::Logger::DBG_SESSION, "Open %d", 2);
     m_Fd = wiringPiI2CSetup(1);
 
+    DEBUGFDEVICE(getFullName().c_str(), INDI::Logger::DBG_SESSION, "Open %d %d", 3, m_Fd);
     return m_Fd >= 0;
 }
 
@@ -66,7 +70,6 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     writeBuf[0] = 0x01;
     writeBuf[1] = 0b11000011;
     writeBuf[2] = 0b00100011;
-    DEBUGFDEVICE(getFullName().c_str(), INDI::Logger::DBG_SESSION, "Power index %d", powerIndex);
 
     if ((powerIndex % 2) == 0) // Trigger conversion
     {
