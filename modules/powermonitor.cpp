@@ -43,16 +43,13 @@ bool PowerMonitor::isOpen() const
 
 bool PowerMonitor::read(PowerMonitor::Readings &out)
 {
-    const int PIN_BASE = 100;  // dowolna baza > numerów GPIO
-    const int I2C_ADDR = 0x48; // typowy adres ADS1115
-
     if (wiringPiSetup() == -1)
     {
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Error %d", 1);
         return 0;
     }
 
-    if (ads1115Setup(PIN_BASE, I2C_ADDR) == 0)
+    if (ads1115Setup(100, 0x48) == 0)
     {
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Error %d", 2);
         return 0;
@@ -65,11 +62,11 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
 
     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Readings %d %d %d %d", raw0, raw1, raw2, raw3);
 
-    if (!isOpen())
-        return false;
+    // if (!isOpen())
+    //     return false;
 
-    uint8_t writeBuf[3];
-    uint8_t readBuf[2];
+    // uint8_t writeBuf[3];
+    // uint8_t readBuf[2];
 
     /*
     powerIndex 0-1 Vin WR, 2-3 Vreg WR, 4-5 Itot WR
