@@ -165,34 +165,11 @@ bool AstroLink4Pi::Connect()
 		return false;
 	}
 
-	// if (!m_SHTReader.open())
-	// {
-	// 	DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize SHT sensor.");
-	// 	return false;
-	// }
-
-    int wipi = wiringPiSetup();
-    if (wipi < 0)
-    {
-        DEBUGFDEVICE(getDeviceName(), INDI::Logger::DBG_SESSION,
-                     "WiPi open failed: errno=%d (%s)",
-                     errno, std::strerror(errno));
-    }
-
-    int m_Fd = wiringPiI2CSetup(0x44);
-    if (m_Fd < 0)
-    {
-        DEBUGFDEVICE(getDeviceName(), INDI::Logger::DBG_SESSION,
-                     "SHT I2C setup failed: errno=%d (%s)",
-                     errno, std::strerror(errno));
-        return false;
-    }
-    else
-    {
-        DEBUGFDEVICE(getDeviceName(), INDI::Logger::DBG_SESSION,
-                     "SHT I2C setup success fd=%d",
-                     m_Fd);        
-    }	
+	if (!m_SHTReader.open())
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize SHT sensor.");
+		return false;
+	}
 
 	DEBUGF(INDI::Logger::DBG_SESSION,
 		   "Connected on %s (%s), kernel %s",

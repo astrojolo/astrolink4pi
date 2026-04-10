@@ -19,6 +19,8 @@ SHTReader::~SHTReader()
 
 bool SHTReader::open()
 {
+    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_ERROR, "Err 1");
+    DEBUGDEVICE("AstroLink 4 Pi", INDI::Logger::DBG_ERROR, "Err 2");
     close();
 
     int wipi = wiringPiSetup();
@@ -33,16 +35,10 @@ bool SHTReader::open()
     m_Fd = wiringPiI2CSetup(m_ShtAddress);
     if (m_Fd < 0)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "SHT I2C setup failed: errno=%d (%s)",
                      errno, std::strerror(errno));
         return false;
-    }
-    else
-    {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
-                     "SHT I2C setup success fd=%d",
-                     m_Fd);        
     }
 
     return m_Fd >= 0;
@@ -67,8 +63,6 @@ bool SHTReader::read(SHTReader::Readings &out)
     if (!isOpen())
         return false;
 
-    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SHT read inside, fd=%d", m_Fd);
-
     out = m_LastReadings;
 
     if ((readIndex % 2) == 0)
@@ -78,7 +72,7 @@ bool SHTReader::read(SHTReader::Readings &out)
         if (wiringPiI2CRawWrite(m_Fd, cmd, 2) != 2)
         {
             int err = errno;
-            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                          "SHT raw write failed: fd=%d errno=%d (%s)",
                          m_Fd, err, std::strerror(err));
             return false;
@@ -91,7 +85,7 @@ bool SHTReader::read(SHTReader::Readings &out)
         if (wiringPiI2CRawRead(m_Fd, buf, 6) != 6)
         {
             int err = errno;
-            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                          "SHT raw read failed: fd=%d errno=%d (%s)",
                          m_Fd, err, std::strerror(err));
             return false;
