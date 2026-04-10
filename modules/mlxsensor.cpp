@@ -52,8 +52,8 @@ MLXSensor::Readout MLXSensor::read(double ambientReferenceC) const
     if (!readWord(MLX_REG_OBJECT1, rawObject))
         return result;
 
-    result.ambientTemperatureC = rawToCelsius(rawAmbient);
-    result.objectTemperatureC = rawToCelsius(rawObject);
+    result.ambientTemperatureC = (rawAmbient);
+    result.objectTemperatureC = (rawObject);
     result.skyTemperatureC = result.objectTemperatureC;
 
     const double reference = ambientReferenceC != 0.0 ? ambientReferenceC : result.ambientTemperatureC;

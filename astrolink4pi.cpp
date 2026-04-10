@@ -1614,7 +1614,11 @@ bool AstroLink4Pi::readMLX()
 	const auto data = m_MLXSensor.read(ambient);
 
 	if (!data.valid)
+	{
+		setParameterValue("WEATHER_SKY_TEMP", 0.0);
+		setParameterValue("WEATHER_SKY_DIFF", 0.0);
 		return false;
+	}
 
 	setParameterValue("WEATHER_SKY_TEMP", data.skyTemperatureC);
 	setParameterValue("WEATHER_SKY_DIFF", data.skyTemperatureDiffC);
