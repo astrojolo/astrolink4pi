@@ -47,7 +47,7 @@ bool PowerMonitor::isOpen() const
 
 bool PowerMonitor::read(PowerMonitor::Readings &out)
 {
-    DEBUGFDEVICE(getFullName().c_str(), INDI::Logger::DBG_SESSION, "Read called with id %d", m_Fd);
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Read called with id %d");
 
     if (!isOpen())
         return false;

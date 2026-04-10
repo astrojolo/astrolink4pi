@@ -121,12 +121,6 @@ const char *AstroLink4Pi::getDefaultName()
 
 bool AstroLink4Pi::Connect()
 {
-	if (!m_PowerMonitor.open(1))
-	{
-		DEBUG(INDI::Logger::DBG_ERROR, "Could not initialize power monitor.");
-		return false;
-	}
-
 	if (!m_BoardIO.connect())
 	{
 		DEBUG(INDI::Logger::DBG_ERROR, "Could not access GPIO.");
@@ -165,6 +159,11 @@ bool AstroLink4Pi::Connect()
 	m_PwmController.enable(PwmController::Channel::FAN);
 	m_PwmController.enable(PwmController::Channel::MOT);
 
+	if (!m_PowerMonitor.open(1))
+	{
+		DEBUG(INDI::Logger::DBG_ERROR, "Could not initialize power monitor.");
+		return false;
+	}
 
 	DEBUGF(INDI::Logger::DBG_SESSION,
 		   "Connected on %s (%s), kernel %s",
