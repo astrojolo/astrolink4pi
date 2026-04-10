@@ -99,7 +99,8 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
                     out.vin = (float)val / 32768.0 * 4.096 * 6.6;
                     break;
                 case 3:
-                    out.vreg = (float)val / 32768.0 * 4.096 * 6.6;
+                    // out.vreg = (float)val / 32768.0 * 4.096 * 6.6;
+                    out.vreg = 6.6;
                     break;
                 case 5:
                     out.current = (float)val / 32768.0 * 4.096 * 1 * ((m_AcsType == 0) ? 20 : 10.8);
