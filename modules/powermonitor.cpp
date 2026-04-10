@@ -22,7 +22,7 @@ PowerMonitor::~PowerMonitor()
 
 bool PowerMonitor::open(int bus)
 {
-    //close();
+    // close();
 
     int wipi = wiringPiSetup();
     if (wipi < 0)
@@ -45,7 +45,7 @@ void PowerMonitor::close()
 {
     if (m_Fd >= 0)
     {
-        //m_Fd = -1;
+        // m_Fd = -1;
     }
 }
 
@@ -67,12 +67,14 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     uint16_t config = 0xC383;
 
     int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
-
-    DEBUGFDEVICE(getDeviceName().c_str(),
-                 INDI::Logger::DBG_SESSION,
-                 "I2C write failed: errno=%d (%s)",
-                 errno,
-                 std::strerror(errno));
+    if (written < 0)
+    {
+        DEBUGFDEVICE(getDeviceName().c_str(),
+                     INDI::Logger::DBG_SESSION,
+                     "I2C write failed: errno=%d (%s)",
+                     errno,
+                     std::strerror(errno));
+    }
 
     // czekaj aż konwersja się skończy
     while (true)
@@ -113,7 +115,6 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     1:0		- 11 comparator disable
     */
 
-    
     // writeBuf[0] = 0x01;
     // writeBuf[1] = 0b11000011;
     // writeBuf[2] = 0b00100011;
@@ -182,6 +183,6 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     // powerIndex++;
     // if (powerIndex > 5)
     //     powerIndex = 0;
-    
+
     return true;
 }
