@@ -68,6 +68,12 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
 
     int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
 
+    DEBUGFDEVICE(getDeviceName().c_str(),
+             INDI::Logger::DBG_SESSION,
+             "I2C write failed: errno=%d (%s)",
+             errno,
+             std::strerror(errno));
+
     // czekaj aż konwersja się skończy
     while (true)
     {
