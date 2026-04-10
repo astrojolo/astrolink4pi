@@ -46,8 +46,8 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     if (!isOpen())
         return false;
 
-    char writeBuf[3];
-    char readBuf[2];
+    uint8_t writeBuf[3];
+    uint8_t readBuf[2];
 
     /*
     powerIndex 0-1 Vin WR, 2-3 Vreg WR, 4-5 Itot WR
@@ -102,7 +102,7 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
                     out.vreg = (float)val / 32768.0 * 4.096 * 6.6;
                     break;
                 case 5:
-                    out.current = (float)val / 32768.0 * 4.096 * 1 * ((ACS_TYPE == 0) ? 20 : 10.8);
+                    out.current = (float)val / 32768.0 * 4.096 * 1 * ((m_AcsType == 0) ? 20 : 10.8);
                     break;
                 }
                 out.power = out.vin * out.current;
