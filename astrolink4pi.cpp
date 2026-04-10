@@ -1698,7 +1698,8 @@ bool AstroLink4Pi::readPower()
 	PowerReadingsN[POW_ITOT].value = r.current;
 	PowerReadingsN[POW_PTOT].value = r.power;
 	PowerReadingsN[POW_AH].value = r.ah;
-	PowerReadingsN[POW_WH].value = r.wh;
+	// PowerReadingsN[POW_WH].value = r.wh;
+	PowerReadingsN[POW_WH].value = 3.14;
 
 	PowerReadingsNP.s = IPS_OK;
 	IDSetNumber(&PowerReadingsNP, nullptr);
