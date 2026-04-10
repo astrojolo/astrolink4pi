@@ -43,8 +43,8 @@ MLXSensor::Readout MLXSensor::read(double ambientReferenceC) const
     if (!m_Bus.isOpen())
         return result;
 
-    uint16_t rawAmbient = 0;
-    uint16_t rawObject = 0;
+    int rawAmbient = 0;
+    int rawObject = 0;
 
     if (!readWord(MLX_REG_AMBIENT, rawAmbient))
         return result;
@@ -52,12 +52,14 @@ MLXSensor::Readout MLXSensor::read(double ambientReferenceC) const
     if (!readWord(MLX_REG_OBJECT1, rawObject))
         return result;
 
-    result.ambientTemperatureC = (rawAmbient);
-    result.objectTemperatureC = (rawObject);
+    result.ambientTemperatureC = rawToCelsius(rawAmbient);
+    result.objectTemperatureC = rawToCelsius(rawObject);
     result.skyTemperatureC = result.objectTemperatureC;
 
     const double reference = ambientReferenceC != 0.0 ? ambientReferenceC : result.ambientTemperatureC;
-    result.skyTemperatureDiffC = reference - result.skyTemperatureC;
+    // result.skyTemperatureDiffC = reference - result.skyTemperatureC;
+    result.skyTemperatureDiffC = rawObject;
+    result.objectTemperatureC = rawAmbient;
 
     result.valid = true;
     return result;
