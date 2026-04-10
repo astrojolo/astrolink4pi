@@ -54,30 +54,54 @@ bool PowerMonitor::isOpen() const
     return m_Fd >= 0;
 }
 
+
+
 bool PowerMonitor::read(PowerMonitor::Readings &out)
 {
-    if (!isOpen() || m_Fd < 0)
+    if (!isOpen())
         return false;
 
-    uint16_t config = 0;
+    uint8_t writeBuf[3];
 
-    switch (powerIndex)
+    /*
+    powerIndex 0-1 Vin WR, 2-3 Vreg WR, 4-5 Itot WR
+
+    15 		- 1 	start single conv
+    14:12	- 100 	Vin, 101 Vreg, 110 Itot, 111 Iref, 011 Ireal
+    11:9  	- 001	+-4.096V
+    8		- 1 single
+
+    7:5		- 010 32SPS, 011 64SPS, 001 16SPS
+    4:2		- 000 comparator
+    1:0		- 11 comparator disable
+    */
+
+    writeBuf[0] = 0x01;
+    writeBuf[1] = 0b11000011;
+    writeBuf[2] = 0b00100011;
+
+    if ((powerIndex % 2) == 0) // Trigger conversion
     {
-    case 0: // start Vin, AIN0
-        config = 0xC323;
-        break;
-
-    case 2: // start Vreg, AIN1
-        config = 0xD323;
-        break;
-
-    case 4: // start Itot, AIN3
-        config = 0xB323;
-        break;
-
-    case 1:
-    case 3:
-    case 5:
+        switch (powerIndex)
+        {
+        case 0:
+            writeBuf[1] = 0b11000011;
+            break;
+        case 2:
+            writeBuf[1] = 0b11010011;
+            break;
+        case 4:
+            writeBuf[1] = 0b10110011;
+            break;
+        }
+        uint16_t config = (writeBuf[1] << 8) | writeBuf[2];
+        int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
+        if (written < 0)
+        {
+            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "ADS1115 write failed: errno=%d (%s)", errno, std::strerror(errno));
+        }
+    }
+    else // Trigger read
     {
         uint8_t reg = 0x00;
         uint8_t buf[2] = {0, 0};
@@ -107,135 +131,28 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
         if (raw < 0)
             raw = 0;
 
-        const float adcVoltage = static_cast<float>(raw) / 32768.0f * 4.096f;
 
         switch (powerIndex)
         {
         case 1:
-            out.vin = adcVoltage * 6.6f;
+            out.vin = (float)raw / 32768.0 * 4.096 * 6.6;
             break;
-
         case 3:
-            out.vreg = adcVoltage * 6.6f;
+            out.vreg = (float)raw / 32768.0 * 4.096 * 6.6;
             break;
-
         case 5:
-            out.current = adcVoltage * ((m_AcsType == 0) ? 20.0f : 10.8f);
-            out.power = out.vin * out.current;
-            energyAs += out.current * 0.4f;
-            energyWs += out.power * 0.4f;
-            out.ah = energyAs / 3600.0f;
-            out.wh = energyWs / 3600.0f;
+            out.current = (float)raw / 32768.0 * 4.096 * 1 * ((m_AcsType == 0) ? 20 : 10.8);
             break;
         }
-
-        break;
+        out.power = out.vin * out.current;
+        energyAs += out.current * 0.4;
+        energyWs += out.vin * out.current * 0.4;
+        out.ah = energyAs / 3600;
+        out.wh = energyWs / 3600;
     }
-
-    default:
-        powerIndex = 0;
-        return true;
-    }
-
-    if ((powerIndex % 2) == 0)
-    {
-        int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
-        if (written < 0)
-        {
-            int err = errno;
-            DEBUGFDEVICE(getDeviceName().c_str(),
-                         INDI::Logger::DBG_SESSION,
-                         "ADS1115 write failed: fd=%d config=0x%04X errno=%d (%s)",
-                         m_Fd, config, err, std::strerror(err));
-            return false;
-        }
-    }
-
     powerIndex++;
     if (powerIndex > 5)
         powerIndex = 0;
 
     return true;
 }
-
-
-// bool PowerMonitor::read(PowerMonitor::Readings &out)
-// {
-//     if (!isOpen())
-//         return false;
-
-//     uint8_t writeBuf[3];
-
-//     /*
-//     powerIndex 0-1 Vin WR, 2-3 Vreg WR, 4-5 Itot WR
-
-//     15 		- 1 	start single conv
-//     14:12	- 100 	Vin, 101 Vreg, 110 Itot, 111 Iref, 011 Ireal
-//     11:9  	- 001	+-4.096V
-//     8		- 1 single
-
-//     7:5		- 010 32SPS, 011 64SPS, 001 16SPS
-//     4:2		- 000 comparator
-//     1:0		- 11 comparator disable
-//     */
-
-//     writeBuf[0] = 0x01;
-//     writeBuf[1] = 0b11000011;
-//     writeBuf[2] = 0b00100011;
-
-//     if ((powerIndex % 2) == 0) // Trigger conversion
-//     {
-//         switch (powerIndex)
-//         {
-//         case 0:
-//             writeBuf[1] = 0b11000011;
-//             break;
-//         case 2:
-//             writeBuf[1] = 0b11010011;
-//             break;
-//         case 4:
-//             writeBuf[1] = 0b10110011;
-//             break;
-//         }
-//         uint16_t config = (writeBuf[1] << 8) | writeBuf[2];
-//         int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
-//         if (written < 0)
-//         {
-//             DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C write failed: errno=%d (%s)", errno, std::strerror(errno));
-//         }
-//     }
-//     else // Trigger read
-//     {
-//         int16_t read = wiringPiI2CReadReg16(m_Fd, 0x00);
-//         if (read < 0)
-//         {
-//             DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C read failed: errno=%d (%s)", errno, std::strerror(errno));
-//         }
-//         else
-//         {
-//             switch (powerIndex)
-//             {
-//             case 1:
-//                 out.vin = (float)read / 32768.0 * 4.096 * 6.6;
-//                 break;
-//             case 3:
-//                 out.vreg = (float)read / 32768.0 * 4.096 * 6.6;
-//                 break;
-//             case 5:
-//                 out.current = (float)read / 32768.0 * 4.096 * 1 * ((m_AcsType == 0) ? 20 : 10.8);
-//                 break;
-//             }
-//             out.power = out.vin * out.current;
-//             energyAs += out.current * 0.4;
-//             energyWs += out.vin * out.current * 0.4;
-//             out.ah = energyAs / 3600;
-//             out.wh = energyWs / 3600;
-//         }
-//         // }
-//     }
-//     powerIndex++;
-//     if (powerIndex > 5)
-//         powerIndex = 0;
-
-//     return true;
-// }
