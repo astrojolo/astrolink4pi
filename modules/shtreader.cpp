@@ -62,6 +62,7 @@ bool SHTReader::read(SHTReader::Readings &out)
         return false;
 
     out = m_LastReadings;
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SHT read=%d", readIndex);
 
     if ((readIndex % 2) == 0)
     {
