@@ -31,7 +31,6 @@ set(indi_astrolink4pi_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/modules/boardio.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/modules/systeminfo.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/modules/pwm.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/modules/i2cbus.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/modules/powermonitor.cpp
 
 )
