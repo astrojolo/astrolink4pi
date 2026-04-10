@@ -45,7 +45,7 @@ bool PowerMonitor::isOpen() const
 
 bool PowerMonitor::read(PowerMonitor::Readings &out)
 {
-    LOG_ERROR("TEST ERROR");
+    DEBUGFDEVICE("PowerMonitor", INDI::Logger::DBG_ERROR, "TEST ERROR %d", 1);
     if (!isOpen())
         return false;
 
