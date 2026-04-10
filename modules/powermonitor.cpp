@@ -10,8 +10,8 @@
 #include <indilogger.h>
 
 
-PowerMonitor::PowerMonitor(uint8_t adsAddress, uint8_t acsType)
-    : m_AdsAddress(adsAddress), m_AcsType(acsType)
+PowerMonitor::PowerMonitor(uint8_t adsAddress, uint8_t acsType, const std::string &deviceName)
+    : BaseComponent(deviceName, "PowerMonitor"), m_AdsAddress(adsAddress), m_AcsType(acsType)
 {
 }
 
@@ -45,7 +45,7 @@ bool PowerMonitor::isOpen() const
 
 bool PowerMonitor::read(PowerMonitor::Readings &out)
 {
-    DEBUGFDEVICE("AstroLink 4 Pi", INDI::Logger::DBG_SESSION, "TEST ERROR %d", 1);
+    DEBUGF(INDI::Logger::DBG_SESSION, "TEST ERROR %d", 1);
     if (!isOpen())
         return false;
 

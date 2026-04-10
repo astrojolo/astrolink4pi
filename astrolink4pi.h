@@ -42,6 +42,7 @@
 
 #include "config.h"
 
+#include "basecomponent.h"
 #include "boardio.h"
 #include "pwm.h"
 #include "systeminfo.h"
