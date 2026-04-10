@@ -43,7 +43,7 @@ void PowerMonitor::close()
 {
     if (m_Fd >= 0)
     {
-        close(m_Fd);
+        ::close(m_Fd);
         m_Fd = -1;
     }
 }
