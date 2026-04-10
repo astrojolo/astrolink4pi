@@ -142,43 +142,43 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     }
     else // Trigger read
     {
-        writeBuf[0] = 0x00;
-        int written = wiringPiI2CWrite(m_Fd, writeBuf[0]);
-        if (written < 0)
+        // writeBuf[0] = 0x00;
+        // int written = wiringPiI2CWrite(m_Fd, writeBuf[0]);
+        // if (written < 0)
+        // {
+        //     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C write failed: errno=%d (%s)", errno, std::strerror(errno));
+        // }
+        // if (written == 0)
+        // {
+        int16_t read = wiringPiI2CReadReg16(m_Fd, 0x00);
+        if (read < 0)
         {
-            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C write failed: errno=%d (%s)", errno, std::strerror(errno));
+            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C read failed: errno=%d (%s)", errno, std::strerror(errno));
         }
-        if (written == 0)
+        if (read > 0)
         {
-            int16_t read = wiringPiI2CReadReg16(m_Fd, 0x00);
-            if (read < 0)
-            {
-                DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C read failed: errno=%d (%s)", errno, std::strerror(errno));
-            }
-            if (read > 0)
-            {
-                // int16_t val = readBuf[0] * 255 + readBuf[1];
-                int16_t val = (static_cast<int16_t>(static_cast<unsigned char>(readBuf[0])) << 8) | static_cast<unsigned char>(readBuf[1]);
+            // int16_t val = readBuf[0] * 255 + readBuf[1];
+            int16_t val = (static_cast<int16_t>(static_cast<unsigned char>(readBuf[0])) << 8) | static_cast<unsigned char>(readBuf[1]);
 
-                switch (powerIndex)
-                {
-                case 1:
-                    out.vin = (float)val / 32768.0 * 4.096 * 6.6;
-                    break;
-                case 3:
-                    out.vreg = (float)val / 32768.0 * 4.096 * 6.6;
-                    break;
-                case 5:
-                    out.current = (float)val / 32768.0 * 4.096 * 1 * ((m_AcsType == 0) ? 20 : 10.8);
-                    break;
-                }
-                out.power = out.vin * out.current;
-                energyAs += out.current * 0.4;
-                energyWs += out.vin * out.current * 0.4;
-                out.ah = energyAs / 3600;
-                out.wh = energyWs / 3600;
+            switch (powerIndex)
+            {
+            case 1:
+                out.vin = (float)val / 32768.0 * 4.096 * 6.6;
+                break;
+            case 3:
+                out.vreg = (float)val / 32768.0 * 4.096 * 6.6;
+                break;
+            case 5:
+                out.current = (float)val / 32768.0 * 4.096 * 1 * ((m_AcsType == 0) ? 20 : 10.8);
+                break;
             }
+            out.power = out.vin * out.current;
+            energyAs += out.current * 0.4;
+            energyWs += out.vin * out.current * 0.4;
+            out.ah = energyAs / 3600;
+            out.wh = energyWs / 3600;
         }
+        // }
     }
     powerIndex++;
     if (powerIndex > 5)
