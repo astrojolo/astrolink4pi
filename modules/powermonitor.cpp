@@ -41,12 +41,9 @@ bool PowerMonitor::isOpen() const
 
 bool PowerMonitor::read(PowerMonitor::Readings &out)
 {
-    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Read called with id %d", m_Fd);
-
     if (!isOpen())
         return false;
 
-    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C opened, power index %d", powerIndex);            
     uint8_t writeBuf[3];
     uint8_t readBuf[2];
 
@@ -82,14 +79,18 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
             break;
         }
         int written = wiringPiI2CRawWrite(m_Fd, writeBuf, 3);
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "written %d", written);            
+
     }
     else // Trigger read
     {
         writeBuf[0] = 0x00;
         int written = wiringPiI2CRawWrite(m_Fd, writeBuf, 1);
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "written %d", written);            
         if (written == 0)
         {
             int read = wiringPiI2CRawRead(m_Fd, readBuf, 2);
+            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "read %d", read);            
             if (read > 0)
             {
                 // int16_t val = readBuf[0] * 255 + readBuf[1];
