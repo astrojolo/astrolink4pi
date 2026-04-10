@@ -54,10 +54,6 @@ bool MLXReader::open()
         return false;
     }
 
-    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
-                 "MLX I2C setup success: addr=0x%02X fd=%d",
-                 m_MlxAddress, m_Fd);
-
     return true;
 }
 
@@ -84,13 +80,12 @@ bool MLXReader::readWord(uint8_t reg, uint16_t &value)
     const int ret = wiringPiI2CReadReg16(m_Fd, reg);
     if (ret < 0)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                      "MLX read word reg 0x%02X failed: fd=%d errno=%d (%s)",
                      reg, m_Fd, errno, std::strerror(errno));
         return false;
     }
 
-    // SMBus Read Word zwraca low byte + high byte.
     value = static_cast<uint16_t>(ret & 0xFFFF);
 
     return true;
@@ -112,18 +107,15 @@ bool MLXReader::read(MLXReader::Readings &out)
     if (!readWord(MLX90614_REG_TOBJ1, rawObject))
         return false;
 
-    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                  "MLX raw ambient=0x%04X object=0x%04X",
                  rawAmbient, rawObject);
 
     out.ambientTemperature = mlxRawToCelsius(rawAmbient);
     out.objectTemperature  = mlxRawToCelsius(rawObject);
+    out.tempDifference = out.objectTemperature - out.ambientTemperature;
 
     m_LastReadings = out;
-
-    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,
-                 "MLX temp ambient=%.2fC object=%.2fC",
-                 out.ambientTemperature, out.objectTemperature);
 
     return true;
 }
