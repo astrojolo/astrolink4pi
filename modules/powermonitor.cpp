@@ -64,7 +64,7 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     // MODE=1 single-shot
     // DR=100 128SPS
     // COMP_QUE=11 disable comparator
-    // uint16_t config = 0xC383;
+    uint16_t config = 0xC383;
 
     int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
 
