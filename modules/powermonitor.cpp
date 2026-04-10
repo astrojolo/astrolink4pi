@@ -1,6 +1,7 @@
 #include "powermonitor.h"
 
 #include <wiringPi.h>
+#include <wiringPiI2C.h>
 #include <ads1115.h>
 #include <chrono>
 #include <cmath>
@@ -22,18 +23,19 @@ PowerMonitor::~PowerMonitor()
 bool PowerMonitor::open(int bus)
 {
     close();
-    //m_Fd = wiringPiI2CSetup(bus);
+    // m_Fd = wiringPiI2CSetup(bus);
     if (wiringPiSetup() == -1)
     {
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Error %d", 1);
         return 0;
     }
 
-    if (ads1115Setup(100, 0x48) == 0)
+    int fd = wiringPiI2CSetup(0x48);
+    if (fd < 0)
     {
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Error %d", 2);
         return 0;
-    }    
+    }
     m_Fd = 1;
     return m_Fd >= 0;
 }
@@ -55,12 +57,36 @@ bool PowerMonitor::isOpen() const
 bool PowerMonitor::read(PowerMonitor::Readings &out)
 {
 
-    int raw0 = analogRead(100 + 0);
-    int raw1 = analogRead(100 + 1);
-    int raw2 = analogRead(100 + 2);
-    int raw3 = analogRead(100 + 3);
+    // CONFIG:
+    // OS=1 start single conversion
+    // MUX=100 AIN0 względem GND
+    // PGA=001 ±4.096V
+    // MODE=1 single-shot
+    // DR=100 128SPS
+    // COMP_QUE=11 disable comparator
+    uint16_t config = 0xC383;
 
-    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Readings %d %d %d %d", raw0, raw1, raw2, raw3);
+    wiringPiI2CWriteReg16(fd, 0x01, __bswap_16(config));
+
+    // czekaj aż konwersja się skończy
+    while (true)
+    {
+        int16_t cfg = wiringPiI2CReadReg16(fd, 0x01);
+        cfg = __bswap_16(cfg);
+        if (cfg & 0x8000)
+            break;
+        delayMicroseconds(100);
+    }
+
+    int16_t raw = wiringPiI2CReadReg16(fd, 0x00);
+    raw = __bswap_16(raw);
+
+    if (raw < 0)
+        raw = 0; // dla single-ended bywa praktyczne
+
+    double voltage = raw * 4.096 / 32768.0;
+
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Readings %d %d %d %f", raw, raw, raw, voltage);
 
     // if (!isOpen())
     //     return false;
