@@ -46,7 +46,7 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     if (!isOpen())
         return false;
 
-    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C opened");            
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C opened, power index %d", powerIndex);            
     uint8_t writeBuf[3];
     uint8_t readBuf[2];
 
