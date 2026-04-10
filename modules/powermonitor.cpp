@@ -55,10 +55,10 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
         return 0;
     }
 
-    int raw0 = analogRead(PIN_BASE + 0);
-    int raw1 = analogRead(PIN_BASE + 1);
-    int raw2 = analogRead(PIN_BASE + 2);
-    int raw3 = analogRead(PIN_BASE + 3);
+    int raw0 = analogRead(100 + 0);
+    int raw1 = analogRead(100 + 1);
+    int raw2 = analogRead(100 + 2);
+    int raw3 = analogRead(100 + 3);
 
     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Readings %d %d %d %d", raw0, raw1, raw2, raw3);
 
