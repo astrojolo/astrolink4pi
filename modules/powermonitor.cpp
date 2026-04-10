@@ -45,7 +45,7 @@ bool PowerMonitor::isOpen() const
 
 bool PowerMonitor::read(PowerMonitor::Readings &out)
 {
-    DEBUGFDEVICE("PowerMonitor", INDI::Logger::DBG_SESSION, "TEST ERROR %d", 1);
+    DEBUGFDEVICE("AstroLink 4 Pi", INDI::Logger::DBG_SESSION, "TEST ERROR %d", 1);
     if (!isOpen())
         return false;
 
