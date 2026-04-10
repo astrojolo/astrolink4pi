@@ -23,6 +23,7 @@ bool PowerMonitor::open(int bus)
 {
     close();
     //m_Fd = wiringPiI2CSetup(bus);
+    m_Fd = 1;
     return m_Fd >= 0;
 }
 
