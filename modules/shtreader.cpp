@@ -19,8 +19,6 @@ SHTReader::~SHTReader()
 
 bool SHTReader::open()
 {
-    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_ERROR, "Err 1");
-    DEBUGDEVICE("AstroLink 4 Pi", INDI::Logger::DBG_ERROR, "Err 2");
     close();
 
     int wipi = wiringPiSetup();

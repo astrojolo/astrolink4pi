@@ -25,14 +25,14 @@ bool PowerMonitor::open()
     int wipi = wiringPiSetup();
     if (wipi < 0)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "WiPi open failed: errno=%d (%s)", errno, std::strerror(errno));
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "WiPi open failed: errno=%d (%s)", errno, std::strerror(errno));
         return 0;
     }
 
     m_Fd = wiringPiI2CSetup(m_AdsAddress);
     if (m_Fd < 0)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C setup failed: errno=%d (%s)", errno, std::strerror(errno));
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "I2C setup failed: errno=%d (%s)", errno, std::strerror(errno));
         return 0;
     }
 
@@ -96,7 +96,7 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
         int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
         if (written < 0)
         {
-            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "ADS1115 write failed: errno=%d (%s)", errno, std::strerror(errno));
+            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG, "ADS1115 write failed: errno=%d (%s)", errno, std::strerror(errno));
         }
     }
     else // Trigger read
@@ -108,7 +108,7 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
         {
             int err = errno;
             DEBUGFDEVICE(getDeviceName().c_str(),
-                         INDI::Logger::DBG_SESSION,
+                         INDI::Logger::DBG_DEBUG,
                          "ADS1115 raw write(reg=0x00) failed: fd=%d errno=%d (%s)",
                          m_Fd, err, std::strerror(err));
             return false;
@@ -118,7 +118,7 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
         {
             int err = errno;
             DEBUGFDEVICE(getDeviceName().c_str(),
-                         INDI::Logger::DBG_SESSION,
+                         INDI::Logger::DBG_DEBUG,
                          "ADS1115 raw read failed: fd=%d errno=%d (%s)",
                          m_Fd, err, std::strerror(err));
             return false;
