@@ -47,12 +47,13 @@ bool PowerMonitor::isOpen() const
 
 bool PowerMonitor::read(PowerMonitor::Readings &out)
 {
+    DEBUGFDEVICE(getFullName().c_str(), INDI::Logger::DBG_SESSION, "Read called with id %d", m_Fd);
+
     if (!isOpen())
         return false;
 
     uint8_t writeBuf[3];
     uint8_t readBuf[2];
-    DEBUGDEVICE(getFullName().c_str(), INDI::Logger::DBG_SESSION, "Buffers created");
 
     /*
     powerIndex 0-1 Vin WR, 2-3 Vreg WR, 4-5 Itot WR
