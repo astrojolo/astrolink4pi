@@ -79,15 +79,15 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
             writeBuf[1] = 0b10110011;
             break;
         }
-        int written = wiringPiI2CWriteBlockData(m_Fd, writeBuf, 3);
+        int written = wiringPiI2CRawWrite(m_Fd, writeBuf, 3);
     }
     else // Trigger read
     {
         writeBuf[0] = 0x00;
-        int written = wiringPiI2CWriteBlockData(m_Fd, writeBuf, 1);
+        int written = wiringPiI2CRawWrite(m_Fd, writeBuf, 1);
         if (written == 0)
         {
-            int read = wiringPiI2CReadBlockData(m_Fd, readBuf, 2);
+            int read = wiringPiI2CRawRead(m_Fd, readBuf, 2);
             if (read > 0)
             {
                 // int16_t val = readBuf[0] * 255 + readBuf[1];

@@ -30,4 +30,5 @@ private:
     int m_Fd = -1;
     uint8_t m_AdsAddress = 0x48;
     uint8_t m_AcsType = 0; // 0 = ACS 20A, 1 = ACS 5A
+    uint8_t powerIndex = 0;
 };
