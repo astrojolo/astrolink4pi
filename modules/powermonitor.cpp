@@ -30,7 +30,7 @@ bool PowerMonitor::open(int bus)
         return 0;
     }
 
-    int m_Fd = wiringPiI2CSetup(m_AdsAddress);
+    m_Fd = wiringPiI2CSetup(m_AdsAddress);
     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "m_Fd %d", m_Fd);
     if (m_Fd < 0)
     {
