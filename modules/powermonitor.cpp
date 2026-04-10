@@ -8,7 +8,6 @@
 #include <thread>
 #include <unistd.h>
 
-
 PowerMonitor::PowerMonitor(uint8_t adsAddress, uint8_t acsType, const std::string &deviceName)
     : BaseComponent(deviceName, "PowerMonitor"), m_AdsAddress(adsAddress), m_AcsType(acsType)
 {
@@ -44,12 +43,12 @@ bool PowerMonitor::isOpen() const
 
 bool PowerMonitor::read(PowerMonitor::Readings &out)
 {
-    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "TEST ERROR %d", 1);
     if (!isOpen())
         return false;
 
     uint8_t writeBuf[3];
     uint8_t readBuf[2];
+    DEBUGDEVICE(getFullName().c_str(), INDI::Logger::DBG_SESSION, "Buffers created");
 
     /*
     powerIndex 0-1 Vin WR, 2-3 Vreg WR, 4-5 Itot WR
@@ -67,6 +66,8 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     writeBuf[0] = 0x01;
     writeBuf[1] = 0b11000011;
     writeBuf[2] = 0b00100011;
+    DEBUGFDEVICE(getFullName().c_str(), INDI::Logger::DBG_SESSION, "Power index %d", powerIndex);
+
     if ((powerIndex % 2) == 0) // Trigger conversion
     {
         switch (powerIndex)

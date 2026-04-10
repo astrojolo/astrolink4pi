@@ -18,9 +18,12 @@ public:
 protected:
     const std::string &getDeviceName() const { return m_DeviceName; }
     const std::string &getComponentName() const { return m_ComponentName; }
+    std::string getFullName() const
+    {
+        return m_DeviceName + ":" + m_ComponentName;
+    }
 
 private:
     std::string m_DeviceName;
     std::string m_ComponentName;
-
 };
