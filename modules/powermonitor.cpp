@@ -22,7 +22,7 @@ PowerMonitor::~PowerMonitor()
 bool PowerMonitor::open(int bus)
 {
     close();
-    m_Fd = wiringPiI2CSetup(bus);
+    //m_Fd = wiringPiI2CSetup(bus);
     return m_Fd >= 0;
 }
 
@@ -30,7 +30,7 @@ void PowerMonitor::close()
 {
     if (m_Fd >= 0)
     {
-        ::close(m_Fd);
+        // ::close(m_Fd);
         m_Fd = -1;
     }
 }
