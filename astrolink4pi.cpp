@@ -174,7 +174,7 @@ bool AstroLink4Pi::Connect()
     int wipi = wiringPiSetup();
     if (wipi < 0)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGFDEVICE(getDeviceName(), INDI::Logger::DBG_WARNING,
                      "WiPi open failed: errno=%d (%s)",
                      errno, std::strerror(errno));
     }
@@ -182,14 +182,14 @@ bool AstroLink4Pi::Connect()
     int m_Fd = wiringPiI2CSetup(0x44);
     if (m_Fd < 0)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+        DEBUGFDEVICE(getDeviceName(), INDI::Logger::DBG_DEBUG,
                      "SHT I2C setup failed: errno=%d (%s)",
                      errno, std::strerror(errno));
         return false;
     }
     else
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+        DEBUGFDEVICE(getDeviceName(), INDI::Logger::DBG_DEBUG,
                      "SHT I2C setup success fd=%d",
                      m_Fd);        
     }	
