@@ -34,9 +34,15 @@ bool SHTReader::open()
     if (m_Fd < 0)
     {
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
-                     "I2C setup failed: errno=%d (%s)",
+                     "SHT I2C setup failed: errno=%d (%s)",
                      errno, std::strerror(errno));
         return false;
+    }
+    else
+    {
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                     "SHT I2C setup success fd=%d",
+                     m_Fd);        
     }
 
     return m_Fd >= 0;
