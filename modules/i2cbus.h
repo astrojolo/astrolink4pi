@@ -23,7 +23,7 @@ public:
     int writeRegisterByte(uint8_t reg, uint8_t value);
     int readRegisterByte(uint8_t reg, uint8_t& value);
 
-    int readWordData(uint8_t reg, uint16_t &value);
+    int readRegisterTransaction(uint8_t reg, char* buffer, std::size_t length);
 
     uint8_t getDeviceAddress() const;
     std::string getLastError() const;

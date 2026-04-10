@@ -65,7 +65,18 @@ MLXSensor::Readout MLXSensor::read(double ambientReferenceC) const
 
 bool MLXSensor::readWord(uint8_t reg, uint16_t &value) const
 {
-    return m_Bus.readWordData(reg, value) == 0;
+    uint8_t buf[3] = {0, 0, 0};
+
+    const int ret = m_Bus.readRegisterTransaction(
+        reg,
+        reinterpret_cast<char *>(buf),
+        sizeof(buf));
+
+    if (ret != 3)
+        return false;
+
+    value = (static_cast<uint16_t>(buf[1]) << 8) | buf[0];
+    return true;
 }
 
 double MLXSensor::rawToCelsius(uint16_t raw)

@@ -4,7 +4,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <i2c/smbus.h>
+#include <cstdint>
 
 #include <cerrno>
 #include <cstring>
@@ -68,7 +68,7 @@ void I2CBus::close()
     }
 }
 
-int I2CBus::write(const char* data, std::size_t length)
+int I2CBus::write(const char *data, std::size_t length)
 {
     if (!isOpen())
     {
@@ -92,7 +92,7 @@ int I2CBus::write(const char* data, std::size_t length)
     return static_cast<int>(written);
 }
 
-int I2CBus::read(char* buffer, std::size_t length)
+int I2CBus::read(char *buffer, std::size_t length)
 {
     if (!isOpen())
     {
@@ -116,7 +116,7 @@ int I2CBus::read(char* buffer, std::size_t length)
     return static_cast<int>(received);
 }
 
-int I2CBus::writeRegister(uint8_t reg, const char* data, std::size_t length)
+int I2CBus::writeRegister(uint8_t reg, const char *data, std::size_t length)
 {
     if (!isOpen())
     {
@@ -148,7 +148,7 @@ int I2CBus::writeRegister(uint8_t reg, const char* data, std::size_t length)
     return static_cast<int>(written - 1);
 }
 
-int I2CBus::readRegister(uint8_t reg, char* buffer, std::size_t length)
+int I2CBus::readRegister(uint8_t reg, char *buffer, std::size_t length)
 {
     if (!isOpen())
     {
@@ -193,7 +193,7 @@ int I2CBus::writeRegisterByte(uint8_t reg, uint8_t value)
     return writeRegister(reg, &data, 1);
 }
 
-int I2CBus::readRegisterByte(uint8_t reg, uint8_t& value)
+int I2CBus::readRegisterByte(uint8_t reg, uint8_t &value)
 {
     char data = 0;
     const int result = readRegister(reg, &data, 1);
@@ -204,7 +204,7 @@ int I2CBus::readRegisterByte(uint8_t reg, uint8_t& value)
     return result;
 }
 
-int I2CBus::readWordData(uint8_t reg, uint16_t &value)
+int I2CBus::readRegisterTransaction(uint8_t reg, char *buffer, std::size_t length)
 {
     if (!isOpen())
     {
@@ -212,15 +212,36 @@ int I2CBus::readWordData(uint8_t reg, uint16_t &value)
         return -1;
     }
 
-    const int result = i2c_smbus_read_word_data(fd_, reg);
-    if (result < 0)
+    if (buffer == nullptr || length == 0)
     {
-        setError("Błąd odczytu SMBus word: " + std::string(std::strerror(errno)));
+        setError("Nieprawidłowy bufor odczytu rejestru");
         return -1;
     }
 
-    value = static_cast<uint16_t>(result);
-    return 0;
+    uint8_t regBuf = reg;
+
+    struct i2c_msg messages[2];
+    messages[0].addr = address_;
+    messages[0].flags = 0;
+    messages[0].len = 1;
+    messages[0].buf = &regBuf;
+
+    messages[1].addr = address_;
+    messages[1].flags = I2C_M_RD;
+    messages[1].len = static_cast<__u16>(length);
+    messages[1].buf = reinterpret_cast<uint8_t *>(buffer);
+
+    struct i2c_rdwr_ioctl_data ioctlData;
+    ioctlData.msgs = messages;
+    ioctlData.nmsgs = 2;
+
+    if (ioctl(fd_, I2C_RDWR, &ioctlData) < 0)
+    {
+        setError("Błąd transakcji I2C_RDWR: " + std::string(std::strerror(errno)));
+        return -1;
+    }
+
+    return static_cast<int>(length);
 }
 
 uint8_t I2CBus::getDeviceAddress() const
@@ -233,7 +254,7 @@ std::string I2CBus::getLastError() const
     return lastError_;
 }
 
-void I2CBus::setError(const std::string& msg)
+void I2CBus::setError(const std::string &msg)
 {
     lastError_ = msg;
 }
