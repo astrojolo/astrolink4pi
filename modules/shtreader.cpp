@@ -24,7 +24,7 @@ bool SHTReader::open()
     int wipi = wiringPiSetup();
     if (wipi < 0)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "WiPi open failed: errno=%d (%s)",
                      errno, std::strerror(errno));
         return false;
@@ -33,7 +33,7 @@ bool SHTReader::open()
     m_Fd = wiringPiI2CSetup(m_ShtAddress);
     if (m_Fd < 0)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                      "I2C setup failed: errno=%d (%s)",
                      errno, std::strerror(errno));
         return false;
@@ -61,6 +61,8 @@ bool SHTReader::read(SHTReader::Readings &out)
     if (!isOpen())
         return false;
 
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SHT read inside, fd=%d", m_Fd);
+
     out = m_LastReadings;
 
     if ((readIndex % 2) == 0)
@@ -70,7 +72,7 @@ bool SHTReader::read(SHTReader::Readings &out)
         if (wiringPiI2CRawWrite(m_Fd, cmd, 2) != 2)
         {
             int err = errno;
-            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,
+            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                          "SHT raw write failed: fd=%d errno=%d (%s)",
                          m_Fd, err, std::strerror(err));
             return false;
@@ -83,7 +85,7 @@ bool SHTReader::read(SHTReader::Readings &out)
         if (wiringPiI2CRawRead(m_Fd, buf, 6) != 6)
         {
             int err = errno;
-            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,
+            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                          "SHT raw read failed: fd=%d errno=%d (%s)",
                          m_Fd, err, std::strerror(err));
             return false;

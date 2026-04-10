@@ -58,6 +58,8 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     if (!isOpen())
         return false;
 
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Powermonitor read inside, fd=%d", m_Fd);
+
     uint8_t writeBuf[3];
 
     /*
