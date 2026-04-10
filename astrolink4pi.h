@@ -42,15 +42,13 @@
 
 #include "config.h"
 
-#include <wiringPi.h>
-#include <wiringPiI2C.h>
-
 #include "basecomponent.h"
 #include "boardio.h"
 #include "pwm.h"
 #include "systeminfo.h"
 #include "powermonitor.h"
 #include "shtreader.h"
+#include "mlxreader.h"
 
 
 #include <defaultdevice.h>
@@ -109,6 +107,7 @@ private:
 	SystemInfoService m_SystemInfo;
 	PowerMonitor m_PowerMonitor;
 	SHTReader m_SHTReader;
+	MLXReader m_MLXReader;
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;

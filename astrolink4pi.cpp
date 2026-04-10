@@ -99,7 +99,7 @@ void ISNewNumber(const char *dev, const char *name, double values[], char *names
 	astroLink4Pi->ISNewNumber(dev, name, values, names, num);
 }
 
-AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this), m_PwmController(m_BoardIO), m_PowerMonitor(ADS_ADDR, ACS_TYPE, getDeviceName()), m_SHTReader(0x44, getDeviceName())
+AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this), m_PwmController(m_BoardIO), m_PowerMonitor(ADS_ADDR, ACS_TYPE, getDeviceName()), m_SHTReader(0x44, getDeviceName(), m_MLXReader(0x5A, getDeviceName()))
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
@@ -170,6 +170,12 @@ bool AstroLink4Pi::Connect()
 		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize SHT sensor.");
 		return false;
 	}
+
+	if (!m_MLXReader.open())
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize MLX sensor.");
+		return false;
+	}	
 
 	DEBUGF(INDI::Logger::DBG_SESSION,
 		   "Connected on %s (%s), kernel %s",
@@ -1595,6 +1601,16 @@ bool AstroLink4Pi::readOLD()
 
 bool AstroLink4Pi::readMLX()
 {
+	MLXReader::Readings readings;
+	if (!m_MLXReader.read(readings))
+	{
+		return false;
+	}
+	setParameterValue("WEATHER_SKY_TEMP", readings.objectTemperature);
+	setParameterValue("WEATHER_SKY_DIFF", readings.tempDifference);
+
+	return true;
+
 	// int i2cHandle = lgI2cOpen(1, 0x5A, 0);
 	// if (i2cHandle >= 0)
 	// {

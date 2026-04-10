@@ -62,11 +62,9 @@ bool SHTReader::read(SHTReader::Readings &out)
         return false;
 
     out = m_LastReadings;
-    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SHT read=%d", readIndex);
 
     if ((readIndex % 2) == 0)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SHT raw write fd=%d", m_Fd);
         uint8_t cmd[2] = {0x24, 0x00};
 
         if (wiringPiI2CRawWrite(m_Fd, cmd, 2) != 2)
@@ -80,7 +78,6 @@ bool SHTReader::read(SHTReader::Readings &out)
     }
     else
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SHT raw read fd=%d", m_Fd);
         uint8_t buf[6] = {0};
 
         if (wiringPiI2CRawRead(m_Fd, buf, 6) != 6)
@@ -123,9 +120,8 @@ bool SHTReader::read(SHTReader::Readings &out)
     }
 
     readIndex++;
-    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SHT read 2=%d", readIndex);
     if (readIndex > 1)
         readIndex = 0;
-    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SHT read 3=%d", readIndex);
+
     return true;
 }
