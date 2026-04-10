@@ -81,14 +81,14 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
         }
         uint16_t config = (writeBuf[1] << 8) | writeBuf[2];
         int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "written %d", written);            
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "written 1 %d", written);            
 
     }
     else // Trigger read
     {
         writeBuf[0] = 0x00;
         int written = wiringPiI2CRawWrite(m_Fd, writeBuf, 1);
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "written %d", written);            
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "written 2 %d", written);            
         if (written == 0)
         {
             int read = wiringPiI2CRawRead(m_Fd, readBuf, 2);
