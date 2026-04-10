@@ -22,4 +22,5 @@ protected:
 private:
     std::string m_DeviceName;
     std::string m_ComponentName;
+
 };
