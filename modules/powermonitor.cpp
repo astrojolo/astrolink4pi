@@ -54,8 +54,6 @@ bool PowerMonitor::isOpen() const
     return m_Fd >= 0;
 }
 
-
-
 bool PowerMonitor::read(PowerMonitor::Readings &out)
 {
     if (!isOpen())
@@ -131,17 +129,23 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
         if (raw < 0)
             raw = 0;
 
+        out.vin = m_LastVin;
+        out.vreg = m_LastVreg;
+        out.current = m_LastCurrent;
 
         switch (powerIndex)
         {
         case 1:
             out.vin = (float)raw / 32768.0 * 4.096 * 6.6;
+            m_LastVin = out.vin;
             break;
         case 3:
             out.vreg = (float)raw / 32768.0 * 4.096 * 6.6;
+            m_LastVreg = out.vreg;
             break;
         case 5:
             out.current = (float)raw / 32768.0 * 4.096 * 1 * ((m_AcsType == 0) ? 20 : 10.8);
+            m_LastCurrent = out.current;
             break;
         }
         out.power = out.vin * out.current;
