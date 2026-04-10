@@ -113,7 +113,7 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
             }
             else
             {
-                out.wh = -1.0;
+                out.wh = read;
             }
 
         }
