@@ -59,27 +59,19 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     if (!isOpen() || m_Fd < 0)
         return false;
 
-    // powerIndex:
-    // 0 - start Vin
-    // 1 - read  Vin
-    // 2 - start Vreg
-    // 3 - read  Vreg
-    // 4 - start Itot
-    // 5 - read  Itot
-
     uint16_t config = 0;
 
     switch (powerIndex)
     {
-    case 0: // start Vin, MUX=100
+    case 0: // start Vin, AIN0
         config = 0xC323;
         break;
 
-    case 2: // start Vreg, MUX=101
+    case 2: // start Vreg, AIN1
         config = 0xD323;
         break;
 
-    case 4: // start Itot, MUX=011
+    case 4: // start Itot, AIN3
         config = 0xB323;
         break;
 
@@ -87,25 +79,35 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     case 3:
     case 5:
     {
-        int16_t raw = wiringPiI2CReadReg16(m_Fd, 0x00);
-        if (raw < 0)
+        uint8_t reg = 0x00;
+        uint8_t buf[2] = {0, 0};
+
+        if (wiringPiI2CRawWrite(m_Fd, &reg, 1) != 1)
         {
             int err = errno;
             DEBUGFDEVICE(getDeviceName().c_str(),
                          INDI::Logger::DBG_SESSION,
-                         "ADS1115 read failed: fd=%d errno=%d (%s)",
+                         "ADS1115 raw write(reg=0x00) failed: fd=%d errno=%d (%s)",
                          m_Fd, err, std::strerror(err));
             return false;
         }
 
-        raw = static_cast<int16_t>(__bswap_16(static_cast<uint16_t>(raw)));
+        if (wiringPiI2CRawRead(m_Fd, buf, 2) != 2)
+        {
+            int err = errno;
+            DEBUGFDEVICE(getDeviceName().c_str(),
+                         INDI::Logger::DBG_SESSION,
+                         "ADS1115 raw read failed: fd=%d errno=%d (%s)",
+                         m_Fd, err, std::strerror(err));
+            return false;
+        }
 
-        // dla wejść single-ended wynik ujemny traktujemy jako 0
+        int16_t raw = static_cast<int16_t>((buf[0] << 8) | buf[1]);
+
         if (raw < 0)
             raw = 0;
 
-        const float fsr = 4.096f;
-        const float adcVoltage = static_cast<float>(raw) / 32768.0f * fsr;
+        const float adcVoltage = static_cast<float>(raw) / 32768.0f * 4.096f;
 
         switch (powerIndex)
         {
@@ -135,7 +137,6 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
         return true;
     }
 
-    // Start single conversion on even steps
     if ((powerIndex % 2) == 0)
     {
         int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
@@ -156,6 +157,7 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
 
     return true;
 }
+
 
 // bool PowerMonitor::read(PowerMonitor::Readings &out)
 // {
