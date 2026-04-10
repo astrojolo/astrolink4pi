@@ -66,7 +66,7 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     // COMP_QUE=11 disable comparator
     uint16_t config = 0xC383;
 
-    wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
+    int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
 
     // czekaj aż konwersja się skończy
     while (true)
@@ -86,7 +86,7 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
 
     double voltage = raw * 4.096 / 32768.0;
 
-    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Readings %d %d %d %f", raw, raw, raw, voltage);
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Readings %d %d %d %f", m_Fd, written, raw, voltage);
 
     // if (!isOpen())
     //     return false;
