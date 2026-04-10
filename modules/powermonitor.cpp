@@ -42,6 +42,28 @@ bool PowerMonitor::isOpen() const
 
 bool PowerMonitor::read(PowerMonitor::Readings &out)
 {
+    const int PIN_BASE = 100;  // dowolna baza > numerów GPIO
+    const int I2C_ADDR = 0x48; // typowy adres ADS1115
+
+    if (wiringPiSetup() == -1)
+    {
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Error %d", 1);
+        return 0;
+    }
+
+    if (ads1115Setup(PIN_BASE, I2C_ADDR) == 0)
+    {
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Error %d", 2);
+        return 0;
+    }
+
+    int raw0 = analogRead(PIN_BASE + 0);
+    int raw1 = analogRead(PIN_BASE + 1);
+    int raw2 = analogRead(PIN_BASE + 2);
+    int raw3 = analogRead(PIN_BASE + 3);
+
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Readings %d %d %d %d", raw0, raw1, raw2, raw3);
+
     if (!isOpen())
         return false;
 
@@ -61,66 +83,66 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     1:0		- 11 comparator disable
     */
 
-    writeBuf[0] = 0x01;
-    writeBuf[1] = 0b11000011;
-    writeBuf[2] = 0b00100011;
+    // writeBuf[0] = 0x01;
+    // writeBuf[1] = 0b11000011;
+    // writeBuf[2] = 0b00100011;
 
-    if ((powerIndex % 2) == 0) // Trigger conversion
-    {
-        switch (powerIndex)
-        {
-        case 0:
-            writeBuf[1] = 0b11000011;
-            break;
-        case 2:
-            writeBuf[1] = 0b11010011;
-            break;
-        case 4:
-            writeBuf[1] = 0b10110011;
-            break;
-        }
-        uint16_t config = (writeBuf[1] << 8) | writeBuf[2];
-        int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "written 1 %d", written);            
+    // if ((powerIndex % 2) == 0) // Trigger conversion
+    // {
+    //     switch (powerIndex)
+    //     {
+    //     case 0:
+    //         writeBuf[1] = 0b11000011;
+    //         break;
+    //     case 2:
+    //         writeBuf[1] = 0b11010011;
+    //         break;
+    //     case 4:
+    //         writeBuf[1] = 0b10110011;
+    //         break;
+    //     }
+    //     uint16_t config = (writeBuf[1] << 8) | writeBuf[2];
+    //     int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
+    //     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "written 1 %d", written);
 
-    }
-    else // Trigger read
-    {
-        writeBuf[0] = 0x00;
-        int written = wiringPiI2CRawWrite(m_Fd, writeBuf, 1);
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "written 2 %d", written);            
-        if (written == 0)
-        {
-            int read = wiringPiI2CRawRead(m_Fd, readBuf, 2);
-            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "read %d", read);            
-            if (read > 0)
-            {
-                // int16_t val = readBuf[0] * 255 + readBuf[1];
-                int16_t val = (static_cast<int16_t>(static_cast<unsigned char>(readBuf[0])) << 8) | static_cast<unsigned char>(readBuf[1]);
+    // }
+    // else // Trigger read
+    // {
+    //     writeBuf[0] = 0x00;
+    //     int written = wiringPiI2CRawWrite(m_Fd, writeBuf, 1);
+    //     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "written 2 %d", written);
+    //     if (written == 0)
+    //     {
+    //         int read = wiringPiI2CRawRead(m_Fd, readBuf, 2);
+    //         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "read %d", read);
+    //         if (read > 0)
+    //         {
+    //             // int16_t val = readBuf[0] * 255 + readBuf[1];
+    //             int16_t val = (static_cast<int16_t>(static_cast<unsigned char>(readBuf[0])) << 8) | static_cast<unsigned char>(readBuf[1]);
 
-                switch (powerIndex)
-                {
-                case 1:
-                    out.vin = (float)val / 32768.0 * 4.096 * 6.6;
-                    break;
-                case 3:
-                    out.vreg = (float)val / 32768.0 * 4.096 * 6.6;
-                    break;
-                case 5:
-                    out.current = (float)val / 32768.0 * 4.096 * 1 * ((m_AcsType == 0) ? 20 : 10.8);
-                    break;
-                }
-                out.power = out.vin * out.current;
-                energyAs += out.current * 0.4;
-                energyWs += out.vin * out.current * 0.4;
-                out.ah = energyAs / 3600;
-                out.wh = energyWs / 3600;
-            }
-        }
-    }
-    powerIndex++;
-    if (powerIndex > 5)
-        powerIndex = 0;
+    //             switch (powerIndex)
+    //             {
+    //             case 1:
+    //                 out.vin = (float)val / 32768.0 * 4.096 * 6.6;
+    //                 break;
+    //             case 3:
+    //                 out.vreg = (float)val / 32768.0 * 4.096 * 6.6;
+    //                 break;
+    //             case 5:
+    //                 out.current = (float)val / 32768.0 * 4.096 * 1 * ((m_AcsType == 0) ? 20 : 10.8);
+    //                 break;
+    //             }
+    //             out.power = out.vin * out.current;
+    //             energyAs += out.current * 0.4;
+    //             energyWs += out.vin * out.current * 0.4;
+    //             out.ah = energyAs / 3600;
+    //             out.wh = energyWs / 3600;
+    //         }
+    //     }
+    // }
+    // powerIndex++;
+    // if (powerIndex > 5)
+    //     powerIndex = 0;
 
     return true;
 }
