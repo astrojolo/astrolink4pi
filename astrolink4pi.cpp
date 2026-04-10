@@ -1610,7 +1610,7 @@ bool AstroLink4Pi::readOLD()
 
 bool AstroLink4Pi::readMLX()
 {
-	const double ambient = getParameter("WEATHER_TEMPERATURE");
+	const double ambient = focuserTemperature;
 	const auto data = m_MLXSensor.read(ambient);
 
 	if (!data.valid)
