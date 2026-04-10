@@ -34,6 +34,7 @@ set(indi_astrolink4pi_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/modules/powermonitor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/modules/shtreader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/modules/mlxreader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/modules/tslreader.cpp
 )
 
 if (UNITY_BUILD)

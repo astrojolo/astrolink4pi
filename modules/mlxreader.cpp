@@ -113,7 +113,7 @@ bool MLXReader::read(MLXReader::Readings &out)
 
     out.ambientTemperature = mlxRawToCelsius(rawAmbient);
     out.objectTemperature  = mlxRawToCelsius(rawObject);
-    out.tempDifference = out.objectTemperature - out.ambientTemperature;
+    out.tempDifference = out.ambientTemperature - out.objectTemperature;
 
     m_LastReadings = out;
 

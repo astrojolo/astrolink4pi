@@ -49,7 +49,7 @@
 #include "powermonitor.h"
 #include "shtreader.h"
 #include "mlxreader.h"
-
+#include "tslreader.h"
 
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
@@ -108,6 +108,7 @@ private:
 	PowerMonitor m_PowerMonitor;
 	SHTReader m_SHTReader;
 	MLXReader m_MLXReader;
+	TSLReader m_TSLReader;
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
