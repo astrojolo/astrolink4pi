@@ -43,8 +43,8 @@ MLXSensor::Readout MLXSensor::read(double ambientReferenceC) const
     if (!m_Bus.isOpen())
         return result;
 
-    int rawAmbient = 0;
-    int rawObject = 0;
+    uint16_t rawAmbient = 0;
+    uint16_t rawObject = 0;
 
     if (!readWord(MLX_REG_AMBIENT, rawAmbient))
         return result;
