@@ -161,8 +161,10 @@ bool AstroLink4Pi::Connect()
 
 	if (!m_PowerMonitor.open(1))
 	{
-		DEBUG(INDI::Logger::DBG_ERROR, "Could not initialize power monitor.");
+		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize power monitor.");
 		return false;
+	} else {
+		DEBUG(INDI::Logger::DBG_SESSION, "Power monitor initialized.");
 	}
 
 	DEBUGF(INDI::Logger::DBG_SESSION,
