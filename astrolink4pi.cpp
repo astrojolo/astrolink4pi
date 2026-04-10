@@ -1634,7 +1634,7 @@ bool AstroLink4Pi::readMLX()
 bool AstroLink4Pi::readSHT()
 {
 	SHTReader::Readings readings;
-	if (!sht.read(readings))
+	if (!m_SHTReader.read(readings))
 	{
 		return false;
 	}
