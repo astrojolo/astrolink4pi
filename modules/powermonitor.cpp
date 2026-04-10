@@ -77,6 +77,7 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     writeBuf[0] = 0x01;
     writeBuf[1] = 0b11000011;
     writeBuf[2] = 0b00100011;
+    out = m_LastReadings;
 
     if ((powerIndex % 2) == 0) // Trigger conversion
     {
@@ -129,23 +130,16 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
         if (raw < 0)
             raw = 0;
 
-        out.vin = m_LastVin;
-        out.vreg = m_LastVreg;
-        out.current = m_LastCurrent;
-
         switch (powerIndex)
         {
         case 1:
             out.vin = (float)raw / 32768.0 * 4.096 * 6.6;
-            m_LastVin = out.vin;
             break;
         case 3:
             out.vreg = (float)raw / 32768.0 * 4.096 * 6.6;
-            m_LastVreg = out.vreg;
             break;
         case 5:
             out.current = (float)raw / 32768.0 * 4.096 * 1 * ((m_AcsType == 0) ? 20 : 10.8);
-            m_LastCurrent = out.current;
             break;
         }
         out.power = out.vin * out.current;
@@ -153,6 +147,8 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
         energyWs += out.vin * out.current * 0.4;
         out.ah = energyAs / 3600;
         out.wh = energyWs / 3600;
+
+        m_LastReadings = out;
     }
     powerIndex++;
     if (powerIndex > 5)

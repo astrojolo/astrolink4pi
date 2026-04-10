@@ -34,7 +34,5 @@ private:
     float energyAs = 0.0;
     float energyWs = 0.0;
 
-    double m_LastVin = 0.0;
-    double m_LastVreg = 0.0;
-    double m_LastCurrent = 0.0;
+    Readings m_LastReadings;
 };
