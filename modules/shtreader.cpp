@@ -123,8 +123,9 @@ bool SHTReader::read(SHTReader::Readings &out)
     }
 
     readIndex++;
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SHT read 2=%d", readIndex);
     if (readIndex > 1)
         readIndex = 0;
-
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SHT read 3=%d", readIndex);
     return true;
 }
