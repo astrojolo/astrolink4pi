@@ -56,51 +56,10 @@ bool PowerMonitor::isOpen() const
 
 bool PowerMonitor::read(PowerMonitor::Readings &out)
 {
-
-    // CONFIG:
-    // OS=1 start single conversion
-    // MUX=100 AIN0 względem GND
-    // PGA=001 ±4.096V
-    // MODE=1 single-shot
-    // DR=100 128SPS
-    // COMP_QUE=11 disable comparator
-    // uint16_t config = 0xC383;
-
-    // int written = wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
-    // if (written < 0)
-    // {
-    //     DEBUGFDEVICE(getDeviceName().c_str(),
-    //                  INDI::Logger::DBG_SESSION,
-    //                  "I2C write failed: errno=%d (%s)",
-    //                  errno,
-    //                  std::strerror(errno));
-    // }
-
-    // // czekaj aż konwersja się skończy
-    // while (true)
-    // {
-    //     int16_t cfg = wiringPiI2CReadReg16(m_Fd, 0x01);
-    //     cfg = __bswap_16(cfg);
-    //     if (cfg & 0x8000)
-    //         break;
-    //     delayMicroseconds(100);
-    // }
-
-    // int16_t raw = wiringPiI2CReadReg16(m_Fd, 0x00);
-    // raw = __bswap_16(raw);
-
-    // if (raw < 0)
-    //     raw = 0; // dla single-ended bywa praktyczne
-
-    // double voltage = raw * 4.096 / 32768.0;
-
-    // DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Readings %d %d %d %f", m_Fd, written, raw, voltage);
-
     if (!isOpen())
         return false;
 
     uint8_t writeBuf[3];
-    uint8_t readBuf[2];
 
     /*
     powerIndex 0-1 Vin WR, 2-3 Vreg WR, 4-5 Itot WR
@@ -142,23 +101,14 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     }
     else // Trigger read
     {
-        // writeBuf[0] = 0x00;
-        // int written = wiringPiI2CWrite(m_Fd, writeBuf[0]);
-        // if (written < 0)
-        // {
-        //     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C write failed: errno=%d (%s)", errno, std::strerror(errno));
-        // }
-        // if (written == 0)
-        // {
         int16_t read = wiringPiI2CReadReg16(m_Fd, 0x00);
         if (read < 0)
         {
             DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "I2C read failed: errno=%d (%s)", errno, std::strerror(errno));
         }
-        if (read > 0)
+        else
         {
-            // int16_t val = readBuf[0] * 255 + readBuf[1];
-            int16_t val = (static_cast<int16_t>(static_cast<unsigned char>(readBuf[0])) << 8) | static_cast<unsigned char>(readBuf[1]);
+            int16_t val = read;
 
             switch (powerIndex)
             {
