@@ -20,7 +20,7 @@ public:
     PowerMonitor(uint8_t adsAddress, uint8_t acsType, const std::string &deviceName);
     ~PowerMonitor();
 
-    bool open(int bus);
+    bool open();
     void close();
     bool isOpen() const;
 

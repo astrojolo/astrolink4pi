@@ -20,10 +20,8 @@ PowerMonitor::~PowerMonitor()
     close();
 }
 
-bool PowerMonitor::open(int bus)
+bool PowerMonitor::open()
 {
-    // close();
-
     int wipi = wiringPiSetup();
     if (wipi < 0)
     {
@@ -45,7 +43,8 @@ void PowerMonitor::close()
 {
     if (m_Fd >= 0)
     {
-        // m_Fd = -1;
+        close(m_Fd);
+        m_Fd = -1;
     }
 }
 

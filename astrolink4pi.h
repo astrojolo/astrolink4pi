@@ -47,6 +47,7 @@
 #include "pwm.h"
 #include "systeminfo.h"
 #include "powermonitor.h"
+#include "shtreader.h"
 
 
 #include <defaultdevice.h>
@@ -104,6 +105,7 @@ private:
 	PwmController m_PwmController;
 	SystemInfoService m_SystemInfo;
 	PowerMonitor m_PowerMonitor;
+	SHTReader m_SHTReader;
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
