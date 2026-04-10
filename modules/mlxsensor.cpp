@@ -57,9 +57,9 @@ MLXSensor::Readout MLXSensor::read(double ambientReferenceC) const
     result.skyTemperatureC = result.objectTemperatureC;
 
     const double reference = ambientReferenceC != 0.0 ? ambientReferenceC : result.ambientTemperatureC;
-    // result.skyTemperatureDiffC = reference - result.skyTemperatureC;
-    result.skyTemperatureDiffC = rawObject;
-    result.objectTemperatureC = rawAmbient;
+    result.skyTemperatureDiffC = reference - result.skyTemperatureC;
+    //result.skyTemperatureDiffC = rawObject;
+    //result.objectTemperatureC = rawAmbient;
 
     result.valid = true;
     return result;
