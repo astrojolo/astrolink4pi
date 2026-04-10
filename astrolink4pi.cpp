@@ -1610,40 +1610,15 @@ bool AstroLink4Pi::readOLD()
 
 bool AstroLink4Pi::readMLX()
 {
-	// int i2cHandle = lgI2cOpen(1, 0x5A, 0);
-	// if (i2cHandle >= 0)
-	// {
-	// 	int Tamb = lgI2cReadWordData(i2cHandle, 0x06);
-	// 	int Tobj = lgI2cReadWordData(i2cHandle, 0x07);
-	// 	lgI2cClose(i2cHandle);
-	// 	if (Tamb >= 0 && Tobj >= 0)
-	// 	{
-	// 		setParameterValue("WEATHER_SKY_TEMP", 0.02 * Tobj - 273.15);
-	// 		setParameterValue("WEATHER_SKY_DIFF", 0.02 * (Tobj - Tamb));
-	// 		if (!SHTavailable)
-	// 			focuserTemperature = 0.02 * Tamb - 273.15;
-	// 		MLXavailable = true;
-	// 	}
-	// 	else
-	// 	{
-	// 		DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from MLX sensor.");
-	// 		MLXavailable = false;
-	// 	}
-	// }
-	// else
-	// {
-	// 	DEBUG(INDI::Logger::DBG_DEBUG, "No MLX sensor found.");
-	// 	MLXavailable = false;
-	// }
+	const double ambient = getParameter("WEATHER_TEMPERATURE");
+	const auto data = m_MLXSensor.read(ambient);
 
-	// if (!MLXavailable)
-	// {
-	// 	setParameterValue("WEATHER_SKY_TEMP", 0.0);
-	// 	setParameterValue("WEATHER_SKY_DIFF", 0.0);
-	// }
+	if (!data.valid)
+		return false;
 
-	// return MLXavailable;
-	return false;
+	setParameterValue("WEATHER_SKY_TEMP", data.skyTemperatureC);
+	setParameterValue("WEATHER_SKY_DIFF", data.skyTemperatureDiffC);
+	return true;
 }
 
 bool AstroLink4Pi::readSHT()
@@ -1657,12 +1632,11 @@ bool AstroLink4Pi::readSHT()
 		return false;
 	}
 
+	setParameterValue("WEATHER_TEMPERATURE", data.temperatureC);
+	setParameterValue("WEATHER_HUMIDITY", data.humidityRH);
+	setParameterValue("WEATHER_DEWPOINT", data.dewPointC);
 
-    setParameterValue("WEATHER_TEMPERATURE", data.temperatureC);
-    setParameterValue("WEATHER_HUMIDITY", data.humidityRH);
-    setParameterValue("WEATHER_DEWPOINT", data.dewPointC);
-
-    focuserTemperature = data.temperatureC;
+	focuserTemperature = data.temperatureC;
 	return true;
 }
 
