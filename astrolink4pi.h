@@ -42,6 +42,9 @@
 
 #include "config.h"
 
+#include <wiringPi.h>
+#include <wiringPiI2C.h>
+
 #include "basecomponent.h"
 #include "boardio.h"
 #include "pwm.h"
