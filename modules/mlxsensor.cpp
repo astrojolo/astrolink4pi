@@ -67,7 +67,7 @@ MLXSensor::Readout MLXSensor::read(double ambientReferenceC) const
 
 bool MLXSensor::readWord(uint8_t reg, uint16_t &value) const
 {
-    std::array<uint8_t, 3> buf{};
+    std::array<uint8_t, 2> buf{};
 
     if (m_Bus.readRegister(reg, reinterpret_cast<char*>(buf.data()), buf.size()) != (int)buf.size())
         return false;
