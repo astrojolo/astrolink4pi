@@ -4,6 +4,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <i2c/smbus.h>
 
 #include <cerrno>
 #include <cstring>
@@ -201,6 +202,25 @@ int I2CBus::readRegisterByte(uint8_t reg, uint8_t& value)
         value = static_cast<uint8_t>(data);
     }
     return result;
+}
+
+int I2CBus::readWordData(uint8_t reg, uint16_t &value)
+{
+    if (!isOpen())
+    {
+        setError("Magistrala I2C nie jest otwarta");
+        return -1;
+    }
+
+    const int result = i2c_smbus_read_word_data(fd_, reg);
+    if (result < 0)
+    {
+        setError("Błąd odczytu SMBus word: " + std::string(std::strerror(errno)));
+        return -1;
+    }
+
+    value = static_cast<uint16_t>(result);
+    return 0;
 }
 
 uint8_t I2CBus::getDeviceAddress() const

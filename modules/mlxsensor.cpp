@@ -5,8 +5,8 @@
 
 namespace
 {
-constexpr uint8_t MLX_REG_AMBIENT = 0x06;
-constexpr uint8_t MLX_REG_OBJECT1 = 0x07;
+    constexpr uint8_t MLX_REG_AMBIENT = 0x06;
+    constexpr uint8_t MLX_REG_OBJECT1 = 0x07;
 }
 
 MLXSensor::MLXSensor(uint8_t deviceAddress)
@@ -58,8 +58,6 @@ MLXSensor::Readout MLXSensor::read(double ambientReferenceC) const
 
     const double reference = ambientReferenceC != 0.0 ? ambientReferenceC : result.ambientTemperatureC;
     result.skyTemperatureDiffC = reference - result.skyTemperatureC;
-    result.skyTemperatureDiffC = rawObject;
-    result.objectTemperatureC = rawToCelsius(rawObject);
 
     result.valid = true;
     return result;
@@ -67,17 +65,7 @@ MLXSensor::Readout MLXSensor::read(double ambientReferenceC) const
 
 bool MLXSensor::readWord(uint8_t reg, uint16_t &value) const
 {
-    std::array<uint8_t, 2> buf{};
-
-    if (m_Bus.readRegister(reg, reinterpret_cast<char*>(buf.data()), buf.size()) != (int)buf.size())
-        return false;
-
-    const uint8_t lsb = buf[0];
-    const uint8_t msb = buf[1];
-
-    value = (static_cast<uint16_t>(msb) << 8) | lsb;
-
-    return true;
+    return m_Bus.readWordData(reg, value) == 0;
 }
 
 double MLXSensor::rawToCelsius(uint16_t raw)
