@@ -9,12 +9,11 @@
 
 namespace
 {
-static constexpr uint8_t MLX90614_REG_TA    = 0x06; // Ambient temperature
-static constexpr uint8_t MLX90614_REG_TOBJ1 = 0x07; // Object temperature
+static constexpr uint8_t MLX90614_REG_TA    = 0x06;
+static constexpr uint8_t MLX90614_REG_TOBJ1 = 0x07;
 
 static double mlxRawToCelsius(uint16_t raw)
 {
-    // MLX90614: 0.02 K/LSB, offset -273.15 C
     return static_cast<double>(raw) * 0.02 - 273.15;
 }
 }
@@ -33,13 +32,17 @@ bool MLXReader::open()
 {
     close();
 
-    const int wipi = wiringPiSetup();
-    if (wipi < 0)
+    static bool wiringPiInitialized = false;
+    if (!wiringPiInitialized)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-                     "WiPi open failed: errno=%d (%s)",
-                     errno, std::strerror(errno));
-        return false;
+        if (wiringPiSetup() < 0)
+        {
+            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                         "wiringPiSetup failed: errno=%d (%s)",
+                         errno, std::strerror(errno));
+            return false;
+        }
+        wiringPiInitialized = true;
     }
 
     m_Fd = wiringPiI2CSetup(m_MlxAddress);
@@ -51,6 +54,9 @@ bool MLXReader::open()
         return false;
     }
 
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                 "MLX I2C setup success: addr=0x%02X fd=%d",
+                 m_MlxAddress, m_Fd);
 
     return true;
 }
@@ -74,29 +80,18 @@ bool MLXReader::readWord(uint8_t reg, uint16_t &value)
     if (!isOpen())
         return false;
 
-    // wiringPiI2CReadReg8() pozwala złożyć słowo jawnie w poprawnej kolejności
-    // bez zgadywania endianowości wiringPiI2CReadReg16().
-    const int lsb = wiringPiI2CReadReg8(m_Fd, reg);
-    if (lsb < 0)
+    errno = 0;
+    const int ret = wiringPiI2CReadReg16(m_Fd, reg);
+    if (ret < 0)
     {
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-                     "MLX read reg 0x%02X LSB failed: fd=%d errno=%d (%s)",
+                     "MLX read word reg 0x%02X failed: fd=%d errno=%d (%s)",
                      reg, m_Fd, errno, std::strerror(errno));
         return false;
     }
 
-    const int msb = wiringPiI2CReadReg8(m_Fd, reg + 1);
-    if (msb < 0)
-    {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-                     "MLX read reg 0x%02X MSB failed: fd=%d errno=%d (%s)",
-                     reg, m_Fd, errno, std::strerror(errno));
-        return false;
-    }
-
-    value = static_cast<uint16_t>(
-        (static_cast<uint16_t>(msb & 0xFF) << 8) |
-        static_cast<uint16_t>(lsb & 0xFF));
+    // SMBus Read Word zwraca low byte + high byte.
+    value = static_cast<uint16_t>(ret & 0xFFFF);
 
     return true;
 }
@@ -118,12 +113,11 @@ bool MLXReader::read(MLXReader::Readings &out)
         return false;
 
     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,
-                 "MLX raw ambient=%u object=%u",
+                 "MLX raw ambient=0x%04X object=0x%04X",
                  rawAmbient, rawObject);
 
     out.ambientTemperature = mlxRawToCelsius(rawAmbient);
     out.objectTemperature  = mlxRawToCelsius(rawObject);
-    out.tempDifference = out.objectTemperature - out.ambientTemperature;
 
     m_LastReadings = out;
 

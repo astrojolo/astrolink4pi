@@ -92,8 +92,6 @@ bool SHTReader::read(SHTReader::Readings &out)
         const uint16_t rawTemp = (static_cast<uint16_t>(buf[0]) << 8) | buf[1];
         const uint16_t rawHumidity = (static_cast<uint16_t>(buf[3]) << 8) | buf[4];
 
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SHT raw t=%d hum=%d", rawTemp, rawHumidity);
-
         const double cTemp = -45.0 + 175.0 * static_cast<double>(rawTemp) / 65535.0;
         double humidity = 100.0 * static_cast<double>(rawHumidity) / 65535.0;
 
