@@ -43,7 +43,6 @@
 #include "config.h"
 
 #include "boardio.h"
-#include "i2cbus.h"
 #include "pwm.h"
 #include "systeminfo.h"
 #include "powermonitor.h"
