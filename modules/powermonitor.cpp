@@ -23,6 +23,17 @@ bool PowerMonitor::open(int bus)
 {
     close();
     //m_Fd = wiringPiI2CSetup(bus);
+    if (wiringPiSetup() == -1)
+    {
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Error %d", 1);
+        return 0;
+    }
+
+    if (ads1115Setup(100, 0x48) == 0)
+    {
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Error %d", 2);
+        return 0;
+    }    
     m_Fd = 1;
     return m_Fd >= 0;
 }
@@ -43,17 +54,6 @@ bool PowerMonitor::isOpen() const
 
 bool PowerMonitor::read(PowerMonitor::Readings &out)
 {
-    if (wiringPiSetup() == -1)
-    {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Error %d", 1);
-        return 0;
-    }
-
-    if (ads1115Setup(100, 0x48) == 0)
-    {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Error %d", 2);
-        return 0;
-    }
 
     int raw0 = analogRead(100 + 0);
     int raw1 = analogRead(100 + 1);
