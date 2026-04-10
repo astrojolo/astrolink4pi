@@ -43,6 +43,7 @@ bool PowerMonitor::isOpen() const
 
 bool PowerMonitor::read(PowerMonitor::Readings &out)
 {
+    LOG_ERROR("TEST ERROR");
     if (!isOpen())
         return false;
 
@@ -111,11 +112,6 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
                 out.ah = energyAs / 3600;
                 out.wh = energyWs / 3600;
             }
-            else
-            {
-                out.wh = read;
-            }
-
         }
     }
     powerIndex++;
