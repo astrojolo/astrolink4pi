@@ -28,9 +28,10 @@ public:
     Readout read(double ambientReferenceC = 0.0) const;
     std::string lastError() const;
 
-private:
     bool readWord(uint8_t reg, uint16_t &value) const;
     static double rawToCelsius(uint16_t raw);
+
+private:
 
 private:
     mutable I2CBus m_Bus;

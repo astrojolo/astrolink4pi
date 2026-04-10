@@ -1620,8 +1620,10 @@ bool AstroLink4Pi::readMLX()
 		return false;
 	}
 
-	setParameterValue("WEATHER_SKY_TEMP", data.skyTemperatureC);
-	setParameterValue("WEATHER_SKY_DIFF", data.skyTemperatureDiffC);
+	// setParameterValue("WEATHER_SKY_TEMP", data.skyTemperatureC);
+	// setParameterValue("WEATHER_SKY_DIFF", data.skyTemperatureDiffC);
+	setParameterValue("WEATHER_SKY_DIFF", 1037);
+	setParameterValue("WEATHER_SKY_TEMP", m_MLXSensor.rawToCelsius(1037));
 	return true;
 }
 
