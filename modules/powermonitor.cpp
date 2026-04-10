@@ -30,13 +30,13 @@ bool PowerMonitor::open(int bus)
         return 0;
     }
 
-    int fd = wiringPiI2CSetup(0x48);
-    if (fd < 0)
+    int m_Fd = wiringPiI2CSetup(0x48);
+    if (m_Fd < 0)
     {
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Error %d", 2);
         return 0;
     }
-    m_Fd = 1;
+
     return m_Fd >= 0;
 }
 
@@ -66,19 +66,19 @@ bool PowerMonitor::read(PowerMonitor::Readings &out)
     // COMP_QUE=11 disable comparator
     uint16_t config = 0xC383;
 
-    wiringPiI2CWriteReg16(fd, 0x01, __bswap_16(config));
+    wiringPiI2CWriteReg16(m_Fd, 0x01, __bswap_16(config));
 
     // czekaj aż konwersja się skończy
     while (true)
     {
-        int16_t cfg = wiringPiI2CReadReg16(fd, 0x01);
+        int16_t cfg = wiringPiI2CReadReg16(m_Fd, 0x01);
         cfg = __bswap_16(cfg);
         if (cfg & 0x8000)
             break;
         delayMicroseconds(100);
     }
 
-    int16_t raw = wiringPiI2CReadReg16(fd, 0x00);
+    int16_t raw = wiringPiI2CReadReg16(m_Fd, 0x00);
     raw = __bswap_16(raw);
 
     if (raw < 0)
