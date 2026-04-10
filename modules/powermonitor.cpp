@@ -7,7 +7,6 @@
 #include <string>
 #include <thread>
 #include <unistd.h>
-#include <indilogger.h>
 
 
 PowerMonitor::PowerMonitor(uint8_t adsAddress, uint8_t acsType, const std::string &deviceName)

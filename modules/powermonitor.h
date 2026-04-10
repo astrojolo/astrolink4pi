@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include "basecomponent.h"
 
 class PowerMonitor : public BaseComponent
 {
