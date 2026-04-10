@@ -1,6 +1,6 @@
 #include "powermonitor.h"
 
-#include <wiringPiI2C.h>
+#include <wiringPi.h>
 #include <ads1115.h>
 #include <chrono>
 #include <cmath>
