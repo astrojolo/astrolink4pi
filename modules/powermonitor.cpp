@@ -46,6 +46,9 @@ void PowerMonitor::close()
         ::close(m_Fd);
         m_Fd = -1;
     }
+    powerIndex = 0;
+    energyAs = 0.0;
+    energyWs = 0.0;    
 }
 
 bool PowerMonitor::isOpen() const

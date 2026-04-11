@@ -72,10 +72,6 @@ bool TSLReader::isOpen() const
 
 bool TSLReader::probeSensor()
 {
-    // Oryginalne readTSL() robiło:
-    // lgI2cWriteByte(i2cHandle, 0x80 | 0x20 | 0x12)
-    //
-    // Zachowujemy ten sam probe.
     int rc = wiringPiI2CWrite(m_Fd, 0x80 | 0x20 | 0x12);
     if (rc < 0)
     {
@@ -98,7 +94,7 @@ bool TSLReader::initializeSensor()
                TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE,
                TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN) < 0);
 
-    // Oryginalny kod ustawiał 0x05 | 0x30
+    // Enable device - power down mode on boot
     rc |= (wiringPiI2CWriteReg8(
                m_Fd,
                TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL,
@@ -181,10 +177,8 @@ bool TSLReader::readChannels(int &full, int &ir)
         return false;
     }
 
-    // wiringPiI2CReadReg16 zwykle zwraca SMBus word; jeżeli wartości wyjdą ewidentnie
-    // zamienione bajtami, trzeba tu dodać swap. Na razie zostawiamy 1:1, jak w logice readTSL().
-    ir = irRaw & 0xFFFF;
-    full = fullRaw & 0xFFFF;
+    ir = irRaw;
+    full = fullRaw;
     return true;
 }
 
@@ -255,8 +249,7 @@ bool TSLReader::read(TSLReader::Readings &out)
 
             const int visCumulative = m_FullCumulative - m_IrCumulative;
 
-            // Zachowane dokładnie jak w readTSL():
-            // jeśli full < ir, zwracamy true i nic dalej nie liczymy.
+
             if (full < ir)
             {
                 out = m_LastReadings;
@@ -297,7 +290,6 @@ bool TSLReader::read(TSLReader::Readings &out)
         }
         else
         {
-            // Integracja jeszcze trwa
             available = true;
         }
     }

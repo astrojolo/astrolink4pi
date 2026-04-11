@@ -105,6 +105,7 @@ AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 , m_SHTReader(0x44, getDeviceName())
 , m_MLXReader(0x5A, getDeviceName())
 , m_TSLReader(0x29, getDeviceName())
+, m_DSReader("/sys/bus/w1/devices/28-000000000000/w1_slave", getDeviceName())
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
@@ -186,7 +187,8 @@ bool AstroLink4Pi::Connect()
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize TSL sensor.");
 		return false;
-	}		
+	}	
+	
 
 	DEBUGF(INDI::Logger::DBG_SESSION,
 		   "Connected on %s (%s), kernel %s",
@@ -1208,90 +1210,19 @@ bool AstroLink4Pi::readDS18B20()
 	if (!isConnected())
 		return false;
 
-	DIR *dir;
-	struct dirent *dirent;
-	char dev[16];			 // Dev ID
-	char devPath[128];		 // Path to device
-	char buf[256] = "";		 // Data from device
-	char temperatureData[6]; // Temp C * 1000 reported by device
-	char path[] = "/sys/bus/w1/devices";
-	float tempC;
-
-	dir = opendir(path);
-
-	// search for --the first-- DS18B20 device
-	if (dir != NULL)
+	if (dsReader.open())
 	{
-		while ((dirent = readdir(dir)))
+		DSFileReader::Readings r;
+		if (dsReader.read(r))
 		{
-			// DS18B20 device is family code beginning with 28-
-			if (dirent->d_type == DT_LNK && strstr(dirent->d_name, "28-") != NULL)
-			{
-				strcpy(dev, dirent->d_name);
-				break;
-			}
+			double tempC = r.temperature;
+			setParameterValue("WEATHER_TEMPERATURE", tempC);
+			DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature: %.2f°C", tempC);
+			focuserTemperature = tempC;
+			return true;
 		}
-		(void)closedir(dir);
-	}
-	else
-	{
-		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor disabled. 1-Wire interface is not available.");
-		return false;
-	}
-
-	// Assemble path to --the first-- DS18B20 device
-	sprintf(devPath, "%s/%s/w1_slave", path, dev);
-
-	// We use fgetc to support EOF. This prevents driver crash when hot plug/unplug the sensor
-	FILE *pFile;
-	int c;
-	pFile = fopen(devPath, "r");
-	if (pFile == NULL)
-	{
-		DEBUG(INDI::Logger::DBG_DEBUG, "Temperature sensor not available.");
-		return false;
-	}
-	else
-	{
-		do
-		{
-			c = fgetc(pFile);
-			if (c != EOF)
-			{
-				int len = strlen(buf);
-				buf[len] = (char)c;
-				buf[len + 1] = '\0';
-			}
-
-		} while (c != EOF);
-		fclose(pFile);
-	}
-
-	if (strlen(buf) < 10)
-	{
-		DEBUG(INDI::Logger::DBG_WARNING, "Temperature sensor read error.");
-		return false;
-	}
-
-	// parse temperature value from sensor output
-	strncpy(temperatureData, strstr(buf, "t=") + 2, 6);
-	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature sensor raw output: %s", buf);
-	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature string: %s", temperatureData);
-
-	tempC = strtof(temperatureData, NULL) / 1000;
-	// tempF = (tempC / 1000) * 9 / 5 + 32;
-
-	// check if temperature is reasonable
-	if (abs(tempC) > 100)
-	{
-		DEBUG(INDI::Logger::DBG_DEBUG, "Temperature reading out of range.");
-		return false;
-	}
-
-	setParameterValue("WEATHER_TEMPERATURE", tempC);
-	DEBUGF(INDI::Logger::DBG_DEBUG, "Temperature: %.2f°C", tempC);
-	focuserTemperature = tempC;
-	return true;
+	}		
+	return false;
 }
 
 int AstroLink4Pi::getHoldPower()
@@ -1519,84 +1450,6 @@ bool AstroLink4Pi::readTSL()
 		return true;
 	}
 	return true;
-
-	// int i2cHandle = lgI2cOpen(1, TSL2591_ADDR, 0);
-
-	// if (i2cHandle < 0)
-	// {
-	// 	TSLmode = TSLState::NotAvailable;
-	// 	return false;
-	// }
-
-	// if (TSLmode == TSLState::NotAvailable)
-	// {
-	// 	int write = lgI2cWriteByte(i2cHandle, 0x80 | 0x20 | 0x12);
-	// 	if (write == 0)
-	// 	{
-	// 		TSLmode = TSLState::Available;
-	// 		available = true;
-	// 	}
-	// }
-	// else if (TSLmode == TSLState::Available)
-	// {
-	// 	int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
-	// 	write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);
-
-	// 	// Enable device - power down mode on boot
-	// 	write += lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL);
-	// 	write += lgI2cWriteByte(i2cHandle, 0x05 | 0x30);
-
-	// 	write += lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
-	// 	write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWEROFF);
-
-	// 	TSLmode = (write == 0) ? TSLState::Initialized : TSLState::NotAvailable;
-	// 	available = (write == 0);
-	// }
-	// else if (TSLmode == TSLState::Initialized)
-	// {
-	// 	if (adcStartTime == 0)
-	// 	{
-	// 		int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
-	// 		write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);
-	// 		adcStartTime = m_SystemInfo.millis();
-	// 		TSLmode = (write == 0) ? TSLState::Initialized : TSLState::NotAvailable;
-	// 		available = (write == 0);
-	// 	}
-	// 	else if (m_SystemInfo.millis() > (adcStartTime + TSL2591_ADC_TIME))
-	// 	{
-	// 		int ir = lgI2cReadWordData(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN1_LOW);
-	// 		int full = lgI2cReadWordData(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN0_LOW);
-
-	// 		int write = lgI2cWriteByte(i2cHandle, TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE);
-	// 		write += lgI2cWriteByte(i2cHandle, TSL2591_ENABLE_POWEROFF);
-	// 		adcStartTime = 0;
-
-	// 		int visCumulative = fullCumulative - irCumulative;
-	// 		if (full < ir)
-	// 			return true;
-	// 		if (niter < 5 || (visCumulative < 500 && niter < 150))
-	// 		{
-	// 			niter++;
-	// 			fullCumulative += full;
-	// 			irCumulative += ir;
-	// 		}
-	// 		else
-	// 		{
-	// 			double VIS = (double)visCumulative / (29628.0 * niter);
-	// 			double mpsas = 12.6 - 1.086 * log(VIS) + SQMOffsetN[0].value + FILTER_COEFF;
-	// 			setParameterValue("SQM_READING", mpsas);
-
-	// 			niter = 0;
-	// 			irCumulative = fullCumulative = 0;
-	// 		}
-
-	// 		TSLmode = (write == 0) ? TSLState::Initialized : TSLState::NotAvailable;
-	// 		available = (write == 0);
-	// 	}
-	// }
-	// lgI2cClose(i2cHandle);
-	// return available;
-	return false;
 }
 
 bool AstroLink4Pi::readOLD()
@@ -1629,41 +1482,6 @@ bool AstroLink4Pi::readMLX()
 	setParameterValue("WEATHER_SKY_DIFF", readings.tempDifference);
 
 	return true;
-
-	// int i2cHandle = lgI2cOpen(1, 0x5A, 0);
-	// if (i2cHandle >= 0)
-	// {
-	// 	int Tamb = lgI2cReadWordData(i2cHandle, 0x06);
-	// 	int Tobj = lgI2cReadWordData(i2cHandle, 0x07);
-	// 	lgI2cClose(i2cHandle);
-	// 	if (Tamb >= 0 && Tobj >= 0)
-	// 	{
-	// 		setParameterValue("WEATHER_SKY_TEMP", 0.02 * Tobj - 273.15);
-	// 		setParameterValue("WEATHER_SKY_DIFF", 0.02 * (Tobj - Tamb));
-	// 		if (!SHTavailable)
-	// 			focuserTemperature = 0.02 * Tamb - 273.15;
-	// 		MLXavailable = true;
-	// 	}
-	// 	else
-	// 	{
-	// 		DEBUG(INDI::Logger::DBG_DEBUG, "Cannot read data from MLX sensor.");
-	// 		MLXavailable = false;
-	// 	}
-	// }
-	// else
-	// {
-	// 	DEBUG(INDI::Logger::DBG_DEBUG, "No MLX sensor found.");
-	// 	MLXavailable = false;
-	// }
-
-	// if (!MLXavailable)
-	// {
-	// 	setParameterValue("WEATHER_SKY_TEMP", 0.0);
-	// 	setParameterValue("WEATHER_SKY_DIFF", 0.0);
-	// }
-
-	// return MLXavailable;
-	return false;
 }
 
 bool AstroLink4Pi::readSHT()
@@ -1679,59 +1497,6 @@ bool AstroLink4Pi::readSHT()
 	focuserTemperature = readings.temperature;
 
 	return true;
-	// char i2cData[6];
-	// char i2cWrite[2];
-
-	// int i2cHandle = lgI2cOpen(1, 0x44, 0);
-	// if (i2cHandle >= 0)
-	// {
-	// 	i2cWrite[0] = 0x24;
-	// 	i2cWrite[1] = 0x00;
-	// 	int written = lgI2cWriteDevice(i2cHandle, i2cWrite, 2);
-	// 	if (written == 0)
-	// 	{
-	// 		usleep(30000);
-	// 		int read = lgI2cReadDevice(i2cHandle, i2cData, 6);
-
-	// 		if (read > 4)
-	// 		{
-	// 			int temp = i2cData[0] * 256 + i2cData[1];
-	// 			double cTemp = -45.0 + (175.0 * temp / 65535.0);
-	// 			double humidity = 100.0 * (i2cData[3] * 256.0 + i2cData[4]) / 65535.0;
-
-	// 			double a = 17.271;
-	// 			double b = 237.7;
-	// 			double tempAux = (a * cTemp) / (b + cTemp) + log(humidity * 0.01);
-	// 			double Td = (b * tempAux) / (a - tempAux);
-
-	// 			setParameterValue("WEATHER_TEMPERATURE", cTemp);
-	// 			setParameterValue("WEATHER_HUMIDITY", humidity);
-	// 			setParameterValue("WEATHER_DEWPOINT", Td);
-	// 			focuserTemperature = cTemp;
-	// 			SHTavailable = true;
-	// 		}
-	// 	}
-	// 	else
-	// 	{
-	// 		DEBUG(INDI::Logger::DBG_DEBUG, "Cannot write data to SHT sensor");
-	// 		SHTavailable = false;
-	// 	}
-	// 	lgI2cClose(i2cHandle);
-	// }
-	// else
-	// {
-	// 	DEBUG(INDI::Logger::DBG_DEBUG, "No SHT sensor found.");
-	// 	SHTavailable = false;
-	// }
-
-	// if (!SHTavailable)
-	// {
-	// 	setParameterValue("WEATHER_TEMPERATURE", 0.0);
-	// 	setParameterValue("WEATHER_HUMIDITY", 0.0);
-	// 	setParameterValue("WEATHER_DEWPOINT", 0.0);
-	// }
-	// return SHTavailable;
-	// return false;
 }
 
 bool AstroLink4Pi::readPower()

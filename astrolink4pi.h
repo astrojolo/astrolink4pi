@@ -50,6 +50,7 @@
 #include "shtreader.h"
 #include "mlxreader.h"
 #include "tslreader.h"
+#include "dsreader.h"
 
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
@@ -109,6 +110,7 @@ private:
 	SHTReader m_SHTReader;
 	MLXReader m_MLXReader;
 	TSLReader m_TSLReader;
+	DSFileReader m_DSReader;
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
