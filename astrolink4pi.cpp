@@ -108,7 +108,18 @@ AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 , m_MLXReader(0x5A, getDeviceName())
 , m_TSLReader(0x29, getDeviceName())
 , m_DSReader("/sys/bus/w1/devices/28-000000000000/w1_slave", getDeviceName())
-, m_Focuser(getDeviceName())
+, m_FocuserConfig{
+	.pinEN = EN_PIN,
+	.pinM0 = M0_PIN,
+	.pinM1 = M1_PIN,
+	.pinM2 = M2_PIN,
+	.pinRST = RST_PIN,
+	.pinSTP = STP_PIN,
+	.pinDIR = DIR_PIN,
+	.spiChannel = 0,
+	.spiSpeed = 500000
+	}
+, m_Focuser(m_FocuserConfig, getDeviceName())
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
