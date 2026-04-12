@@ -212,14 +212,14 @@ bool AstroLink4Pi::Disconnect()
 	//m_BoardIO.write(RST_PIN, LOW); // sleep
 	//m_BoardIO.write(EN_PIN, HIGH); // make disabled
 
-	if (m_BoardIO.read(EN_PIN) != HIGH)
-	{
-		DEBUGF(INDI::Logger::DBG_ERROR, "Cannot set GPIO line %i to disable stepper motor driver. Focusing motor may still be powered.", EN_PIN);
-	}
-	else
-	{
-		DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
-	}
+	// if (m_BoardIO.read(EN_PIN) != HIGH)
+	// {
+	// 	DEBUGF(INDI::Logger::DBG_ERROR, "Cannot set GPIO line %i to disable stepper motor driver. Focusing motor may still be powered.", EN_PIN);
+	// }
+	// else
+	// {
+	// 	DEBUG(INDI::Logger::DBG_SESSION, "Focusing motor power disabled.");
+	// }
 
 	// Unlock Relay Labels setting
 	RelayLabelsTP.s = IPS_IDLE;
