@@ -4,7 +4,7 @@
 #include <sstream>
 #include <stdexcept>
 
-BoardIO::BoardIO()
+BoardIO::BoardIO(const std::string &deviceName)
  : BaseComponent(deviceName, "BoardIO")
 {
 
