@@ -31,32 +31,12 @@ static constexpr int SYSTEM_UPDATE_PERIOD = 1000;
 static constexpr int POLL_PERIOD = 200;
 static constexpr int FAN_PERIOD = (20 * 1000);
 
-static constexpr int TSL2591_ADC_TIME = 750; // integration time in ms for a single increment
-static constexpr uint8_t TSL2591_ADDR = 0x29;
-static constexpr uint8_t TSL2591_COMMAND_BIT = 0xA0; // bits 7 and 5 for 'command normal'
-static constexpr uint8_t TSL2591_ENABLE_POWERON = 0x01;
-static constexpr uint8_t TSL2591_ENABLE_POWEROFF = 0x00;
-static constexpr uint8_t TSL2591_ENABLE_AEN = 0x02;
-static constexpr uint8_t TSL2591_ENABLE_AIEN = 0x10;
-static constexpr uint8_t TSL2591_REGISTER_ENABLE = 0x00;
-static constexpr uint8_t TSL2591_REGISTER_CONTROL = 0x01;
-static constexpr uint8_t TSL2591_REGISTER_CHAN0_LOW = 0x14;
-static constexpr uint8_t TSL2591_REGISTER_CHAN1_LOW = 0x16;
-static constexpr float FILTER_COEFF = -1.2;
-
 static constexpr uint8_t FAN_66_TEMP = 60;
 static constexpr uint8_t FANMAX_TEMP = 70;
 
 static constexpr int RP4_GPIO = 0;
 static constexpr int RP5_GPIO = 4;
 static constexpr int DECAY_PIN = 14;   // pin 8
-static constexpr int EN_PIN = 15;	   // pin 10
-static constexpr int M0_PIN = 17;	   // pin 11
-static constexpr int M1_PIN = 18;	   // pin 12
-static constexpr int M2_PIN = 27;	   // pin 13
-static constexpr int RST_PIN = 22;	   // pin 15
-static constexpr int STP_PIN = 24;	   // pin 18
-static constexpr int DIR_PIN = 23;	   // pin 16
 static constexpr int OUT1_PIN = 5;	   // pin 29
 static constexpr int OUT2_PIN = 6;	   // pin 31
 static constexpr int PWM1_PIN = 26;	   // pin 37
@@ -108,18 +88,7 @@ AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 , m_MLXReader(0x5A, getDeviceName())
 , m_TSLReader(0x29, getDeviceName())
 , m_DSReader("/sys/bus/w1/devices/28-000000000000/w1_slave", getDeviceName())
-, m_FocuserConfig{
-	.pinEN = EN_PIN,
-	.pinM0 = M0_PIN,
-	.pinM1 = M1_PIN,
-	.pinM2 = M2_PIN,
-	.pinRST = RST_PIN,
-	.pinSTP = STP_PIN,
-	.pinDIR = DIR_PIN,
-	.spiChannel = 0,
-	.spiSpeed = 500000
-	}
-, m_Focuser(m_FocuserConfig, getDeviceName())
+, m_Focuser(Focuser::Config{}, getDeviceName())
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }

@@ -14,13 +14,13 @@ class Focuser : public BaseComponent
 public:
     struct Config
     {
-        int pinEN = 15;
-        int pinM0 = 17;
-        int pinM1 = 18;
-        int pinM2 = 27;
-        int pinRST = 22;
-        int pinSTP = 24;
-        int pinDIR = 23;
+        int pinEN = 15;  // pin 10
+        int pinM0 = 17;  // pin 11
+        int pinM1 = 18;  // pin 12
+        int pinM2 = 27;  // pin 13
+        int pinRST = 22; // pin 15
+        int pinSTP = 24; // pin 18
+        int pinDIR = 23; // pin 16
 
         int spiChannel = 0;
         int spiSpeed = 500000;
