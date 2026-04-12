@@ -1213,10 +1213,10 @@ bool AstroLink4Pi::readDS18B20()
 	if (!isConnected())
 		return false;
 
-	if (dsReader.open())
+	if (m_DSReader.open())
 	{
 		DSFileReader::Readings r;
-		if (dsReader.read(r))
+		if (m_DSReader.read(r))
 		{
 			double tempC = r.temperature;
 			setParameterValue("WEATHER_TEMPERATURE", tempC);
