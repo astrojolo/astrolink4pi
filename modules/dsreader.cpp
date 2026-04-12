@@ -1,4 +1,4 @@
-#include "dsfilereader.h"
+#include "dsreader.h"
 
 #include <cerrno>
 #include <cstdio>
