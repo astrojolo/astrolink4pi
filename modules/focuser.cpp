@@ -11,15 +11,14 @@
 
 namespace
 {
-constexpr int DAC_MAX_VALUE = 4095;
-constexpr int DAC_MIN_VALUE = 0;
-constexpr int MAX_DRIVER_CURRENT_MA = 2000;
-constexpr int MIN_DRIVER_CURRENT_MA = 0;
+    constexpr int DAC_MAX_VALUE = 4095;
+    constexpr int DAC_MIN_VALUE = 0;
+    constexpr int MAX_DRIVER_CURRENT_MA = 2000;
+    constexpr int MIN_DRIVER_CURRENT_MA = 0;
 }
 
-Focuser::Focuser(const Config &config, const std::string &deviceName)
-    : BaseComponent(deviceName, "Focuser")
-    , m_Config(config)
+Focuser::Focuser(const Config &config, BoardIO &boardIO, const std::string &deviceName)
+    : BaseComponent(deviceName, "Focuser"), m_BoardIO(boardIO), m_Config(config)
 {
     m_State.resolution = config.defaultResolution;
     m_State.stepDelayUs = config.defaultStepDelayUs;
@@ -36,27 +35,13 @@ bool Focuser::open()
 {
     close();
 
-    if (wiringPiSetupGpio() < 0)
-    {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-                     "wiringPiSetupGpio failed: errno=%d (%s)", errno, std::strerror(errno));
-        return false;
-    }
-
-    m_WiringPiReady = true;
-
-    pinMode(m_Config.pinEN, OUTPUT);
-    pinMode(m_Config.pinM0, OUTPUT);
-    pinMode(m_Config.pinM1, OUTPUT);
-    pinMode(m_Config.pinM2, OUTPUT);
-    pinMode(m_Config.pinRST, OUTPUT);
-    pinMode(m_Config.pinSTP, OUTPUT);
-    pinMode(m_Config.pinDIR, OUTPUT);
-
-    digitalWrite(m_Config.pinRST, HIGH);
-    digitalWrite(m_Config.pinSTP, LOW);
-    digitalWrite(m_Config.pinDIR, LOW);
-    digitalWrite(m_Config.pinEN, HIGH); // disabled at startup
+    m_BoardIO.initializePin(m_Config.pinEN, OUTPUT, HIGH); // disabled at startup
+    m_BoardIO.initializePin(m_Config.pinM0, OUTPUT, LOW);
+    m_BoardIO.initializePin(m_Config.pinM1, OUTPUT, LOW);
+    m_BoardIO.initializePin(m_Config.pinM2, OUTPUT, LOW);
+    m_BoardIO.initializePin(m_Config.pinRST, OUTPUT, HIGH);
+    m_BoardIO.initializePin(m_Config.pinSTP, OUTPUT, LOW);
+    m_BoardIO.initializePin(m_Config.pinDIR, OUTPUT, LOW);
 
     m_SpiFd = wiringPiSPISetup(m_Config.spiChannel, m_Config.spiSpeed);
     if (m_SpiFd < 0)
@@ -88,14 +73,7 @@ void Focuser::close()
 {
     abortFocuser();
 
-    if (m_WiringPiReady)
-    {
-        digitalWrite(m_Config.pinRST, LOW);
-        digitalWrite(m_Config.pinEN, HIGH);
-    }
-
     m_SpiFd = -1;
-    m_WiringPiReady = false;
 
     std::lock_guard<std::mutex> lock(m_StateMutex);
     m_State.connected = false;
@@ -204,26 +182,38 @@ bool Focuser::setResolution(int res)
 
     switch (res)
     {
-        case 1:
-            m0 = LOW;  m1 = LOW;  m2 = LOW;
-            break;
-        case 2:
-            m0 = HIGH; m1 = LOW;  m2 = LOW;
-            break;
-        case 4:
-            m0 = LOW;  m1 = HIGH; m2 = LOW;
-            break;
-        case 8:
-            m0 = HIGH; m1 = HIGH; m2 = LOW;
-            break;
-        case 16:
-            m0 = LOW;  m1 = LOW;  m2 = HIGH;
-            break;
-        case 32:
-            m0 = HIGH; m1 = LOW;  m2 = HIGH;
-            break;
-        default:
-            return false;
+    case 1:
+        m0 = LOW;
+        m1 = LOW;
+        m2 = LOW;
+        break;
+    case 2:
+        m0 = HIGH;
+        m1 = LOW;
+        m2 = LOW;
+        break;
+    case 4:
+        m0 = LOW;
+        m1 = HIGH;
+        m2 = LOW;
+        break;
+    case 8:
+        m0 = HIGH;
+        m1 = HIGH;
+        m2 = LOW;
+        break;
+    case 16:
+        m0 = LOW;
+        m1 = LOW;
+        m2 = HIGH;
+        break;
+    case 32:
+        m0 = HIGH;
+        m1 = LOW;
+        m2 = HIGH;
+        break;
+    default:
+        return false;
     }
 
     digitalWrite(m_Config.pinM0, m0);
@@ -439,7 +429,7 @@ Focuser::State Focuser::getState() const
 std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backlashTicksRemaining)
 {
     return std::thread([this, targetPos, direction, backlashTicksRemaining]()
-    {
+                       {
         int motorDirection = direction;
         int backlashRemaining = backlashTicksRemaining;
 
@@ -487,8 +477,7 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
             m_State.targetPosition = m_State.currentPosition;
         }
 
-        setCurrent(true);
-    });
+        setCurrent(true); });
 }
 
 int Focuser::clampInt(int value, int minValue, int maxValue)

@@ -88,7 +88,7 @@ AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 , m_MLXReader(0x5A, getDeviceName())
 , m_TSLReader(0x29, getDeviceName())
 , m_DSReader("/sys/bus/w1/devices/28-000000000000/w1_slave", getDeviceName())
-, m_Focuser(Focuser::Config{}, getDeviceName())
+, m_Focuser(Focuser::Config{}, m_BoardIO, getDeviceName())
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
@@ -966,106 +966,107 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 
 std::thread AstroLink4Pi::getMotorThread(uint32_t targetTicks, int lastDirection, int backlashTicksRemaining)
 {
-	return std::thread([this](uint32_t targetPos, int direction, int backlashTicksRemaining)
-					   {
-		int motorDirection = direction;
-		std::mutex motionMutex;
+	return nullptr;
+	// return std::thread([this](uint32_t targetPos, int direction, int backlashTicksRemaining)
+	// 				   {
+	// 	int motorDirection = direction;
+	// 	std::mutex motionMutex;
 
-		uint32_t currentPos = FocusAbsPosNP[0].getValue();
-		while (currentPos != targetPos && !(_abort.load(std::memory_order_relaxed)))
-		{
-			if (FocusReverseSP[INDI_ENABLED].getState() == ISS_ON)
-			{
-				m_BoardIO.write(DIR_PIN, (motorDirection < 0) ? HIGH : LOW);
-			}
-			else
-			{
-				m_BoardIO.write(DIR_PIN, (motorDirection < 0) ? LOW : HIGH);
-			}
-			m_BoardIO.write(STP_PIN, HIGH);
-			usleep(10);
-			m_BoardIO.write(STP_PIN, LOW);
+	// 	uint32_t currentPos = FocusAbsPosNP[0].getValue();
+	// 	while (currentPos != targetPos && !(_abort.load(std::memory_order_relaxed)))
+	// 	{
+	// 		if (FocusReverseSP[INDI_ENABLED].getState() == ISS_ON)
+	// 		{
+	// 			m_BoardIO.write(DIR_PIN, (motorDirection < 0) ? HIGH : LOW);
+	// 		}
+	// 		else
+	// 		{
+	// 			m_BoardIO.write(DIR_PIN, (motorDirection < 0) ? LOW : HIGH);
+	// 		}
+	// 		m_BoardIO.write(STP_PIN, HIGH);
+	// 		usleep(10);
+	// 		m_BoardIO.write(STP_PIN, LOW);
 
-			if (backlashTicksRemaining <= 0)
-			{ // Only Count the position change if it is not due to backlash
-				currentPos += motorDirection;
-			}
-			else
-			{ // Don't count the backlash position change, just decrement the counter
-				backlashTicksRemaining -= 1;
-			}
-			if (currentPos % 100 == 0)
-			{
-				std::lock_guard<std::mutex> lk(motionMutex);
-				FocusAbsPosNP[0].setValue(currentPos);
-				FocusAbsPosNP.setState(IPS_BUSY);
-				FocusAbsPosNP.apply();
-			}
-			//usleep(FocusStepDelayN[0].value);
-			std::this_thread::sleep_for(std::chrono::microseconds(static_cast<long>(FocusStepDelayN[0].value)));
-		}
+	// 		if (backlashTicksRemaining <= 0)
+	// 		{ // Only Count the position change if it is not due to backlash
+	// 			currentPos += motorDirection;
+	// 		}
+	// 		else
+	// 		{ // Don't count the backlash position change, just decrement the counter
+	// 			backlashTicksRemaining -= 1;
+	// 		}
+	// 		if (currentPos % 100 == 0)
+	// 		{
+	// 			std::lock_guard<std::mutex> lk(motionMutex);
+	// 			FocusAbsPosNP[0].setValue(currentPos);
+	// 			FocusAbsPosNP.setState(IPS_BUSY);
+	// 			FocusAbsPosNP.apply();
+	// 		}
+	// 		//usleep(FocusStepDelayN[0].value);
+	// 		std::this_thread::sleep_for(std::chrono::microseconds(static_cast<long>(FocusStepDelayN[0].value)));
+	// 	}
 
-		// update abspos value and status
-		DEBUGF(INDI::Logger::DBG_SESSION, "Focuser moved to position %i", (int)currentPos);
-		FocusAbsPosNP[0].setValue(currentPos);
-		FocusAbsPosNP.setState(IPS_OK);
-		FocusAbsPosNP.apply();
-		FocusRelPosNP.setState(IPS_OK);
-		FocusRelPosNP.apply();
+	// 	// update abspos value and status
+	// 	DEBUGF(INDI::Logger::DBG_SESSION, "Focuser moved to position %i", (int)currentPos);
+	// 	FocusAbsPosNP[0].setValue(currentPos);
+	// 	FocusAbsPosNP.setState(IPS_OK);
+	// 	FocusAbsPosNP.apply();
+	// 	FocusRelPosNP.setState(IPS_OK);
+	// 	FocusRelPosNP.apply();
 
-		savePosition((int)FocusAbsPosNP[0].getValue() * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
-		lastTemperature = FocusTemperatureN[0].value;							// register last temperature
-		setCurrent(true); },
-					   targetTicks, lastDirection, backlashTicksRemaining);
+	// 	savePosition((int)FocusAbsPosNP[0].getValue() * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
+	// 	lastTemperature = FocusTemperatureN[0].value;							// register last temperature
+	// 	setCurrent(true); },
+	// 				   targetTicks, lastDirection, backlashTicksRemaining);
 }
 
 void AstroLink4Pi::SetResolution(int res)
 {
 	// Release lines
-	m_BoardIO.write(M0_PIN, HIGH);
-	m_BoardIO.write(M1_PIN, HIGH);
-	m_BoardIO.write(M2_PIN, HIGH);
+	// m_BoardIO.write(M0_PIN, HIGH);
+	// m_BoardIO.write(M1_PIN, HIGH);
+	// m_BoardIO.write(M2_PIN, HIGH);
 
-	switch (res)
-	{
-	case 1: // 1:1
+	// switch (res)
+	// {
+	// case 1: // 1:1
 
-		m_BoardIO.write(M0_PIN, LOW);
-		m_BoardIO.write(M1_PIN, LOW);
-		m_BoardIO.write(M2_PIN, LOW);
-		break;
-	case 2: // 1:2
-		m_BoardIO.write(M0_PIN, HIGH);
-		m_BoardIO.write(M1_PIN, LOW);
-		m_BoardIO.write(M2_PIN, LOW);
-		break;
-	case 4: // 1:4
-		m_BoardIO.write(M0_PIN, LOW);
-		m_BoardIO.write(M1_PIN, HIGH);
-		m_BoardIO.write(M2_PIN, LOW);
-		break;
-	case 8: // 1:8
-		m_BoardIO.write(M0_PIN, HIGH);
-		m_BoardIO.write(M1_PIN, HIGH);
-		m_BoardIO.write(M2_PIN, LOW);
-		break;
-	case 16: // 1:16
-		m_BoardIO.write(M0_PIN, LOW);
-		m_BoardIO.write(M1_PIN, LOW);
-		m_BoardIO.write(M2_PIN, HIGH);
-		break;
-	case 32: // 1:32
-		m_BoardIO.write(M0_PIN, HIGH);
-		m_BoardIO.write(M1_PIN, HIGH);
-		m_BoardIO.write(M2_PIN, HIGH);
-		break;
-	default: // 1:1
-		m_BoardIO.write(M0_PIN, LOW);
-		m_BoardIO.write(M1_PIN, LOW);
-		m_BoardIO.write(M2_PIN, LOW);
+	// 	m_BoardIO.write(M0_PIN, LOW);
+	// 	m_BoardIO.write(M1_PIN, LOW);
+	// 	m_BoardIO.write(M2_PIN, LOW);
+	// 	break;
+	// case 2: // 1:2
+	// 	m_BoardIO.write(M0_PIN, HIGH);
+	// 	m_BoardIO.write(M1_PIN, LOW);
+	// 	m_BoardIO.write(M2_PIN, LOW);
+	// 	break;
+	// case 4: // 1:4
+	// 	m_BoardIO.write(M0_PIN, LOW);
+	// 	m_BoardIO.write(M1_PIN, HIGH);
+	// 	m_BoardIO.write(M2_PIN, LOW);
+	// 	break;
+	// case 8: // 1:8
+	// 	m_BoardIO.write(M0_PIN, HIGH);
+	// 	m_BoardIO.write(M1_PIN, HIGH);
+	// 	m_BoardIO.write(M2_PIN, LOW);
+	// 	break;
+	// case 16: // 1:16
+	// 	m_BoardIO.write(M0_PIN, LOW);
+	// 	m_BoardIO.write(M1_PIN, LOW);
+	// 	m_BoardIO.write(M2_PIN, HIGH);
+	// 	break;
+	// case 32: // 1:32
+	// 	m_BoardIO.write(M0_PIN, HIGH);
+	// 	m_BoardIO.write(M1_PIN, HIGH);
+	// 	m_BoardIO.write(M2_PIN, HIGH);
+	// 	break;
+	// default: // 1:1
+	// 	m_BoardIO.write(M0_PIN, LOW);
+	// 	m_BoardIO.write(M1_PIN, LOW);
+	// 	m_BoardIO.write(M2_PIN, LOW);
 
-		break;
-	}
+	// 	break;
+	// }
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "Resolution set to 1 / %d.", res);
 }
@@ -1228,67 +1229,67 @@ void AstroLink4Pi::setCurrent(bool standby)
 	if (!isConnected())
 		return;
 
-	if (standby)
-	{
-		m_BoardIO.write(EN_PIN, (getHoldPower() > 0) ? HIGH : LOW);
-		m_BoardIO.write(DECAY_PIN, LOW);
+	// if (standby)
+	// {
+	// 	m_BoardIO.write(EN_PIN, (getHoldPower() > 0) ? HIGH : LOW);
+	// 	m_BoardIO.write(DECAY_PIN, LOW);
 
-		if (m_BoardIO.revision() == 1)
-		{
-			if (getHoldPower() == 5)
-			{
-				m_BoardIO.write(HOLD_PIN, LOW);
-				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 100%%.");
-			}
-			else if (getHoldPower() > 0)
-			{
-				m_BoardIO.write(HOLD_PIN, HIGH);
-				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 50%%.");
-			}
-			else
-			{
-				m_BoardIO.write(HOLD_PIN, HIGH);
-				DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
-			}
-		}
-		if (m_BoardIO.revision() > 1 && m_BoardIO.revision() < 4)
-		{
-			// for 0.1 ohm resistor Vref = iref / 2
-			setDac(0, 255 * (getHoldPower() * StepperCurrentN[0].value / 5) / 4096);
-		}
-		if (m_BoardIO.revision() >= 4)
-		{
-			m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(getHoldPower() * StepperCurrentN[0].value / 5));
-		}
+	// 	if (m_BoardIO.revision() == 1)
+	// 	{
+	// 		if (getHoldPower() == 5)
+	// 		{
+	// 			m_BoardIO.write(HOLD_PIN, LOW);
+	// 			DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 100%%.");
+	// 		}
+	// 		else if (getHoldPower() > 0)
+	// 		{
+	// 			m_BoardIO.write(HOLD_PIN, HIGH);
+	// 			DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 50%%.");
+	// 		}
+	// 		else
+	// 		{
+	// 			m_BoardIO.write(HOLD_PIN, HIGH);
+	// 			DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
+	// 		}
+	// 	}
+	// 	if (m_BoardIO.revision() > 1 && m_BoardIO.revision() < 4)
+	// 	{
+	// 		// for 0.1 ohm resistor Vref = iref / 2
+	// 		setDac(0, 255 * (getHoldPower() * StepperCurrentN[0].value / 5) / 4096);
+	// 	}
+	// 	if (m_BoardIO.revision() >= 4)
+	// 	{
+	// 		m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(getHoldPower() * StepperCurrentN[0].value / 5));
+	// 	}
 
-		if (getHoldPower() > 0)
-		{
-			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", getHoldPower() * 20);
-		}
-		else
-		{
-			DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
-		}
-	}
-	else
-	{
-		m_BoardIO.write(EN_PIN, LOW);
-		m_BoardIO.write(DECAY_PIN, HIGH);
-		if (m_BoardIO.revision() == 1)
-		{
-			m_BoardIO.write(HOLD_PIN, LOW);
-		}
-		if (m_BoardIO.revision() > 1 && m_BoardIO.revision() < 4)
-		{
-			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current %0.2f", StepperCurrentN[0].value);
-			// for 0.1 ohm resistor Vref = iref / 2
-			setDac(0, 255 * StepperCurrentN[0].value / 4096);
-		}
-		if (m_BoardIO.revision() >= 4)
-		{
-			m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(StepperCurrentN[0].value));
-		}
-	}
+	// 	if (getHoldPower() > 0)
+	// 	{
+	// 		DEBUGF(INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", getHoldPower() * 20);
+	// 	}
+	// 	else
+	// 	{
+	// 		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
+	// 	}
+	// }
+	// else
+	// {
+	// 	m_BoardIO.write(EN_PIN, LOW);
+	// 	m_BoardIO.write(DECAY_PIN, HIGH);
+	// 	if (m_BoardIO.revision() == 1)
+	// 	{
+	// 		m_BoardIO.write(HOLD_PIN, LOW);
+	// 	}
+	// 	if (m_BoardIO.revision() > 1 && m_BoardIO.revision() < 4)
+	// 	{
+	// 		DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current %0.2f", StepperCurrentN[0].value);
+	// 		// for 0.1 ohm resistor Vref = iref / 2
+	// 		setDac(0, 255 * StepperCurrentN[0].value / 4096);
+	// 	}
+	// 	if (m_BoardIO.revision() >= 4)
+	// 	{
+	// 		m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(StepperCurrentN[0].value));
+	// 	}
+	// }
 }
 
 void AstroLink4Pi::systemUpdate()

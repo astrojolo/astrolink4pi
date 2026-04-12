@@ -58,7 +58,7 @@ public:
         double temperatureCoefficient = 0.0;
     };
 
-    Focuser(const Config &config, const std::string &deviceName);
+    Focuser(const Config &config, BoardIO &boardIO, const std::string &deviceName);
     ~Focuser();
 
     bool open();
@@ -97,6 +97,7 @@ private:
     static int clampInt(int value, int minValue, int maxValue);
 
 private:
+    BoardIO &m_BoardIO;
     Config m_Config;
     mutable std::mutex m_StateMutex;
     State m_State;
@@ -105,5 +106,4 @@ private:
     std::atomic<bool> m_Abort{false};
 
     int m_SpiFd = -1;
-    bool m_WiringPiReady = false;
 };
