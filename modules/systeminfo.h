@@ -4,6 +4,8 @@
 #include <string>
 #include <cstdint>
 
+#include "basecomponent.h"
+
 class SystemInfoService : public BaseComponent
 {
 public:

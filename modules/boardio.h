@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <wiringPi.h>
 
+#include "basecomponent.h"
+
 class BoardIO : public BaseComponent
 {
 public:

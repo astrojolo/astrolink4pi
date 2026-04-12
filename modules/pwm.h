@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 
+#include "basecomponent.h"
+
 // dtoverlay=pwm-pio,gpio=19
 // dtoverlay=pwm-pio,gpio=26
 // dtoverlay=pwm-pio,gpio=13
