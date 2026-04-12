@@ -263,6 +263,13 @@ bool Focuser::setTemperature(double temperatureC)
     return true;
 }
 
+bool setTemperatureCompensation(bool tempCompEnabled)
+{
+    std::lock_guard<std::mutex> lock(m_StateMutex);
+    m_State.temperatureCompEnabled = tempCompEnabled;
+    return true;
+}
+
 bool Focuser::setTemperatureCoefficient(double stepsPerC)
 {
     std::lock_guard<std::mutex> lock(m_StateMutex);
@@ -452,10 +459,10 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
                     ? ((motorDirection < 0) ? HIGH : LOW)
                     : ((motorDirection < 0) ? LOW : HIGH);
 
-            digitalWrite(m_Config.pinDIR, dirLevel);
-            digitalWrite(m_Config.pinSTP, HIGH);
+            m_BoardIO.write(m_Config.pinDIR, dirLevel);
+            m_BoardIO.write(m_Config.pinSTP, HIGH);
             delayMicroseconds(10);
-            digitalWrite(m_Config.pinSTP, LOW);
+            m_BoardIO.write(m_Config.pinSTP, LOW);
 
             {
                 std::lock_guard<std::mutex> lock(m_StateMutex);

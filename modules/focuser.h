@@ -76,6 +76,7 @@ public:
     bool setFocuserMaxPosition(uint32_t ticks);
 
     bool setTemperature(double temperatureC);
+    bool setTemperatureCompensation(bool tempCompEnabled);
     bool setTemperatureCoefficient(double stepsPerC);
     bool temperatureCompensation();
 

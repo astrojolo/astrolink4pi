@@ -471,6 +471,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IDSetNumber(&FocusStepDelayNP, nullptr);
 			FocusStepDelayNP.s = IPS_OK;
 			IDSetNumber(&FocusStepDelayNP, nullptr);
+			m_Focuser.setStepDelayUs(FocusStepDelayN[0].value);
 			DEBUGF(INDI::Logger::DBG_SESSION, "Step delay set to %0.0f us.", FocusStepDelayN[0].value);
 			return true;
 		}
@@ -486,6 +487,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			FocusAbsPosNP.setState(IPS_OK);
 			FocusMaxPosNP.apply();
 			getFocuserInfo();
+			m_Focuser.setFocuserMaxPosition(FocusMaxPosNP[0].getValue());
 			return true;
 		}
 
@@ -495,7 +497,8 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&TemperatureCoefNP, values, names, n);
 			TemperatureCoefNP.s = IPS_OK;
 			IDSetNumber(&TemperatureCoefNP, nullptr);
-			DEBUGF(INDI::Logger::DBG_SESSION, "Temperature coefficient set to %0.1f steps/Â°C", TemperatureCoefN[0].value);
+			m_Focuser.setTemperatureCoefficient(TemperatureCoefN[0].value);
+			DEBUGF(INDI::Logger::DBG_SESSION, "Temperature coefficient set to %0.1f steps/°C", TemperatureCoefN[0].value);
 			return true;
 		}
 
@@ -549,6 +552,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&StepperCurrentNP, values, names, n);
 			StepperCurrentNP.s = IPS_OK;
 			IDSetNumber(&StepperCurrentNP, nullptr);
+			m_Focuser.setCurrent(StepperCurrentN[0].value);
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current set to %0.0f mA", StepperCurrentN[0].value);
 			setCurrent(true);
 			return true;
@@ -576,12 +580,14 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			if (TemperatureCompensateS[0].s == ISS_ON)
 			{
 				TemperatureCompensateSP.s = IPS_OK;
+				m_Focuser.setTemperatureCompensation(true);
 				DEBUG(INDI::Logger::DBG_SESSION, "Temperature compensation ENABLED.");
 			}
 
 			if (TemperatureCompensateS[1].s == ISS_ON)
 			{
 				TemperatureCompensateSP.s = IPS_IDLE;
+				m_Focuser.setTemperatureCompensation(true);
 				DEBUG(INDI::Logger::DBG_SESSION, "Temperature compensation DISABLED.");
 			}
 
@@ -681,7 +687,8 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			IUUpdateSwitch(&FocusHoldSP, states, names, n);
 			FocusHoldSP.s = IPS_OK;
 			IDSetSwitch(&FocusHoldSP, nullptr);
-			setCurrent(true);
+			m_Focuser.setHoldPowerPercent(20.0 * getHoldPower());
+			m_Focuser.setCurrent(true);
 			return true;
 		}
 
@@ -732,7 +739,7 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 				MoveAbsFocuser(FocusAbsPosNP[0].getValue() + position_adjustment);
 			}
 
-			SetResolution(resolution);
+			m_Focuser.setResolution(resolution);
 
 			// update values based on resolution
 			FocusRelPosNP[0].setMin((int)FocusRelPosNP[0].getMin() * resolution / last_resolution);
@@ -877,14 +884,7 @@ void AstroLink4Pi::TimerHit()
 
 bool AstroLink4Pi::AbortFocuser()
 {
-	if (_motionThread.joinable())
-	{
-		//_abort = true;
-		_abort.store(true, std::memory_order_relaxed);
-		_motionThread.join();
-	}
-	DEBUG(INDI::Logger::DBG_SESSION, "Focuser motion aborted.");
-	return true;
+	return m_Focuser.abortFocuser();
 }
 
 IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
@@ -911,6 +911,9 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	FocusAbsPosNP.setState(IPS_BUSY);
 	FocusAbsPosNP.apply();
 	setCurrent(false);
+
+	m_Focuser.setFocuserBacklash(FocusBacklashNP[0].getValue());
+	m_Focuser.moveAbsFocuser(targetTicks);
 
 	// set direction
 	const char *direction;
