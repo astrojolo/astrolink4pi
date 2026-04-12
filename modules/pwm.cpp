@@ -12,7 +12,7 @@
 #include <softPwm.h>
 
 PwmController::PwmController(BoardIO &boardIO)
-    : m_BoardIO(boardIO)
+    : BaseComponent(deviceName, "PWM"), m_BoardIO(boardIO)
 {
     m_ChannelStates[Channel::P1] = {};
     m_ChannelStates[Channel::P2] = {};

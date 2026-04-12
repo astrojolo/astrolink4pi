@@ -1,0 +1,497 @@
+#include "focuser.h"
+
+#include <algorithm>
+#include <cerrno>
+#include <chrono>
+#include <cstring>
+
+#include <unistd.h>
+#include <wiringPi.h>
+#include <wiringPiSPI.h>
+
+namespace
+{
+constexpr int DAC_MAX_VALUE = 4095;
+constexpr int DAC_MIN_VALUE = 0;
+constexpr int MAX_DRIVER_CURRENT_MA = 2000;
+constexpr int MIN_DRIVER_CURRENT_MA = 0;
+}
+
+Focuser::Focuser(const Config &config, const std::string &deviceName)
+    : BaseComponent(deviceName, "Focuser")
+    , m_Config(config)
+{
+    m_State.resolution = config.defaultResolution;
+    m_State.stepDelayUs = config.defaultStepDelayUs;
+    m_State.currentmA = config.defaultCurrentmA;
+    m_State.maxPosition = config.defaultMaxPosition;
+}
+
+Focuser::~Focuser()
+{
+    close();
+}
+
+bool Focuser::open()
+{
+    close();
+
+    if (wiringPiSetupGpio() < 0)
+    {
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                     "wiringPiSetupGpio failed: errno=%d (%s)", errno, std::strerror(errno));
+        return false;
+    }
+
+    m_WiringPiReady = true;
+
+    pinMode(m_Config.pinEN, OUTPUT);
+    pinMode(m_Config.pinM0, OUTPUT);
+    pinMode(m_Config.pinM1, OUTPUT);
+    pinMode(m_Config.pinM2, OUTPUT);
+    pinMode(m_Config.pinRST, OUTPUT);
+    pinMode(m_Config.pinSTP, OUTPUT);
+    pinMode(m_Config.pinDIR, OUTPUT);
+
+    digitalWrite(m_Config.pinRST, HIGH);
+    digitalWrite(m_Config.pinSTP, LOW);
+    digitalWrite(m_Config.pinDIR, LOW);
+    digitalWrite(m_Config.pinEN, HIGH); // disabled at startup
+
+    m_SpiFd = wiringPiSPISetup(m_Config.spiChannel, m_Config.spiSpeed);
+    if (m_SpiFd < 0)
+    {
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                     "wiringPiSPISetup failed: errno=%d (%s)", errno, std::strerror(errno));
+        close();
+        return false;
+    }
+
+    if (!setResolution(m_State.resolution))
+    {
+        close();
+        return false;
+    }
+
+    setCurrent(true);
+
+    {
+        std::lock_guard<std::mutex> lock(m_StateMutex);
+        m_State.connected = true;
+        m_State.moving = false;
+    }
+
+    return true;
+}
+
+void Focuser::close()
+{
+    abortFocuser();
+
+    if (m_WiringPiReady)
+    {
+        digitalWrite(m_Config.pinRST, LOW);
+        digitalWrite(m_Config.pinEN, HIGH);
+    }
+
+    m_SpiFd = -1;
+    m_WiringPiReady = false;
+
+    std::lock_guard<std::mutex> lock(m_StateMutex);
+    m_State.connected = false;
+    m_State.moving = false;
+}
+
+bool Focuser::isOpen() const
+{
+    std::lock_guard<std::mutex> lock(m_StateMutex);
+    return m_State.connected;
+}
+
+bool Focuser::abortFocuser()
+{
+    m_Abort.store(true, std::memory_order_relaxed);
+
+    if (m_MotionThread.joinable())
+        m_MotionThread.join();
+
+    {
+        std::lock_guard<std::mutex> lock(m_StateMutex);
+        m_State.moving = false;
+        m_State.targetPosition = m_State.currentPosition;
+    }
+
+    setCurrent(true);
+    return true;
+}
+
+bool Focuser::moveRelFocuser(int32_t ticks)
+{
+    State state = getState();
+    return moveAbsFocuser(static_cast<uint32_t>(state.currentPosition + ticks));
+}
+
+bool Focuser::moveAbsFocuser(uint32_t targetTicks)
+{
+    if (!isOpen())
+        return false;
+
+    int direction = 0;
+    int backlashTicksRemaining = 0;
+    int32_t currentPosition = 0;
+    int32_t maxPosition = 0;
+    int32_t lastDirection = 0;
+
+    {
+        std::lock_guard<std::mutex> lock(m_StateMutex);
+        currentPosition = m_State.currentPosition;
+        maxPosition = m_State.maxPosition;
+        lastDirection = m_State.lastDirection;
+    }
+
+    if (static_cast<int32_t>(targetTicks) < 0 || static_cast<int32_t>(targetTicks) > maxPosition)
+    {
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                    "Requested focuser position out of range.");
+        return false;
+    }
+
+    if (static_cast<int32_t>(targetTicks) == currentPosition)
+        return true;
+
+    if (static_cast<int32_t>(targetTicks) > currentPosition)
+        direction = 1;
+    else
+        direction = -1;
+
+    {
+        std::lock_guard<std::mutex> lock(m_StateMutex);
+        if (m_State.lastDirection != 0 &&
+            direction != m_State.lastDirection &&
+            m_State.backlashSteps > 0)
+        {
+            backlashTicksRemaining = m_State.backlashSteps;
+        }
+
+        m_State.targetPosition = static_cast<int32_t>(targetTicks);
+        m_State.lastDirection = direction;
+        m_State.moving = true;
+    }
+
+    if (m_MotionThread.joinable())
+    {
+        m_Abort.store(true, std::memory_order_relaxed);
+        m_MotionThread.join();
+    }
+
+    setCurrent(false);
+    m_Abort.store(false, std::memory_order_relaxed);
+    m_MotionThread = getMotorThread(targetTicks, direction, backlashTicksRemaining);
+    return true;
+}
+
+bool Focuser::setResolution(int res)
+{
+    if (!m_WiringPiReady)
+        return false;
+
+    if (res != 1 && res != 2 && res != 4 && res != 8 && res != 16 && res != 32)
+        return false;
+
+    int m0 = LOW;
+    int m1 = LOW;
+    int m2 = LOW;
+
+    switch (res)
+    {
+        case 1:
+            m0 = LOW;  m1 = LOW;  m2 = LOW;
+            break;
+        case 2:
+            m0 = HIGH; m1 = LOW;  m2 = LOW;
+            break;
+        case 4:
+            m0 = LOW;  m1 = HIGH; m2 = LOW;
+            break;
+        case 8:
+            m0 = HIGH; m1 = HIGH; m2 = LOW;
+            break;
+        case 16:
+            m0 = LOW;  m1 = LOW;  m2 = HIGH;
+            break;
+        case 32:
+            m0 = HIGH; m1 = LOW;  m2 = HIGH;
+            break;
+        default:
+            return false;
+    }
+
+    digitalWrite(m_Config.pinM0, m0);
+    digitalWrite(m_Config.pinM1, m1);
+    digitalWrite(m_Config.pinM2, m2);
+
+    std::lock_guard<std::mutex> lock(m_StateMutex);
+    m_State.resolution = res;
+    return true;
+}
+
+bool Focuser::reverseFocuser(bool enabled)
+{
+    std::lock_guard<std::mutex> lock(m_StateMutex);
+    m_State.reverse = enabled;
+    return true;
+}
+
+bool Focuser::syncFocuser(uint32_t ticks)
+{
+    std::lock_guard<std::mutex> lock(m_StateMutex);
+    m_State.currentPosition = clampInt(static_cast<int>(ticks), 0, m_State.maxPosition);
+    m_State.targetPosition = m_State.currentPosition;
+    return true;
+}
+
+bool Focuser::setFocuserBacklash(int32_t steps)
+{
+    std::lock_guard<std::mutex> lock(m_StateMutex);
+    m_State.backlashSteps = std::max<int32_t>(0, steps);
+    return true;
+}
+
+bool Focuser::setFocuserMaxPosition(uint32_t ticks)
+{
+    std::lock_guard<std::mutex> lock(m_StateMutex);
+    m_State.maxPosition = std::max<int32_t>(0, static_cast<int32_t>(ticks));
+    if (m_State.currentPosition > m_State.maxPosition)
+        m_State.currentPosition = m_State.maxPosition;
+    if (m_State.targetPosition > m_State.maxPosition)
+        m_State.targetPosition = m_State.maxPosition;
+    return true;
+}
+
+bool Focuser::setTemperature(double temperatureC)
+{
+    std::lock_guard<std::mutex> lock(m_StateMutex);
+    m_State.focuserTemperature = temperatureC;
+    return true;
+}
+
+bool Focuser::setTemperatureCoefficient(double stepsPerC)
+{
+    std::lock_guard<std::mutex> lock(m_StateMutex);
+    m_State.temperatureCoefficient = stepsPerC;
+    return true;
+}
+
+bool Focuser::temperatureCompensation()
+{
+    double currentTemperature = 0.0;
+    double previousTemperature = 0.0;
+    double coefficient = 0.0;
+    bool enabled = false;
+
+    {
+        std::lock_guard<std::mutex> lock(m_StateMutex);
+        enabled = m_State.temperatureCompEnabled;
+        currentTemperature = m_State.focuserTemperature;
+        previousTemperature = m_State.lastCompTemperature;
+        coefficient = m_State.temperatureCoefficient;
+    }
+
+    if (!enabled)
+        return false;
+
+    if (currentTemperature < -999.0)
+        return false;
+
+    if (previousTemperature < -999.0)
+    {
+        std::lock_guard<std::mutex> lock(m_StateMutex);
+        m_State.lastCompTemperature = currentTemperature;
+        return true;
+    }
+
+    const double delta = currentTemperature - previousTemperature;
+    const int correctionSteps = static_cast<int>(delta * coefficient);
+
+    {
+        std::lock_guard<std::mutex> lock(m_StateMutex);
+        m_State.lastCompTemperature = currentTemperature;
+    }
+
+    if (correctionSteps == 0)
+        return true;
+
+    return moveRelFocuser(correctionSteps);
+}
+
+int Focuser::getHoldPower() const
+{
+    std::lock_guard<std::mutex> lock(m_StateMutex);
+    return m_State.holdPowerPercent;
+}
+
+bool Focuser::setHoldPowerPercent(int percent)
+{
+    percent = clampInt(percent, 0, 100);
+
+    {
+        std::lock_guard<std::mutex> lock(m_StateMutex);
+        m_State.holdPowerPercent = percent;
+    }
+
+    setCurrent(true);
+    return true;
+}
+
+bool Focuser::setCurrent(int currentmA)
+{
+    {
+        std::lock_guard<std::mutex> lock(m_StateMutex);
+        m_State.currentmA = clampInt(currentmA, MIN_DRIVER_CURRENT_MA, MAX_DRIVER_CURRENT_MA);
+    }
+
+    setCurrent(true);
+    return true;
+}
+
+void Focuser::setCurrent(bool standby)
+{
+    int requestedCurrent = 0;
+    int holdPercent = 0;
+
+    {
+        std::lock_guard<std::mutex> lock(m_StateMutex);
+        requestedCurrent = m_State.currentmA;
+        holdPercent = m_State.holdPowerPercent;
+    }
+
+    int effectiveCurrent = requestedCurrent;
+    if (standby)
+        effectiveCurrent = requestedCurrent * holdPercent / 100;
+
+    const int dacValue = getMotorPWM(effectiveCurrent);
+
+    // To keep compatibility with the original method list:
+    // - channel 0 can be treated as "run"
+    // - channel 1 as "hold/alternate"
+    // Here we update both identically, unless you want separate scaling later.
+    setDac(m_Config.dacChannelRun, dacValue);
+    setDac(m_Config.dacChannelHold, dacValue);
+
+    if (m_WiringPiReady)
+    {
+        // EN low = enabled, EN high = disabled
+        digitalWrite(m_Config.pinEN, effectiveCurrent > 0 ? LOW : HIGH);
+    }
+}
+
+int Focuser::getMotorPWM(int currentmA) const
+{
+    currentmA = clampInt(currentmA, MIN_DRIVER_CURRENT_MA, MAX_DRIVER_CURRENT_MA);
+
+    // Sensible linear mapping used as a reconstruction of the original helper.
+    // Adjust denominator if your hardware full-scale current differs.
+    const int value = static_cast<int>(
+        (static_cast<double>(currentmA) / MAX_DRIVER_CURRENT_MA) * DAC_MAX_VALUE);
+
+    return clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
+}
+
+int Focuser::setDac(int chan, int value)
+{
+    if (m_SpiFd < 0)
+        return -1;
+
+    chan = (chan != 0) ? 1 : 0;
+    value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
+
+    // MCP4922-style 16-bit frame:
+    // bit15 A/B, bit14 BUF=0, bit13 GA=1 (1x), bit12 SHDN=1, bits11..0 data
+    uint16_t frame = 0;
+    frame |= (static_cast<uint16_t>(chan) << 15);
+    frame |= (1u << 13);
+    frame |= (1u << 12);
+    frame |= static_cast<uint16_t>(value & 0x0FFF);
+
+    unsigned char data[2];
+    data[0] = static_cast<unsigned char>((frame >> 8) & 0xFF);
+    data[1] = static_cast<unsigned char>(frame & 0xFF);
+
+    return wiringPiSPIDataRW(m_Config.spiChannel, data, 2);
+}
+
+bool Focuser::setStepDelayUs(int stepDelayUs)
+{
+    if (stepDelayUs < 50)
+        return false;
+
+    std::lock_guard<std::mutex> lock(m_StateMutex);
+    m_State.stepDelayUs = stepDelayUs;
+    return true;
+}
+
+Focuser::State Focuser::getState() const
+{
+    std::lock_guard<std::mutex> lock(m_StateMutex);
+    return m_State;
+}
+
+std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backlashTicksRemaining)
+{
+    return std::thread([this, targetPos, direction, backlashTicksRemaining]()
+    {
+        int motorDirection = direction;
+        int backlashRemaining = backlashTicksRemaining;
+
+        while (!m_Abort.load(std::memory_order_relaxed))
+        {
+            bool reverse = false;
+            int stepDelayUs = 0;
+            int32_t currentPos = 0;
+
+            {
+                std::lock_guard<std::mutex> lock(m_StateMutex);
+                reverse = m_State.reverse;
+                stepDelayUs = m_State.stepDelayUs;
+                currentPos = m_State.currentPosition;
+            }
+
+            if (currentPos == static_cast<int32_t>(targetPos))
+                break;
+
+            const int dirLevel =
+                reverse
+                    ? ((motorDirection < 0) ? HIGH : LOW)
+                    : ((motorDirection < 0) ? LOW : HIGH);
+
+            digitalWrite(m_Config.pinDIR, dirLevel);
+            digitalWrite(m_Config.pinSTP, HIGH);
+            delayMicroseconds(10);
+            digitalWrite(m_Config.pinSTP, LOW);
+
+            {
+                std::lock_guard<std::mutex> lock(m_StateMutex);
+
+                if (backlashRemaining <= 0)
+                    m_State.currentPosition += motorDirection;
+                else
+                    --backlashRemaining;
+            }
+
+            delayMicroseconds(stepDelayUs);
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(m_StateMutex);
+            m_State.moving = false;
+            m_State.targetPosition = m_State.currentPosition;
+        }
+
+        setCurrent(true);
+    });
+}
+
+int Focuser::clampInt(int value, int minValue, int maxValue)
+{
+    return std::max(minValue, std::min(value, maxValue));
+}

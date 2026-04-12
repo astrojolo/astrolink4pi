@@ -5,13 +5,13 @@
 #include <cstdint>
 #include <wiringPi.h>
 
-class BoardIO
+class BoardIO : public BaseComponent
 {
 public:
     static constexpr int RP4_GPIOCHIP = 4;
     static constexpr int RP5_GPIOCHIP = 5;
 
-    BoardIO();
+    BoardIO(const std::string &deviceName);
     ~BoardIO();
 
     bool connect();

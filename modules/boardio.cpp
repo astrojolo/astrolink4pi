@@ -4,7 +4,11 @@
 #include <sstream>
 #include <stdexcept>
 
-BoardIO::BoardIO() = default;
+BoardIO::BoardIO()
+ : BaseComponent(deviceName, "BoardIO")
+{
+
+}
 
 BoardIO::~BoardIO()
 {

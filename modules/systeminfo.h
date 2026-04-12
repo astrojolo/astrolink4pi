@@ -4,10 +4,10 @@
 #include <string>
 #include <cstdint>
 
-class SystemInfoService
+class SystemInfoService : public BaseComponent
 {
 public:
-    SystemInfoService();
+    SystemInfoService(const std::string &deviceName);
     ~SystemInfoService();
 
     std::string getHostname() const;

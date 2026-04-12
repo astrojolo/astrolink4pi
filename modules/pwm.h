@@ -16,9 +16,7 @@
 // pwmConfig.pi5Channels[PwmController::Channel::MOT] = {"/sys/class/pwm/pwmchip3", 0}; // GPIO20
 
 
-class BoardIO;
-
-class PwmController
+class PwmController : public BaseComponent
 {
 public:
     enum class Channel
@@ -50,7 +48,7 @@ public:
         std::map<Channel, Pi5ChannelConfig> pi5Channels;
     };
 
-    explicit PwmController(BoardIO &boardIO);
+    explicit PwmController(BoardIO &boardIO, const std::string &deviceName);
     ~PwmController();
 
     bool initialize(const Config &config);

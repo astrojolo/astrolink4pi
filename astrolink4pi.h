@@ -51,6 +51,7 @@
 #include "mlxreader.h"
 #include "tslreader.h"
 #include "dsreader.h"
+#include "focuser.h"
 
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
@@ -111,6 +112,7 @@ private:
 	MLXReader m_MLXReader;
 	TSLReader m_TSLReader;
 	DSFileReader m_DSReader;
+	Focuser m_Focuser;
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;

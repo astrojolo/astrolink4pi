@@ -7,7 +7,11 @@
 #include <memory>
 #include <array>
 
-SystemInfoService::SystemInfoService() = default;
+SystemInfoService::SystemInfoService(const std::string &deviceName)
+ : BaseComponent(deviceName, "SystemInfo")
+{
+
+}
 
 SystemInfoService::~SystemInfoService() = default;
 
