@@ -11,7 +11,7 @@
 #include <wiringPi.h>
 #include <softPwm.h>
 
-PwmController::PwmController(BoardIO &boardIO)
+PwmController::PwmController(BoardIO &boardIO, const std::string &deviceName)
     : BaseComponent(deviceName, "PWM"), m_BoardIO(boardIO)
 {
     m_ChannelStates[Channel::P1] = {};
