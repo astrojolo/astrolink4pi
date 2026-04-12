@@ -214,9 +214,9 @@ bool Focuser::setResolution(int res)
         return false;
     }
 
-    m_BoardIO->write(m_Config.pinM0, m0);
-    m_BoardIO->write(m_Config.pinM1, m1);
-    m_BoardIO->write(m_Config.pinM2, m2);
+    m_BoardIO.write(m_Config.pinM0, m0);
+    m_BoardIO.write(m_Config.pinM1, m1);
+    m_BoardIO.write(m_Config.pinM2, m2);
 
     std::lock_guard<std::mutex> lock(m_StateMutex);
     m_State.resolution = res;
@@ -366,11 +366,11 @@ void Focuser::setCurrent(bool standby)
     setDac(m_Config.dacChannelRun, dacValue);
     setDac(m_Config.dacChannelHold, dacValue);
 
-    if (m_WiringPiReady)
-    {
-        // EN low = enabled, EN high = disabled
-        digitalWrite(m_Config.pinEN, effectiveCurrent > 0 ? LOW : HIGH);
-    }
+    // if (m_WiringPiReady)
+    // {
+    //     // EN low = enabled, EN high = disabled
+    //     digitalWrite(m_Config.pinEN, effectiveCurrent > 0 ? LOW : HIGH);
+    // }
 }
 
 int Focuser::getMotorPWM(int currentmA) const
