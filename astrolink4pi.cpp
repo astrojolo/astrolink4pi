@@ -209,8 +209,8 @@ bool AstroLink4Pi::Connect()
 
 bool AstroLink4Pi::Disconnect()
 {
-	m_BoardIO.write(RST_PIN, LOW); // sleep
-	m_BoardIO.write(EN_PIN, HIGH); // make disabled
+	//m_BoardIO.write(RST_PIN, LOW); // sleep
+	//m_BoardIO.write(EN_PIN, HIGH); // make disabled
 
 	if (m_BoardIO.read(EN_PIN) != HIGH)
 	{
@@ -958,7 +958,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 
 std::thread AstroLink4Pi::getMotorThread(uint32_t targetTicks, int lastDirection, int backlashTicksRemaining)
 {
-	return nullptr;
+	return std::thread();
 	// return std::thread([this](uint32_t targetPos, int direction, int backlashTicksRemaining)
 	// 				   {
 	// 	int motorDirection = direction;
