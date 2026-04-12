@@ -100,6 +100,7 @@ bool Focuser::abortFocuser()
     }
 
     setCurrent(true);
+    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Focuser motion aborted.");    
     return true;
 }
 
@@ -170,9 +171,6 @@ bool Focuser::moveAbsFocuser(uint32_t targetTicks)
 
 bool Focuser::setResolution(int res)
 {
-    if (!m_WiringPiReady)
-        return false;
-
     if (res != 1 && res != 2 && res != 4 && res != 8 && res != 16 && res != 32)
         return false;
 
@@ -216,9 +214,9 @@ bool Focuser::setResolution(int res)
         return false;
     }
 
-    digitalWrite(m_Config.pinM0, m0);
-    digitalWrite(m_Config.pinM1, m1);
-    digitalWrite(m_Config.pinM2, m2);
+    m_BoardIO->write(m_Config.pinM0, m0);
+    m_BoardIO->write(m_Config.pinM1, m1);
+    m_BoardIO->write(m_Config.pinM2, m2);
 
     std::lock_guard<std::mutex> lock(m_StateMutex);
     m_State.resolution = res;

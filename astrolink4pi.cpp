@@ -117,14 +117,6 @@ bool AstroLink4Pi::Connect()
 	}
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi %d, RPi version %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
 
-	m_BoardIO.initializePin(DECAY_PIN, OUTPUT, LOW);
-	m_BoardIO.initializePin(EN_PIN, OUTPUT, HIGH); // EN_PIN start as disabled
-	m_BoardIO.initializePin(M0_PIN, OUTPUT, LOW);
-	m_BoardIO.initializePin(M1_PIN, OUTPUT, LOW);
-	m_BoardIO.initializePin(M2_PIN, OUTPUT, LOW);
-	m_BoardIO.initializePin(RST_PIN, OUTPUT, HIGH); // RST_PIN start as wake up
-	m_BoardIO.initializePin(STP_PIN, OUTPUT, LOW);
-	m_BoardIO.initializePin(DIR_PIN, OUTPUT, LOW);
 	m_BoardIO.initializePin(OUT1_PIN, OUTPUT, relayState[0]);
 	m_BoardIO.initializePin(OUT2_PIN, OUTPUT, relayState[1]);
 
