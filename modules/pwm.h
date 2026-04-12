@@ -6,6 +6,7 @@
 #include <string>
 
 #include "basecomponent.h"
+#include "boardio.h"
 
 // dtoverlay=pwm-pio,gpio=19
 // dtoverlay=pwm-pio,gpio=26

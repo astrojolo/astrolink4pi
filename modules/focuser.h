@@ -7,6 +7,7 @@
 #include <thread>
 
 #include "basecomponent.h"
+#include "boardio.h"
 
 class Focuser : public BaseComponent
 {
