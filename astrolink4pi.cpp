@@ -100,12 +100,15 @@ void ISNewNumber(const char *dev, const char *name, double values[], char *names
 }
 
 AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
+, m_BoardIO(getDeviceName())
 , m_PwmController(m_BoardIO, getDeviceName())
+, m_SystemInfo(getDeviceName())
 , m_PowerMonitor(0x48, ACS_TYPE, getDeviceName())
 , m_SHTReader(0x44, getDeviceName())
 , m_MLXReader(0x5A, getDeviceName())
 , m_TSLReader(0x29, getDeviceName())
 , m_DSReader("/sys/bus/w1/devices/28-000000000000/w1_slave", getDeviceName())
+, m_Focuser(getDeviceName())
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
