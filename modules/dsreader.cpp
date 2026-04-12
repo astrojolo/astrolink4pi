@@ -21,7 +21,7 @@ bool DSFileReader::open()
 
     if (m_DevicePath.empty())
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "DS file path is empty");
         return false;
     }
@@ -107,7 +107,7 @@ bool DSFileReader::parseTemperature(const std::string &content, double &temperat
     // Wymagamy poprawnego CRC reported by kernel driver: "... YES"
     if (content.find("YES") == std::string::npos)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                      "DS file content has no valid CRC flag (YES)");
         return false;
     }
@@ -116,7 +116,7 @@ bool DSFileReader::parseTemperature(const std::string &content, double &temperat
     const std::size_t pos = content.find(key);
     if (pos == std::string::npos)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                      "DS file content has no temperature marker");
         return false;
     }
@@ -128,7 +128,7 @@ bool DSFileReader::parseTemperature(const std::string &content, double &temperat
     long value = std::strtol(start, &end, 10);
     if (start == end || errno != 0)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                      "Cannot parse DS temperature value");
         return false;
     }
