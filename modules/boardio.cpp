@@ -64,7 +64,7 @@ int BoardIO::gpioChip() const
 	return m_GpioChip;
 }
 
-Config BoardIO::getConfig() const
+BoardIO::Config BoardIO::getConfig() const
 {
 	return m_Config;
 }
