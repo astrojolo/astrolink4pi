@@ -383,7 +383,7 @@ void Focuser::setCurrent(bool standby)
             m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(holdPercent * requestedCurrent / 100));
         }
 
-        if(holdPowerPercent > 0)
+        if(holdPercent > 0)
         {
             DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", holdPercent);
         }
@@ -394,7 +394,7 @@ void Focuser::setCurrent(bool standby)
     }
     else
     {
-        m_BoardIO.write(m_Config.pinEn, LOW);
+        m_BoardIO.write(m_Config.pinEN, LOW);
         m_BoardIO.write(m_Config.pinDecay, HIGH);
         if(m_Revision == 1)
         {
@@ -414,7 +414,7 @@ void Focuser::setCurrent(bool standby)
 int Focuser::getMotorPWM(int currentmA) const
 {
 	// 100 = 1.03V = 2.06A, 1 = 20mA
-    return clampInt((current / 20), 0, 100);
+    return clampInt((currentmA / 20), 0, 100);
 }
 
 bool Focuser::setStepDelayUs(int stepDelayUs)
