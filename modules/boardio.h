@@ -50,6 +50,7 @@ private:
     std::string readFile(const std::string &path) const;
 
 private:
+    Config m_Config;
     int m_SpiFd = -1;
 
     int m_Revision = 0;

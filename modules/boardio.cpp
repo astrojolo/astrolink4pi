@@ -113,7 +113,7 @@ int BoardIO::checkRevision()
 	// lgGpioClaimInput(handle, 0, MOTOR_PWM);	 // OLD CHK_PIN
 	// lgGpioClaimInput(handle, 0, MOTOR_PWM); // OLD CHK2_PIN
 
-	m_BoardIO.setDac(1, 0);
+	setDac(1, 0);
 	// if (lgGpioRead(handle, MOTOR_PWM) == 0)
 	// {
 	// 	setDac(1, 255);
