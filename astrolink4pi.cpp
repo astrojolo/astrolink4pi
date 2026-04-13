@@ -186,7 +186,7 @@ bool AstroLink4Pi::Connect()
 	FocusAbsPosNP[0].setValue(savePosition(-1) != -1 ? (int)savePosition(-1) * resolution / MAX_RESOLUTION : 0);
 
 	// preset resolution
-	SetResolution(resolution);
+	m_Focuser.setResolution(resolution);
 
 	getFocuserInfo();
 	uint64_t currentTime = m_SystemInfo.millis();
@@ -547,7 +547,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&StepperCurrentNP, values, names, n);
 			StepperCurrentNP.s = IPS_OK;
 			IDSetNumber(&StepperCurrentNP, nullptr);
-			m_Focuser.setCurrent(StepperCurrentN[0].value);
+			m_Focuser.setCurrent(static_cast<int>(StepperCurrentN[0].value));
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current set to %0.0f mA", StepperCurrentN[0].value);
 			setCurrent(true);
 			return true;
@@ -899,7 +899,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	setCurrent(false);
 
 	m_Focuser.setFocuserBacklash(FocusBacklashNP[0].getValue());
-	return (m_Focuser.moveAbsFocuser(targetTicks) ?: IPS_BUSY : IPS_ALERT);
+	return (m_Focuser.moveAbsFocuser(targetTicks) ? IPS_BUSY : IPS_ALERT);
 }
 
 bool AstroLink4Pi::ReverseFocuser(bool enabled)

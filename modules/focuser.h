@@ -87,6 +87,7 @@ public:
     bool setHoldPowerPercent(int percent);
 
     bool setCurrent(int currentmA);
+    void setCurrent(bool standby);
     int getMotorPWM(int currentmA) const;
     int setDac(int chan, int value);
 
@@ -98,7 +99,6 @@ public:
 
 private:
     std::thread getMotorThread(uint32_t targetPos, int direction, int backlashTicksRemaining);
-    void setCurrent(bool standby);
 
     static int clampInt(int value, int minValue, int maxValue);
 
