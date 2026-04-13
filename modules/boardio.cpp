@@ -168,7 +168,7 @@ int BoardIO::setDac(int chan, int value)
 		return -1;
 
 	chan = (chan != 0) ? 1 : 0;
-	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
+	//value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
 
 	// MCP4922-style 16-bit frame:
 	// bit15 A/B, bit14 BUF=0, bit13 GA=1 (1x), bit12 SHDN=1, bits11..0 data
