@@ -15,8 +15,8 @@ namespace
     constexpr int MIN_DRIVER_CURRENT_MA = 0;
 }
 
-Focuser::Focuser(const Config &config, BoardIO &boardIO, const std::string &deviceName)
-    : BaseComponent(deviceName, "Focuser"), m_BoardIO(boardIO), m_Config(config)
+Focuser::Focuser(const Config &config, BoardIO &boardIO, PwmController pwmController, const std::string &deviceName)
+    : BaseComponent(deviceName, "Focuser"), m_BoardIO(boardIO), m_PwmController(pwmController), m_Config(config)
 {
     m_State.resolution = config.defaultResolution;
     m_State.stepDelayUs = config.defaultStepDelayUs;
@@ -40,8 +40,8 @@ bool Focuser::open()
     m_BoardIO.initializePin(m_Config.pinRST, OUTPUT, HIGH);
     m_BoardIO.initializePin(m_Config.pinSTP, OUTPUT, LOW);
     m_BoardIO.initializePin(m_Config.pinDIR, OUTPUT, LOW);
-    m_BoardIO.initialisePin(m_Config.pinDecay, OUTPUT, LOW);
-    m_BoardIO.initialisePin(m_Config.pinHold, OUTPUT, LOW);
+    m_BoardIO.initializePin(m_Config.pinDecay, OUTPUT, LOW);
+    m_BoardIO.initializePin(m_Config.pinHold, OUTPUT, LOW);
 
     if (!setResolution(m_State.resolution))
     {
@@ -356,14 +356,14 @@ void Focuser::setCurrent(bool standby)
 
     if (standby)
     {
-        if (revision == 1)
+        if (m_Revision == 1)
         {
-            if (holdPowerPercent == 100)
+            if (holdPercent == 100)
             {
                 m_BoardIO.write(m_Config.pinHold, LOW);
                 DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Stepper motor enabled 100%%.");
             }
-            else if (holdPowerPercent > 0)
+            else if (holdPercent > 0)
             {
                 m_BoardIO.write(m_Config.pinHold, HIGH);
                 DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Stepper motor enabled 50%%.");
@@ -374,18 +374,18 @@ void Focuser::setCurrent(bool standby)
                 DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Stepper motor enabled 0%%.");
             }
         }
-        if (revision > 1 && revision < 4)
+        if (m_Revision > 1 && m_Revision < 4)
         {
-            m_BoardIO.setDac(m_Config.dacChannelRun, 255 * (holdPowrPercent * StepperCurrentN[0].value / 100) / 4096);
+            m_BoardIO.setDac(m_Config.dacChannelRun, 255 * (holdPercent * requestedCurrent / 100) / 4096);
         }
-        if (revision >= 4)
+        if (m_Revision >= 4)
         {
-            m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(holdPowrPercent * StepperCurrentN[0].value / 100));
+            m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(holdPercent * requestedCurrent / 100));
         }
 
         if(holdPowerPercent > 0)
         {
-            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", holdPowerPercent);
+            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", holdPercent);
         }
         else
         {
@@ -396,15 +396,15 @@ void Focuser::setCurrent(bool standby)
     {
         m_BoardIO.write(m_Config.pinEn, LOW);
         m_BoardIO.write(m_Config.pinDecay, HIGH);
-        if(revision == 1)
+        if(m_Revision == 1)
         {
             m_BoardIO.write(m_Config.pinHold, LOW);
         }
-        if (revision > 1 && revision < 4)
+        if (m_Revision > 1 && m_Revision < 4)
         {
             m_BoardIO.setDac(m_Config.dacChannelRun, 255 * StepperCurrentN[0].value / 4096);
         }    
-        if (revision >= 4)
+        if (m_Revision >= 4)
         {
             m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(StepperCurrentN[0].value));
         }            
