@@ -25,12 +25,6 @@ public:
         int pinDecay = 14; // pin 8
         int pinHold = 10;  // pin 19 EN
 
-        int spiChannel = 0;
-        int spiSpeed = 500000;
-
-        int dacChannelRun = 0;
-        int dacChannelHold = 1;
-
         int maxResolution = 32;
         int defaultResolution = 1;
         int defaultStepDelayUs = 2000;

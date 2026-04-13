@@ -4,9 +4,11 @@
 #include <sstream>
 #include <stdexcept>
 
-static constexpr int CHK_IN_PIN = 16;  // pin 36
-static constexpr int CHK2_IN_PIN = 21; // pin 40
-static constexpr int MOTOR_PWM = 20;   // pin 38 VOUT
+namespace
+{
+    constexpr int DAC_MAX_VALUE = 4095;
+    constexpr int DAC_MIN_VALUE = 0;
+}
 
 BoardIO::BoardIO(const std::string &deviceName)
 	: BaseComponent(deviceName, "BoardIO")
@@ -37,8 +39,6 @@ bool BoardIO::connect()
 	{
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
 					 "wiringPiSPISetup failed: errno=%d (%s)", errno, std::strerror(errno));
-		close();
-		return false;
 	}
 
 	return true;
@@ -105,16 +105,10 @@ int BoardIO::detectBoard()
 int BoardIO::checkRevision()
 {
 	// TODO - check SPI, I2C and 1-Wire
-	int spiFd = wiringPiSPISetup(m_Config.spiChannel, m_Config.spiSpeed);
-	if (spiFd < 0)
-	{
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-					 "wiringPiSPISetup failed: errno=%d (%s)", errno, std::strerror(errno));
-	}
 
 	int rev = 1;
-	initializePin(MOTOR_PWM, INPUT, LOW);
-	initializePin(MOTOR_PWM, INPUT, LOW);
+	initializePin(m_Config.pinCHK_IN, INPUT, LOW);
+	initializePin(m_Config.pinCHK2_IN, INPUT, LOW);
 
 	// lgGpioClaimInput(handle, 0, MOTOR_PWM);	 // OLD CHK_PIN
 	// lgGpioClaimInput(handle, 0, MOTOR_PWM); // OLD CHK2_PIN

@@ -7,12 +7,10 @@
 
 #include <unistd.h>
 #include <wiringPi.h>
-#include <wiringPiSPI.h>
+
 
 namespace
 {
-    constexpr int DAC_MAX_VALUE = 4095;
-    constexpr int DAC_MIN_VALUE = 0;
     constexpr int MAX_DRIVER_CURRENT_MA = 2000;
     constexpr int MIN_DRIVER_CURRENT_MA = 0;
 }
