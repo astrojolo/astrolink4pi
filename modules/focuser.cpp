@@ -42,15 +42,8 @@ bool Focuser::open()
     m_BoardIO.initializePin(m_Config.pinRST, OUTPUT, HIGH);
     m_BoardIO.initializePin(m_Config.pinSTP, OUTPUT, LOW);
     m_BoardIO.initializePin(m_Config.pinDIR, OUTPUT, LOW);
-
-    m_SpiFd = wiringPiSPISetup(m_Config.spiChannel, m_Config.spiSpeed);
-    if (m_SpiFd < 0)
-    {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-                     "wiringPiSPISetup failed: errno=%d (%s)", errno, std::strerror(errno));
-        close();
-        return false;
-    }
+    m_BoardIO.initialisePin(m_Config.pinDecay, OUTPUT, LOW);
+    m_BoardIO.initialisePin(m_Config.pinHold, OUTPUT, LOW);
 
     if (!setResolution(m_State.resolution))
     {
@@ -72,8 +65,6 @@ bool Focuser::open()
 void Focuser::close()
 {
     abortFocuser();
-
-    m_SpiFd = -1;
 
     std::lock_guard<std::mutex> lock(m_StateMutex);
     m_State.connected = false;
@@ -100,7 +91,7 @@ bool Focuser::abortFocuser()
     }
 
     setCurrent(true);
-    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Focuser motion aborted.");    
+    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Focuser motion aborted.");
     return true;
 }
 
@@ -263,6 +254,11 @@ bool Focuser::setTemperature(double temperatureC)
     return true;
 }
 
+void Focuser::setRevision(int revision)
+{
+    m_Revision = revision;
+}
+
 bool setTemperatureCompensation(bool tempCompEnabled)
 {
     std::lock_guard<std::mutex> lock(m_StateMutex);
@@ -360,59 +356,67 @@ void Focuser::setCurrent(bool standby)
         holdPercent = m_State.holdPowerPercent;
     }
 
-    int effectiveCurrent = requestedCurrent;
     if (standby)
-        effectiveCurrent = requestedCurrent * holdPercent / 100;
+    {
+        if (revision == 1)
+        {
+            if (holdPowerPercent == 100)
+            {
+                m_BoardIO.write(m_Config.pinHold, LOW);
+                DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Stepper motor enabled 100%%.");
+            }
+            else if (holdPowerPercent > 0)
+            {
+                m_BoardIO.write(m_Config.pinHold, HIGH);
+                DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Stepper motor enabled 50%%.");
+            }
+            else
+            {
+                m_BoardIO.write(m_Config.pinHold, HIGH);
+                DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Stepper motor enabled 0%%.");
+            }
+        }
+        if (revision > 1 && revision < 4)
+        {
+            m_BoardIO.setDac(m_Config.dacChannelRun, 255 * (holdPowrPercent * StepperCurrentN[0].value / 100) / 4096);
+        }
+        if (revision >= 4)
+        {
+            m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(holdPowrPercent * StepperCurrentN[0].value / 100));
+        }
 
-    const int dacValue = getMotorPWM(effectiveCurrent);
-
-    // To keep compatibility with the original method list:
-    // - channel 0 can be treated as "run"
-    // - channel 1 as "hold/alternate"
-    // Here we update both identically, unless you want separate scaling later.
-    setDac(m_Config.dacChannelRun, dacValue);
-    setDac(m_Config.dacChannelHold, dacValue);
-
-    // if (m_WiringPiReady)
-    // {
-    //     // EN low = enabled, EN high = disabled
-    //     digitalWrite(m_Config.pinEN, effectiveCurrent > 0 ? LOW : HIGH);
-    // }
+        if(holdPowerPercent > 0)
+        {
+            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", holdPowerPercent);
+        }
+        else
+        {
+            DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
+        }
+    }
+    else
+    {
+        m_BoardIO.write(m_Config.pinEn, LOW);
+        m_BoardIO.write(m_Config.pinDecay, HIGH);
+        if(revision == 1)
+        {
+            m_BoardIO.write(m_Config.pinHold, LOW);
+        }
+        if (revision > 1 && revision < 4)
+        {
+            m_BoardIO.setDac(m_Config.dacChannelRun, 255 * StepperCurrentN[0].value / 4096);
+        }    
+        if (revision >= 4)
+        {
+            m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(StepperCurrentN[0].value));
+        }            
+    }
 }
 
 int Focuser::getMotorPWM(int currentmA) const
 {
-    currentmA = clampInt(currentmA, MIN_DRIVER_CURRENT_MA, MAX_DRIVER_CURRENT_MA);
-
-    // Sensible linear mapping used as a reconstruction of the original helper.
-    // Adjust denominator if your hardware full-scale current differs.
-    const int value = static_cast<int>(
-        (static_cast<double>(currentmA) / MAX_DRIVER_CURRENT_MA) * DAC_MAX_VALUE);
-
-    return clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
-}
-
-int Focuser::setDac(int chan, int value)
-{
-    if (m_SpiFd < 0)
-        return -1;
-
-    chan = (chan != 0) ? 1 : 0;
-    value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
-
-    // MCP4922-style 16-bit frame:
-    // bit15 A/B, bit14 BUF=0, bit13 GA=1 (1x), bit12 SHDN=1, bits11..0 data
-    uint16_t frame = 0;
-    frame |= (static_cast<uint16_t>(chan) << 15);
-    frame |= (1u << 13);
-    frame |= (1u << 12);
-    frame |= static_cast<uint16_t>(value & 0x0FFF);
-
-    unsigned char data[2];
-    data[0] = static_cast<unsigned char>((frame >> 8) & 0xFF);
-    data[1] = static_cast<unsigned char>(frame & 0xFF);
-
-    return wiringPiSPIDataRW(m_Config.spiChannel, data, 2);
+	// 100 = 1.03V = 2.06A, 1 = 20mA
+    return clampInt((current / 20), 0, 100);
 }
 
 bool Focuser::setStepDelayUs(int stepDelayUs)

@@ -27,6 +27,7 @@ public:
     void write(int gpio, int value);
     int read(int gpio) const;
     void initializePin(int gpio, int mode, int value);
+    int setDac(int chan, int value);
 
 private:
     int detectBoard();
@@ -34,6 +35,8 @@ private:
     std::string readFile(const std::string &path) const;
 
 private:
+    int m_SpiFd = -1;
+
     int m_Revision = 0;
     int m_GpioChip = RP4_GPIOCHIP;
 };

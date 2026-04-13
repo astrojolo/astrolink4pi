@@ -8,19 +8,22 @@
 
 #include "basecomponent.h"
 #include "boardio.h"
+#include "pwm.h"
 
 class Focuser : public BaseComponent
 {
 public:
     struct Config
     {
-        int pinEN = 15;  // pin 10
-        int pinM0 = 17;  // pin 11
-        int pinM1 = 18;  // pin 12
-        int pinM2 = 27;  // pin 13
-        int pinRST = 22; // pin 15
-        int pinSTP = 24; // pin 18
-        int pinDIR = 23; // pin 16
+        int pinEN = 15;    // pin 10
+        int pinM0 = 17;    // pin 11
+        int pinM1 = 18;    // pin 12
+        int pinM2 = 27;    // pin 13
+        int pinRST = 22;   // pin 15
+        int pinSTP = 24;   // pin 18
+        int pinDIR = 23;   // pin 16
+        int pinDecay = 14; // pin 8
+        int pinHold = 10;  // pin 19 EN
 
         int spiChannel = 0;
         int spiSpeed = 500000;
@@ -58,7 +61,7 @@ public:
         double temperatureCoefficient = 0.0;
     };
 
-    Focuser(const Config &config, BoardIO &boardIO, const std::string &deviceName);
+    Focuser(const Config &config, BoardIO &boardIO, PwmController &pwmController, const std::string &deviceName);
     ~Focuser();
 
     bool open();
@@ -87,6 +90,8 @@ public:
     int getMotorPWM(int currentmA) const;
     int setDac(int chan, int value);
 
+    void setRevision(int revision);
+
     bool setStepDelayUs(int stepDelayUs);
 
     State getState() const;
@@ -99,6 +104,7 @@ private:
 
 private:
     BoardIO &m_BoardIO;
+    PwmController &m_PwmController;
     Config m_Config;
     mutable std::mutex m_StateMutex;
     State m_State;
@@ -106,5 +112,5 @@ private:
     std::thread m_MotionThread;
     std::atomic<bool> m_Abort{false};
 
-    int m_SpiFd = -1;
+    int m_Revision = 0;
 };

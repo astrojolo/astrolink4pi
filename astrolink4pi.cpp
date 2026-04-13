@@ -22,7 +22,6 @@
 auto astroLink4Pi = std::make_unique<AstroLink4Pi>();
 
 static constexpr uint8_t ACS_TYPE = 0; // 0 - 20A, 1 - 5A
-static constexpr uint8_t ADS_ADDR = 0x48;
 
 static constexpr int MAX_RESOLUTION = 32;							 // the highest resolution supported is 1/32 step
 static constexpr int TEMPERATURE_UPDATE_TIMEOUT = (5 * 1000);		 // 5 sec
@@ -36,16 +35,8 @@ static constexpr uint8_t FANMAX_TEMP = 70;
 
 static constexpr int RP4_GPIO = 0;
 static constexpr int RP5_GPIO = 4;
-static constexpr int DECAY_PIN = 14;   // pin 8
 static constexpr int OUT1_PIN = 5;	   // pin 29
 static constexpr int OUT2_PIN = 6;	   // pin 31
-static constexpr int PWM1_PIN = 26;	   // pin 37
-static constexpr int PWM2_PIN = 19;	   // pin 35
-static constexpr int MOTOR_PWM = 20;   // pin 38 VOUT
-static constexpr int CHK_IN_PIN = 16;  // pin 36
-static constexpr int CHK2_IN_PIN = 21; // pin 40
-static constexpr int FAN_PIN = 13;	   // pin 33
-static constexpr int HOLD_PIN = 10;	   // pin 19 EN
 
 void ISPoll(void *p);
 
@@ -88,7 +79,7 @@ AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 , m_MLXReader(0x5A, getDeviceName())
 , m_TSLReader(0x29, getDeviceName())
 , m_DSReader("/sys/bus/w1/devices/28-000000000000/w1_slave", getDeviceName())
-, m_Focuser(Focuser::Config{}, m_BoardIO, getDeviceName())
+, m_Focuser(Focuser::Config{}, m_BoardIO, m_PwmController, getDeviceName())
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
@@ -156,14 +147,19 @@ bool AstroLink4Pi::Connect()
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize MLX sensor.");
 		return false;
-	}	
+	}
 
 	if (!m_TSLReader.open())
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize TSL sensor.");
 		return false;
-	}	
-	
+	}
+
+	if (!m_Focuser.open())
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize Focuser module.");
+		return false;
+	}
 
 	DEBUGF(INDI::Logger::DBG_SESSION,
 		   "Connected on %s (%s), kernel %s",
@@ -209,8 +205,8 @@ bool AstroLink4Pi::Connect()
 
 bool AstroLink4Pi::Disconnect()
 {
-	//m_BoardIO.write(RST_PIN, LOW); // sleep
-	//m_BoardIO.write(EN_PIN, HIGH); // make disabled
+	// m_BoardIO.write(RST_PIN, LOW); // sleep
+	// m_BoardIO.write(EN_PIN, HIGH); // make disabled
 
 	// if (m_BoardIO.read(EN_PIN) != HIGH)
 	// {
@@ -487,7 +483,6 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			FocusAbsPosNP.setState(IPS_OK);
 			FocusMaxPosNP.apply();
 			getFocuserInfo();
-			m_Focuser.setFocuserMaxPosition(FocusMaxPosNP[0].getValue());
 			return true;
 		}
 
@@ -580,14 +575,12 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			if (TemperatureCompensateS[0].s == ISS_ON)
 			{
 				TemperatureCompensateSP.s = IPS_OK;
-				m_Focuser.setTemperatureCompensation(true);
 				DEBUG(INDI::Logger::DBG_SESSION, "Temperature compensation ENABLED.");
 			}
 
 			if (TemperatureCompensateS[1].s == ISS_ON)
 			{
 				TemperatureCompensateSP.s = IPS_IDLE;
-				m_Focuser.setTemperatureCompensation(true);
 				DEBUG(INDI::Logger::DBG_SESSION, "Temperature compensation DISABLED.");
 			}
 
@@ -687,8 +680,7 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			IUUpdateSwitch(&FocusHoldSP, states, names, n);
 			FocusHoldSP.s = IPS_OK;
 			IDSetSwitch(&FocusHoldSP, nullptr);
-			m_Focuser.setHoldPowerPercent(20.0 * getHoldPower());
-			m_Focuser.setCurrent(true);
+			setCurrent(true);
 			return true;
 		}
 
@@ -895,12 +887,6 @@ IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
 
 IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 {
-	if (targetTicks < FocusAbsPosNP[0].getMin() || targetTicks > FocusAbsPosNP[0].getMax())
-	{
-		DEBUG(INDI::Logger::DBG_WARNING, "Requested position is out of range.");
-		return IPS_ALERT;
-	}
-
 	if (targetTicks == FocusAbsPosNP[0].getValue())
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Already at the requested position.");
@@ -913,157 +899,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	setCurrent(false);
 
 	m_Focuser.setFocuserBacklash(FocusBacklashNP[0].getValue());
-	m_Focuser.moveAbsFocuser(targetTicks);
-
-	// set direction
-	const char *direction;
-	int newDirection;
-	if (targetTicks > FocusAbsPosNP[0].getValue())
-	{
-		// OUTWARD
-		direction = "OUTWARD";
-		newDirection = 1;
-	}
-	else
-	{
-		// INWARD
-		direction = "INWARD";
-		newDirection = -1;
-	}
-
-	// if direction changed do backlash adjustment
-	if (lastDirection != 0 && newDirection != lastDirection && FocusBacklashNP[0].getValue() != 0)
-	{
-		DEBUGF(INDI::Logger::DBG_SESSION, "Backlash compensation by %0.0f steps.", FocusBacklashNP[0].getValue());
-		backlashTicksRemaining = FocusBacklashNP[0].getValue();
-	}
-	else
-	{
-		backlashTicksRemaining = 0;
-	}
-
-	lastDirection = newDirection;
-
-	DEBUGF(INDI::Logger::DBG_SESSION, "Focuser is moving %s to position %d.", direction, targetTicks);
-
-	if (_motionThread.joinable())
-	{
-		//_abort = true;
-		_abort.store(true, std::memory_order_relaxed);
-		_motionThread.join();
-	}
-
-	//_abort = false;
-	_abort.store(false, std::memory_order_relaxed);
-	_motionThread = getMotorThread(targetTicks, lastDirection, backlashTicksRemaining);
-	return IPS_BUSY;
-}
-
-std::thread AstroLink4Pi::getMotorThread(uint32_t targetTicks, int lastDirection, int backlashTicksRemaining)
-{
-	return std::thread();
-	// return std::thread([this](uint32_t targetPos, int direction, int backlashTicksRemaining)
-	// 				   {
-	// 	int motorDirection = direction;
-	// 	std::mutex motionMutex;
-
-	// 	uint32_t currentPos = FocusAbsPosNP[0].getValue();
-	// 	while (currentPos != targetPos && !(_abort.load(std::memory_order_relaxed)))
-	// 	{
-	// 		if (FocusReverseSP[INDI_ENABLED].getState() == ISS_ON)
-	// 		{
-	// 			m_BoardIO.write(DIR_PIN, (motorDirection < 0) ? HIGH : LOW);
-	// 		}
-	// 		else
-	// 		{
-	// 			m_BoardIO.write(DIR_PIN, (motorDirection < 0) ? LOW : HIGH);
-	// 		}
-	// 		m_BoardIO.write(STP_PIN, HIGH);
-	// 		usleep(10);
-	// 		m_BoardIO.write(STP_PIN, LOW);
-
-	// 		if (backlashTicksRemaining <= 0)
-	// 		{ // Only Count the position change if it is not due to backlash
-	// 			currentPos += motorDirection;
-	// 		}
-	// 		else
-	// 		{ // Don't count the backlash position change, just decrement the counter
-	// 			backlashTicksRemaining -= 1;
-	// 		}
-	// 		if (currentPos % 100 == 0)
-	// 		{
-	// 			std::lock_guard<std::mutex> lk(motionMutex);
-	// 			FocusAbsPosNP[0].setValue(currentPos);
-	// 			FocusAbsPosNP.setState(IPS_BUSY);
-	// 			FocusAbsPosNP.apply();
-	// 		}
-	// 		//usleep(FocusStepDelayN[0].value);
-	// 		std::this_thread::sleep_for(std::chrono::microseconds(static_cast<long>(FocusStepDelayN[0].value)));
-	// 	}
-
-	// 	// update abspos value and status
-	// 	DEBUGF(INDI::Logger::DBG_SESSION, "Focuser moved to position %i", (int)currentPos);
-	// 	FocusAbsPosNP[0].setValue(currentPos);
-	// 	FocusAbsPosNP.setState(IPS_OK);
-	// 	FocusAbsPosNP.apply();
-	// 	FocusRelPosNP.setState(IPS_OK);
-	// 	FocusRelPosNP.apply();
-
-	// 	savePosition((int)FocusAbsPosNP[0].getValue() * MAX_RESOLUTION / resolution); // always save at MAX_RESOLUTION
-	// 	lastTemperature = FocusTemperatureN[0].value;							// register last temperature
-	// 	setCurrent(true); },
-	// 				   targetTicks, lastDirection, backlashTicksRemaining);
-}
-
-void AstroLink4Pi::SetResolution(int res)
-{
-	// Release lines
-	// m_BoardIO.write(M0_PIN, HIGH);
-	// m_BoardIO.write(M1_PIN, HIGH);
-	// m_BoardIO.write(M2_PIN, HIGH);
-
-	// switch (res)
-	// {
-	// case 1: // 1:1
-
-	// 	m_BoardIO.write(M0_PIN, LOW);
-	// 	m_BoardIO.write(M1_PIN, LOW);
-	// 	m_BoardIO.write(M2_PIN, LOW);
-	// 	break;
-	// case 2: // 1:2
-	// 	m_BoardIO.write(M0_PIN, HIGH);
-	// 	m_BoardIO.write(M1_PIN, LOW);
-	// 	m_BoardIO.write(M2_PIN, LOW);
-	// 	break;
-	// case 4: // 1:4
-	// 	m_BoardIO.write(M0_PIN, LOW);
-	// 	m_BoardIO.write(M1_PIN, HIGH);
-	// 	m_BoardIO.write(M2_PIN, LOW);
-	// 	break;
-	// case 8: // 1:8
-	// 	m_BoardIO.write(M0_PIN, HIGH);
-	// 	m_BoardIO.write(M1_PIN, HIGH);
-	// 	m_BoardIO.write(M2_PIN, LOW);
-	// 	break;
-	// case 16: // 1:16
-	// 	m_BoardIO.write(M0_PIN, LOW);
-	// 	m_BoardIO.write(M1_PIN, LOW);
-	// 	m_BoardIO.write(M2_PIN, HIGH);
-	// 	break;
-	// case 32: // 1:32
-	// 	m_BoardIO.write(M0_PIN, HIGH);
-	// 	m_BoardIO.write(M1_PIN, HIGH);
-	// 	m_BoardIO.write(M2_PIN, HIGH);
-	// 	break;
-	// default: // 1:1
-	// 	m_BoardIO.write(M0_PIN, LOW);
-	// 	m_BoardIO.write(M1_PIN, LOW);
-	// 	m_BoardIO.write(M2_PIN, LOW);
-
-	// 	break;
-	// }
-
-	DEBUGF(INDI::Logger::DBG_SESSION, "Resolution set to 1 / %d.", res);
+	return (m_Focuser.moveAbsFocuser(targetTicks) ?: IPS_BUSY : IPS_ALERT);
 }
 
 bool AstroLink4Pi::ReverseFocuser(bool enabled)
@@ -1145,6 +981,7 @@ bool AstroLink4Pi::SyncFocuser(uint32_t ticks)
 	FocusAbsPosNP[0].setValue(ticks);
 	FocusAbsPosNP.apply();
 	savePosition(ticks);
+	m_Focuser.syncFocuser(ticks);
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "Absolute Position reset to %0.0f", FocusAbsPosNP[0].getValue());
 
@@ -1159,6 +996,7 @@ bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
 
 bool AstroLink4Pi::SetFocuserMaxPosition(uint32_t ticks)
 {
+	m_Focuser.setFocuserMaxPosition(ticks);
 	DEBUGF(INDI::Logger::DBG_SESSION, "Max position set to %i steps", ticks);
 	return true;
 }
@@ -1168,20 +1006,10 @@ void AstroLink4Pi::temperatureCompensation()
 	if (!isConnected())
 		return;
 
-	if (TemperatureCompensateS[0].s == ISS_ON && FocusTemperatureN[0].value != lastTemperature)
-	{
-		float deltaTemperature = FocusTemperatureN[0].value - lastTemperature; // change of temperature from last focuser movement
-		float deltaPos = TemperatureCoefN[0].value * deltaTemperature;
-
-		// Move focuser once the compensation is larger than 1/2 CFZ
-		if (abs(deltaPos) > (FocuserInfoN[2].value / 2))
-		{
-			int thermalAdjustment = round(deltaPos);						 // adjust focuser by half number of steps to keep it in the center of cfz
-			MoveAbsFocuser(FocusAbsPosNP[0].getValue() + thermalAdjustment); // adjust focuser position
-			lastTemperature = FocusTemperatureN[0].value;					 // register last temperature
-			DEBUGF(INDI::Logger::DBG_SESSION, "Focuser adjusted by %d steps due to temperature change by %0.2fÂ°C", thermalAdjustment, deltaTemperature);
-		}
-	}
+	m_Focuser.setTemperatureCompensation(TemperatureCompensateS[0].s == ISS_ON);
+	m_Focuser.setTemperatureCoefficient(TemperatureCoefN[0].value);
+	m_Focuser.setTemperature(FocusTemperatureN[0].value);
+	m_Focuser.temperatureCompensation();
 }
 
 bool AstroLink4Pi::readDS18B20()
@@ -1200,7 +1028,7 @@ bool AstroLink4Pi::readDS18B20()
 			focuserTemperature = tempC;
 			return true;
 		}
-	}		
+	}
 	return false;
 }
 
@@ -1224,67 +1052,8 @@ void AstroLink4Pi::setCurrent(bool standby)
 	if (!isConnected())
 		return;
 
-	// if (standby)
-	// {
-	// 	m_BoardIO.write(EN_PIN, (getHoldPower() > 0) ? HIGH : LOW);
-	// 	m_BoardIO.write(DECAY_PIN, LOW);
-
-	// 	if (m_BoardIO.revision() == 1)
-	// 	{
-	// 		if (getHoldPower() == 5)
-	// 		{
-	// 			m_BoardIO.write(HOLD_PIN, LOW);
-	// 			DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 100%%.");
-	// 		}
-	// 		else if (getHoldPower() > 0)
-	// 		{
-	// 			m_BoardIO.write(HOLD_PIN, HIGH);
-	// 			DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor enabled 50%%.");
-	// 		}
-	// 		else
-	// 		{
-	// 			m_BoardIO.write(HOLD_PIN, HIGH);
-	// 			DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
-	// 		}
-	// 	}
-	// 	if (m_BoardIO.revision() > 1 && m_BoardIO.revision() < 4)
-	// 	{
-	// 		// for 0.1 ohm resistor Vref = iref / 2
-	// 		setDac(0, 255 * (getHoldPower() * StepperCurrentN[0].value / 5) / 4096);
-	// 	}
-	// 	if (m_BoardIO.revision() >= 4)
-	// 	{
-	// 		m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(getHoldPower() * StepperCurrentN[0].value / 5));
-	// 	}
-
-	// 	if (getHoldPower() > 0)
-	// 	{
-	// 		DEBUGF(INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", getHoldPower() * 20);
-	// 	}
-	// 	else
-	// 	{
-	// 		DEBUG(INDI::Logger::DBG_SESSION, "Stepper motor disabled.");
-	// 	}
-	// }
-	// else
-	// {
-	// 	m_BoardIO.write(EN_PIN, LOW);
-	// 	m_BoardIO.write(DECAY_PIN, HIGH);
-	// 	if (m_BoardIO.revision() == 1)
-	// 	{
-	// 		m_BoardIO.write(HOLD_PIN, LOW);
-	// 	}
-	// 	if (m_BoardIO.revision() > 1 && m_BoardIO.revision() < 4)
-	// 	{
-	// 		DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current %0.2f", StepperCurrentN[0].value);
-	// 		// for 0.1 ohm resistor Vref = iref / 2
-	// 		setDac(0, 255 * StepperCurrentN[0].value / 4096);
-	// 	}
-	// 	if (m_BoardIO.revision() >= 4)
-	// 	{
-	// 		m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(StepperCurrentN[0].value));
-	// 	}
-	// }
+	m_Focuser.setHoldPowerPercent(20.0 * getHoldPower());
+	m_Focuser.setCurrent(standby);
 }
 
 void AstroLink4Pi::systemUpdate()
@@ -1360,36 +1129,6 @@ void AstroLink4Pi::getFocuserInfo()
 	IDSetNumber(&FocuserInfoNP, nullptr);
 
 	DEBUGF(INDI::Logger::DBG_DEBUG, "Focuser Info: %0.2f %0.2f %0.2f.", FocuserInfoN[0].value, FocuserInfoN[1].value, FocuserInfoN[2].value);
-}
-
-int AstroLink4Pi::getMotorPWM(int current)
-{
-	// 100 = 1.03V = 2.06A, 1 = 20mA
-	return current / 20;
-}
-
-int AstroLink4Pi::setDac(int chan, int value)
-{
-	char spiData[2];
-	uint8_t chanBits, dataBits;
-
-	if (chan == 0)
-		chanBits = 0x30;
-	else
-		chanBits = 0xB0;
-
-	chanBits |= ((value >> 4) & 0x0F);
-	dataBits = ((value << 4) & 0xF0);
-
-	spiData[0] = chanBits;
-	spiData[1] = dataBits;
-
-	// int spiHandle = lgSpiOpen(lgpioHandle, 1, 100000, 0);
-	// int written = lgSpiWrite(spiHandle, spiData, 2);
-	// lgSpiClose(spiHandle);
-
-	// return written;
-	return 0;
 }
 
 void AstroLink4Pi::fanUpdate()

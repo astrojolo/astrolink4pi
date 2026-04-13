@@ -94,7 +94,6 @@ protected:
 private:
 	virtual bool Connect();
 	virtual bool Disconnect();
-	virtual void SetResolution(int res);
 	virtual int savePosition(int pos);
 	virtual bool readSHT();
 	virtual bool readMLX();
@@ -284,7 +283,6 @@ private:
 	void fanUpdate();
 	int getMotorPWM(int current);
 	int setDac(int chan, int value);
-	std::thread getMotorThread(uint32_t targetPos, int direction, int backlashTicksRemaining);
 
 	static constexpr const char *ENVIRONMENT_TAB{"Environment"};
 	static constexpr const char *SYSTEM_TAB{"System"};

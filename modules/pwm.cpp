@@ -11,6 +11,12 @@
 #include <wiringPi.h>
 #include <softPwm.h>
 
+static constexpr int PWM1_PIN = 26;	   // pin 37
+static constexpr int PWM2_PIN = 19;	   // pin 35
+static constexpr int MOTOR_PWM = 20;   // pin 38 VOUT
+static constexpr int FAN_PIN = 13;	   // pin 33
+
+
 PwmController::PwmController(BoardIO &boardIO, const std::string &deviceName)
     : BaseComponent(deviceName, "PWM"), m_BoardIO(boardIO)
 {
@@ -23,6 +29,24 @@ PwmController::PwmController(BoardIO &boardIO, const std::string &deviceName)
 PwmController::~PwmController()
 {
     shutdown();
+}
+
+
+int PwmController::bcmPin(Channel channel) const
+{
+    switch (channel)
+    {
+    case Channel::P1:
+        return PWM1_PIN;
+    case Channel::P2:
+        return PWM2_PIN;
+    case Channel::FAN:
+        return FAN_PIN;
+    case Channel::MOT:
+        return MOTOR_PWM;
+    }
+
+    return -1;
 }
 
 bool PwmController::initialize(const Config &config)
@@ -228,23 +252,6 @@ bool PwmController::initializePi5()
     }
 
     return true;
-}
-
-int PwmController::bcmPin(Channel channel) const
-{
-    switch (channel)
-    {
-    case Channel::P1:
-        return 19;
-    case Channel::P2:
-        return 26;
-    case Channel::FAN:
-        return 13;
-    case Channel::MOT:
-        return 20;
-    }
-
-    return -1;
 }
 
 uint64_t PwmController::frequencyToPeriodNs(uint32_t frequencyHz) const

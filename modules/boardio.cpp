@@ -4,58 +4,70 @@
 #include <sstream>
 #include <stdexcept>
 
-BoardIO::BoardIO(const std::string &deviceName)
- : BaseComponent(deviceName, "BoardIO")
-{
+static constexpr int CHK_IN_PIN = 16;  // pin 36
+static constexpr int CHK2_IN_PIN = 21; // pin 40
+static constexpr int MOTOR_PWM = 20;   // pin 38 VOUT
 
+BoardIO::BoardIO(const std::string &deviceName)
+	: BaseComponent(deviceName, "BoardIO")
+{
 }
 
 BoardIO::~BoardIO()
 {
-    disconnect();
+	disconnect();
 }
 
 bool BoardIO::connect()
 {
-    if (isConnected())
-        return true;
+	if (isConnected())
+		return true;
 
-    m_GpioChip = detectBoard();
-    m_Revision = checkRevision();
+	m_GpioChip = detectBoard();
+	m_Revision = checkRevision();
 
-    int wiringPiSetup = wiringPiSetupPinType(WPI_PIN_BCM);
-    if (wiringPiSetup < 0)
-    {
-        return false;
-    }
+	int wiringPiSetup = wiringPiSetupPinType(WPI_PIN_BCM);
+	if (wiringPiSetup < 0)
+	{
+		return false;
+	}
 
-    return true;
+	m_SpiFd = wiringPiSPISetup(m_Config.spiChannel, m_Config.spiSpeed);
+	if (m_SpiFd < 0)
+	{
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+					 "wiringPiSPISetup failed: errno=%d (%s)", errno, std::strerror(errno));
+		close();
+		return false;
+	}
+
+	return true;
 }
 
 void BoardIO::disconnect()
 {
-    // nothig to do
+	m_SpiFd = -1;
 }
 
 bool BoardIO::isConnected() const
 {
-    return m_Revision > 0;
+	return m_Revision > 0;
 }
 
 int BoardIO::revision() const
 {
-    return m_Revision;
+	return m_Revision;
 }
 
 int BoardIO::gpioChip() const
 {
-    return m_GpioChip;
+	return m_GpioChip;
 }
-
 
 void BoardIO::initializePin(int gpio, int mode, int value)
 {
-    if(!isConnected()) return;
+	if (!isConnected())
+		return;
 	pinMode(gpio, mode);
 	if (mode == OUTPUT)
 		digitalWrite(gpio, value);
@@ -65,73 +77,49 @@ void BoardIO::initializePin(int gpio, int mode, int value)
 
 void BoardIO::write(int gpio, int value)
 {
-    if(!isConnected()) return;
-    digitalWrite(gpio, value);
+	if (!isConnected())
+		return;
+	digitalWrite(gpio, value);
 }
 
 int BoardIO::read(int gpio) const
 {
-    if(!isConnected()) return -1;
-    return digitalRead(gpio);
+	if (!isConnected())
+		return -1;
+	return digitalRead(gpio);
 }
 
 int BoardIO::detectBoard()
 {
-    const std::string model = readFile("/proc/device-tree/model");
+	const std::string model = readFile("/proc/device-tree/model");
 
-    if (model.find("Raspberry Pi 5") != std::string::npos)
-        return RP5_GPIOCHIP;
+	if (model.find("Raspberry Pi 5") != std::string::npos)
+		return RP5_GPIOCHIP;
 
-    if (model.find("Raspberry Pi 4") != std::string::npos)
-        return RP4_GPIOCHIP;
+	if (model.find("Raspberry Pi 4") != std::string::npos)
+		return RP4_GPIOCHIP;
 
-    return RP4_GPIOCHIP;
+	return RP4_GPIOCHIP;
 }
 
 int BoardIO::checkRevision()
 {
-	int rev = 4;
-	// int handle = lgGpiochipOpen(RP5_GPIO);
+	// TODO - check SPI, I2C and 1-Wire
+	int spiFd = wiringPiSPISetup(m_Config.spiChannel, m_Config.spiSpeed);
+	if (spiFd < 0)
+	{
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+					 "wiringPiSPISetup failed: errno=%d (%s)", errno, std::strerror(errno));
+	}
 
-	// if (handle < 0)
-	// {
-	// 	handle = lgGpiochipOpen(RP4_GPIO);
-	// 	if (handle < 0)
-	// 		DEBUG(INDI::Logger::DBG_SESSION, "Neither RPi4 nor RPi5 GPIO was detected.\n");
-	// 	else
-	// 		gpioType = RP4_GPIO;
-	// }
-	// else
-	// {
-	// 	gpioType = RP5_GPIO;
-	// }
-
-	// lgChipInfo_t cInfo;
-	// int status = lgGpioGetChipInfo(handle, &cInfo);
-
-	// if (status == LG_OKAY)
-	// {
-	// 	DEBUGF(INDI::Logger::DBG_SESSION, "GPIO chip lines=%d name=%s label=%s\n", cInfo.lines, cInfo.name, cInfo.label);
-	// 	lgpioHandle = handle;
-	// }
-
-	// int spiHandle = lgSpiOpen(lgpioHandle, 1, 100000, 0);
-	// if (spiHandle >= 0)
-	// {
-	// 	DEBUG(INDI::Logger::DBG_SESSION, "SPI bus active.\n");
-	// 	lgSpiClose(spiHandle);
-	// }
-	// int i2cHandle = lgI2cOpen(1, 0x68, 0);
-	// if (i2cHandle >= 0)
-	// {
-	// 	DEBUG(INDI::Logger::DBG_SESSION, "I2C bus active.\n");
-	// 	lgI2cClose(i2cHandle);
-	// }
+	int rev = 1;
+	initializePin(MOTOR_PWM, INPUT, LOW);
+	initializePin(MOTOR_PWM, INPUT, LOW);
 
 	// lgGpioClaimInput(handle, 0, MOTOR_PWM);	 // OLD CHK_PIN
-	// lgGpioClaimInput(handle, 0, CHK_IN_PIN); // OLD CHK2_PIN
+	// lgGpioClaimInput(handle, 0, MOTOR_PWM); // OLD CHK2_PIN
 
-	// setDac(1, 0);
+	m_BoardIO.setDac(1, 0);
 	// if (lgGpioRead(handle, MOTOR_PWM) == 0)
 	// {
 	// 	setDac(1, 255);
@@ -171,11 +159,34 @@ int BoardIO::checkRevision()
 
 std::string BoardIO::readFile(const std::string &path) const
 {
-    std::ifstream in(path, std::ios::binary);
-    if (!in)
-        return {};
+	std::ifstream in(path, std::ios::binary);
+	if (!in)
+		return {};
 
-    std::ostringstream ss;
-    ss << in.rdbuf();
-    return ss.str();
+	std::ostringstream ss;
+	ss << in.rdbuf();
+	return ss.str();
+}
+
+int BoardIO::setDac(int chan, int value)
+{
+	if (m_SpiFd < 0)
+		return -1;
+
+	chan = (chan != 0) ? 1 : 0;
+	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
+
+	// MCP4922-style 16-bit frame:
+	// bit15 A/B, bit14 BUF=0, bit13 GA=1 (1x), bit12 SHDN=1, bits11..0 data
+	uint16_t frame = 0;
+	frame |= (static_cast<uint16_t>(chan) << 15);
+	frame |= (1u << 13);
+	frame |= (1u << 12);
+	frame |= static_cast<uint16_t>(value & 0x0FFF);
+
+	unsigned char data[2];
+	data[0] = static_cast<unsigned char>((frame >> 8) & 0xFF);
+	data[1] = static_cast<unsigned char>(frame & 0xFF);
+
+	return wiringPiSPIDataRW(m_Config.spiChannel, data, 2);
 }
