@@ -64,6 +64,11 @@ int BoardIO::gpioChip() const
 	return m_GpioChip;
 }
 
+Config BoardIO::getConfig() const
+{
+	return m_Config;
+}
+
 void BoardIO::initializePin(int gpio, int mode, int value)
 {
 	if (!isConnected())

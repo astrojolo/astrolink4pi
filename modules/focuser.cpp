@@ -15,7 +15,7 @@ namespace
     constexpr int MIN_DRIVER_CURRENT_MA = 0;
 }
 
-Focuser::Focuser(const Config &config, BoardIO &boardIO, PwmController pwmController, const std::string &deviceName)
+Focuser::Focuser(const Config &config, BoardIO &boardIO, PwmController &pwmController, const std::string &deviceName)
     : BaseComponent(deviceName, "Focuser"), m_BoardIO(boardIO), m_PwmController(pwmController), m_Config(config)
 {
     m_State.resolution = config.defaultResolution;
@@ -257,7 +257,7 @@ void Focuser::setRevision(int revision)
     m_Revision = revision;
 }
 
-bool setTemperatureCompensation(bool tempCompEnabled)
+bool Focuser::setTemperatureCompensation(bool tempCompEnabled)
 {
     std::lock_guard<std::mutex> lock(m_StateMutex);
     m_State.temperatureCompEnabled = tempCompEnabled;
@@ -376,7 +376,7 @@ void Focuser::setCurrent(bool standby)
         }
         if (m_Revision > 1 && m_Revision < 4)
         {
-            m_BoardIO.setDac(m_Config.dacChannelRun, 255 * (holdPercent * requestedCurrent / 100) / 4096);
+            m_BoardIO.setDac(m_BoardIO.getConfig().dacChannelRun, 255 * (holdPercent * requestedCurrent / 100) / 4096);
         }
         if (m_Revision >= 4)
         {
@@ -402,11 +402,11 @@ void Focuser::setCurrent(bool standby)
         }
         if (m_Revision > 1 && m_Revision < 4)
         {
-            m_BoardIO.setDac(m_Config.dacChannelRun, 255 * StepperCurrentN[0].value / 4096);
+            m_BoardIO.setDac(m_BoardIO.getConfig().dacChannelRun, 255 * requestedCurrent / 4096);
         }    
         if (m_Revision >= 4)
         {
-            m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(StepperCurrentN[0].value));
+            m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(requestedCurrent));
         }            
     }
 }

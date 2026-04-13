@@ -43,6 +43,7 @@ public:
     int read(int gpio) const;
     void initializePin(int gpio, int mode, int value);
     int setDac(int chan, int value);
+    Config getConfig() const;
 
 private:
     int detectBoard();
