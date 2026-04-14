@@ -152,6 +152,7 @@ bool Focuser::moveAbsFocuser(uint32_t targetTicks)
         m_MotionThread.join();
     }
 
+    m_PwmController.setDutyPercent(PwmController::Channel::MOT, 100);
     DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,  "Motor thread about to start");
 
     setCurrent(false);
