@@ -118,8 +118,8 @@ private:
 		SHT_T = 1,
 		SHT_R,
 		MLX,
-		FAN,
 		SYS,
+		FAN,
 		IDLE
 	};
 	inline SensorCycle next(SensorCycle c)

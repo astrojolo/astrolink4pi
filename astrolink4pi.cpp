@@ -796,12 +796,12 @@ void AstroLink4Pi::TimerHit()
 		case SensorCycle::MLX:
 			readMLX();
 			break;
-		case SensorCycle::FAN:
-			fanUpdate();
-			break;		
 		case SensorCycle::SYS:
 			systemUpdate();
 			break;	
+		case SensorCycle::FAN:
+			fanUpdate();
+			break;		
 		default:
 			break;
 		}
@@ -1069,24 +1069,37 @@ void AstroLink4Pi::getFocuserInfo()
 
 void AstroLink4Pi::fanUpdate()
 {
-	// FanPowerNP.s = IPS_BUSY;
-	// int temp = std::stoi(SysInfoT[SYSI_CPUTEMP].text);
-	// int cycle = 0;
-	// double fanPwr = 33.0;
-	// if (temp > 50)
-	// {
-	// 	cycle = 50;
-	// 	fanPwr = 66.0;
-	// }
-	// if (temp > 60)
-	// {
-	// 	cycle = 100;
-	// 	fanPwr = 100.0;
-	// }
-	// m_PwmController.setDutyPercent(PwmController::Channel::FAN, cycle);
-	// FanPowerN[0].value = fanPwr;
-	// FanPowerNP.s = IPS_OK;
-	// IDSetNumber(&FanPowerNP, nullptr);
+	const char* txt = SysInfoT[SYSI_CPUTEMP].text;
+
+	FanPowerNP.s = IPS_BUSY;
+	if (txt && *txt)  // != nullptr i nie pusty string
+	{
+		int temp = 0;
+		int cycle = 0;
+		try
+		{
+			temp = std::stoi(txt);
+			double fanPwr = 33.0;
+			if (temp > 50)
+			{
+				cycle = 50;
+				fanPwr = 66.0;
+			}
+			if (temp > 60)
+			{
+				cycle = 100;
+				fanPwr = 100.0;
+			}
+			m_PwmController.setDutyPercent(PwmController::Channel::FAN, cycle);
+			FanPowerN[0].value = fanPwr;
+			FanPowerNP.s = IPS_OK;
+		}
+		catch (const std::exception&)
+		{
+			FanPowerNP.s = IPS_ALERT;		
+		}
+	}	
+	IDSetNumber(&FanPowerNP, nullptr);
 }
 
 bool AstroLink4Pi::readSQM(bool triggerOldSensor)
