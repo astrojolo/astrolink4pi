@@ -90,17 +90,6 @@ uint64_t SystemInfoService::millis() const
         .count();
 }
 
-bool SystemInfoService::update()
-{
-    uint64_t now = millis();
-    if(nextSystemRead < now)
-    {
-        nextSystemRead = now + SYSTEM_UPDATE_PERIOD;
-        return true;
-    }
-    return false;
-}
-
 std::string SystemInfoService::runCommand(const std::string &command) const
 {
     std::array<char, 256> buffer {};

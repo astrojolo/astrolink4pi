@@ -7,8 +7,8 @@
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
 
-SHTReader::SHTReader(uint8_t shtAddress, const std::string &deviceName)
-    : BaseComponent(deviceName, "SHTReader"), m_ShtAddress(shtAddress)
+SHTReader::SHTReader(const std::string &deviceName)
+    : BaseComponent(deviceName, "SHTReader")
 {
 }
 
@@ -20,15 +20,6 @@ SHTReader::~SHTReader()
 bool SHTReader::open()
 {
     close();
-
-    int wipi = wiringPiSetup();
-    if (wipi < 0)
-    {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-                     "WiPi open failed: errno=%d (%s)",
-                     errno, std::strerror(errno));
-        return false;
-    }
 
     m_Fd = wiringPiI2CSetup(m_ShtAddress);
     if (m_Fd < 0)

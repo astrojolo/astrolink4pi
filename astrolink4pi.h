@@ -39,7 +39,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-
 #include "config.h"
 
 #include "basecomponent.h"
@@ -107,7 +106,7 @@ private:
 	PwmController m_PwmController;
 	SystemInfoService m_SystemInfo;
 	PowerMonitor m_PowerMonitor;
-	// SHTReader m_SHTReader;
+	SHTReader m_SHTReader;
 	// MLXReader m_MLXReader;
 	// TSLReader m_TSLReader;
 	// DSFileReader m_DSReader;
@@ -241,6 +240,26 @@ private:
 	INumber StepperCurrentN[1];
 	INumberVectorProperty StepperCurrentNP;
 
+	enum class SensorCycle
+	{
+		SHT = 1,
+		MLX,
+		TSL,
+		SQM,
+		IDLE
+	};
+
+	SensorCycle m_Cycle = SensorCycle::IDLE;
+
+	inline SensorCycle &operator++(SensorCycle &c)
+	{
+		if (c == SensorCycle::IDLE)
+			c = SensorCycle::SHT;
+		else
+			c = static_cast<SensorCycle>(static_cast<int>(c) + 1);
+
+		return c;
+	}
 
 	int getHoldPower();
 	void getFocuserInfo();

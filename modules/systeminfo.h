@@ -9,12 +9,8 @@
 class SystemInfoService : public BaseComponent
 {
 public:
-    static constexpr int SYSTEM_UPDATE_PERIOD = 1000;
-
     SystemInfoService(const std::string &deviceName);
     ~SystemInfoService();
-
-    bool update();
 
     std::string getHostname() const;
     std::string getModel() const;

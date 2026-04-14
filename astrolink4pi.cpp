@@ -21,6 +21,7 @@
 auto astroLink4Pi = std::make_unique<AstroLink4Pi>();
 
 static constexpr int POLL_PERIOD = 200;
+static constexpr int SENSOR_READ_PERIOD = 1000;
 
 void ISPoll(void *p);
 
@@ -54,11 +55,7 @@ void ISNewNumber(const char *dev, const char *name, double values[], char *names
 	astroLink4Pi->ISNewNumber(dev, name, values, names, num);
 }
 
-AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
-, m_BoardIO(getDeviceName())
-, m_PwmController(m_BoardIO, (getDeviceName()))
-, m_SystemInfo(getDeviceName())
-, m_PowerMonitor(getDeviceName())
+AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this), m_BoardIO(getDeviceName()), m_PwmController(m_BoardIO, (getDeviceName())), m_SystemInfo(getDeviceName()), m_PowerMonitor(getDeviceName()), m_SHTReader(0x44, getDeviceName())
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
@@ -89,10 +86,15 @@ bool AstroLink4Pi::Connect()
 	{
 		DEBUG(INDI::Logger::DBG_ERROR, "Could not initialize PWM.");
 		return false;
-	}	
+	}
 	if (!m_PowerMonitor.open())
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize power monitor.");
+		return false;
+	}
+	if (!m_SHTReader.open())
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize SHT sensor.");
 		return false;
 	}
 
@@ -122,7 +124,6 @@ bool AstroLink4Pi::Connect()
 	// read last position from file & convert from MAX_RESOLUTION to current resolution
 	// FocusAbsPosNP[0].setValue(savePosition(-1) != -1 ? (int)savePosition(-1) * resolution / MAX_RESOLUTION : 0);
 
-
 	getFocuserInfo();
 
 	SetTimer(POLL_PERIOD);
@@ -137,6 +138,7 @@ bool AstroLink4Pi::Disconnect()
 {
 	m_BoardIO.disconnect();
 	m_PwmController.shutdown();
+	m_PowerMonitor.close();
 
 	RelayLabelsTP.s = IPS_IDLE;
 	IDSetText(&RelayLabelsTP, nullptr);
@@ -515,13 +517,13 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 
 			if (Switch1S[S1_ON].s == ISS_ON)
 			{
-				if(!m_BoardIO.setOut1(HIGH))
+				if (!m_BoardIO.setOut1(HIGH))
 				{
 					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #1");
 					Switch1SP.s = IPS_ALERT;
 					Switch1S[S1_ON].s = ISS_OFF;
 					IDSetSwitch(&Switch1SP, NULL);
-					return false;					
+					return false;
 				}
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #1 set to ON");
 				Switch1SP.s = IPS_OK;
@@ -531,13 +533,13 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			}
 			if (Switch1S[S1_OFF].s == ISS_ON)
 			{
-				if(!m_BoardIO.setOut1(LOW))
+				if (!m_BoardIO.setOut1(LOW))
 				{
 					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #1");
 					Switch1SP.s = IPS_ALERT;
 					Switch1S[S1_ON].s = ISS_OFF;
 					IDSetSwitch(&Switch1SP, NULL);
-					return false;					
+					return false;
 				}
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #1 set to OFF");
 				Switch1SP.s = IPS_IDLE;
@@ -554,13 +556,13 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 
 			if (Switch2S[S2_ON].s == ISS_ON)
 			{
-				if(!m_BoardIO.setOut2(HIGH))
+				if (!m_BoardIO.setOut2(HIGH))
 				{
 					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #2");
 					Switch1SP.s = IPS_ALERT;
 					Switch1S[S1_ON].s = ISS_OFF;
 					IDSetSwitch(&Switch1SP, NULL);
-					return false;					
+					return false;
 				}
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #2 set to ON");
 				Switch2SP.s = IPS_OK;
@@ -570,13 +572,13 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			}
 			if (Switch2S[S2_OFF].s == ISS_ON)
 			{
-				if(!m_BoardIO.setOut2(LOW))
+				if (!m_BoardIO.setOut2(LOW))
 				{
 					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #2");
 					Switch1SP.s = IPS_ALERT;
 					Switch1S[S1_ON].s = ISS_OFF;
 					IDSetSwitch(&Switch1SP, NULL);
-					return false;					
+					return false;
 				}
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #2 set to OFF");
 				Switch2SP.s = IPS_IDLE;
@@ -771,15 +773,38 @@ void AstroLink4Pi::TimerHit()
 	// 	temperatureCompensation();
 	// 	nextTemperatureCompensation = timeMillis + TEMPERATURE_COMPENSATION_TIMEOUT;
 	// }
-	if(m_SystemInfo.update())
+	if (nextSystemRead < timeMillis)
 	{
-		systemUpdate();
+		++m_Cycle;
+
+		switch (m_Cycle)
+		{
+		case SensorCycle::SHT:
+			readSHT();
+			break;
+		// case SensorCycle::MLX:
+		// 	readMLX();
+		// 	break;
+		// case SensorCycle::TSL:
+		// 	readTSL();
+		// 	break;
+		// case SensorCycle::SQM:
+		// 	readSQM();
+		// 	break;
+		// case SensorCycle::OLD:
+		// 	readOLD();
+		// 	break;
+		default:
+			break;
+		}
+		nextSystemRead = timeMillis + SENSOR_READ_PERIOD;
 	}
 	// if (nextFanUpdate < timeMillis)
 	// {
 	// 	fanUpdate();
 	// 	nextFanUpdate = timeMillis + FAN_PERIOD;
 	// }
+
 	readPower();
 
 	SetTimer(POLL_PERIOD);
@@ -915,7 +940,6 @@ bool AstroLink4Pi::SetFocuserMaxPosition(uint32_t ticks)
 	DEBUGF(INDI::Logger::DBG_SESSION, "Max position set to %i steps", ticks);
 	return true;
 }
-
 
 bool AstroLink4Pi::readDS18B20()
 {
@@ -1110,15 +1134,15 @@ bool AstroLink4Pi::readMLX()
 
 bool AstroLink4Pi::readSHT()
 {
-	// SHTReader::Readings readings;
-	// if (!m_SHTReader.read(readings))
-	// {
-	// 	return false;
-	// }
-	// setParameterValue("WEATHER_TEMPERATURE", readings.temperature);
-	// setParameterValue("WEATHER_HUMIDITY", readings.humidity);
-	// setParameterValue("WEATHER_DEWPOINT", readings.dewPoint);
-	// focuserTemperature = readings.temperature;
+	SHTReader::Readings readings;
+	if (!m_SHTReader.read(readings))
+	{
+		return false;
+	}
+	setParameterValue("WEATHER_TEMPERATURE", readings.temperature);
+	setParameterValue("WEATHER_HUMIDITY", readings.humidity);
+	setParameterValue("WEATHER_DEWPOINT", readings.dewPoint);
+	focuserTemperature = readings.temperature;
 
 	return true;
 }
