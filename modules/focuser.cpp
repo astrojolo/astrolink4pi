@@ -100,12 +100,6 @@ bool Focuser::moveRelFocuser(int32_t ticks)
 
 bool Focuser::moveAbsFocuser(uint32_t targetTicks)
 {
-    m_PwmController.setDutyPercent(PwmController::Channel::MOT, 100);
-    m_PwmController.enable(PwmController::Channel::MOT);
-    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Mot PWM set");
-
-    return false;
-
     if (!isOpen())
         return false;
 
@@ -389,6 +383,7 @@ void Focuser::setCurrent(bool standby)
         {
             m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(holdPercent * requestedCurrent / 100));
             (holdPercent > 0) ? m_PwmController.enable(PwmController::Channel::MOT) : m_PwmController.disable(PwmController::Channel::MOT);
+            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Current %d hold %d", requestedCurrent, holdPercent);            
         }
 
         if (holdPercent > 0)
@@ -416,6 +411,7 @@ void Focuser::setCurrent(bool standby)
         {
             m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(requestedCurrent));
             m_PwmController.enable(PwmController::Channel::MOT);
+            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Current %d hold %d", requestedCurrent, 100);            
         }
     }
 }
