@@ -86,14 +86,14 @@ void BoardIO::initializePin(int gpio, int mode, int value)
 bool BoardIO::setOut1(int value)
 {
 	write(m_Config.OUT1_PIN, value);
-	return (value = read(m_Config.OUT1_PIN));
+	return (value == read(m_Config.OUT1_PIN));
 }
 
 
 bool BoardIO::setOut2(int value)
 {
 	write(m_Config.OUT2_PIN, value);
-	return (value = read(m_Config.OUT2_PIN));
+	return (value == read(m_Config.OUT2_PIN));
 }
 
 
