@@ -42,10 +42,6 @@ bool Focuser::open()
     m_BoardIO.initializePin(DECAY_PIN, OUTPUT, LOW);
     m_BoardIO.initializePin(HOLD_PIN, OUTPUT, LOW);
 
-    m_PwmController.setDutyPercent(PwmController::Channel::MOT, 100);
-    m_PwmController.enable(PwmController::Channel::MOT);
-    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Mot PWM set");
-
     if (!setResolution(m_State.resolution))
     {
         close();
@@ -104,6 +100,12 @@ bool Focuser::moveRelFocuser(int32_t ticks)
 
 bool Focuser::moveAbsFocuser(uint32_t targetTicks)
 {
+    m_PwmController.setDutyPercent(PwmController::Channel::MOT, 100);
+    m_PwmController.enable(PwmController::Channel::MOT);
+    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Mot PWM set");
+
+    return false;
+
     if (!isOpen())
         return false;
 
