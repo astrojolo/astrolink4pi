@@ -17,7 +17,7 @@ public:
         double wh = 0.0;
     };
 
-    PowerMonitor(uint8_t adsAddress, uint8_t acsType, const std::string &deviceName);
+    PowerMonitor(const std::string &deviceName);
     ~PowerMonitor();
 
     bool open();

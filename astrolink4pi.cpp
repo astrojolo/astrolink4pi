@@ -58,6 +58,7 @@ AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 , m_BoardIO(getDeviceName())
 , m_PwmController(m_BoardIO, (getDeviceName()))
 , m_SystemInfo(getDeviceName())
+, m_PowerMonitor(getDeviceName())
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
@@ -89,7 +90,11 @@ bool AstroLink4Pi::Connect()
 		DEBUG(INDI::Logger::DBG_ERROR, "Could not initialize PWM.");
 		return false;
 	}	
-
+	if (!m_PowerMonitor.open())
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize power monitor.");
+		return false;
+	}
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi %d, RPi version %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
 
