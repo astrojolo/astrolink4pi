@@ -775,7 +775,7 @@ void AstroLink4Pi::TimerHit()
 	// 	fanUpdate();
 	// 	nextFanUpdate = timeMillis + FAN_PERIOD;
 	// }
-	// readPower();
+	readPower();
 
 	SetTimer(POLL_PERIOD);
 }
@@ -1120,21 +1120,21 @@ bool AstroLink4Pi::readSHT()
 
 bool AstroLink4Pi::readPower()
 {
-	// PowerMonitor::Readings readings;
+	PowerMonitor::Readings readings;
 
-	// if (!m_PowerMonitor.read(readings))
-	// {
-	// 	PowerReadingsNP.s = IPS_ALERT;
-	// 	IDSetNumber(&PowerReadingsNP, nullptr);
-	// 	return false;
-	// }
+	if (!m_PowerMonitor.read(readings))
+	{
+		PowerReadingsNP.s = IPS_ALERT;
+		IDSetNumber(&PowerReadingsNP, nullptr);
+		return false;
+	}
 
-	// PowerReadingsN[POW_VIN].value = readings.vin;
-	// PowerReadingsN[POW_VREG].value = readings.vreg;
-	// PowerReadingsN[POW_ITOT].value = readings.current;
-	// PowerReadingsN[POW_PTOT].value = readings.power;
-	// PowerReadingsN[POW_AH].value = readings.ah;
-	// PowerReadingsN[POW_WH].value = readings.wh;
+	PowerReadingsN[POW_VIN].value = readings.vin;
+	PowerReadingsN[POW_VREG].value = readings.vreg;
+	PowerReadingsN[POW_ITOT].value = readings.current;
+	PowerReadingsN[POW_PTOT].value = readings.power;
+	PowerReadingsN[POW_AH].value = readings.ah;
+	PowerReadingsN[POW_WH].value = readings.wh;
 
 	PowerReadingsNP.s = IPS_OK;
 	IDSetNumber(&PowerReadingsNP, nullptr);

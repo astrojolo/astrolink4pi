@@ -10,8 +10,8 @@
 #include <thread>
 #include <unistd.h>
 
-PowerMonitor::PowerMonitor(uint8_t adsAddress, uint8_t acsType, const std::string &deviceName)
-    : BaseComponent(deviceName, "PowerMonitor"), m_AdsAddress(adsAddress), m_AcsType(acsType)
+PowerMonitor::PowerMonitor(const std::string &deviceName)
+    : BaseComponent(deviceName, "PowerMonitor")
 {
 }
 

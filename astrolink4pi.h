@@ -106,7 +106,7 @@ private:
 	BoardIO m_BoardIO;
 	PwmController m_PwmController;
 	SystemInfoService m_SystemInfo;
-	// PowerMonitor m_PowerMonitor;
+	PowerMonitor m_PowerMonitor;
 	// SHTReader m_SHTReader;
 	// MLXReader m_MLXReader;
 	// TSLReader m_TSLReader;
