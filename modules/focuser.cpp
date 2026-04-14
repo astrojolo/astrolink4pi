@@ -441,7 +441,10 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
                        {
         int motorDirection = direction;
         int backlashRemaining = backlashTicksRemaining;
-         DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,  "Inside thread");
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,  "Inside thread");
+
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,  "PIN statuses EN %d HOLD %d DECAY_PIN %d"
+        , m_BoardIO.read(EN_PIN), m_BoardIO.read(HOLD_PIN), m_BoardIO.read(DECAY_PIN));
 
         while (!m_Abort.load(std::memory_order_relaxed))
         {
@@ -468,6 +471,7 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
             m_BoardIO.write(STP_PIN, HIGH);
             delayMicroseconds(10);
             m_BoardIO.write(STP_PIN, LOW);
+            DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,  "STP pin cycled");
 
             {
                 std::lock_guard<std::mutex> lock(m_StateMutex);
