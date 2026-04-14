@@ -59,7 +59,7 @@ public:
     ~PwmController();
 
     bool connect();
-    void updateConfig(const Config& cfg);
+    bool updateConfig(const Config& cfg);
 
     void shutdown();
 
