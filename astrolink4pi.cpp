@@ -129,6 +129,9 @@ bool AstroLink4Pi::Connect()
 
 bool AstroLink4Pi::Disconnect()
 {
+	m_BoardIO.disconnect();
+	m_PwmController.shutdown();
+
 	RelayLabelsTP.s = IPS_IDLE;
 	IDSetText(&RelayLabelsTP, nullptr);
 
@@ -423,7 +426,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&PWM1NP, values, names, n);
 			PWM1NP.s = IPS_OK;
 			IDSetNumber(&PWM1NP, nullptr);
-			// m_PwmController.setDutyPercent(PwmController::Channel::P1, PWM1N[0].value);
+			m_PwmController.setDutyPercent(PwmController::Channel::P1, PWM1N[0].value);
 			// pwmState[0] = PWM1N[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 1 set to %0.0f", PWM1N[0].value);
 			return true;
@@ -434,7 +437,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&PWM2NP, values, names, n);
 			PWM2NP.s = IPS_OK;
 			IDSetNumber(&PWM2NP, nullptr);
-			// m_PwmController.setDutyPercent(PwmController::Channel::P2, PWM2N[0].value);
+			m_PwmController.setDutyPercent(PwmController::Channel::P2, PWM2N[0].value);
 			// pwmState[1] = PWM2N[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 2 set to %0.0f", PWM2N[0].value);
 			return true;
