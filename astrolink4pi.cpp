@@ -55,7 +55,12 @@ void ISNewNumber(const char *dev, const char *name, double values[], char *names
 	astroLink4Pi->ISNewNumber(dev, name, values, names, num);
 }
 
-AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this), m_BoardIO(getDeviceName()), m_PwmController(m_BoardIO, (getDeviceName())), m_SystemInfo(getDeviceName()), m_PowerMonitor(getDeviceName()), m_SHTReader(0x44, getDeviceName())
+AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
+, m_BoardIO(getDeviceName())
+, m_PwmController(m_BoardIO, (getDeviceName()))
+, m_SystemInfo(getDeviceName())
+, m_PowerMonitor(getDeviceName())
+, m_SHTReader(getDeviceName())
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }

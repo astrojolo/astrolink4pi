@@ -15,7 +15,7 @@ public:
         double dewPoint    = 0.0;
     };
 
-    SHTReader(uint8_t shtAddress, const std::string &deviceName);
+    SHTReader(const std::string &deviceName);
     ~SHTReader();
 
     bool open();
