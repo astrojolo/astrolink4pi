@@ -66,7 +66,7 @@ private:
     int m_IrCumulative = 0;
 
     double m_SQMOffset = 0.0;
-    double m_FilterCoeff = 0.0;
+    double m_FilterCoeff = -1.2;
 
     Readings m_LastReadings;
 };

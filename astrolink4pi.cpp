@@ -772,25 +772,14 @@ void AstroLink4Pi::TimerHit()
 
 	// 	nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
 
-	// 	if (DSavailable || SHTavailable || MLXavailable)
-	// 	{
-	// 		FocusTemperatureN[0].value = focuserTemperature;
-	// 		FocusTemperatureNP.s = IPS_OK;
-	// 	}
-	// 	else
-	// 	{
-	// 		FocusTemperatureN[0].value = 0.0;
-	// 		FocusTemperatureNP.s = IPS_ALERT;
-	// 		IDSetNumber(&FocusTemperatureNP, nullptr);
-	// 	}
-	// 	IDSetNumber(&FocusTemperatureNP, nullptr);
-	// }
+
 	// if (nextTemperatureCompensation < timeMillis)
 	// {
 	// 	temperatureCompensation();
 	// 	nextTemperatureCompensation = timeMillis + TEMPERATURE_COMPENSATION_TIMEOUT;
 	// }
 	readSQM(nextSystemRead < timeMillis);
+	readPower();
 
 	if (nextSystemRead < timeMillis)
 	{
@@ -807,27 +796,23 @@ void AstroLink4Pi::TimerHit()
 		case SensorCycle::MLX:
 			readMLX();
 			break;
-		// case SensorCycle::TSL:
-		// 	readTSL();
-		// 	break;
-		// case SensorCycle::SQM:
-		// 	readSQM();
-		// 	break;
-		// case SensorCycle::OLD:
-		// 	readOLD();
-		// 	break;
+		case SensorCycle::FAN:
+			fanUpdate();
+			break;		
+		case SensorCycle::SYS:
+			systemUpdate();
+			break;	
 		default:
 			break;
 		}
 		nextSystemRead = timeMillis + SENSOR_READ_PERIOD;
 	}
-	// if (nextFanUpdate < timeMillis)
-	// {
-	// 	fanUpdate();
-	// 	nextFanUpdate = timeMillis + FAN_PERIOD;
-	// }
 
-	readPower();
+	// IF NO TEMP AVAILABLE
+	// 		FocusTemperatureN[0].value = 0.0;
+	// 		FocusTemperatureNP.s = IPS_ALERT;
+	// 		IDSetNumber(&FocusTemperatureNP, nullptr);	
+
 
 	SetTimer(POLL_PERIOD);
 }
@@ -1084,24 +1069,24 @@ void AstroLink4Pi::getFocuserInfo()
 
 void AstroLink4Pi::fanUpdate()
 {
-	// FanPowerNP.s = IPS_BUSY;
-	// int temp = std::stoi(SysInfoT[SYSI_CPUTEMP].text);
-	// int cycle = 0;
-	// double fanPwr = 33.0;
-	// if (temp > FAN_66_TEMP)
-	// {
-	// 	cycle = 50;
-	// 	fanPwr = 66.0;
-	// }
-	// if (temp > FANMAX_TEMP)
-	// {
-	// 	cycle = 100;
-	// 	fanPwr = 100.0;
-	// }
-	// m_PwmController.setDutyPercent(PwmController::Channel::FAN, cycle);
-	// FanPowerN[0].value = fanPwr;
-	// FanPowerNP.s = IPS_OK;
-	// IDSetNumber(&FanPowerNP, nullptr);
+	FanPowerNP.s = IPS_BUSY;
+	int temp = std::stoi(SysInfoT[SYSI_CPUTEMP].text);
+	int cycle = 0;
+	double fanPwr = 33.0;
+	if (temp > 50)
+	{
+		cycle = 50;
+		fanPwr = 66.0;
+	}
+	if (temp > 60)
+	{
+		cycle = 100;
+		fanPwr = 100.0;
+	}
+	m_PwmController.setDutyPercent(PwmController::Channel::FAN, cycle);
+	FanPowerN[0].value = fanPwr;
+	FanPowerNP.s = IPS_OK;
+	IDSetNumber(&FanPowerNP, nullptr);
 }
 
 bool AstroLink4Pi::readSQM(bool triggerOldSensor)
@@ -1114,6 +1099,7 @@ bool AstroLink4Pi::readSQM(bool triggerOldSensor)
 bool AstroLink4Pi::readTSL()
 {
 	TSLReader::Readings readings;
+	m_TSLReader.setSQMOffset(SQMOffsetN[0].value);
 	if (m_TSLReader.read(readings) && readings.valid)
 	{
 		setParameterValue("SQM_READING", readings.mpsas);
@@ -1164,7 +1150,10 @@ bool AstroLink4Pi::readSHT(int mode)
 	setParameterValue("WEATHER_TEMPERATURE", readings.temperature);
 	setParameterValue("WEATHER_HUMIDITY", readings.humidity);
 	setParameterValue("WEATHER_DEWPOINT", readings.dewPoint);
-	// focuserTemperature = readings.temperature;
+
+	FocusTemperatureN[0].value = readings.temperature;
+	FocusTemperatureNP.s = IPS_OK;
+	IDSetNumber(&FocusTemperatureNP, nullptr);
 
 	return true;
 }
