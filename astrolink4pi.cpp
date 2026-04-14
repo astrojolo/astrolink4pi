@@ -20,6 +20,7 @@
 
 auto astroLink4Pi = std::make_unique<AstroLink4Pi>();
 
+static constexpr int POLL_PERIOD = 200;
 
 void ISPoll(void *p);
 
@@ -415,7 +416,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			PWM1NP.s = IPS_OK;
 			IDSetNumber(&PWM1NP, nullptr);
 			// m_PwmController.setDutyPercent(PwmController::Channel::P1, PWM1N[0].value);
-			pwmState[0] = PWM1N[0].value;
+			// pwmState[0] = PWM1N[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 1 set to %0.0f", PWM1N[0].value);
 			return true;
 		}
@@ -426,7 +427,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			PWM2NP.s = IPS_OK;
 			IDSetNumber(&PWM2NP, nullptr);
 			// m_PwmController.setDutyPercent(PwmController::Channel::P2, PWM2N[0].value);
-			pwmState[1] = PWM2N[0].value;
+			// pwmState[1] = PWM2N[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 2 set to %0.0f", PWM2N[0].value);
 			return true;
 		}
@@ -504,7 +505,7 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 				// 	IDSetSwitch(&Switch1SP, NULL);
 				// 	return false;
 				// }
-				relayState[0] = 1;
+				// relayState[0] = 1;
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #1 set to ON");
 				Switch1SP.s = IPS_OK;
 				Switch1S[S1_OFF].s = ISS_OFF;
@@ -522,7 +523,7 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 				// 	IDSetSwitch(&Switch1SP, NULL);
 				// 	return false;
 				// }
-				relayState[0] = 0;
+				// relayState[0] = 0;
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #1 set to OFF");
 				Switch1SP.s = IPS_IDLE;
 				Switch1S[S1_ON].s = ISS_OFF;
@@ -547,7 +548,7 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 				// 	IDSetSwitch(&Switch2SP, NULL);
 				// 	return false;
 				// }
-				relayState[1] = 1;
+				// relayState[1] = 1;
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #2 set to ON");
 				Switch2SP.s = IPS_OK;
 				Switch2S[S2_OFF].s = ISS_OFF;
@@ -565,7 +566,7 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 				// 	IDSetSwitch(&Switch2SP, NULL);
 				// 	return false;
 				// }
-				relayState[1] = 0;
+				// relayState[1] = 0;
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #2 set to OFF");
 				Switch2SP.s = IPS_IDLE;
 				Switch2S[S2_ON].s = ISS_OFF;
@@ -580,14 +581,14 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			IUUpdateSwitch(&FocusHoldSP, states, names, n);
 			FocusHoldSP.s = IPS_OK;
 			IDSetSwitch(&FocusHoldSP, nullptr);
-			setCurrent(true);
+			// setCurrent(true);
 			return true;
 		}
 
 		// handle focus resolution
 		if (!strcmp(name, FocusResolutionSP.name))
 		{
-			int last_resolution = resolution;
+			// int last_resolution = resolution;
 
 			IUUpdateSwitch(&FocusResolutionSP, states, names, n);
 
@@ -969,13 +970,13 @@ void AstroLink4Pi::systemUpdate()
 	IDSetText(&SysInfoTP, NULL);
 
 	// update CPU temp
-	IUSaveText(&SysInfoT[SYSI_CPUTEMP], m_SystemInfo.getCpuTemp().c_str());
+	// IUSaveText(&SysInfoT[SYSI_CPUTEMP], m_SystemInfo.getCpuTemp().c_str());
 
 	// update uptime
-	IUSaveText(&SysInfoT[SYSI_UPTIME], m_SystemInfo.getUptimeString().c_str());
+	// IUSaveText(&SysInfoT[SYSI_UPTIME], m_SystemInfo.getUptimeString().c_str());
 
 	// update load
-	IUSaveText(&SysInfoT[SYSI_LOAD], m_SystemInfo.getLoad().c_str());
+	// IUSaveText(&SysInfoT[SYSI_LOAD], m_SystemInfo.getLoad().c_str());
 
 	SysInfoTP.s = IPS_OK;
 	IDSetText(&SysInfoTP, NULL);
