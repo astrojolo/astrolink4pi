@@ -239,9 +239,6 @@ bool TSLReader::read(TSLReader::Readings &out)
             bool readOk = readChannels(full, ir);
             bool stopOk = stopIntegration();
 
-            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Full %d IR %d", full, ir);    
-
-
             m_AdcStartTime = 0;
 
             if (!readOk || !stopOk)

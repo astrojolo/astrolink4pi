@@ -790,6 +790,8 @@ void AstroLink4Pi::TimerHit()
 	// 	temperatureCompensation();
 	// 	nextTemperatureCompensation = timeMillis + TEMPERATURE_COMPENSATION_TIMEOUT;
 	// }
+	readSQM(nextSystemRead < timeMillis);
+
 	if (nextSystemRead < timeMillis)
 	{
 		m_Cycle = next(m_Cycle);
@@ -805,9 +807,9 @@ void AstroLink4Pi::TimerHit()
 		case SensorCycle::MLX:
 			readMLX();
 			break;
-		case SensorCycle::TSL:
-			readTSL();
-			break;
+		// case SensorCycle::TSL:
+		// 	readTSL();
+		// 	break;
 		// case SensorCycle::SQM:
 		// 	readSQM();
 		// 	break;
@@ -1106,7 +1108,7 @@ bool AstroLink4Pi::readSQM(bool triggerOldSensor)
 {
 	// SQMavailable = readTSL() || (triggerOldSensor && readOLD());
 	// return SQMavailable;
-	return false;
+	return readTSL();
 }
 
 bool AstroLink4Pi::readTSL()
