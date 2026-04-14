@@ -33,6 +33,8 @@ bool BoardIO::connect()
 	{
 		return false;
 	}
+	initializePin(m_Config.OUT1_PIN, OUTPUT, LOW);
+	initializePin(m_Config.OUT2_PIN, OUTPUT, LOW);
 
 	m_SpiFd = wiringPiSPISetup(m_Config.spiChannel, m_Config.spiSpeed);
 	if (m_SpiFd < 0)
