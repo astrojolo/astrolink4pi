@@ -242,6 +242,12 @@ private:
 	INumberVectorProperty StepperCurrentNP;
 
 
+	int getHoldPower();
+	void getFocuserInfo();
+	void temperatureCompensation();
+	void systemUpdate();
+	void fanUpdate();
+
 	static constexpr const char *ENVIRONMENT_TAB{"Environment"};
 	static constexpr const char *SYSTEM_TAB{"System"};
 	static constexpr const char *OUTPUTS_TAB{"Outputs"};

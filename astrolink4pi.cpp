@@ -61,12 +61,12 @@ AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 
 AstroLink4Pi::~AstroLink4Pi()
 {
-	if (_motionThread.joinable())
-	{
-		//_abort = true;
-		_abort.store(true, std::memory_order_relaxed);
-		_motionThread.join();
-	}
+	// if (_motionThread.joinable())
+	// {
+	// 	//_abort = true;
+	// 	_abort.store(true, std::memory_order_relaxed);
+	// 	_motionThread.join();
+	// }
 }
 
 const char *AstroLink4Pi::getDefaultName()
@@ -96,16 +96,16 @@ bool AstroLink4Pi::Connect()
 	// update Hardware
 	// https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
 
-	IUSaveText(&SysInfoT[SYSI_HARDWARE], m_SystemInfo.getHostname().c_str());
-	IUSaveText(&SysInfoT[SYSI_HOST], m_SystemInfo.getModel().c_str());
-	IUSaveText(&SysInfoT[SYSI_LOCALIP], m_SystemInfo.getLocalIP().c_str());
-	IUSaveText(&SysInfoT[SYSI_PUBIP], m_SystemInfo.getPublicIP().c_str());
+	// IUSaveText(&SysInfoT[SYSI_HARDWARE], m_SystemInfo.getHostname().c_str());
+	// IUSaveText(&SysInfoT[SYSI_HOST], m_SystemInfo.getModel().c_str());
+	// IUSaveText(&SysInfoT[SYSI_LOCALIP], m_SystemInfo.getLocalIP().c_str());
+	// IUSaveText(&SysInfoT[SYSI_PUBIP], m_SystemInfo.getPublicIP().c_str());
 
 	// Update client
 	IDSetText(&SysInfoTP, NULL);
 
 	// read last position from file & convert from MAX_RESOLUTION to current resolution
-	FocusAbsPosNP[0].setValue(savePosition(-1) != -1 ? (int)savePosition(-1) * resolution / MAX_RESOLUTION : 0);
+	// FocusAbsPosNP[0].setValue(savePosition(-1) != -1 ? (int)savePosition(-1) * resolution / MAX_RESOLUTION : 0);
 
 
 	getFocuserInfo();
