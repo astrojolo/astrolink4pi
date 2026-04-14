@@ -775,7 +775,7 @@ void AstroLink4Pi::TimerHit()
 	// }
 	if (nextSystemRead < timeMillis)
 	{
-		++m_Cycle;
+		m_Cycle = next(m_Cycle);
 
 		switch (m_Cycle)
 		{

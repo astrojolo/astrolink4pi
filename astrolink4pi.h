@@ -121,10 +121,16 @@ private:
 		SQM,
 		IDLE
 	};
+	inline SensorCycle next(SensorCycle c)
+	{
+		if (c == SensorCycle::BREAK)
+			return SensorCycle::SHT;
+
+		return static_cast<SensorCycle>(static_cast<int>(c) + 1);
+	}
 
 	SensorCycle m_Cycle = SensorCycle::IDLE;
 	uint64_t nextSystemRead = 0;
-
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
@@ -263,15 +269,5 @@ private:
 	static constexpr const char *SYSTEM_TAB{"System"};
 	static constexpr const char *OUTPUTS_TAB{"Outputs"};
 };
-
-inline AstroLink4Pi::SensorCycle &operator++(AstroLink4Pi::SensorCycle &c)
-{
-	if (c == AstroLink4Pi::SensorCycle::IDLE)
-		c = AstroLink4Pi::SensorCycle::SHT;
-	else
-		c = static_cast<AstroLink4Pi::SensorCycle>(static_cast<int>(c) + 1);
-
-	return c;
-}
 
 #endif
