@@ -104,7 +104,7 @@ private:
 	virtual bool readDS18B20();
 
 	BoardIO m_BoardIO;
-	// PwmController m_PwmController;
+	PwmController m_PwmController;
 	// SystemInfoService m_SystemInfo;
 	// PowerMonitor m_PowerMonitor;
 	// SHTReader m_SHTReader;

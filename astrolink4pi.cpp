@@ -56,6 +56,7 @@ void ISNewNumber(const char *dev, const char *name, double values[], char *names
 
 AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 , m_BoardIO(getDeviceName())
+, m_PwmController(m_BoardIO, (getDeviceName())
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
@@ -82,6 +83,13 @@ bool AstroLink4Pi::Connect()
 		DEBUG(INDI::Logger::DBG_ERROR, "Could not access GPIO.");
 		return false;
 	}
+	if (!m_PwmController.connect())
+	{
+		DEBUG(INDI::Logger::DBG_ERROR, "Could not access GPIO.");
+		return false;
+	}	
+
+
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi %d, RPi version %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
 
 	// DEBUGF(INDI::Logger::DBG_SESSION,

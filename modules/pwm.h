@@ -18,10 +18,14 @@
 // pwmConfig.pi5Channels[PwmController::Channel::FAN] = {"/sys/class/pwm/pwmchip2", 0}; // GPIO13
 // pwmConfig.pi5Channels[PwmController::Channel::MOT] = {"/sys/class/pwm/pwmchip3", 0}; // GPIO20
 
-
 class PwmController : public BaseComponent
 {
 public:
+    static constexpr int PWM1_PIN = 26;  // pin 37
+    static constexpr int PWM2_PIN = 19;  // pin 35
+    static constexpr int MOTOR_PWM = 20; // pin 38 VOUT
+    static constexpr int FAN_PIN = 13;   // pin 33
+
     enum class Channel
     {
         P1,
@@ -39,8 +43,8 @@ public:
 
     struct Pi5ChannelConfig
     {
-        std::string chipPath;   // np. /sys/class/pwm/pwmchip0
-        int pwmIndex = 0;       // zwykle 0 dla pwm-pio
+        std::string chipPath; // np. /sys/class/pwm/pwmchip0
+        int pwmIndex = 0;     // zwykle 0 dla pwm-pio
     };
 
     struct Config
@@ -54,7 +58,9 @@ public:
     explicit PwmController(BoardIO &boardIO, const std::string &deviceName);
     ~PwmController();
 
-    bool initialize(const Config &config);
+    bool initialize();
+    void updateConfig(const Config& cfg);
+
     void shutdown();
 
     bool isInitialized() const;

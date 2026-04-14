@@ -33,8 +33,8 @@ bool BoardIO::connect()
 	{
 		return false;
 	}
-	initializePin(m_Config.OUT1_PIN, OUTPUT, LOW);
-	initializePin(m_Config.OUT2_PIN, OUTPUT, LOW);
+	initializePin(OUT1_PIN, OUTPUT, LOW);
+	initializePin(OUT2_PIN, OUTPUT, LOW);
 
 	m_SpiFd = wiringPiSPISetup(m_Config.spiChannel, m_Config.spiSpeed);
 	if (m_SpiFd < 0)
@@ -85,15 +85,15 @@ void BoardIO::initializePin(int gpio, int mode, int value)
 
 bool BoardIO::setOut1(int value)
 {
-	write(m_Config.OUT1_PIN, value);
-	return (value == read(m_Config.OUT1_PIN));
+	write(OUT1_PIN, value);
+	return (value == read(OUT1_PIN));
 }
 
 
 bool BoardIO::setOut2(int value)
 {
-	write(m_Config.OUT2_PIN, value);
-	return (value == read(m_Config.OUT2_PIN));
+	write(OUT2_PIN, value);
+	return (value == read(OUT2_PIN));
 }
 
 

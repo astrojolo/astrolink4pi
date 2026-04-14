@@ -11,11 +11,6 @@
 #include <wiringPi.h>
 #include <softPwm.h>
 
-static constexpr int PWM1_PIN = 26;	   // pin 37
-static constexpr int PWM2_PIN = 19;	   // pin 35
-static constexpr int MOTOR_PWM = 20;   // pin 38 VOUT
-static constexpr int FAN_PIN = 13;	   // pin 33
-
 
 PwmController::PwmController(BoardIO &boardIO, const std::string &deviceName)
     : BaseComponent(deviceName, "PWM"), m_BoardIO(boardIO)
@@ -49,12 +44,10 @@ int PwmController::bcmPin(Channel channel) const
     return -1;
 }
 
-bool PwmController::initialize(const Config &config)
+bool PwmController::initialize()
 {
     if (m_Initialized)
         return true;
-
-    m_Config = config;
 
     // Lets use always soft PWM first to test
     // if (m_BoardIO.revision() >= 5)
@@ -73,6 +66,25 @@ bool PwmController::initialize(const Config &config)
     // }
 
     m_Initialized = true;
+    return true;
+}
+
+bool PwmController::updateConfig(const Config& cfg)
+{
+    Config newConfig = m_Config;
+
+    newConfig.defaultFrequencyHz = cfg.defaultFrequencyHz;
+    newConfig.softPwmRange = cfg.softPwmRange;
+
+    for (const auto& [channel, chCfg] : cfg.pi5Channels)
+    {
+        newConfig.pi5Channels[channel] = chCfg;
+    }
+
+    if (newConfig.defaultFrequencyHz == 0)
+        return false;
+
+    m_Config = std::move(newConfig);
     return true;
 }
 

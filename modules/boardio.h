@@ -14,12 +14,11 @@ class BoardIO : public BaseComponent
 public:
     static constexpr int RP4_GPIOCHIP = 4;
     static constexpr int RP5_GPIOCHIP = 5;
+    static constexpr int OUT1_PIN = 5; // pin 29
+    static constexpr int OUT2_PIN = 6; // pin 31
 
     struct Config
     {
-        int OUT1_PIN = 5; // pin 29
-        int OUT2_PIN = 6; // pin 31
-
         int spiChannel = 0;
         int spiSpeed = 500000;
 
