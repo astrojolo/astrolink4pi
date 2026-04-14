@@ -10,21 +10,24 @@
 #include "boardio.h"
 #include "pwm.h"
 
+static constexpr int DECAY_PIN = 14;		// pin 8
+static constexpr int EN_PIN = 15;			// pin 10
+static constexpr int M0_PIN = 17;			// pin 11
+static constexpr int M1_PIN = 18;			// pin 12
+static constexpr int M2_PIN = 27;			// pin 13
+static constexpr int RST_PIN = 22;			// pin 15
+static constexpr int STP_PIN = 24;			// pin 18
+static constexpr int DIR_PIN = 23;			// pin 16
+static constexpr int MOTOR_PWM = 20;		// pin 38 VOUT
+static constexpr int CHK_IN_PIN = 16;		// pin 36
+static constexpr int CHK2_IN_PIN = 21;		// pin 40
+static constexpr int HOLD_PIN = 10;			// pin 19 EN 
+
 class Focuser : public BaseComponent
 {
 public:
     struct Config
     {
-        int pinEN = 15;    // pin 10
-        int pinM0 = 17;    // pin 11
-        int pinM1 = 18;    // pin 12
-        int pinM2 = 27;    // pin 13
-        int pinRST = 22;   // pin 15
-        int pinSTP = 24;   // pin 18
-        int pinDIR = 23;   // pin 16
-        int pinDecay = 14; // pin 8
-        int pinHold = 10;  // pin 19 EN
-
         int maxResolution = 32;
         int defaultResolution = 1;
         int defaultStepDelayUs = 2000;

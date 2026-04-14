@@ -110,8 +110,8 @@ private:
 	MLXReader m_MLXReader;
 	TSLReader m_TSLReader;
 	// DSFileReader m_DSReader;
-	// Focuser::Config m_FocuserConfig;
-	// Focuser m_Focuser;
+	Focuser::Config m_FocuserConfig;
+	Focuser m_Focuser;
 
 	enum class SensorCycle
 	{

@@ -63,6 +63,7 @@ AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 , m_SHTReader(getDeviceName())
 , m_MLXReader(getDeviceName())
 , m_TSLReader(getDeviceName())
+, m_Focuser(Focuser::Config{}, m_BoardIO, m_PwmController, getDeviceName())
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
@@ -112,6 +113,11 @@ bool AstroLink4Pi::Connect()
 	if (!m_TSLReader.open())
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize TSL sensor.");
+		return false;
+	}	
+	if (!m_Focuser.open())
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize Focuser module.");
 		return false;
 	}	
 
@@ -404,7 +410,6 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IDSetNumber(&FocusStepDelayNP, nullptr);
 			FocusStepDelayNP.s = IPS_OK;
 			IDSetNumber(&FocusStepDelayNP, nullptr);
-			// m_Focuser.setStepDelayUs(FocusStepDelayN[0].value);
 			DEBUGF(INDI::Logger::DBG_SESSION, "Step delay set to %0.0f us.", FocusStepDelayN[0].value);
 			return true;
 		}
@@ -429,7 +434,6 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&TemperatureCoefNP, values, names, n);
 			TemperatureCoefNP.s = IPS_OK;
 			IDSetNumber(&TemperatureCoefNP, nullptr);
-			// m_Focuser.setTemperatureCoefficient(TemperatureCoefN[0].value);
 			DEBUGF(INDI::Logger::DBG_SESSION, "Temperature coefficient set to %0.1f steps/°C", TemperatureCoefN[0].value);
 			return true;
 		}
@@ -486,7 +490,6 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&StepperCurrentNP, values, names, n);
 			StepperCurrentNP.s = IPS_OK;
 			IDSetNumber(&StepperCurrentNP, nullptr);
-			// m_Focuser.setCurrent(static_cast<int>(StepperCurrentN[0].value));
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current set to %0.0f mA", StepperCurrentN[0].value);
 			// setCurrent(true);
 			return true;
@@ -845,6 +848,12 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 
 	// m_Focuser.setFocuserBacklash(FocusBacklashNP[0].getValue());
 	// return (m_Focuser.moveAbsFocuser(targetTicks) ? IPS_BUSY : IPS_ALERT);
+
+	m_Focuser.setStepDelayUs(FocusStepDelayN[0].value);
+	m_Focuser.setTemperatureCoefficient(TemperatureCoefN[0].value);
+	m_Focuser.setCurrent(static_cast<int>(StepperCurrentN[0].value));
+	m_Focuser.setCurrent(false);
+	m_Focuser.moveAbsFocuser(targetTicks);
 
 	return IPS_OK;
 }

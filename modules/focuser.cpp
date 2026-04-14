@@ -33,15 +33,15 @@ bool Focuser::open()
 {
     close();
 
-    m_BoardIO.initializePin(m_Config.pinEN, OUTPUT, HIGH); // disabled at startup
-    m_BoardIO.initializePin(m_Config.pinM0, OUTPUT, LOW);
-    m_BoardIO.initializePin(m_Config.pinM1, OUTPUT, LOW);
-    m_BoardIO.initializePin(m_Config.pinM2, OUTPUT, LOW);
-    m_BoardIO.initializePin(m_Config.pinRST, OUTPUT, HIGH);
-    m_BoardIO.initializePin(m_Config.pinSTP, OUTPUT, LOW);
-    m_BoardIO.initializePin(m_Config.pinDIR, OUTPUT, LOW);
-    m_BoardIO.initializePin(m_Config.pinDecay, OUTPUT, LOW);
-    m_BoardIO.initializePin(m_Config.pinHold, OUTPUT, LOW);
+    m_BoardIO.initializePin(EN_PIN, OUTPUT, HIGH); // disabled at startup
+    m_BoardIO.initializePin(M0_PIN, OUTPUT, LOW);
+    m_BoardIO.initializePin(M1_PIN, OUTPUT, LOW);
+    m_BoardIO.initializePin(M2_PIN, OUTPUT, LOW);
+    m_BoardIO.initializePin(RST_PIN, OUTPUT, HIGH);
+    m_BoardIO.initializePin(STP_PIN, OUTPUT, LOW);
+    m_BoardIO.initializePin(DIR_PIN, OUTPUT, LOW);
+    m_BoardIO.initializePin(DECAY_PIN, OUTPUT, LOW);
+    m_BoardIO.initializePin(HOLD_PIN, OUTPUT, LOW);
 
     if (!setResolution(m_State.resolution))
     {
@@ -151,6 +151,8 @@ bool Focuser::moveAbsFocuser(uint32_t targetTicks)
         m_Abort.store(true, std::memory_order_relaxed);
         m_MotionThread.join();
     }
+
+    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,  "Motor thread about to start");
 
     setCurrent(false);
     m_Abort.store(false, std::memory_order_relaxed);
@@ -439,6 +441,7 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
                        {
         int motorDirection = direction;
         int backlashRemaining = backlashTicksRemaining;
+         DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,  "Inside thread");
 
         while (!m_Abort.load(std::memory_order_relaxed))
         {
@@ -482,7 +485,11 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
             std::lock_guard<std::mutex> lock(m_StateMutex);
             m_State.moving = false;
             m_State.targetPosition = m_State.currentPosition;
+
         }
+
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,  "Motor thread about to end");
+
 
         setCurrent(true); });
 }
