@@ -42,7 +42,7 @@ bool Focuser::open()
     m_BoardIO.initializePin(DECAY_PIN, OUTPUT, LOW);
     m_BoardIO.initializePin(HOLD_PIN, OUTPUT, LOW);
 
-    m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(requestedCurrent));
+    m_PwmController.setDutyPercent(PwmController::Channel::MOT, 100);
     m_PwmController.enable(PwmController::Channel::MOT);
     DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Mot PWM set");
 
