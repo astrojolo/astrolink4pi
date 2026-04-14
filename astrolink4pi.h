@@ -251,16 +251,6 @@ private:
 
 	SensorCycle m_Cycle = SensorCycle::IDLE;
 
-	inline SensorCycle &operator++(SensorCycle &c)
-	{
-		if (c == SensorCycle::IDLE)
-			c = SensorCycle::SHT;
-		else
-			c = static_cast<SensorCycle>(static_cast<int>(c) + 1);
-
-		return c;
-	}
-
 	int getHoldPower();
 	void getFocuserInfo();
 	void temperatureCompensation();
@@ -271,5 +261,15 @@ private:
 	static constexpr const char *SYSTEM_TAB{"System"};
 	static constexpr const char *OUTPUTS_TAB{"Outputs"};
 };
+
+inline SensorCycle &operator++(SensorCycle &c)
+{
+	if (c == SensorCycle::IDLE)
+		c = SensorCycle::SHT;
+	else
+		c = static_cast<SensorCycle>(static_cast<int>(c) + 1);
+
+	return c;
+}
 
 #endif
