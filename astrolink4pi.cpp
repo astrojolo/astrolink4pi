@@ -85,7 +85,7 @@ bool AstroLink4Pi::Connect()
 	}
 	if (!m_PwmController.connect())
 	{
-		DEBUG(INDI::Logger::DBG_ERROR, "Could not access GPIO.");
+		DEBUG(INDI::Logger::DBG_ERROR, "Could not initialize PWM.");
 		return false;
 	}	
 

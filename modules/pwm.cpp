@@ -44,7 +44,7 @@ int PwmController::bcmPin(Channel channel) const
     return -1;
 }
 
-bool PwmController::initialize()
+bool PwmController::connect()
 {
     if (m_Initialized)
         return true;

@@ -58,7 +58,7 @@ public:
     explicit PwmController(BoardIO &boardIO, const std::string &deviceName);
     ~PwmController();
 
-    bool initialize();
+    bool connect();
     void updateConfig(const Config& cfg);
 
     void shutdown();
