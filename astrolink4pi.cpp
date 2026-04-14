@@ -112,7 +112,7 @@ bool AstroLink4Pi::Connect()
 	getFocuserInfo();
 
 	SetTimer(POLL_PERIOD);
-	setCurrent(true);
+	// setCurrent(true);
 
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
 
@@ -450,7 +450,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IDSetNumber(&StepperCurrentNP, nullptr);
 			// m_Focuser.setCurrent(static_cast<int>(StepperCurrentN[0].value));
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current set to %0.0f mA", StepperCurrentN[0].value);
-			setCurrent(true);
+			// setCurrent(true);
 			return true;
 		}
 
@@ -942,14 +942,14 @@ int AstroLink4Pi::getHoldPower()
 	return 0;
 }
 
-void AstroLink4Pi::setCurrent(bool standby)
-{
-	if (!isConnected())
-		return;
+// void AstroLink4Pi::setCurrent(bool standby)
+// {
+// 	if (!isConnected())
+// 		return;
 
-	// m_Focuser.setHoldPowerPercent(20.0 * getHoldPower());
-	// m_Focuser.setCurrent(standby);
-}
+// 	// m_Focuser.setHoldPowerPercent(20.0 * getHoldPower());
+// 	// m_Focuser.setCurrent(standby);
+// }
 
 void AstroLink4Pi::systemUpdate()
 {
