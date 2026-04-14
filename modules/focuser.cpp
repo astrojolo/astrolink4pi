@@ -464,10 +464,10 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
                     ? ((motorDirection < 0) ? HIGH : LOW)
                     : ((motorDirection < 0) ? LOW : HIGH);
 
-            m_BoardIO.write(m_Config.pinDIR, dirLevel);
-            m_BoardIO.write(m_Config.pinSTP, HIGH);
+            m_BoardIO.write(DIR_PIN, dirLevel);
+            m_BoardIO.write(STP_PIN, HIGH);
             delayMicroseconds(10);
-            m_BoardIO.write(m_Config.pinSTP, LOW);
+            m_BoardIO.write(STP_PIN, LOW);
 
             {
                 std::lock_guard<std::mutex> lock(m_StateMutex);
