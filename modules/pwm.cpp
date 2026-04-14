@@ -65,6 +65,16 @@ bool PwmController::connect()
     m_Backend = Backend::SoftPwm;
     // }
 
+	setDutyPercent(PwmController::Channel::P1, 0.0);
+	setDutyPercent(PwmController::Channel::P2, 0.0);
+	setDutyPercent(PwmController::Channel::FAN, 0.0);
+	setDutyPercent(PwmController::Channel::MOT, 0.0);
+
+	enable(PwmController::Channel::P1);
+	enable(PwmController::Channel::P2);
+	// enable(PwmController::Channel::FAN);
+	// enable(PwmController::Channel::MOT);    
+
     m_Initialized = true;
     return true;
 }
