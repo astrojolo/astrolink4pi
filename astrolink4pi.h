@@ -125,7 +125,7 @@ private:
 	inline SensorCycle next(SensorCycle c)
 	{
 		if (c == SensorCycle::IDLE)
-			return SensorCycle::SHT;
+			return SensorCycle::SHT_T;
 
 		return static_cast<SensorCycle>(static_cast<int>(c) + 1);
 	}
