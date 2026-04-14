@@ -21,7 +21,7 @@ bool DSFileReader::open()
 
     if (m_DevicePath.empty())
     {
-        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                      "DS file path is empty");
         return false;
     }
@@ -29,7 +29,7 @@ bool DSFileReader::open()
     FILE *fp = fopen(m_DevicePath.c_str(), "r");
     if (fp == nullptr)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                      "Cannot open DS file %s: errno=%d (%s)",
                      m_DevicePath.c_str(), errno, std::strerror(errno));
         return false;
