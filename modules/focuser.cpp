@@ -8,7 +8,6 @@
 #include <unistd.h>
 #include <wiringPi.h>
 
-
 namespace
 {
     constexpr int MAX_DRIVER_CURRENT_MA = 2000;
@@ -42,6 +41,10 @@ bool Focuser::open()
     m_BoardIO.initializePin(DIR_PIN, OUTPUT, LOW);
     m_BoardIO.initializePin(DECAY_PIN, OUTPUT, LOW);
     m_BoardIO.initializePin(HOLD_PIN, OUTPUT, LOW);
+
+    m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(requestedCurrent));
+    m_PwmController.enable(PwmController::Channel::MOT);
+    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Mot PWM set");
 
     if (!setResolution(m_State.resolution))
     {
@@ -152,7 +155,7 @@ bool Focuser::moveAbsFocuser(uint32_t targetTicks)
         m_MotionThread.join();
     }
 
-    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,  "Motor thread about to start");
+    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Motor thread about to start");
 
     setCurrent(false);
     m_Abort.store(false, std::memory_order_relaxed);
@@ -386,7 +389,7 @@ void Focuser::setCurrent(bool standby)
             (holdPercent > 0) ? m_PwmController.enable(PwmController::Channel::MOT) : m_PwmController.disable(PwmController::Channel::MOT);
         }
 
-        if(holdPercent > 0)
+        if (holdPercent > 0)
         {
             DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Stepper motor enabled %d %%.", holdPercent);
         }
@@ -399,25 +402,25 @@ void Focuser::setCurrent(bool standby)
     {
         m_BoardIO.write(EN_PIN, LOW);
         m_BoardIO.write(DECAY_PIN, HIGH);
-        if(m_Revision == 1)
+        if (m_Revision == 1)
         {
             m_BoardIO.write(HOLD_PIN, LOW);
         }
         if (m_Revision > 1 && m_Revision < 4)
         {
             m_BoardIO.setDac(m_BoardIO.getConfig().dacChannelRun, 255 * requestedCurrent / 4096);
-        }    
+        }
         if (m_Revision >= 4)
         {
             m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(requestedCurrent));
             m_PwmController.enable(PwmController::Channel::MOT);
-        }            
+        }
     }
 }
 
 int Focuser::getMotorPWM(int currentmA) const
 {
-	// 100 = 1.03V = 2.06A, 1 = 20mA
+    // 100 = 1.03V = 2.06A, 1 = 20mA
     return clampInt((currentmA / 20), 0, 100);
 }
 
