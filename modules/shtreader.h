@@ -21,11 +21,10 @@ public:
     bool open();
     void close();
     bool isOpen() const;
-    bool read(Readings &out);
+    bool read(Readings &out, int mode);
 
 private:
     int m_Fd = -1;
     uint8_t m_ShtAddress = 0x44;
-    uint8_t readIndex = 0;
     Readings m_LastReadings;
 };

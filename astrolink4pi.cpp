@@ -61,6 +61,7 @@ AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 , m_SystemInfo(getDeviceName())
 , m_PowerMonitor(getDeviceName())
 , m_SHTReader(getDeviceName())
+, m_MLXReader(getDeviceName())
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
@@ -102,6 +103,11 @@ bool AstroLink4Pi::Connect()
 		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize SHT sensor.");
 		return false;
 	}
+	if (!m_MLXReader.open())
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize MLX sensor.");
+		return false;
+	}	
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi %d, RPi version %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
 
@@ -784,12 +790,15 @@ void AstroLink4Pi::TimerHit()
 
 		switch (m_Cycle)
 		{
-		case SensorCycle::SHT:
-			readSHT();
+		case SensorCycle::SHT_T:
+			readSHT(0);
 			break;
-		// case SensorCycle::MLX:
-		// 	readMLX();
-		// 	break;
+		case SensorCycle::SHT_R:
+			readSHT(1);
+			break;
+		case SensorCycle::MLX:
+			readMLX();
+			break;
 		// case SensorCycle::TSL:
 		// 	readTSL();
 		// 	break;
@@ -1126,21 +1135,21 @@ bool AstroLink4Pi::readOLD()
 
 bool AstroLink4Pi::readMLX()
 {
-	// MLXReader::Readings readings;
-	// if (!m_MLXReader.read(readings))
-	// {
-	// 	return false;
-	// }
-	// setParameterValue("WEATHER_SKY_TEMP", readings.objectTemperature);
-	// setParameterValue("WEATHER_SKY_DIFF", readings.tempDifference);
+	MLXReader::Readings readings;
+	if (!m_MLXReader.read(readings))
+	{
+		return false;
+	}
+	setParameterValue("WEATHER_SKY_TEMP", readings.objectTemperature);
+	setParameterValue("WEATHER_SKY_DIFF", readings.tempDifference);
 
 	return true;
 }
 
-bool AstroLink4Pi::readSHT()
+bool AstroLink4Pi::readSHT(int mode)
 {
 	SHTReader::Readings readings;
-	if (!m_SHTReader.read(readings))
+	if (!m_SHTReader.read(readings, mode))
 	{
 		return false;
 	}

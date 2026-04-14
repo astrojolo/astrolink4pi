@@ -47,14 +47,14 @@ bool SHTReader::isOpen() const
     return m_Fd >= 0;
 }
 
-bool SHTReader::read(SHTReader::Readings &out)
+bool SHTReader::read(SHTReader::Readings &out, int mode)
 {
     if (!isOpen())
         return false;
 
     out = m_LastReadings;
 
-    if ((readIndex % 2) == 0)
+    if ((mode % 2) == 0)
     {
         uint8_t cmd[2] = {0x24, 0x00};
 
@@ -107,10 +107,6 @@ bool SHTReader::read(SHTReader::Readings &out)
 
         m_LastReadings = out;
     }
-
-    readIndex++;
-    if (readIndex > 1)
-        readIndex = 0;
 
     return true;
 }

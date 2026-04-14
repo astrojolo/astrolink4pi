@@ -18,8 +18,8 @@ static double mlxRawToCelsius(uint16_t raw)
 }
 }
 
-MLXReader::MLXReader(uint8_t mlxAddress, const std::string &deviceName)
-    : BaseComponent(deviceName, "MLXReader"), m_MlxAddress(mlxAddress)
+MLXReader::MLXReader(const std::string &deviceName)
+    : BaseComponent(deviceName, "MLXReader")
 {
 }
 
@@ -31,19 +31,6 @@ MLXReader::~MLXReader()
 bool MLXReader::open()
 {
     close();
-
-    static bool wiringPiInitialized = false;
-    if (!wiringPiInitialized)
-    {
-        if (wiringPiSetup() < 0)
-        {
-            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-                         "wiringPiSetup failed: errno=%d (%s)",
-                         errno, std::strerror(errno));
-            return false;
-        }
-        wiringPiInitialized = true;
-    }
 
     m_Fd = wiringPiI2CSetup(m_MlxAddress);
     if (m_Fd < 0)

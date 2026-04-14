@@ -15,7 +15,7 @@ public:
         double tempDifference  = 0.0; // Td
     };
 
-    MLXReader(uint8_t mlxAddress, const std::string &deviceName);
+    MLXReader(const std::string &deviceName);
     ~MLXReader();
 
     bool open();

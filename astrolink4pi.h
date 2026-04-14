@@ -94,7 +94,7 @@ private:
 	virtual bool Connect();
 	virtual bool Disconnect();
 	virtual int savePosition(int pos);
-	virtual bool readSHT();
+	virtual bool readSHT(int mode);
 	virtual bool readMLX();
 	virtual bool readSQM(bool triggerOldSensor);
 	virtual bool readTSL();
@@ -107,7 +107,7 @@ private:
 	SystemInfoService m_SystemInfo;
 	PowerMonitor m_PowerMonitor;
 	SHTReader m_SHTReader;
-	// MLXReader m_MLXReader;
+	MLXReader m_MLXReader;
 	// TSLReader m_TSLReader;
 	// DSFileReader m_DSReader;
 	// Focuser::Config m_FocuserConfig;
@@ -115,7 +115,8 @@ private:
 
 	enum class SensorCycle
 	{
-		SHT = 1,
+		SHT_T = 1,
+		SHT_R,
 		MLX,
 		TSL,
 		SQM,
