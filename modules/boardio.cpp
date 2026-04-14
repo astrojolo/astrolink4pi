@@ -127,13 +127,13 @@ int BoardIO::checkRevision()
 	// TODO - check SPI, I2C and 1-Wire
 
 	int rev = 1;
-	initializePin(m_Config.pinCHK_IN, INPUT, LOW);
-	initializePin(m_Config.pinCHK2_IN, INPUT, LOW);
+	// initializePin(m_Config.pinCHK_IN, INPUT, LOW);
+	// initializePin(m_Config.pinCHK2_IN, INPUT, LOW);
 
 	// lgGpioClaimInput(handle, 0, MOTOR_PWM);	 // OLD CHK_PIN
 	// lgGpioClaimInput(handle, 0, MOTOR_PWM); // OLD CHK2_PIN
 
-	setDac(1, 0);
+	// setDac(1, 0);
 	// if (lgGpioRead(handle, MOTOR_PWM) == 0)
 	// {
 	// 	setDac(1, 255);
