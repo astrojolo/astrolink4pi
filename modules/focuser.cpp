@@ -205,9 +205,9 @@ bool Focuser::setResolution(int res)
         return false;
     }
 
-    m_BoardIO.write(m_Config.pinM0, m0);
-    m_BoardIO.write(m_Config.pinM1, m1);
-    m_BoardIO.write(m_Config.pinM2, m2);
+    m_BoardIO.write(M0_PIN, m0);
+    m_BoardIO.write(M1_PIN, m1);
+    m_BoardIO.write(M2_PIN, m2);
 
     std::lock_guard<std::mutex> lock(m_StateMutex);
     m_State.resolution = res;
@@ -362,17 +362,17 @@ void Focuser::setCurrent(bool standby)
         {
             if (holdPercent == 100)
             {
-                m_BoardIO.write(m_Config.pinHold, LOW);
+                m_BoardIO.write(HOLD_PIN, LOW);
                 DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Stepper motor enabled 100%%.");
             }
             else if (holdPercent > 0)
             {
-                m_BoardIO.write(m_Config.pinHold, HIGH);
+                m_BoardIO.write(HOLD_PIN, HIGH);
                 DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Stepper motor enabled 50%%.");
             }
             else
             {
-                m_BoardIO.write(m_Config.pinHold, HIGH);
+                m_BoardIO.write(HOLD_PIN, HIGH);
                 DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Stepper motor enabled 0%%.");
             }
         }
@@ -396,11 +396,11 @@ void Focuser::setCurrent(bool standby)
     }
     else
     {
-        m_BoardIO.write(m_Config.pinEN, LOW);
-        m_BoardIO.write(m_Config.pinDecay, HIGH);
+        m_BoardIO.write(EN_PIN, LOW);
+        m_BoardIO.write(DECAY_PIN, HIGH);
         if(m_Revision == 1)
         {
-            m_BoardIO.write(m_Config.pinHold, LOW);
+            m_BoardIO.write(HOLD_PIN, LOW);
         }
         if (m_Revision > 1 && m_Revision < 4)
         {
