@@ -108,7 +108,7 @@ private:
 	PowerMonitor m_PowerMonitor;
 	SHTReader m_SHTReader;
 	MLXReader m_MLXReader;
-	// TSLReader m_TSLReader;
+	TSLReader m_TSLReader;
 	// DSFileReader m_DSReader;
 	// Focuser::Config m_FocuserConfig;
 	// Focuser m_Focuser;

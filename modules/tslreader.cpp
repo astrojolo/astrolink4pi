@@ -8,8 +8,8 @@
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
 
-TSLReader::TSLReader(uint8_t tslAddress, const std::string &deviceName)
-    : BaseComponent(deviceName, "TSLReader"), m_TslAddress(tslAddress)
+TSLReader::TSLReader(const std::string &deviceName)
+    : BaseComponent(deviceName, "TSLReader")
 {
 }
 

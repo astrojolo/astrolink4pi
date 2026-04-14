@@ -17,7 +17,7 @@ public:
         bool valid = false;
     };
 
-    TSLReader(uint8_t tslAddress, const std::string &deviceName);
+    TSLReader(const std::string &deviceName);
     ~TSLReader();
 
     bool open();

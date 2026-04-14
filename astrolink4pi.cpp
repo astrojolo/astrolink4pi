@@ -62,6 +62,7 @@ AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 , m_PowerMonitor(getDeviceName())
 , m_SHTReader(getDeviceName())
 , m_MLXReader(getDeviceName())
+, m_TSLReader(getDeviceName())
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
@@ -106,6 +107,11 @@ bool AstroLink4Pi::Connect()
 	if (!m_MLXReader.open())
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize MLX sensor.");
+		return false;
+	}	
+	if (!m_TSLReader.open())
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize TSL sensor.");
 		return false;
 	}	
 
@@ -799,9 +805,9 @@ void AstroLink4Pi::TimerHit()
 		case SensorCycle::MLX:
 			readMLX();
 			break;
-		// case SensorCycle::TSL:
-		// 	readTSL();
-		// 	break;
+		case SensorCycle::TSL:
+			readTSL();
+			break;
 		// case SensorCycle::SQM:
 		// 	readSQM();
 		// 	break;
@@ -1105,13 +1111,13 @@ bool AstroLink4Pi::readSQM(bool triggerOldSensor)
 
 bool AstroLink4Pi::readTSL()
 {
-	// TSLReader::Readings readings;
-	// if (m_TSLReader.read(readings) && readings.valid)
-	// {
-	// 	setParameterValue("SQM_READING", readings.mpsas);
-	// 	return true;
-	// }
-	return true;
+	TSLReader::Readings readings;
+	if (m_TSLReader.read(readings) && readings.valid)
+	{
+		setParameterValue("SQM_READING", readings.mpsas);
+		return true;
+	}
+	return false;
 }
 
 bool AstroLink4Pi::readOLD()
