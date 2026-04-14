@@ -104,15 +104,15 @@ private:
 	virtual bool readDS18B20();
 
 	BoardIO m_BoardIO;
-	PwmController m_PwmController;
-	SystemInfoService m_SystemInfo;
-	PowerMonitor m_PowerMonitor;
-	SHTReader m_SHTReader;
-	MLXReader m_MLXReader;
-	TSLReader m_TSLReader;
-	DSFileReader m_DSReader;
-	Focuser::Config m_FocuserConfig;
-	Focuser m_Focuser;
+	// PwmController m_PwmController;
+	// SystemInfoService m_SystemInfo;
+	// PowerMonitor m_PowerMonitor;
+	// SHTReader m_SHTReader;
+	// MLXReader m_MLXReader;
+	// TSLReader m_TSLReader;
+	// DSFileReader m_DSReader;
+	// Focuser::Config m_FocuserConfig;
+	// Focuser m_Focuser;
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
@@ -241,48 +241,6 @@ private:
 	INumber StepperCurrentN[1];
 	INumberVectorProperty StepperCurrentNP;
 
-
-	int resolution = 1;
-
-	float lastTemperature = -1000.0;
-	float focuserTemperature = -1000.0;
-	bool SHTavailable = false;
-	bool MLXavailable = false;
-	bool SQMavailable = false;
-	bool DSavailable = false;
-	TSLState TSLmode = TSLState::NotAvailable;
-
-	int backlashTicksRemaining = 0;
-	int lastDirection = 0;
-
-	int pwmState[2] = {0};
-	int relayState[2] = {0};
-
-	uint64_t nextTemperatureRead = 0;
-	uint64_t nextTemperatureCompensation = 0;
-	uint64_t nextSystemRead = 0;
-	uint64_t nextFanUpdate = 0;
-	uint64_t adcStartTime = 0;
-	int niter = 0;
-	uint64_t fullCumulative = 0;
-	uint64_t irCumulative = 0;
-
-	int powerIndex = 0;
-	float energyAs = 0.0;
-	float energyWs = 0.0;
-
-	std::thread _motionThread;
-	// volatile bool _abort;
-	std::atomic<bool> _abort{false};
-
-	int getHoldPower();
-	void getFocuserInfo();
-	void temperatureCompensation();
-	void setCurrent(bool standby);
-	void systemUpdate();
-	void fanUpdate();
-	int getMotorPWM(int current);
-	int setDac(int chan, int value);
 
 	static constexpr const char *ENVIRONMENT_TAB{"Environment"};
 	static constexpr const char *SYSTEM_TAB{"System"};
