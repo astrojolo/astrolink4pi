@@ -1069,24 +1069,24 @@ void AstroLink4Pi::getFocuserInfo()
 
 void AstroLink4Pi::fanUpdate()
 {
-	FanPowerNP.s = IPS_BUSY;
-	int temp = std::stoi(SysInfoT[SYSI_CPUTEMP].text);
-	int cycle = 0;
-	double fanPwr = 33.0;
-	if (temp > 50)
-	{
-		cycle = 50;
-		fanPwr = 66.0;
-	}
-	if (temp > 60)
-	{
-		cycle = 100;
-		fanPwr = 100.0;
-	}
-	m_PwmController.setDutyPercent(PwmController::Channel::FAN, cycle);
-	FanPowerN[0].value = fanPwr;
-	FanPowerNP.s = IPS_OK;
-	IDSetNumber(&FanPowerNP, nullptr);
+	// FanPowerNP.s = IPS_BUSY;
+	// int temp = std::stoi(SysInfoT[SYSI_CPUTEMP].text);
+	// int cycle = 0;
+	// double fanPwr = 33.0;
+	// if (temp > 50)
+	// {
+	// 	cycle = 50;
+	// 	fanPwr = 66.0;
+	// }
+	// if (temp > 60)
+	// {
+	// 	cycle = 100;
+	// 	fanPwr = 100.0;
+	// }
+	// m_PwmController.setDutyPercent(PwmController::Channel::FAN, cycle);
+	// FanPowerN[0].value = fanPwr;
+	// FanPowerNP.s = IPS_OK;
+	// IDSetNumber(&FanPowerNP, nullptr);
 }
 
 bool AstroLink4Pi::readSQM(bool triggerOldSensor)
