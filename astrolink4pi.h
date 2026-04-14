@@ -123,7 +123,7 @@ private:
 	};
 	inline SensorCycle next(SensorCycle c)
 	{
-		if (c == SensorCycle::BREAK)
+		if (c == SensorCycle::IDLE)
 			return SensorCycle::SHT;
 
 		return static_cast<SensorCycle>(static_cast<int>(c) + 1);
