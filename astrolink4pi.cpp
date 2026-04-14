@@ -57,6 +57,7 @@ void ISNewNumber(const char *dev, const char *name, double values[], char *names
 AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
 , m_BoardIO(getDeviceName())
 , m_PwmController(m_BoardIO, (getDeviceName()))
+, m_SystemInfo(getDeviceName())
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
@@ -92,11 +93,11 @@ bool AstroLink4Pi::Connect()
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi %d, RPi version %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
 
-	// DEBUGF(INDI::Logger::DBG_SESSION,
-	// 	   "Connected on %s (%s), kernel %s",
-	// 	   m_SystemInfo.getHostname().c_str(),
-	// 	   m_SystemInfo.getModel().c_str(),
-	// 	   m_SystemInfo.getKernelVersion().c_str());
+	DEBUGF(INDI::Logger::DBG_SESSION,
+		   "Connected on %s (%s), kernel %s",
+		   m_SystemInfo.getHostname().c_str(),
+		   m_SystemInfo.getModel().c_str(),
+		   m_SystemInfo.getKernelVersion().c_str());
 
 	// Lock Relay Labels setting
 	RelayLabelsTP.s = IPS_BUSY;
@@ -105,10 +106,10 @@ bool AstroLink4Pi::Connect()
 	// update Hardware
 	// https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
 
-	// IUSaveText(&SysInfoT[SYSI_HARDWARE], m_SystemInfo.getHostname().c_str());
-	// IUSaveText(&SysInfoT[SYSI_HOST], m_SystemInfo.getModel().c_str());
-	// IUSaveText(&SysInfoT[SYSI_LOCALIP], m_SystemInfo.getLocalIP().c_str());
-	// IUSaveText(&SysInfoT[SYSI_PUBIP], m_SystemInfo.getPublicIP().c_str());
+	IUSaveText(&SysInfoT[SYSI_HARDWARE], m_SystemInfo.getHostname().c_str());
+	IUSaveText(&SysInfoT[SYSI_HOST], m_SystemInfo.getModel().c_str());
+	IUSaveText(&SysInfoT[SYSI_LOCALIP], m_SystemInfo.getLocalIP().c_str());
+	IUSaveText(&SysInfoT[SYSI_PUBIP], m_SystemInfo.getPublicIP().c_str());
 
 	// Update client
 	IDSetText(&SysInfoTP, NULL);
@@ -730,7 +731,7 @@ void AstroLink4Pi::TimerHit()
 	if (!isConnected())
 		return;
 
-	// uint64_t timeMillis = m_SystemInfo.millis();
+	uint64_t timeMillis = m_SystemInfo.millis();
 	// SQMavailable = readSQM(nextTemperatureRead < timeMillis);
 
 	// if (nextTemperatureRead < timeMillis)
@@ -765,11 +766,10 @@ void AstroLink4Pi::TimerHit()
 	// 	temperatureCompensation();
 	// 	nextTemperatureCompensation = timeMillis + TEMPERATURE_COMPENSATION_TIMEOUT;
 	// }
-	// if (nextSystemRead < timeMillis)
-	// {
-	// 	systemUpdate();
-	// 	nextSystemRead = timeMillis + SYSTEM_UPDATE_PERIOD;
-	// }
+	if(m_SystemInfo.update())
+	{
+		systemUpdate();
+	}
 	// if (nextFanUpdate < timeMillis)
 	// {
 	// 	fanUpdate();
@@ -975,13 +975,13 @@ void AstroLink4Pi::systemUpdate()
 	IDSetText(&SysInfoTP, NULL);
 
 	// update CPU temp
-	// IUSaveText(&SysInfoT[SYSI_CPUTEMP], m_SystemInfo.getCpuTemp().c_str());
+	IUSaveText(&SysInfoT[SYSI_CPUTEMP], m_SystemInfo.getCpuTemp().c_str());
 
 	// update uptime
-	// IUSaveText(&SysInfoT[SYSI_UPTIME], m_SystemInfo.getUptimeString().c_str());
+	IUSaveText(&SysInfoT[SYSI_UPTIME], m_SystemInfo.getUptimeString().c_str());
 
 	// update load
-	// IUSaveText(&SysInfoT[SYSI_LOAD], m_SystemInfo.getLoad().c_str());
+	IUSaveText(&SysInfoT[SYSI_LOAD], m_SystemInfo.getLoad().c_str());
 
 	SysInfoTP.s = IPS_OK;
 	IDSetText(&SysInfoTP, NULL);

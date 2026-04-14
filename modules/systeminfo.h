@@ -9,8 +9,12 @@
 class SystemInfoService : public BaseComponent
 {
 public:
+    static constexpr int SYSTEM_UPDATE_PERIOD = 1000;
+
     SystemInfoService(const std::string &deviceName);
     ~SystemInfoService();
+
+    void update();
 
     std::string getHostname() const;
     std::string getModel() const;
@@ -28,6 +32,7 @@ public:
 
 private:
     std::string trim(const std::string &value) const;
+    uint64_t nextSystemRead = 0;
 };
 
 #endif
