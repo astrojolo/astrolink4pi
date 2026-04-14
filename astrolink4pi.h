@@ -113,6 +113,19 @@ private:
 	// Focuser::Config m_FocuserConfig;
 	// Focuser m_Focuser;
 
+	enum class SensorCycle
+	{
+		SHT = 1,
+		MLX,
+		TSL,
+		SQM,
+		IDLE
+	};
+
+	SensorCycle m_Cycle = SensorCycle::IDLE;
+	uint64_t nextSystemRead = 0;
+
+
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
 	enum
@@ -240,17 +253,6 @@ private:
 	INumber StepperCurrentN[1];
 	INumberVectorProperty StepperCurrentNP;
 
-	enum class SensorCycle
-	{
-		SHT = 1,
-		MLX,
-		TSL,
-		SQM,
-		IDLE
-	};
-
-	SensorCycle m_Cycle = SensorCycle::IDLE;
-
 	int getHoldPower();
 	void getFocuserInfo();
 	void temperatureCompensation();
@@ -262,12 +264,12 @@ private:
 	static constexpr const char *OUTPUTS_TAB{"Outputs"};
 };
 
-inline SensorCycle &operator++(SensorCycle &c)
+inline AstroLink4Pi::SensorCycle &operator++(AstroLink4Pi::SensorCycle &c)
 {
-	if (c == SensorCycle::IDLE)
-		c = SensorCycle::SHT;
+	if (c == AstroLink4Pi::SensorCycle::IDLE)
+		c = AstroLink4Pi::SensorCycle::SHT;
 	else
-		c = static_cast<SensorCycle>(static_cast<int>(c) + 1);
+		c = static_cast<AstroLink4Pi::SensorCycle>(static_cast<int>(c) + 1);
 
 	return c;
 }

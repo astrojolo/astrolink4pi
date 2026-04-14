@@ -1142,7 +1142,7 @@ bool AstroLink4Pi::readSHT()
 	setParameterValue("WEATHER_TEMPERATURE", readings.temperature);
 	setParameterValue("WEATHER_HUMIDITY", readings.humidity);
 	setParameterValue("WEATHER_DEWPOINT", readings.dewPoint);
-	focuserTemperature = readings.temperature;
+	// focuserTemperature = readings.temperature;
 
 	return true;
 }
