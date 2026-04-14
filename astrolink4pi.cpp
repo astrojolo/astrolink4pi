@@ -427,6 +427,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			PWM1NP.s = IPS_OK;
 			IDSetNumber(&PWM1NP, nullptr);
 			m_PwmController.setDutyPercent(PwmController::Channel::P1, PWM1N[0].value);
+			(PWM1N[0].value > 0) ? m_PwmController.enable(PwmController::Channel::P1) : m_PwmController.disable(PwmController::Channel::P1);
 			// pwmState[0] = PWM1N[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 1 set to %0.0f", PWM1N[0].value);
 			return true;
@@ -438,6 +439,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			PWM2NP.s = IPS_OK;
 			IDSetNumber(&PWM2NP, nullptr);
 			m_PwmController.setDutyPercent(PwmController::Channel::P2, PWM2N[0].value);
+			(PWM2N[0].value > 0) ? m_PwmController.enable(PwmController::Channel::P2) : m_PwmController.disable(PwmController::Channel::P2);
 			// pwmState[1] = PWM2N[0].value;
 			DEBUGF(INDI::Logger::DBG_SESSION, "PWM 2 set to %0.0f", PWM2N[0].value);
 			return true;
