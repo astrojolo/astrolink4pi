@@ -152,7 +152,6 @@ bool Focuser::moveAbsFocuser(uint32_t targetTicks)
         m_MotionThread.join();
     }
 
-    m_PwmController.setDutyPercent(PwmController::Channel::MOT, 100);
     DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,  "Motor thread about to start");
 
     setCurrent(false);
@@ -384,6 +383,7 @@ void Focuser::setCurrent(bool standby)
         if (m_Revision >= 4)
         {
             m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(holdPercent * requestedCurrent / 100));
+            (holdPercent > 0) ? m_PwmController.enable(PwmController::Channel::MOT) : m_PwmController.disable(PwmController::Channel::MOT);
         }
 
         if(holdPercent > 0)
@@ -410,6 +410,7 @@ void Focuser::setCurrent(bool standby)
         if (m_Revision >= 4)
         {
             m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(requestedCurrent));
+            m_PwmController.enable(PwmController::Channel::MOT);
         }            
     }
 }
