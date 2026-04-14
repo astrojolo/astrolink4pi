@@ -90,7 +90,7 @@ uint64_t SystemInfoService::millis() const
         .count();
 }
 
-bool SystemInfoService::update() const
+bool SystemInfoService::update()
 {
     uint64_t now = millis();
     if(nextSystemRead < now)

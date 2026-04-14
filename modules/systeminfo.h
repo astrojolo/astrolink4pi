@@ -14,7 +14,7 @@ public:
     SystemInfoService(const std::string &deviceName);
     ~SystemInfoService();
 
-    void update();
+    bool update();
 
     std::string getHostname() const;
     std::string getModel() const;
