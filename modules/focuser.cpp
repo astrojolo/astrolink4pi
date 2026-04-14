@@ -151,7 +151,7 @@ bool Focuser::moveAbsFocuser(uint32_t targetTicks)
         m_MotionThread.join();
     }
 
-    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Motor thread about to start");
+    // DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Motor thread about to start");
 
     setCurrent(false);
     m_Abort.store(false, std::memory_order_relaxed);

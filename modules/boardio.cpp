@@ -128,7 +128,7 @@ int BoardIO::checkRevision()
 {
 	// TODO - check SPI, I2C and 1-Wire
 
-	int rev = 1;
+	int rev = 4;
 	// initializePin(m_Config.pinCHK_IN, INPUT, LOW);
 	// initializePin(m_Config.pinCHK2_IN, INPUT, LOW);
 
