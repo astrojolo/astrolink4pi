@@ -17,9 +17,8 @@ public:
 
     struct Config
     {
-        int pinCHK_IN = 16;  // pin 36
-        int pinCHK2_IN = 21; // pin 40
-        int pinMOTOR = 20;   // pin 38 VOUT
+        int OUT1_PIN = 5; // pin 29
+        int OUT2_PIN = 6; // pin 31
 
         int spiChannel = 0;
         int spiSpeed = 500000;
@@ -38,6 +37,9 @@ public:
     int revision() const;
     int gpioChip() const;
     int handle() const;
+
+    bool setOut1(int value);
+    bool setOut2(int value);
 
     void write(int gpio, int value);
     int read(int gpio) const;

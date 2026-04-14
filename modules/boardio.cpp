@@ -37,7 +37,7 @@ bool BoardIO::connect()
 	m_SpiFd = wiringPiSPISetup(m_Config.spiChannel, m_Config.spiSpeed);
 	if (m_SpiFd < 0)
 	{
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
 					 "wiringPiSPISetup failed: errno=%d (%s)", errno, std::strerror(errno));
 	}
 
@@ -79,6 +79,21 @@ void BoardIO::initializePin(int gpio, int mode, int value)
 	else
 		pullUpDnControl(gpio, (value == 0) ? PUD_DOWN : PUD_UP);
 }
+
+
+bool BoardIO::setOut1(int value)
+{
+	write(m_Config.OUT1_PIN, value);
+	return (value = read(m_Config.OUT1_PIN));
+}
+
+
+bool BoardIO::setOut2(int value)
+{
+	write(m_Config.OUT2_PIN, value);
+	return (value = read(m_Config.OUT2_PIN));
+}
+
 
 void BoardIO::write(int gpio, int value)
 {
