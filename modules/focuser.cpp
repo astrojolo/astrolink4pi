@@ -383,7 +383,6 @@ void Focuser::setCurrent(bool standby)
         {
             m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(holdPercent * requestedCurrent / 100));
             (holdPercent > 0) ? m_PwmController.enable(PwmController::Channel::MOT) : m_PwmController.disable(PwmController::Channel::MOT);
-            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Current %d hold %d", requestedCurrent, holdPercent);            
         }
 
         if (holdPercent > 0)
@@ -411,7 +410,6 @@ void Focuser::setCurrent(bool standby)
         {
             m_PwmController.setDutyPercent(PwmController::Channel::MOT, getMotorPWM(requestedCurrent));
             m_PwmController.enable(PwmController::Channel::MOT);
-            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Current %d hold %d", requestedCurrent, 100);            
         }
     }
 }
@@ -419,6 +417,7 @@ void Focuser::setCurrent(bool standby)
 int Focuser::getMotorPWM(int currentmA) const
 {
     // 100 = 1.03V = 2.06A, 1 = 20mA
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Current %d", currentmA);
     return clampInt((currentmA / 20), 0, 100);
 }
 
@@ -444,10 +443,6 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
                        {
         int motorDirection = direction;
         int backlashRemaining = backlashTicksRemaining;
-        // DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,  "Inside thread");
-
-        // DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,  "PIN statuses EN %d HOLD %d DECAY_PIN %d"
-        // , m_BoardIO.read(EN_PIN), m_BoardIO.read(HOLD_PIN), m_BoardIO.read(DECAY_PIN));
 
         while (!m_Abort.load(std::memory_order_relaxed))
         {
@@ -474,7 +469,6 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
             m_BoardIO.write(STP_PIN, HIGH);
             delayMicroseconds(10);
             m_BoardIO.write(STP_PIN, LOW);
-            // DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,  "STP pin cycled");
 
             {
                 std::lock_guard<std::mutex> lock(m_StateMutex);
@@ -494,10 +488,6 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
             m_State.targetPosition = m_State.currentPosition;
 
         }
-
-        // DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,  "Motor thread about to end");
-
-
         setCurrent(true); });
 }
 
