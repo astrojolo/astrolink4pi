@@ -265,6 +265,7 @@ private:
 	void temperatureCompensation();
 	void systemUpdate();
 	void fanUpdate();
+	void focuserUpdate();
 
 	static constexpr const char *ENVIRONMENT_TAB{"Environment"};
 	static constexpr const char *SYSTEM_TAB{"System"};

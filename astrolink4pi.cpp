@@ -784,6 +784,7 @@ void AstroLink4Pi::TimerHit()
 	// }
 	readSQM(nextSystemRead < timeMillis);
 	readPower();
+	focuserUpdate();
 
 	if (nextSystemRead < timeMillis)
 	{
@@ -823,8 +824,7 @@ void AstroLink4Pi::TimerHit()
 
 bool AstroLink4Pi::AbortFocuser()
 {
-	return true;
-	// return m_Focuser.abortFocuser();
+	return m_Focuser.abortFocuser();
 }
 
 IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
@@ -836,19 +836,17 @@ IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
 
 IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 {
-	// if (targetTicks == FocusAbsPosNP[0].getValue())
-	// {
-	// 	DEBUG(INDI::Logger::DBG_SESSION, "Already at the requested position.");
-	// 	return IPS_OK;
-	// }
+	if (targetTicks == FocusAbsPosNP[0].getValue())
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Already at the requested position.");
+		return IPS_OK;
+	}
 
-	// // set focuser busy
-	// FocusAbsPosNP.setState(IPS_BUSY);
-	// FocusAbsPosNP.apply();
-	// setCurrent(false);
+	// set focuser busy
+	FocusAbsPosNP.setState(IPS_BUSY);
+	FocusAbsPosNP.apply();
 
 	// m_Focuser.setFocuserBacklash(FocusBacklashNP[0].getValue());
-	// return (m_Focuser.moveAbsFocuser(targetTicks) ? IPS_BUSY : IPS_ALERT);
 
 	m_Focuser.setStepDelayUs(FocusStepDelayN[0].value);
 	m_Focuser.setTemperatureCoefficient(TemperatureCoefN[0].value);
@@ -856,7 +854,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	m_Focuser.setCurrent(false);
 	m_Focuser.moveAbsFocuser(targetTicks);
 
-	return IPS_OK;
+	return (m_Focuser.moveAbsFocuser(targetTicks) ? IPS_BUSY : IPS_ALERT);
 }
 
 bool AstroLink4Pi::ReverseFocuser(bool enabled)
@@ -993,14 +991,13 @@ int AstroLink4Pi::getHoldPower()
 	return 0;
 }
 
-// void AstroLink4Pi::setCurrent(bool standby)
-// {
-// 	if (!isConnected())
-// 		return;
-
-// 	// m_Focuser.setHoldPowerPercent(20.0 * getHoldPower());
-// 	// m_Focuser.setCurrent(standby);
-// }
+void AstroLink4Pi::focuserUpdate()
+{
+	auto state = m_Focuser.getState();
+	FocusAbsPosNP[0].setValue(state.currentPosition);
+	FocusAbsPosNP.setState(state.moving ? IPS_BUSY : IPS_OK);
+	FocusAbsPosNP.apply();
+}
 
 void AstroLink4Pi::systemUpdate()
 {

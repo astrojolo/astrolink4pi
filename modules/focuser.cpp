@@ -151,8 +151,6 @@ bool Focuser::moveAbsFocuser(uint32_t targetTicks)
         m_MotionThread.join();
     }
 
-    // DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Motor thread about to start");
-
     setCurrent(false);
     m_Abort.store(false, std::memory_order_relaxed);
     m_MotionThread = getMotorThread(targetTicks, direction, backlashTicksRemaining);
@@ -467,8 +465,7 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
 
             m_BoardIO.write(DIR_PIN, dirLevel);
             m_BoardIO.write(STP_PIN, HIGH);
-            // delayMicroseconds(10);
-            usleep(10);
+            delayMicroseconds(10);
             m_BoardIO.write(STP_PIN, LOW);
 
             {
@@ -487,7 +484,6 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
             std::lock_guard<std::mutex> lock(m_StateMutex);
             m_State.moving = false;
             m_State.targetPosition = m_State.currentPosition;
-
         }
         setCurrent(true); });
 }
