@@ -121,6 +121,4 @@ private:
     std::mutex m_PositionSaveMutex;
     int32_t m_LastSavedPosition = 0;
     std::chrono::steady_clock::time_point m_LastSaveTime = std::chrono::steady_clock::now();
-
-J    
 };
