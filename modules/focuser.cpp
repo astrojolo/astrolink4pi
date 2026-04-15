@@ -134,13 +134,13 @@ bool Focuser::moveAbsFocuser(uint32_t targetTicks)
 
     {
         std::lock_guard<std::mutex> lock(m_StateMutex);
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Last dir %d dir %d back %d bakcrem %d", m_State.lastDirection, direction, m_State.backlashSteps, backlashTicksRemaining);
         if (m_State.lastDirection != 0 &&
             direction != m_State.lastDirection &&
             m_State.backlashSteps > 0)
         {
             backlashTicksRemaining = m_State.backlashSteps;
         }
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Last dir %d dir %d back %d bakcrem %", m_State.lastDirection, direction, m_State.backlashSteps, backlashTicksRemaining);
 
         m_State.targetPosition = static_cast<int32_t>(targetTicks);
         m_State.lastDirection = direction;
