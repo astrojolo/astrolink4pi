@@ -467,7 +467,8 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
 
             m_BoardIO.write(DIR_PIN, dirLevel);
             m_BoardIO.write(STP_PIN, HIGH);
-            delayMicroseconds(10);
+            // delayMicroseconds(10);
+            usleep(10);
             m_BoardIO.write(STP_PIN, LOW);
 
             {
