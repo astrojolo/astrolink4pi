@@ -423,7 +423,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			FocusAbsPosNP[0].setMax(FocusMaxPosNP[0].getValue());
 			FocusAbsPosNP.updateMinMax(); // This call is not INDI protocol compliant
 
-			FocusAbsPosNP.setState(IPS_OK);
+			FocusMaxPosNP.setState(IPS_OK);
 			FocusMaxPosNP.apply();
 			getFocuserInfo();
 			return true;
@@ -843,8 +843,8 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	}
 
 	// set focuser busy
-	FocusAbsPosNP.setState(IPS_BUSY);
-	FocusAbsPosNP.apply();
+	// FocusAbsPosNP.setState(IPS_BUSY);
+	// FocusAbsPosNP.apply();
 
 	// m_Focuser.setFocuserBacklash(FocusBacklashNP[0].getValue());
 
