@@ -44,6 +44,15 @@ int PwmController::bcmPin(Channel channel) const
     return -1;
 }
 
+int PwmController::softPwmRange(Channel channel) const
+{
+    const auto it = m_Config.softPwmRanges.find(channel);
+    if (it == m_Config.softPwmRanges.end())
+        return 100;
+
+    return (it->second > 0) ? it->second : 100;
+}
+
 bool PwmController::connect()
 {
     if (m_Initialized)
@@ -74,7 +83,14 @@ bool PwmController::updateConfig(const Config& cfg)
     Config newConfig = m_Config;
 
     newConfig.defaultFrequencyHz = cfg.defaultFrequencyHz;
-    newConfig.softPwmRange = cfg.softPwmRange;
+
+    for (const auto& [channel, range] : cfg.softPwmRanges)
+    {
+        if (range <= 0)
+            return false;
+
+        newConfig.softPwmRanges[channel] = range;
+    }
 
     for (const auto& [channel, chCfg] : cfg.pi5Channels)
     {
@@ -229,9 +245,10 @@ bool PwmController::initializePi4()
     for (auto &it : m_ChannelStates)
     {
         const int pin = bcmPin(it.first);
+        const int range = softPwmRange(it.first);
 
         softPwmStop(pin);
-        if (softPwmCreate(pin, 0, m_Config.softPwmRange) != 0)
+        if (softPwmCreate(pin, 0, range) != 0)
             return false;
 
         it.second.frequencyHz = m_Config.defaultFrequencyHz;

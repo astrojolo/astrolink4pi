@@ -272,7 +272,7 @@ bool AstroLink4Pi::initProperties()
 	defineProperty(&RelayLabelsTP);
 	loadConfig();
 
-	IUFillNumber(&StepperCurrentN[0], "STEPPER_CURRENT", "mA", "%0.0f", 200, 2000, 50, 400);
+	IUFillNumber(&StepperCurrentN[0], "STEPPER_CURRENT", "mA", "%0.0f", 200, 2000, 100, 400);
 	IUFillNumberVector(&StepperCurrentNP, StepperCurrentN, 1, getDeviceName(), "STEPPER_CURRENT", "Stepper current", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
 	IUFillSwitch(&Switch1S[S1_ON], "S1_ON", "ON", ISS_OFF);

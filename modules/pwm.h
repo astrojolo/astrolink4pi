@@ -50,7 +50,12 @@ public:
     struct Config
     {
         uint32_t defaultFrequencyHz = 1000;
-        int softPwmRange = 100;
+        std::map<Channel, int> softPwmRanges = {
+            {Channel::P1, 100},
+            {Channel::P2, 100},
+            {Channel::FAN, 10},
+            {Channel::MOT, 10}
+        };
 
         std::map<Channel, Pi5ChannelConfig> pi5Channels;
     };
@@ -120,6 +125,8 @@ private:
     uint64_t frequencyToPeriodNs(uint32_t frequencyHz) const;
     void applyCachedStatePi4(Channel channel);
     bool applyCachedStatePi5(Channel channel);
+
+    int softPwmRange(Channel channel) const;
 
 private:
     BoardIO &m_BoardIO;
