@@ -93,7 +93,6 @@ protected:
 private:
 	virtual bool Connect();
 	virtual bool Disconnect();
-	virtual int savePosition(int pos);
 	virtual bool readSHT(int mode);
 	virtual bool readMLX();
 	virtual bool readSQM(bool triggerOldSensor);

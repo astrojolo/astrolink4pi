@@ -5,6 +5,8 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <chrono>
+#include <filesystem>
 
 #include "basecomponent.h"
 #include "boardio.h"
@@ -99,6 +101,10 @@ private:
 
     static int clampInt(int value, int minValue, int maxValue);
 
+    bool loadSavedPosition();
+    void savePositionAtomic(int32_t position);
+    void savePositionIfNeeded(int32_t position, bool force = false);    
+
 private:
     BoardIO &m_BoardIO;
     PwmController &m_PwmController;
@@ -110,4 +116,11 @@ private:
     std::atomic<bool> m_Abort{false};
 
     int m_Revision = 0;
+
+    std::string m_PositionFile = "/var/lib/astrolink/focuser_position.txt";
+    std::mutex m_PositionSaveMutex;
+    int32_t m_LastSavedPosition = 0;
+    std::chrono::steady_clock::time_point m_LastSaveTime = std::chrono::steady_clock::now();
+
+J    
 };

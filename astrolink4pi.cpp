@@ -146,7 +146,7 @@ bool AstroLink4Pi::Connect()
 	IDSetText(&SysInfoTP, NULL);
 
 	// read last position from file & convert from MAX_RESOLUTION to current resolution
-	// FocusAbsPosNP[0].setValue(savePosition(-1) != -1 ? (int)savePosition(-1) * resolution / MAX_RESOLUTION : 0);
+	FocusAbsPosNP[0].setValue(m_Focuser.getState().currentPosition);
 
 	getFocuserInfo();
 
@@ -841,8 +841,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 		return IPS_OK;
 	}
 
-
-	m_Focuser.setFocuserBacklash(FocusBacklashNP[0].getValue());
+	// m_Focuser.setFocuserBacklash(FocusBacklashNP[0].getValue());
 	m_Focuser.setStepDelayUs(FocusStepDelayN[0].value);
 	m_Focuser.setTemperatureCoefficient(TemperatureCoefN[0].value);
 	m_Focuser.setCurrent(static_cast<int>(StepperCurrentN[0].value));
@@ -863,67 +862,6 @@ bool AstroLink4Pi::ReverseFocuser(bool enabled)
 	return true;
 }
 
-int AstroLink4Pi::savePosition(int pos)
-{
-	FILE *pFile;
-	char posFileName[MAXRBUF];
-	char buf[100];
-
-	const char *indi_cfg = getenv("INDICONFIG");
-	if (indi_cfg)
-	{
-		snprintf(posFileName, MAXRBUF, "%s.position", indi_cfg);
-	}
-	else
-	{
-		const char *home = getenv("HOME");
-		if (!home)
-		{
-			DEBUG(INDI::Logger::DBG_ERROR, "Neither INDICONFIG nor HOME env set.");
-		}
-		snprintf(posFileName, MAXRBUF, "%s/.indi/%s.position", home, getDeviceName());
-	}
-
-	if (pos == -1)
-	{
-		pFile = fopen(posFileName, "r");
-		if (pFile == NULL)
-		{
-			DEBUGF(INDI::Logger::DBG_ERROR, "Failed to open file %s.", posFileName);
-			return -1;
-		}
-
-		if (fgets(buf, sizeof(buf), pFile) == NULL)
-		{
-			DEBUGF(INDI::Logger::DBG_ERROR, "Failed to read file %s.", posFileName);
-			fclose(pFile);
-			return -1;
-		}
-		else
-		{
-			pos = atoi(buf);
-			DEBUGF(INDI::Logger::DBG_DEBUG, "Reading position %d from %s.", pos, posFileName);
-		}
-	}
-	else
-	{
-		pFile = fopen(posFileName, "w");
-		if (pFile == NULL)
-		{
-			DEBUGF(INDI::Logger::DBG_ERROR, "Failed to open file %s.", posFileName);
-			return -1;
-		}
-
-		sprintf(buf, "%d", pos);
-		fputs(buf, pFile);
-		DEBUGF(INDI::Logger::DBG_DEBUG, "Writing position %s to %s.", buf, posFileName);
-	}
-
-	fclose(pFile);
-
-	return pos;
-}
-
 bool AstroLink4Pi::SyncFocuser(uint32_t ticks)
 {
 	// FocusAbsPosNP[0].setValue(ticks);
@@ -938,6 +876,7 @@ bool AstroLink4Pi::SyncFocuser(uint32_t ticks)
 
 bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
 {
+	m_Focuser.setFocuserBacklash(steps);
 	DEBUGF(INDI::Logger::DBG_SESSION, "Backlash set to %i steps", steps);
 	return true;
 }

@@ -4,6 +4,11 @@
 #include <cerrno>
 #include <chrono>
 #include <cstring>
+#include <fstream>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <filesystem>
 
 #include <unistd.h>
 #include <wiringPi.h>
@@ -12,6 +17,9 @@ namespace
 {
     constexpr int MAX_DRIVER_CURRENT_MA = 2000;
     constexpr int MIN_DRIVER_CURRENT_MA = 0;
+
+    constexpr int POSITION_SAVE_MIN_DELTA = 10;
+    constexpr std::chrono::seconds POSITION_SAVE_INTERVAL{10};    
 }
 
 Focuser::Focuser(const Config &config, BoardIO &boardIO, PwmController &pwmController, const std::string &deviceName)
@@ -21,6 +29,7 @@ Focuser::Focuser(const Config &config, BoardIO &boardIO, PwmController &pwmContr
     m_State.stepDelayUs = config.defaultStepDelayUs;
     m_State.currentmA = config.defaultCurrentmA;
     m_State.maxPosition = config.defaultMaxPosition;
+    m_LastSavedPosition = m_State.currentPosition;
 }
 
 Focuser::~Focuser()
@@ -49,12 +58,12 @@ bool Focuser::open()
     }
 
     setCurrent(true);
+    loadSavedPosition();
 
     {
         std::lock_guard<std::mutex> lock(m_StateMutex);
         m_State.connected = true;
-        m_State.moving = false;
-          
+        m_State.moving = false;          
     }
 
     return true;
@@ -134,7 +143,6 @@ bool Focuser::moveAbsFocuser(uint32_t targetTicks)
 
     {
         std::lock_guard<std::mutex> lock(m_StateMutex);
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Last dir %d dir %d back %d bakcrem %d", m_State.lastDirection, direction, m_State.backlashSteps, backlashTicksRemaining);
         if (m_State.lastDirection != 0 &&
             direction != m_State.lastDirection &&
             m_State.backlashSteps > 0)
@@ -222,9 +230,16 @@ bool Focuser::reverseFocuser(bool enabled)
 
 bool Focuser::syncFocuser(uint32_t ticks)
 {
-    std::lock_guard<std::mutex> lock(m_StateMutex);
-    m_State.currentPosition = clampInt(static_cast<int>(ticks), 0, m_State.maxPosition);
-    m_State.targetPosition = m_State.currentPosition;
+    int32_t syncedPosition = 0;
+
+    {
+        std::lock_guard lock(m_StateMutex);
+        m_State.currentPosition = clampInt(static_cast<int>(ticks), 0, m_State.maxPosition);
+        m_State.targetPosition = m_State.currentPosition;
+        syncedPosition = m_State.currentPosition;
+    }
+
+    savePositionIfNeeded(syncedPosition, true);
     return true;
 }
 
@@ -440,7 +455,7 @@ Focuser::State Focuser::getState() const
 std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backlashTicksRemaining)
 {
     return std::thread([this, targetPos, direction, backlashTicksRemaining]()
-                       {
+    {
         int motorDirection = direction;
         int backlashRemaining = backlashTicksRemaining;
 
@@ -471,6 +486,7 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
             delayMicroseconds(10);
             m_BoardIO.write(STP_PIN, LOW);
 
+            int32_t updatedPosition = currentPos;
             {
                 std::lock_guard<std::mutex> lock(m_StateMutex);
 
@@ -478,17 +494,125 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
                     m_State.currentPosition += motorDirection;
                 else
                     --backlashRemaining;
+
+                updatedPosition = m_State.currentPosition;
             }
+            if (backlashRemaining <= 0)
+                savePositionIfNeeded(updatedPosition, false);            
 
             delayMicroseconds(stepDelayUs);
         }
 
+        int32_t finalPosition = 0;
         {
             std::lock_guard<std::mutex> lock(m_StateMutex);
             m_State.moving = false;      
             m_State.targetPosition = m_State.currentPosition;
+            finalPosition = m_State.currentPosition;
         }
-        setCurrent(true); });
+        savePositionIfNeeded(finalPosition, true);
+        setCurrent(true); 
+    });
+}
+
+bool Focuser::loadSavedPosition()
+{
+    std::ifstream in(m_PositionFile);
+    if (!in)
+    {
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,
+                     "Saved focuser position file not found: %s", m_PositionFile.c_str());
+        return false;
+    }
+
+    int32_t loadedPosition = 0;
+    in >> loadedPosition;
+
+    if (!in)
+    {
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                     "Invalid focuser position file: %s", m_PositionFile.c_str());
+        return false;
+    }
+
+    {
+        std::lock_guard lock(m_StateMutex);
+        loadedPosition = clampInt(loadedPosition, 0, m_State.maxPosition);
+        m_State.currentPosition = loadedPosition;
+        m_State.targetPosition = loadedPosition;
+    }
+
+    m_LastSavedPosition = loadedPosition;
+    m_LastSaveTime = std::chrono::steady_clock::now();
+
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,
+                 "Loaded saved focuser position: %d", loadedPosition);
+
+    return true;
+}
+
+void Focuser::savePositionAtomic(int32_t position)
+{
+    std::lock_guard<std::mutex> lock(m_PositionSaveMutex);
+
+    try
+    {
+        const std::filesystem::path finalPath(m_PositionFile);
+        const std::filesystem::path tmpPath = finalPath.string() + ".tmp";
+
+        if (finalPath.has_parent_path())
+            std::filesystem::create_directories(finalPath.parent_path());
+
+        {
+            std::ofstream out(tmpPath, std::ios::trunc);
+            if (!out)
+            {
+                DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                             "Cannot open temp focuser position file: %s", tmpPath.c_str());
+                return;
+            }
+
+            out << position << '\n';
+            out.flush();
+
+            if (!out)
+            {
+                DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                             "Cannot write focuser position to temp file: %s", tmpPath.c_str());
+                return;
+            }
+        }
+
+        std::filesystem::rename(tmpPath, finalPath);
+
+        m_LastSavedPosition = position;
+        m_LastSaveTime = std::chrono::steady_clock::now();
+
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,
+                     "Saved focuser position: %d", position);
+    }
+    catch (const std::exception &e)
+    {
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                     "Failed to save focuser position: %s", e.what());
+    }
+}
+
+void Focuser::savePositionIfNeeded(int32_t position, bool force)
+{
+    const auto now = std::chrono::steady_clock::now();
+    const auto elapsed = now - m_LastSaveTime;
+
+    if (!force)
+    {
+        if (std::abs(position - m_LastSavedPosition) < POSITION_SAVE_MIN_DELTA)
+            return;
+
+        if (elapsed < POSITION_SAVE_INTERVAL)
+            return;
+    }
+
+    savePositionAtomic(position);
 }
 
 int Focuser::clampInt(int value, int minValue, int maxValue)
