@@ -230,6 +230,7 @@ bool PwmController::initializePi4()
     {
         const int pin = bcmPin(it.first);
 
+        softPwmStop(pin);
         if (softPwmCreate(pin, 0, m_Config.softPwmRange) != 0)
             return false;
 
