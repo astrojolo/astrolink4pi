@@ -841,12 +841,8 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 		return IPS_OK;
 	}
 
-	// set focuser busy
-	// FocusAbsPosNP.setState(IPS_BUSY);
-	// FocusAbsPosNP.apply();
 
-	// m_Focuser.setFocuserBacklash(FocusBacklashNP[0].getValue());
-
+	m_Focuser.setFocuserBacklash(FocusBacklashNP[0].getValue());
 	m_Focuser.setStepDelayUs(FocusStepDelayN[0].value);
 	m_Focuser.setTemperatureCoefficient(TemperatureCoefN[0].value);
 	m_Focuser.setCurrent(static_cast<int>(StepperCurrentN[0].value));
@@ -995,8 +991,9 @@ void AstroLink4Pi::focuserUpdate()
 	auto state = m_Focuser.getState();
 	FocusAbsPosNP[0].setValue(state.currentPosition);
 	FocusAbsPosNP.setState(state.moving ? IPS_BUSY : IPS_OK);
-	// DEBUGF(INDI::Logger::DBG_SESSION, "Pos %d moving %d", state.currentPosition, state.moving);
 	FocusAbsPosNP.apply();
+	FocusRelPosNP.setState(state.moving ? IPS_BUSY : IPS_OK);
+	FocusRelPosNP.apply();	
 }
 
 void AstroLink4Pi::systemUpdate()
