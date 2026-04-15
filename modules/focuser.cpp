@@ -54,7 +54,7 @@ bool Focuser::open()
         std::lock_guard<std::mutex> lock(m_StateMutex);
         m_State.connected = true;
         m_State.moving = false;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Moving false %d", 2);            
+          
     }
 
     return true;
@@ -66,8 +66,7 @@ void Focuser::close()
 
     std::lock_guard<std::mutex> lock(m_StateMutex);
     m_State.connected = false;
-    m_State.moving = false;
-    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Moving false %d", 3);            
+    m_State.moving = false;        
 }
 
 bool Focuser::isOpen() const
@@ -85,8 +84,7 @@ bool Focuser::abortFocuser()
 
     {
         std::lock_guard<std::mutex> lock(m_StateMutex);
-        m_State.moving = false;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Moving false %d", 4);            
+        m_State.moving = false;        
         m_State.targetPosition = m_State.currentPosition;
     }
 
@@ -145,8 +143,7 @@ bool Focuser::moveAbsFocuser(uint32_t targetTicks)
 
         m_State.targetPosition = static_cast<int32_t>(targetTicks);
         m_State.lastDirection = direction;
-        m_State.moving = true;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Moving false %d", 5);            
+        m_State.moving = true;        
     }
 
     if (m_MotionThread.joinable())
@@ -419,7 +416,7 @@ void Focuser::setCurrent(bool standby)
 int Focuser::getMotorPWM(int currentmA) const
 {
     // 100 = 1.03V = 2.06A, 1 = 20mA
-    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Current %d", currentmA);
+    // DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Current %d", currentmA);
     return clampInt((currentmA / 20), 0, 100);
 }
 
@@ -457,6 +454,7 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
                 reverse = m_State.reverse;
                 stepDelayUs = m_State.stepDelayUs;
                 currentPos = m_State.currentPosition;
+                m_State.moving = true; 
             }
 
             if (currentPos == static_cast<int32_t>(targetPos))
@@ -486,8 +484,7 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
 
         {
             std::lock_guard<std::mutex> lock(m_StateMutex);
-            m_State.moving = false;
-            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Moving false %d", 1);            
+            m_State.moving = false;      
             m_State.targetPosition = m_State.currentPosition;
         }
         setCurrent(true); });
