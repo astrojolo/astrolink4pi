@@ -517,11 +517,11 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
 
 bool Focuser::loadSavedPosition()
 {
-    std::ifstream in(m_PositionFile);
+    std::ifstream in(getSafePositionPath());
     if (!in)
     {
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,
-                     "Saved focuser position file not found: %s", m_PositionFile.c_str());
+                     "Saved focuser position file not found: %s", getSafePositionPath().c_str());
         return false;
     }
 
@@ -531,7 +531,7 @@ bool Focuser::loadSavedPosition()
     if (!in)
     {
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-                     "Invalid focuser position file: %s", m_PositionFile.c_str());
+                     "Invalid focuser position file: %s", getSafePositionPath().c_str());
         return false;
     }
 
@@ -557,7 +557,7 @@ void Focuser::savePositionAtomic(int32_t position)
 
     try
     {
-        const std::filesystem::path finalPath(m_PositionFile);
+        const std::filesystem::path finalPath(getSafePositionPath());
         const std::filesystem::path tmpPath = finalPath.string() + ".tmp";
 
         if (finalPath.has_parent_path())
@@ -613,6 +613,17 @@ void Focuser::savePositionIfNeeded(int32_t position, bool force)
     }
 
     savePositionAtomic(position);
+}
+
+std::string Focuser::getSafePositionPath()
+{
+    const char* home = std::getenv("HOME");
+
+    if (home)
+        return std::string(home) + "/.local/share/astrolink/focuser_position.txt";
+
+    // fallback (np. daemon bez HOME)
+    return "/tmp/astrolink_focuser_position.txt";
 }
 
 int Focuser::clampInt(int value, int minValue, int maxValue)
