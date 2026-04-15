@@ -829,9 +829,8 @@ bool AstroLink4Pi::AbortFocuser()
 
 IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
 {
-	// uint32_t targetTicks = FocusAbsPosNP[0].getValue() + ((int32_t)ticks * (dir == FOCUS_INWARD ? -1 : 1));
-	// return MoveAbsFocuser(targetTicks);
-	return IPS_OK;
+	uint32_t targetTicks = FocusAbsPosNP[0].getValue() + ((int32_t)ticks * (dir == FOCUS_INWARD ? -1 : 1));
+	return MoveAbsFocuser(targetTicks);
 }
 
 IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
