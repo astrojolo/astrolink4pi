@@ -104,6 +104,7 @@ private:
     bool loadSavedPosition();
     void savePositionAtomic(int32_t position);
     void savePositionIfNeeded(int32_t position, bool force = false);    
+    std::string getSafePositionPath();
 
 private:
     BoardIO &m_BoardIO;
