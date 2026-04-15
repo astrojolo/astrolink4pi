@@ -996,6 +996,7 @@ void AstroLink4Pi::focuserUpdate()
 	auto state = m_Focuser.getState();
 	FocusAbsPosNP[0].setValue(state.currentPosition);
 	FocusAbsPosNP.setState(state.moving ? IPS_BUSY : IPS_OK);
+	DEBUGF(INDI::Logger::DBG_SESSION, "Pos %d moving %d", state.currentPosition, state.moving);
 	FocusAbsPosNP.apply();
 }
 
