@@ -847,8 +847,6 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 	m_Focuser.setTemperatureCoefficient(TemperatureCoefN[0].value);
 	m_Focuser.setCurrent(static_cast<int>(StepperCurrentN[0].value));
 	m_Focuser.setCurrent(false);
-	m_Focuser.moveAbsFocuser(targetTicks);
-
 	return (m_Focuser.moveAbsFocuser(targetTicks) ? IPS_BUSY : IPS_ALERT);
 }
 
