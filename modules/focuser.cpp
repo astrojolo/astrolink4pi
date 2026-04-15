@@ -54,6 +54,7 @@ bool Focuser::open()
         std::lock_guard<std::mutex> lock(m_StateMutex);
         m_State.connected = true;
         m_State.moving = false;
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Moving false %d", 2);            
     }
 
     return true;
@@ -66,6 +67,7 @@ void Focuser::close()
     std::lock_guard<std::mutex> lock(m_StateMutex);
     m_State.connected = false;
     m_State.moving = false;
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Moving false %d", 3);            
 }
 
 bool Focuser::isOpen() const
@@ -84,6 +86,7 @@ bool Focuser::abortFocuser()
     {
         std::lock_guard<std::mutex> lock(m_StateMutex);
         m_State.moving = false;
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Moving false %d", 4);            
         m_State.targetPosition = m_State.currentPosition;
     }
 
@@ -143,6 +146,7 @@ bool Focuser::moveAbsFocuser(uint32_t targetTicks)
         m_State.targetPosition = static_cast<int32_t>(targetTicks);
         m_State.lastDirection = direction;
         m_State.moving = true;
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Moving false %d", 5);            
     }
 
     if (m_MotionThread.joinable())
@@ -483,6 +487,7 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
         {
             std::lock_guard<std::mutex> lock(m_StateMutex);
             m_State.moving = false;
+            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Moving false %d", 1);            
             m_State.targetPosition = m_State.currentPosition;
         }
         setCurrent(true); });
