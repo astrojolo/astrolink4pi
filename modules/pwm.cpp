@@ -293,6 +293,7 @@ void PwmController::applyCachedStatePi4(Channel channel)
 {
     const auto &state = m_ChannelStates[channel];
     const int pin = bcmPin(channel);
+    const int range = softPwmRange(channel);
 
     if (!state.enabled)
     {
@@ -300,7 +301,7 @@ void PwmController::applyCachedStatePi4(Channel channel)
         return;
     }
 
-    const int value = static_cast<int>((state.dutyPercent / 100.0) * m_Config.softPwmRange + 0.5);
+    const int value = static_cast<int>((state.dutyPercent / 100.0) * range + 0.5);
     softPwmWrite(pin, value);
 }
 
