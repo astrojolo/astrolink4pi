@@ -418,8 +418,7 @@ int Focuser::getMotorPWM(int currentmA) const
 {
     // 100 = 1.03V = 2.06A, 1 = 20mA
     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Current %d", currentmA);
-    // return clampInt((currentmA / 20), 0, 100);
-    return clampInt((currentmA / 200), 0, 10);
+    return clampInt((currentmA / 20), 0, 100);
 }
 
 bool Focuser::setStepDelayUs(int stepDelayUs)
