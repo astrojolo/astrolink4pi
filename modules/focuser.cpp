@@ -140,6 +140,7 @@ bool Focuser::moveAbsFocuser(uint32_t targetTicks)
         {
             backlashTicksRemaining = m_State.backlashSteps;
         }
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Last dir %d dir %d back %d bakcrem %", m_State.lastDirection, direction, m_State.backlashSteps, backlashTicksRemaining);
 
         m_State.targetPosition = static_cast<int32_t>(targetTicks);
         m_State.lastDirection = direction;
