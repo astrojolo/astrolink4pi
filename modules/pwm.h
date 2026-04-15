@@ -53,8 +53,8 @@ public:
         std::map<Channel, int> softPwmRanges = {
             {Channel::P1, 100},
             {Channel::P2, 100},
-            {Channel::FAN, 10},
-            {Channel::MOT, 10}
+            {Channel::FAN, 20},
+            {Channel::MOT, 20}
         };
 
         std::map<Channel, Pi5ChannelConfig> pi5Channels;
