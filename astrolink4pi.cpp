@@ -649,7 +649,7 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 
 			FocusResolutionSP.s = IPS_OK;
 			IDSetSwitch(&FocusResolutionSP, nullptr);
-			DEBUGF(INDI::Logger::DBG_SESSION, "Resolution set to 1 / %d.", res);
+			DEBUGF(INDI::Logger::DBG_SESSION, "Resolution set to 1 / %d.", resolution);
 			return true;
 		}
 
