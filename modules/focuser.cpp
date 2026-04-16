@@ -333,6 +333,9 @@ bool Focuser::temperatureCompensation()
     if (correctionSteps == 0)
         return true;
 
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,
+                    "Temperature compensation applied %d steps", correctionSteps);        
+
     return moveRelFocuser(correctionSteps);
 }
 
