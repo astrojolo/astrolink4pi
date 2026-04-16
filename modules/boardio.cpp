@@ -187,12 +187,12 @@ std::string BoardIO::readFile(const std::string &path) const
 
 int BoardIO::setDacRun(int value)
 {
-	setDac(m_Config.dacChannelRun, value);
+	return setDac(m_Config.dacChannelRun, value);
 }
 
 int BoardIO::setDacHold(int value)
 {
-	setDac(m_Config.dacChannelHold, value);
+	return setDac(m_Config.dacChannelHold, value);
 }
 
 int BoardIO::setDac(int chan, int value)
