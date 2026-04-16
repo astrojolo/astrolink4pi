@@ -109,17 +109,17 @@ bool AstroLink4Pi::Connect()
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize MLX sensor.");
 		return false;
-	}	
+	}
 	if (!m_TSLReader.open())
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize TSL sensor.");
 		return false;
-	}	
+	}
 	if (!m_Focuser.open())
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize Focuser module.");
 		return false;
-	}	
+	}
 	m_Focuser.setRevision(m_BoardIO.revision());
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi %d, RPi version %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
@@ -151,7 +151,6 @@ bool AstroLink4Pi::Connect()
 	getFocuserInfo();
 
 	SetTimer(POLL_PERIOD);
-	// setCurrent(true);
 
 	DEBUG(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi connected successfully.");
 
@@ -619,80 +618,33 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			IUUpdateSwitch(&FocusHoldSP, states, names, n);
 			FocusHoldSP.s = IPS_OK;
 			IDSetSwitch(&FocusHoldSP, nullptr);
-			// setCurrent(true);
 			return true;
 		}
 
 		// handle focus resolution
 		if (!strcmp(name, FocusResolutionSP.name))
 		{
-			// int last_resolution = resolution;
-
+			int resolution = 1;
 			IUUpdateSwitch(&FocusResolutionSP, states, names, n);
 
-			// // Resolution 1/1
-			// if (FocusResolutionS[RES_1].s == ISS_ON)
-			// 	resolution = 1;
+			if (FocusResolutionS[RES_1].s == ISS_ON)
+				resolution = 1;
 
-			// // Resolution 1/2
-			// if (FocusResolutionS[RES_2].s == ISS_ON)
-			// 	resolution = 2;
+			if (FocusResolutionS[RES_2].s == ISS_ON)
+				resolution = 2;
 
-			// // Resolution 1/4
-			// if (FocusResolutionS[RES_4].s == ISS_ON)
-			// 	resolution = 4;
+			if (FocusResolutionS[RES_4].s == ISS_ON)
+				resolution = 4;
 
-			// // Resolution 1/8
-			// if (FocusResolutionS[RES_8].s == ISS_ON)
-			// 	resolution = 8;
+			if (FocusResolutionS[RES_8].s == ISS_ON)
+				resolution = 8;
 
-			// // Resolution 1/16
-			// if (FocusResolutionS[RES_16].s == ISS_ON)
-			// 	resolution = 16;
+			if (FocusResolutionS[RES_16].s == ISS_ON)
+				resolution = 16;
 
-			// // Resolution 1/32
-			// if (FocusResolutionS[RES_32].s == ISS_ON)
-			// 	resolution = 32;
-
-			// Adjust position to a step in lower resolution
-			// int position_adjustment = last_resolution * (FocusAbsPosNP[0].getValue() / last_resolution - (int)FocusAbsPosNP[0].getValue() / last_resolution);
-			// if (resolution < last_resolution && position_adjustment > 0)
-			// {
-			// 	if ((float)position_adjustment / last_resolution < 0.5)
-			// 	{
-			// 		position_adjustment *= -1;
-			// 	}
-			// 	else
-			// 	{
-			// 		position_adjustment = last_resolution - position_adjustment;
-			// 	}
-			// 	DEBUGF(INDI::Logger::DBG_SESSION, "Focuser position adjusted by %d steps at 1/%d resolution to sync with 1/%d resolution.", position_adjustment, last_resolution, resolution);
-			// 	MoveAbsFocuser(FocusAbsPosNP[0].getValue() + position_adjustment);
-			// }
-
-			// m_Focuser.setResolution(resolution);
-
-			// // update values based on resolution
-			// FocusRelPosNP[0].setMin((int)FocusRelPosNP[0].getMin() * resolution / last_resolution);
-			// FocusRelPosNP[0].setMax((int)FocusRelPosNP[0].getMax() * resolution / last_resolution);
-			// FocusRelPosNP[0].setStep((int)FocusRelPosNP[0].getStep() * resolution / last_resolution);
-			// FocusRelPosNP[0].setValue((int)FocusRelPosNP[0].getValue() * resolution / last_resolution);
-			// FocusRelPosNP.apply();
-			// FocusRelPosNP.updateMinMax();
-
-			// FocusAbsPosNP[0].setMax((int)FocusAbsPosNP[0].getMax() * resolution / last_resolution);
-			// FocusAbsPosNP[0].setStep((int)FocusAbsPosNP[0].getStep() * resolution / last_resolution);
-			// FocusAbsPosNP[0].setValue((int)FocusAbsPosNP[0].getValue() * resolution / last_resolution);
-			// FocusAbsPosNP.apply();
-			// FocusAbsPosNP.updateMinMax();
-
-			// FocusMaxPosNP[0].setMin((int)FocusMaxPosNP[0].getMin() * resolution / last_resolution);
-			// FocusMaxPosNP[0].setMax((int)FocusMaxPosNP[0].getMax() * resolution / last_resolution);
-			// FocusMaxPosNP[0].setStep((int)FocusMaxPosNP[0].getStep() * resolution / last_resolution);
-			// FocusMaxPosNP[0].setValue((int)FocusMaxPosNP[0].getValue() * resolution / last_resolution);
-			FocusMaxPosNP.apply();
-			FocusMaxPosNP.updateMinMax();
-
+			if (FocusResolutionS[RES_32].s == ISS_ON)
+				resolution = 32;
+			m_Focuser.setResolution(resolution);
 			getFocuserInfo();
 
 			FocusResolutionSP.s = IPS_OK;
@@ -764,28 +716,6 @@ void AstroLink4Pi::TimerHit()
 		return;
 
 	uint64_t timeMillis = m_SystemInfo.millis();
-	// SQMavailable = readSQM(nextTemperatureRead < timeMillis);
-
-	// if (nextTemperatureRead < timeMillis)
-	// {
-	// 	if (m_BoardIO.revision() == 1 || m_BoardIO.revision() == 2)
-	// 	{
-	// 		DSavailable = readDS18B20();
-	// 	}
-	// 	else
-	// 	{
-	// 		SHTavailable = readSHT();
-	// 		MLXavailable = readMLX();
-	// 	}
-
-	// 	nextTemperatureRead = timeMillis + TEMPERATURE_UPDATE_TIMEOUT;
-
-
-	// if (nextTemperatureCompensation < timeMillis)
-	// {
-	// 	temperatureCompensation();
-	// 	nextTemperatureCompensation = timeMillis + TEMPERATURE_COMPENSATION_TIMEOUT;
-	// }
 	readSQM(nextSystemRead < timeMillis);
 	readPower();
 	focuserUpdate();
@@ -807,25 +737,24 @@ void AstroLink4Pi::TimerHit()
 			break;
 		case SensorCycle::SYS:
 			systemUpdate();
-			break;	
+			break;
 		case SensorCycle::FAN:
 			fanUpdate();
-			break;		
+			break;
 		case SensorCycle::COMP:
-			if(FocusTemperatureNP.s == IPS_OK)
+			if (FocusTemperatureNP.s == IPS_OK)
 			{
 				m_Focuser.setTemperature(FocusTemperatureN[0].value);
 				m_Focuser.temperatureCompensation();
-			}		
+			}
 			break;
 		default:
 			break;
 		}
 		nextSystemRead = timeMillis + SENSOR_READ_PERIOD;
 
-		if(FocusTemperatureNP.s == IPS_OK)
+		if (FocusTemperatureNP.s == IPS_OK)
 		{
-
 		}
 	}
 
@@ -850,7 +779,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 		DEBUG(INDI::Logger::DBG_SESSION, "Already at the requested position.");
 		return IPS_OK;
 	}
-	
+
 	m_Focuser.setCurrent(false);
 	return (m_Focuser.moveAbsFocuser(targetTicks) ? IPS_BUSY : IPS_ALERT);
 }
@@ -870,7 +799,7 @@ bool AstroLink4Pi::ReverseFocuser(bool enabled)
 
 bool AstroLink4Pi::SyncFocuser(uint32_t ticks)
 {
-	if(m_Focuser.syncFocuser(ticks))
+	if (m_Focuser.syncFocuser(ticks))
 	{
 		FocusAbsPosNP[0].setValue(ticks);
 		FocusAbsPosNP.apply();
@@ -940,7 +869,7 @@ void AstroLink4Pi::focuserUpdate()
 	FocusAbsPosNP.setState(state.moving ? IPS_BUSY : IPS_OK);
 	FocusAbsPosNP.apply();
 	FocusRelPosNP.setState(state.moving ? IPS_BUSY : IPS_OK);
-	FocusRelPosNP.apply();	
+	FocusRelPosNP.apply();
 }
 
 void AstroLink4Pi::systemUpdate()
@@ -1020,10 +949,10 @@ void AstroLink4Pi::getFocuserInfo()
 
 void AstroLink4Pi::fanUpdate()
 {
-	const char* txt = SysInfoT[SYSI_CPUTEMP].text;
+	const char *txt = SysInfoT[SYSI_CPUTEMP].text;
 
 	FanPowerNP.s = IPS_BUSY;
-	if (txt && *txt)  // != nullptr i nie pusty string
+	if (txt && *txt) // != nullptr i nie pusty string
 	{
 		int temp = 0;
 		int cycle = 0;
@@ -1045,11 +974,11 @@ void AstroLink4Pi::fanUpdate()
 			FanPowerN[0].value = fanPwr;
 			FanPowerNP.s = IPS_OK;
 		}
-		catch (const std::exception&)
+		catch (const std::exception &)
 		{
-			FanPowerNP.s = IPS_ALERT;		
+			FanPowerNP.s = IPS_ALERT;
 		}
-	}	
+	}
 	IDSetNumber(&FanPowerNP, nullptr);
 }
 

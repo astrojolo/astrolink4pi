@@ -57,7 +57,6 @@ bool Focuser::open()
         return false;
     }
 
-    setCurrent(true);
     loadSavedPosition();
 
     {
