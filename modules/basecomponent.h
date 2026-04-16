@@ -23,6 +23,11 @@ protected:
         return m_DeviceName + ":" + m_ComponentName;
     }
 
+    static int clampInt(int value, int minValue, int maxValue)
+    {
+        return std::max(minValue, std::min(value, maxValue));
+    }    
+
 private:
     std::string m_DeviceName;
     std::string m_ComponentName;

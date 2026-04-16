@@ -636,7 +636,3 @@ std::string Focuser::getSafePositionPath()
     return "/tmp/astrolink_focuser_position.txt";
 }
 
-int Focuser::clampInt(int value, int minValue, int maxValue)
-{
-    return std::max(minValue, std::min(value, maxValue));
-}

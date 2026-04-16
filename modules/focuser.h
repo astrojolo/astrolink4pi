@@ -99,8 +99,6 @@ public:
 private:
     std::thread getMotorThread(uint32_t targetPos, int direction, int backlashTicksRemaining);
 
-    static int clampInt(int value, int minValue, int maxValue);
-
     bool loadSavedPosition();
     void savePositionAtomic(int32_t position);
     void savePositionIfNeeded(int32_t position, bool force = false);    
