@@ -2,18 +2,22 @@
 #define BOARDIO_H
 
 #include <string>
-#include <cstdint>
 
-#include <wiringPi.h>
-#include <wiringPiSPI.h>
 
 #include "basecomponent.h"
+
+/*
+TODO
+check revision
+check DAC values
+*/
 
 class BoardIO : public BaseComponent
 {
 public:
     static constexpr int RP4_GPIOCHIP = 4;
     static constexpr int RP5_GPIOCHIP = 5;
+    static constexpr int RP_UNKNOWN = 0;
     static constexpr int OUT1_PIN = 5; // pin 29
     static constexpr int OUT2_PIN = 6; // pin 31
 
@@ -35,8 +39,7 @@ public:
 
     int revision() const;
     int gpioChip() const;
-    int handle() const;
-
+  
     bool setOut1(int value);
     bool setOut2(int value);
 
@@ -44,7 +47,8 @@ public:
     int read(int gpio) const;
     void initializePin(int gpio, int mode, int value);
     int setDac(int chan, int value);
-    Config getConfig() const;
+    int setDacRun(int value);
+    int setDacHold(int value);
 
 private:
     int detectBoard();
@@ -56,7 +60,7 @@ private:
     int m_SpiFd = -1;
 
     int m_Revision = 0;
-    int m_GpioChip = RP4_GPIOCHIP;
+    int m_GpioChip = RP_UNKNOWN;
 };
 
 #endif

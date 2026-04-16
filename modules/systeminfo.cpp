@@ -45,11 +45,6 @@ std::string SystemInfoService::getLocalIP() const
     return trim(runCommand("hostname -I|awk -F' '  '{print $1}'|xargs"));
 }
 
-std::string SystemInfoService::getPublicIP() const
-{
-    return trim(runCommand("curl -s ifconfig.me"));
-}
-
 std::string SystemInfoService::getUptimeString() const
 {
     std::ifstream in("/proc/uptime");

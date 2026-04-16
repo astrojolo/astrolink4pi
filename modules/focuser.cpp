@@ -402,7 +402,7 @@ void Focuser::setCurrent(bool standby)
         }
         if (m_Revision > 1 && m_Revision < 4)
         {
-            m_BoardIO.setDac(m_BoardIO.getConfig().dacChannelRun, 255 * (holdPercent * requestedCurrent / 100) / 4096);
+            m_BoardIO.setDacRun(255 * (holdPercent * requestedCurrent / 100) / 4096);
         }
         if (m_Revision >= 4)
         {
@@ -429,7 +429,7 @@ void Focuser::setCurrent(bool standby)
         }
         if (m_Revision > 1 && m_Revision < 4)
         {
-            m_BoardIO.setDac(m_BoardIO.getConfig().dacChannelRun, 255 * requestedCurrent / 4096);
+            m_BoardIO.setDacRun(255 * requestedCurrent / 4096);
         }
         if (m_Revision >= 4)
         {

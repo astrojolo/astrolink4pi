@@ -3,6 +3,10 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <cstdint>
+
+#include <wiringPi.h>
+#include <wiringPiSPI.h>
 
 namespace
 {
@@ -49,6 +53,8 @@ bool BoardIO::connect()
 void BoardIO::disconnect()
 {
 	m_SpiFd = -1;
+	m_Revision = 0;
+	m_GpioChip = RP_UNKNOWN;
 }
 
 bool BoardIO::isConnected() const
@@ -64,11 +70,6 @@ int BoardIO::revision() const
 int BoardIO::gpioChip() const
 {
 	return m_GpioChip;
-}
-
-BoardIO::Config BoardIO::getConfig() const
-{
-	return m_Config;
 }
 
 void BoardIO::initializePin(int gpio, int mode, int value)
@@ -121,7 +122,7 @@ int BoardIO::detectBoard()
 	if (model.find("Raspberry Pi 4") != std::string::npos)
 		return RP4_GPIOCHIP;
 
-	return RP4_GPIOCHIP;
+	return RP_UNKNOWN;
 }
 
 int BoardIO::checkRevision()
@@ -135,18 +136,18 @@ int BoardIO::checkRevision()
 	// lgGpioClaimInput(handle, 0, MOTOR_PWM);	 // OLD CHK_PIN
 	// lgGpioClaimInput(handle, 0, MOTOR_PWM); // OLD CHK2_PIN
 
-	// setDac(1, 0);
+	// setDacHold(1, 0);
 	// if (lgGpioRead(handle, MOTOR_PWM) == 0)
 	// {
-	// 	setDac(1, 255);
+	// 	setDacHold(1, 255);
 	// 	if (lgGpioRead(handle, MOTOR_PWM) == 1)
 	// 		rev = 2;
 	// }
 
-	// setDac(1, 0);
+	// setDacHold(1, 0);
 	// if (lgGpioRead(handle, CHK_IN_PIN) == 0)
 	// {
-	// 	setDac(1, 255);
+	// 	setDacHold(1, 255);
 	// 	if (lgGpioRead(handle, CHK_IN_PIN) == 1)
 	// 		rev = 3;
 	// }
@@ -184,13 +185,23 @@ std::string BoardIO::readFile(const std::string &path) const
 	return ss.str();
 }
 
+int BoardIO::setDacRun(int value)
+{
+	setDac(m_Config.dacChannelRun, value);
+}
+
+int BoardIO::setDacHold(int value)
+{
+	setDac(m_Config.dacChannelHold, value);
+}
+
 int BoardIO::setDac(int chan, int value)
 {
 	if (m_SpiFd < 0)
 		return -1;
 
 	chan = (chan != 0) ? 1 : 0;
-	//value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
+	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
 
 	// MCP4922-style 16-bit frame:
 	// bit15 A/B, bit14 BUF=0, bit13 GA=1 (1x), bit12 SHDN=1, bits11..0 data

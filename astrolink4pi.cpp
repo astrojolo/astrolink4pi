@@ -52,6 +52,7 @@ void ISNewText(const char *dev, const char *name, char *texts[], char *names[], 
 
 void ISNewNumber(const char *dev, const char *name, double values[], char *names[], int num)
 {
+	ISInit();
 	astroLink4Pi->ISNewNumber(dev, name, values, names, num);
 }
 
@@ -137,10 +138,9 @@ bool AstroLink4Pi::Connect()
 	// update Hardware
 	// https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
 
-	IUSaveText(&SysInfoT[SYSI_HARDWARE], m_SystemInfo.getHostname().c_str());
-	IUSaveText(&SysInfoT[SYSI_HOST], m_SystemInfo.getModel().c_str());
+	IUSaveText(&SysInfoT[SYSI_HOST], m_SystemInfo.getHostname().c_str());
+	IUSaveText(&SysInfoT[SYSI_HARDWARE], m_SystemInfo.getModel().c_str());
 	IUSaveText(&SysInfoT[SYSI_LOCALIP], m_SystemInfo.getLocalIP().c_str());
-	IUSaveText(&SysInfoT[SYSI_PUBIP], m_SystemInfo.getPublicIP().c_str());
 
 	// Update client
 	IDSetText(&SysInfoTP, NULL);
@@ -251,8 +251,7 @@ bool AstroLink4Pi::initProperties()
 	IUFillText(&SysInfoT[SYSI_LOAD], "SYSI_LOAD", "Load (1 / 5 / 15 min.)", NULL);
 	IUFillText(&SysInfoT[SYSI_HOST], "SYSI_HOST", "Hostname", NULL);
 	IUFillText(&SysInfoT[SYSI_LOCALIP], "SYSI_LOCALIP", "Local IP", NULL);
-	IUFillText(&SysInfoT[SYSI_PUBIP], "SYSI_PUBIP", "Public IP", NULL);
-	IUFillTextVector(&SysInfoTP, SysInfoT, 7, getDeviceName(), "SYSTEM_INFO", "System Info", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);
+	IUFillTextVector(&SysInfoTP, SysInfoT, 6, getDeviceName(), "SYSTEM_INFO", "System Info", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);
 
 	IUFillNumber(&FanPowerN[0], "FAN_PWR", "Speed [%]", "%0.0f", 0, 100, 1, 33);
 	IUFillNumberVector(&FanPowerNP, FanPowerN, 1, getDeviceName(), "FAN_POWER", "Internal fan", SYSTEM_TAB, IP_RO, 60, IPS_IDLE);

@@ -20,10 +20,7 @@
 #ifndef ASTROLINK4PI_H
 #define ASTROLINK4PI_H
 
-#include <atomic>
 #include <cstdio>
-#include <mutex>
-#include <chrono>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -31,13 +28,7 @@
 #include <memory>
 #include <cmath>
 #include <ctime>
-#include <thread>
-#include <algorithm>
 #include <cstdint>
-#include <vector>
-#include <dirent.h>
-#include <fcntl.h>
-#include <unistd.h>
 
 #include "config.h"
 
@@ -223,8 +214,7 @@ private:
 		SYSI_UPTIME,
 		SYSI_LOAD,
 		SYSI_HOST,
-		SYSI_LOCALIP,
-		SYSI_PUBIP
+		SYSI_LOCALIP
 	};
 
 	IText RelayLabelsT[4];

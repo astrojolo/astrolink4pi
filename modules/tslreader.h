@@ -27,7 +27,6 @@ public:
     bool read(Readings &out);
 
     void setSQMOffset(double offset) { m_SQMOffset = offset; }
-    void setFilterCoeff(double coeff) { m_FilterCoeff = coeff; }
 
 private:
     enum class TSLState
