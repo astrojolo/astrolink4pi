@@ -119,6 +119,7 @@ private:
 		MLX,
 		SYS,
 		FAN,
+		COMP,
 		IDLE
 	};
 	inline SensorCycle next(SensorCycle c)

@@ -411,6 +411,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IDSetNumber(&FocusStepDelayNP, nullptr);
 			FocusStepDelayNP.s = IPS_OK;
 			IDSetNumber(&FocusStepDelayNP, nullptr);
+			m_Focuser.setStepDelayUs(FocusStepDelayN[0].value);
 			DEBUGF(INDI::Logger::DBG_SESSION, "Step delay set to %0.0f us.", FocusStepDelayN[0].value);
 			return true;
 		}
@@ -435,6 +436,7 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&TemperatureCoefNP, values, names, n);
 			TemperatureCoefNP.s = IPS_OK;
 			IDSetNumber(&TemperatureCoefNP, nullptr);
+			m_Focuser.setTemperatureCoefficient(TemperatureCoefN[0].value);
 			DEBUGF(INDI::Logger::DBG_SESSION, "Temperature coefficient set to %0.1f steps/°C", TemperatureCoefN[0].value);
 			return true;
 		}
@@ -491,8 +493,8 @@ bool AstroLink4Pi::ISNewNumber(const char *dev, const char *name, double values[
 			IUUpdateNumber(&StepperCurrentNP, values, names, n);
 			StepperCurrentNP.s = IPS_OK;
 			IDSetNumber(&StepperCurrentNP, nullptr);
+			m_Focuser.setCurrent(static_cast<int>(StepperCurrentN[0].value));
 			DEBUGF(INDI::Logger::DBG_SESSION, "Stepper current set to %0.0f mA", StepperCurrentN[0].value);
-			// setCurrent(true);
 			return true;
 		}
 
@@ -518,12 +520,14 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			if (TemperatureCompensateS[0].s == ISS_ON)
 			{
 				TemperatureCompensateSP.s = IPS_OK;
+				m_Focuser.setTemperatureCompensation(true);
 				DEBUG(INDI::Logger::DBG_SESSION, "Temperature compensation ENABLED.");
 			}
 
 			if (TemperatureCompensateS[1].s == ISS_ON)
 			{
 				TemperatureCompensateSP.s = IPS_IDLE;
+				m_Focuser.setTemperatureCompensation(false);
 				DEBUG(INDI::Logger::DBG_SESSION, "Temperature compensation DISABLED.");
 			}
 
@@ -807,17 +811,23 @@ void AstroLink4Pi::TimerHit()
 		case SensorCycle::FAN:
 			fanUpdate();
 			break;		
+		case SensorCycle::COMP:
+			if(FocusTemperatureNP.s == IPS_OK)
+			{
+				m_Focuser.setTemperature(FocusTemperatureN[0].value);
+				m_Focuser.temperatureCompensation();
+			}		
+			break;
 		default:
 			break;
 		}
 		nextSystemRead = timeMillis + SENSOR_READ_PERIOD;
+
+		if(FocusTemperatureNP.s == IPS_OK)
+		{
+
+		}
 	}
-
-	// IF NO TEMP AVAILABLE
-	// 		FocusTemperatureN[0].value = 0.0;
-	// 		FocusTemperatureNP.s = IPS_ALERT;
-	// 		IDSetNumber(&FocusTemperatureNP, nullptr);	
-
 
 	SetTimer(POLL_PERIOD);
 }
@@ -840,10 +850,7 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 		DEBUG(INDI::Logger::DBG_SESSION, "Already at the requested position.");
 		return IPS_OK;
 	}
-
-	m_Focuser.setStepDelayUs(FocusStepDelayN[0].value);
-	m_Focuser.setTemperatureCoefficient(TemperatureCoefN[0].value);
-	m_Focuser.setCurrent(static_cast<int>(StepperCurrentN[0].value));
+	
 	m_Focuser.setCurrent(false);
 	return (m_Focuser.moveAbsFocuser(targetTicks) ? IPS_BUSY : IPS_ALERT);
 }
@@ -1102,6 +1109,9 @@ bool AstroLink4Pi::readSHT(int mode)
 	SHTReader::Readings readings;
 	if (!m_SHTReader.read(readings, mode))
 	{
+		FocusTemperatureN[0].value = 0.0;
+		FocusTemperatureNP.s = IPS_ALERT;
+		IDSetNumber(&FocusTemperatureNP, nullptr);
 		return false;
 	}
 	setParameterValue("WEATHER_TEMPERATURE", readings.temperature);
