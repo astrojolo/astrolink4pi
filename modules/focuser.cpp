@@ -295,6 +295,12 @@ bool Focuser::temperatureCompensation()
 
     {
         std::lock_guard<std::mutex> lock(m_StateMutex);
+        const auto now = std::chrono::steady_clock::now();
+        if (now - m_LastTemperatureCompensationTime < COM_THRESHOLD_PERIOD)
+            return false;
+
+        m_LastTemperatureCompensationTime = now;
+
         enabled = m_State.temperatureCompEnabled;
         currentTemperature = m_State.focuserTemperature;
         previousTemperature = m_State.lastCompTemperature;
@@ -315,6 +321,8 @@ bool Focuser::temperatureCompensation()
     }
 
     const double delta = currentTemperature - previousTemperature;
+    if (std::abs(delta) < COMP_THRESHOLD_DELTA) return true;
+
     const int correctionSteps = static_cast<int>(delta * coefficient);
 
     {

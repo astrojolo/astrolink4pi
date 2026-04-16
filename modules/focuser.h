@@ -106,14 +106,19 @@ private:
     void savePositionIfNeeded(int32_t position, bool force = false);    
     std::string getSafePositionPath();
 
-private:
     BoardIO &m_BoardIO;
     PwmController &m_PwmController;
     Config m_Config;
     mutable std::mutex m_StateMutex;
     State m_State;
 
-    std::thread m_MotionThread;
+    static constexpr auto COM_THRESHOLD_PERIOD = std::chrono::seconds(30);
+    static constexpr double COMP_THRESHOLD_DELTA = 0.5;
+
+    std::chrono::steady_clock::time_point m_LastTemperatureCompensationTime =
+        std::chrono::steady_clock::now() - COM_THRESHOLD_PERIOD;   
+    
+    std::thread m_MotionThread;    
     std::atomic<bool> m_Abort{false};
 
     int m_Revision = 0;
