@@ -540,7 +540,7 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 
 			if (Switch1S[S1_ON].s == ISS_ON)
 			{
-				if (!m_BoardIO.setOut1(HIGH))
+				if (!m_BoardIO.setOut1(1))
 				{
 					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #1");
 					Switch1SP.s = IPS_ALERT;
@@ -556,7 +556,7 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			}
 			if (Switch1S[S1_OFF].s == ISS_ON)
 			{
-				if (!m_BoardIO.setOut1(LOW))
+				if (!m_BoardIO.setOut1(0))
 				{
 					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #1");
 					Switch1SP.s = IPS_ALERT;
@@ -579,7 +579,7 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 
 			if (Switch2S[S2_ON].s == ISS_ON)
 			{
-				if (!m_BoardIO.setOut2(HIGH))
+				if (!m_BoardIO.setOut2(1))
 				{
 					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #2");
 					Switch1SP.s = IPS_ALERT;
@@ -595,7 +595,7 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 			}
 			if (Switch2S[S2_OFF].s == ISS_ON)
 			{
-				if (!m_BoardIO.setOut2(LOW))
+				if (!m_BoardIO.setOut2(0))
 				{
 					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #2");
 					Switch1SP.s = IPS_ALERT;
