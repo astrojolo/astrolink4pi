@@ -841,7 +841,6 @@ IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
 		return IPS_OK;
 	}
 
-	// m_Focuser.setFocuserBacklash(FocusBacklashNP[0].getValue());
 	m_Focuser.setStepDelayUs(FocusStepDelayN[0].value);
 	m_Focuser.setTemperatureCoefficient(TemperatureCoefN[0].value);
 	m_Focuser.setCurrent(static_cast<int>(StepperCurrentN[0].value));
@@ -864,14 +863,18 @@ bool AstroLink4Pi::ReverseFocuser(bool enabled)
 
 bool AstroLink4Pi::SyncFocuser(uint32_t ticks)
 {
-	// FocusAbsPosNP[0].setValue(ticks);
-	// FocusAbsPosNP.apply();
-	// savePosition(ticks);
-	// m_Focuser.syncFocuser(ticks);
-
-	DEBUGF(INDI::Logger::DBG_SESSION, "Absolute Position reset to %0.0f", FocusAbsPosNP[0].getValue());
-
-	return true;
+	if(m_Focuser.syncFocuser(ticks))
+	{
+		FocusAbsPosNP[0].setValue(ticks);
+		FocusAbsPosNP.apply();
+		DEBUGF(INDI::Logger::DBG_SESSION, "Absolute Position synced to %0.0f", FocusAbsPosNP[0].getValue());
+		return true;
+	}
+	else
+	{
+		DEBUG(INDI::Logger::DBG_SESSION, "Could not sync focuser position");
+		return false;
+	}
 }
 
 bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
