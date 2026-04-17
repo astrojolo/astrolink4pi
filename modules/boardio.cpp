@@ -10,7 +10,7 @@
 
 namespace
 {
-    constexpr int DAC_MAX_VALUE = 4095;
+    constexpr int DAC_MAX_VALUE = 288;
     constexpr int DAC_MIN_VALUE = 0;
 }
 
@@ -127,50 +127,42 @@ int BoardIO::detectBoard()
 
 int BoardIO::checkRevision()
 {
-	// TODO - check SPI, I2C and 1-Wire
-
 	int rev = 4;
-	// initializePin(m_Config.pinCHK_IN, INPUT, LOW);
-	// initializePin(m_Config.pinCHK2_IN, INPUT, LOW);
 
-	// lgGpioClaimInput(handle, 0, MOTOR_PWM);	 // OLD CHK_PIN
-	// lgGpioClaimInput(handle, 0, MOTOR_PWM); // OLD CHK2_PIN
+	initializePin(MOTOR_PWM, INPUT, LOW);
+	initializePin(CHK_IN_PIN, INPUT, LOW);
 
-	// setDacHold(1, 0);
-	// if (lgGpioRead(handle, MOTOR_PWM) == 0)
-	// {
-	// 	setDacHold(1, 255);
-	// 	if (lgGpioRead(handle, MOTOR_PWM) == 1)
-	// 		rev = 2;
-	// }
+	setDacHold(1, 0);
+	if (read(MOTOR_PWM) == 0)
+	{
+		setDacHold(1, 255);
+		if (read(MOTOR_PWM) == 1)
+			rev = 2;
+	}
 
-	// setDacHold(1, 0);
-	// if (lgGpioRead(handle, CHK_IN_PIN) == 0)
-	// {
-	// 	setDacHold(1, 255);
-	// 	if (lgGpioRead(handle, CHK_IN_PIN) == 1)
-	// 		rev = 3;
-	// }
+	setDacHold(1, 0);
+	if (read(CHK_IN_PIN) == 0)
+	{
+		setDacHold(1, 255);
+		if (read(CHK_IN_PIN) == 1)
+			rev = 3;
+	}
 
-	// lgGpioClaimOutput(handle, 0, MOTOR_PWM, 0);
-	// if (rev == 1)
-	// {
-	// 	if (lgGpioRead(handle, CHK_IN_PIN) == 0)
-	// 	{
-	// 		lgGpioWrite(handle, MOTOR_PWM, 1);		 // pin20
-	// 		if (lgGpioRead(handle, CHK_IN_PIN) == 1) // pin16
-	// 		{
-	// 			rev = 4;
-	// 		}
-	// 	}
-	// }
-	// lgGpioFree(handle, MOTOR_PWM);
-	// lgGpioFree(handle, CHK_IN_PIN);
+	initializePin(MOTOR_PWM, OUTPUT, LOW);
+	if (rev == 1)
+	{
+		if (read(CHK_IN_PIN) == 0)
+		{
+			write(MOTOR_PWM, 1);		 	// pin20
+			if (read(CHK_IN_PIN) == 1) 		// pin16
+			{
+				rev = 4;
+			}
+		}
+	}
+	initializePin(MOTOR_PWM, INPUT, LOW);
 
-	// if (handle >= 0)
-	// 	lgGpiochipClose(handle);
-
-	// DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
+	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;
 }
 
@@ -201,15 +193,20 @@ int BoardIO::setDac(int chan, int value)
 		return -1;
 
 	chan = (chan != 0) ? 1 : 0;
-	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
+	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE); 
 
-	// MCP4922-style 16-bit frame:
-	// bit15 A/B, bit14 BUF=0, bit13 GA=1 (1x), bit12 SHDN=1, bits11..0 data
+	// MCP4802 16-bit frame:
+	// bit15 A/B
+	// bit14 don't care (0)
+	// bit13 GA = 1 (1x)
+	// bit12 SHDN = 1 (active)
+	// bits11..4 = 8-bit DAC data
+	// bits3..0  = don't care (0)
 	uint16_t frame = 0;
 	frame |= (static_cast<uint16_t>(chan) << 15);
 	frame |= (1u << 13);
 	frame |= (1u << 12);
-	frame |= static_cast<uint16_t>(value & 0x0FFF);
+	frame |= (static_cast<uint16_t>(value & 0xFF) << 4);
 
 	unsigned char data[2];
 	data[0] = static_cast<unsigned char>((frame >> 8) & 0xFF);

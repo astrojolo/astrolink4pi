@@ -86,6 +86,7 @@ const char *AstroLink4Pi::getDefaultName()
 
 bool AstroLink4Pi::Connect()
 {
+	// Required modules
 	if (!m_BoardIO.connect())
 	{
 		DEBUG(INDI::Logger::DBG_ERROR, "Could not access GPIO.");
@@ -94,26 +95,6 @@ bool AstroLink4Pi::Connect()
 	if (!m_PwmController.connect())
 	{
 		DEBUG(INDI::Logger::DBG_ERROR, "Could not initialize PWM.");
-		return false;
-	}
-	if (!m_PowerMonitor.open())
-	{
-		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize power monitor.");
-		return false;
-	}
-	if (!m_SHTReader.open())
-	{
-		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize SHT sensor.");
-		return false;
-	}
-	if (!m_MLXReader.open())
-	{
-		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize MLX sensor.");
-		return false;
-	}
-	if (!m_TSLReader.open())
-	{
-		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize TSL sensor.");
 		return false;
 	}
 	if (!m_Focuser.open())
@@ -130,6 +111,25 @@ bool AstroLink4Pi::Connect()
 		   m_SystemInfo.getHostname().c_str(),
 		   m_SystemInfo.getModel().c_str(),
 		   m_SystemInfo.getKernelVersion().c_str());
+
+
+	// Optional modules
+	if (!m_PowerMonitor.open())
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "Power monitor not detected.");
+	}
+	if (!m_SHTReader.open())
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "SHT sensor not detected.");
+	}
+	if (!m_MLXReader.open())
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "MLX sensor not detected.");
+	}
+	if (!m_TSLReader.open())
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "TSL sensor not detected.");
+	}
 
 	// Lock Relay Labels setting
 	RelayLabelsTP.s = IPS_BUSY;

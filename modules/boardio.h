@@ -18,8 +18,12 @@ public:
     static constexpr int RP4_GPIOCHIP = 4;
     static constexpr int RP5_GPIOCHIP = 5;
     static constexpr int RP_UNKNOWN = 0;
+
     static constexpr int OUT1_PIN = 5; // pin 29
     static constexpr int OUT2_PIN = 6; // pin 31
+    static constexpr int MOTOR_PWM = 20;		// pin 38 VOUT
+    static constexpr int CHK_IN_PIN = 16;		// pin 36
+    static constexpr int CHK2_IN_PIN = 21;		// pin 40    
 
     struct Config
     {
