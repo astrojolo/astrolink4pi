@@ -30,6 +30,19 @@ cmake ..
 make -j4
 sudo make install
 ```
+**Adding current user access to SPI and I2C devices**
+
+Check the group the devices are in:
+```bash
+ls -al /dev/spi*
+ls -al /dev/i2c*
+```
+The group can be uucp, spi, or another. Add current user to the listed groups:
+```bash  
+sudo usermod -aG uucp $USER
+```
+Then reboot.
+
 After installation, the driver will appear in:
 ```
 INDI → Auxiliary devices → AstroLink 4 Pi
