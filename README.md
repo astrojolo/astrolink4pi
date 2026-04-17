@@ -23,9 +23,10 @@ It provides control over power distribution, focuser operation, environmental mo
 
 **Required software**
 - INDI **2.1.3 or newer**
-- wiringPi *https://github.com/WiringPi/WiringPi/tree/master?tab=readme-ov-file#installing* 
+- wiringPi https://github.com/WiringPi/WiringPi/tree/master?tab=readme-ov-file#installing
 
-**Basic installation** *([see Prerequisites section below for full installation path](#-prerequisites))*
+**Basic installation** 
+([see Prerequisites section below for full installation path](#-prerequisites))
 ```bash
 git clone https://github.com/astrojolo/astrolink4pi.git
 cd astrolink4pi
