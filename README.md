@@ -21,7 +21,7 @@ It provides control over power distribution, focuser operation, environmental mo
 - INDI **2.1.3 or newer**
 - wiringPi *https://github.com/WiringPi/WiringPi/tree/master?tab=readme-ov-file#installing* 
 
-**Basic installation** *(see Prerequisites section below for full installation path)*
+**Basic installation** *([see Prerequisites section below for full installation path](#-prerequisites))*
 ```bash
 git clone https://github.com/astrojolo/astrolink4pi.git
 cd astrolink4pi
@@ -96,6 +96,14 @@ sudo apt install -y \
   git cmake build-essential \
   libindi-dev 
 ```
+**Wiring Pi installation**
+
+```bash
+git clone https://github.com/WiringPi/WiringPi.git
+cd WiringPi
+./build
+```
+
 **Adding current user access to SPI and I2C devices**
 
 Check the group the devices are in:
