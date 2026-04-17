@@ -1044,6 +1044,7 @@ bool AstroLink4Pi::readSHT(int mode)
 
 	SHTReader::Readings readings;
 	bool correct = m_SHTReader.read(readings, mode);
+	DEBUGF(INDI::Logger::DBG_SESSION, "Correct %d temp %d", correct ? 1 : 0, readings.temperature);
 	setParameterValue("WEATHER_TEMPERATURE", readings.temperature);
 	setParameterValue("WEATHER_HUMIDITY", readings.humidity);
 	setParameterValue("WEATHER_DEWPOINT", readings.dewPoint);
