@@ -1044,10 +1044,6 @@ bool AstroLink4Pi::readSHT(int mode)
 
 	SHTReader::Readings readings;
 	bool correct = m_SHTReader.read(readings, mode);
-	DEBUGF(INDI::Logger::DBG_SESSION, "Correct %d temp %f", correct ? 1 : 0, readings.temperature);
-	setParameterValue("WEATHER_TEMPERATURE", readings.temperature);
-	setParameterValue("WEATHER_HUMIDITY", readings.humidity);
-	setParameterValue("WEATHER_DEWPOINT", readings.dewPoint);
 	if (correct)
 	{
 		FocusTemperatureN[0].value = readings.temperature;
@@ -1055,10 +1051,16 @@ bool AstroLink4Pi::readSHT(int mode)
 	}
 	else
 	{
+		readings = new SHTReader::Readings();
 		FocusTemperatureN[0].value = 0.0;
 		FocusTemperatureNP.s = IPS_ALERT;
 	}
 	IDSetNumber(&FocusTemperatureNP, nullptr);
+
+	setParameterValue("WEATHER_TEMPERATURE", readings.temperature);
+	setParameterValue("WEATHER_HUMIDITY", readings.humidity);
+	setParameterValue("WEATHER_DEWPOINT", readings.dewPoint);
+
 
 	return correct;
 }
