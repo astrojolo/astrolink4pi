@@ -997,7 +997,7 @@ bool AstroLink4Pi::readTSL()
 	TSLReader::Readings readings;
 	m_TSLReader.setSQMOffset(SQMOffsetN[0].value);
 	bool correct = m_TSLReader.read(readings) && readings.valid;
-	if (correct)
+	if (!correct)
 	{
 		readings = TSLReader::Readings{};
 	}
