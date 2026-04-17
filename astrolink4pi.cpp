@@ -996,12 +996,13 @@ bool AstroLink4Pi::readTSL()
 
 	TSLReader::Readings readings;
 	m_TSLReader.setSQMOffset(SQMOffsetN[0].value);
-	if (m_TSLReader.read(readings) && readings.valid)
+	bool correct = m_TSLReader.read(readings) && readings.valid;
+	if (correct)
 	{
-		setParameterValue("SQM_READING", readings.mpsas);
-		return true;
+		readings = TSLReader::Readings{}:
 	}
-	return false;
+	setParameterValue("SQM_READING", readings.mpsas);
+	return correct;
 }
 
 bool AstroLink4Pi::readOLD()
@@ -1028,14 +1029,15 @@ bool AstroLink4Pi::readMLX()
 	if(!m_MLXReader.isOpen()) return false;
 
 	MLXReader::Readings readings;
-	if (!m_MLXReader.read(readings))
+	bool correct = m_MLXReader.read(readings);
+	if (!correct)
 	{
-		return false;
+		readings = MLXReader::Readings{};
 	}
 	setParameterValue("WEATHER_SKY_TEMP", readings.objectTemperature);
 	setParameterValue("WEATHER_SKY_DIFF", readings.tempDifference);
 
-	return true;
+	return correct;
 }
 
 bool AstroLink4Pi::readSHT(int mode)
@@ -1070,11 +1072,17 @@ bool AstroLink4Pi::readPower()
 	PowerMonitor::Readings readings;
 	if(!m_PowerMonitor.isOpen()) return false;
 
-	if (!m_PowerMonitor.read(readings))
+	bool correct = m_PowerMonitor.read(readings);
+
+	if (correct)
 	{
+		PowerReadingsNP.s = IPS_OK;
+
+	}
+	else 
+	{
+		readings = PowerMonitor::Readings{};
 		PowerReadingsNP.s = IPS_ALERT;
-		IDSetNumber(&PowerReadingsNP, nullptr);
-		return false;
 	}
 
 	PowerReadingsN[POW_VIN].value = readings.vin;
@@ -1084,7 +1092,6 @@ bool AstroLink4Pi::readPower()
 	PowerReadingsN[POW_AH].value = readings.ah;
 	PowerReadingsN[POW_WH].value = readings.wh;
 
-	PowerReadingsNP.s = IPS_OK;
 	IDSetNumber(&PowerReadingsNP, nullptr);
-	return true;
+	return correct;
 }
