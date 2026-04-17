@@ -1051,7 +1051,7 @@ bool AstroLink4Pi::readSHT(int mode)
 	}
 	else
 	{
-		readings = new SHTReader::Readings();
+		readings = SHTReader::Readings{};
 		FocusTemperatureN[0].value = 0.0;
 		FocusTemperatureNP.s = IPS_ALERT;
 	}
