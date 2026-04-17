@@ -35,10 +35,10 @@ After installation, the driver will appear in:
 INDI → Auxiliary devices → AstroLink 4 Pi
 ```
 > [!IMPORTANT]
-> 🔌 Once connected to the driver, configure the settings to match your requirements, including (but not limited to):
+> Once connected to the driver, configure the settings to match your requirements, including (but not limited to):
 >
-> • 🔧 **Focusing motor settings**  
-> • ⏱️ **Polling period** *(default: 60s)*  
+>**Focusing motor settings**  
+>**Polling period** *(default: 60s)*  
 > &nbsp;&nbsp;&nbsp;&nbsp;📡 Sensor readings are updated every minute by default  
 > &nbsp;&nbsp;&nbsp;&nbsp;⚡ You may decrease it to **5–10s** for more frequent updates  
 
