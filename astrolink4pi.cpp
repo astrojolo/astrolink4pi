@@ -716,7 +716,7 @@ void AstroLink4Pi::TimerHit()
 		return;
 
 	uint64_t timeMillis = m_SystemInfo.millis();
-	readSQM(nextSystemRead < timeMillis);
+	readTSL();
 	readPower();
 	focuserUpdate();
 
@@ -983,13 +983,6 @@ void AstroLink4Pi::fanUpdate()
 	IDSetNumber(&FanPowerNP, nullptr);
 }
 
-bool AstroLink4Pi::readSQM(bool triggerOldSensor)
-{
-	// SQMavailable = readTSL() || (triggerOldSensor && readOLD());
-	// return SQMavailable;
-	return readTSL();
-}
-
 bool AstroLink4Pi::readTSL()
 {
 	if(!m_TSLReader.isOpen()) return false;
@@ -1003,25 +996,6 @@ bool AstroLink4Pi::readTSL()
 	}
 	setParameterValue("SQM_READING", readings.mpsas);
 	return correct;
-}
-
-bool AstroLink4Pi::readOLD()
-{
-	// char i2cData[7];
-	// int i2cHandle = lgI2cOpen(1, 0x33, 0);
-	// if (i2cHandle >= 0)
-	// {
-	// 	int read = lgI2cReadDevice(i2cHandle, i2cData, 7);
-	// 	lgI2cClose(i2cHandle);
-	// 	if (read > 6)
-	// 	{
-	// 		int sqm = i2cData[5] * 256 + i2cData[6];
-	// 		setParameterValue("SQM_READING", 0.01 * sqm);
-	// 		// DEBUGF(INDI::Logger::DBG_SESSION, "SQM read %i %i", i2cData[5], i2cData[6]);
-	// 		return true;
-	// 	}
-	// }
-	return false;
 }
 
 bool AstroLink4Pi::readMLX()

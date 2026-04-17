@@ -86,9 +86,7 @@ private:
 	virtual bool Disconnect();
 	virtual bool readSHT(int mode);
 	virtual bool readMLX();
-	virtual bool readSQM(bool triggerOldSensor);
 	virtual bool readTSL();
-	virtual bool readOLD();
 	virtual bool readPower();
 	virtual bool readDS18B20();
 
