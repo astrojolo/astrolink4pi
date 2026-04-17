@@ -4,6 +4,21 @@
 
 # 🚀 AstroLink 4 Pi
 
+## 📚 Table of Contents
+
+- [Quick Start](#-quick-start)
+- [Compatibility Matrix](#-compatibility-matrix)
+- [Features](#-features)
+- [Installation](#-installation)
+  - [Prerequisites](#-prerequisites)
+  - [Build & Install](#-build--install)
+  - [Enable Interfaces](#-enable-interfaces)
+  - [RTC Setup](#-rtc-setup-if-applicable)
+- [INDI / Ekos Setup](#-indi--ekos-setup)
+- [Permissions](#-permissions)
+- [Troubleshooting](#-troubleshooting)
+- [Summary](#-summary)
+
 AstroLink 4 Pi is an INDI driver for AstroLink hardware, designed to simplify and integrate astrophotography setups.  
 It provides control over power distribution, focuser operation, environmental monitoring, and device telemetry — all in a single compact system.
 
