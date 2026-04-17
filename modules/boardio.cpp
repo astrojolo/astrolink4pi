@@ -190,7 +190,10 @@ int BoardIO::setDacHold(int value)
 int BoardIO::setDac(int chan, int value)
 {
 	if (m_SpiFd < 0)
+	{
+		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "SPI not available - write error.");		
 		return -1;
+	}
 
 	chan = (chan != 0) ? 1 : 0;
 	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE); 

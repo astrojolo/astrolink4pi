@@ -81,7 +81,10 @@ bool MLXReader::readWord(uint8_t reg, uint16_t &value)
 bool MLXReader::read(MLXReader::Readings &out)
 {
     if (!isOpen())
+    {
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "I2C not available - read error.");
         return false;
+    }
 
     out = m_LastReadings;
 

@@ -50,7 +50,10 @@ bool SHTReader::isOpen() const
 bool SHTReader::read(SHTReader::Readings &out, int mode)
 {
     if (!isOpen())
+    {
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "I2C not available - read error.");
         return false;
+    }
 
     out = m_LastReadings;
 

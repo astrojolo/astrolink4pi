@@ -6,11 +6,6 @@
 
 #include "basecomponent.h"
 
-/*
-TODO
-check revision
-check DAC values
-*/
 
 class BoardIO : public BaseComponent
 {

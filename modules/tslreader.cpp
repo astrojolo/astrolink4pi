@@ -22,15 +22,6 @@ bool TSLReader::open()
 {
     close();
 
-    int wipi = wiringPiSetup();
-    if (wipi < 0)
-    {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-                     "WiPi open failed: errno=%d (%s)",
-                     errno, std::strerror(errno));
-        return false;
-    }
-
     m_Fd = wiringPiI2CSetup(m_TslAddress);
     if (m_Fd < 0)
     {
@@ -185,7 +176,10 @@ bool TSLReader::readChannels(int &full, int &ir)
 bool TSLReader::read(TSLReader::Readings &out)
 {
     if (!isOpen())
+    {
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "I2C not available - read error.");
         return false;
+    }
 
     out = m_LastReadings;
     bool available = false;

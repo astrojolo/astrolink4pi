@@ -22,12 +22,7 @@ PowerMonitor::~PowerMonitor()
 
 bool PowerMonitor::open()
 {
-    int wipi = wiringPiSetup();
-    if (wipi < 0)
-    {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "WiPi open failed: errno=%d (%s)", errno, std::strerror(errno));
-        return 0;
-    }
+    close();
 
     m_Fd = wiringPiI2CSetup(m_AdsAddress);
     if (m_Fd < 0)
@@ -59,7 +54,10 @@ bool PowerMonitor::isOpen() const
 bool PowerMonitor::read(PowerMonitor::Readings &out)
 {
     if (!isOpen())
+    {
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "I2C not available - read error.");
         return false;
+    }
 
     uint8_t writeBuf[3];
 

@@ -992,6 +992,8 @@ bool AstroLink4Pi::readSQM(bool triggerOldSensor)
 
 bool AstroLink4Pi::readTSL()
 {
+	if(!m_TSLReader.isOpen()) return false;
+
 	TSLReader::Readings readings;
 	m_TSLReader.setSQMOffset(SQMOffsetN[0].value);
 	if (m_TSLReader.read(readings) && readings.valid)
@@ -1023,6 +1025,8 @@ bool AstroLink4Pi::readOLD()
 
 bool AstroLink4Pi::readMLX()
 {
+	if(!m_MLXReader.isOpen()) return false;
+
 	MLXReader::Readings readings;
 	if (!m_MLXReader.read(readings))
 	{
@@ -1036,6 +1040,8 @@ bool AstroLink4Pi::readMLX()
 
 bool AstroLink4Pi::readSHT(int mode)
 {
+	if(!m_SHTReader.isOpen()) return false;
+
 	SHTReader::Readings readings;
 	if (!m_SHTReader.read(readings, mode))
 	{
@@ -1058,6 +1064,7 @@ bool AstroLink4Pi::readSHT(int mode)
 bool AstroLink4Pi::readPower()
 {
 	PowerMonitor::Readings readings;
+	if(!m_PowerMonitor.isOpen()) return false;
 
 	if (!m_PowerMonitor.read(readings))
 	{
