@@ -51,6 +51,7 @@ void SHTReader::close()
 
 bool SHTReader::isOpen() const
 {
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SHT ID %d is open?", m_Fd);
     return m_Fd >= 0;
 }
 
