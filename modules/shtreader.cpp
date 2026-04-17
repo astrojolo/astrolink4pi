@@ -24,18 +24,12 @@ bool SHTReader::open()
     m_Fd = wiringPiI2CSetup(m_ShtAddress);
     if (m_Fd < 0)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SHT ID %d failed: errno=%d (%s)", m_Fd, errno, std::strerror(errno));
-
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "SHT I2C setup failed: errno=%d (%s)",
                      errno, std::strerror(errno));
         return false;
     }
-    else
-    {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SHT ID %d OK: errno=%d (%s)", m_Fd, errno, std::strerror(errno));
 
-    }
 
     return m_Fd >= 0;
 }
@@ -51,7 +45,6 @@ void SHTReader::close()
 
 bool SHTReader::isOpen() const
 {
-    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SHT ID %d is open?", m_Fd);
     return m_Fd >= 0;
 }
 
