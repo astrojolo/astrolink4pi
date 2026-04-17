@@ -15,11 +15,11 @@ It provides control over power distribution, focuser operation, environmental mo
 
 **Supported platforms**
 - Raspberry Pi 4  
-- Raspberry Pi 5 *(Bookworm recommended)* - revisions 3 and newer
+- Raspberry Pi 5 *AstroLink 4 Pi versions 3 and later*
 
 **Required software**
 - INDI **2.1.3 or newer**
-- lgpio https://abyz.me.uk/lg/download.html
+- wiringPi *https://github.com/WiringPi/WiringPi/tree/master?tab=readme-ov-file#installing* 
 
 **Basic installation**
 ```bash
@@ -214,18 +214,6 @@ and modify
 
 ```bash
 dtoverlay=i2c-rtc,ds1307
-```
-
-Before compiling lgpio find the following line in Makefile file:
-
-```bash
-prefix ?= /usr/local
-```
-
-and update to
-
-```bash
-prefix ?= /usr
 ```
 
 Create additional groups and add user astronaut to them:

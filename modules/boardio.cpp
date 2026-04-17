@@ -29,9 +29,6 @@ bool BoardIO::connect()
 	if (isConnected())
 		return true;
 
-	m_GpioChip = detectBoard();
-	m_Revision = checkRevision();
-
 	int wiringPiSetup = wiringPiSetupPinType(WPI_PIN_BCM);
 	if (wiringPiSetup < 0)
 	{
@@ -39,13 +36,16 @@ bool BoardIO::connect()
 	}
 	initializePin(OUT1_PIN, OUTPUT, LOW);
 	initializePin(OUT2_PIN, OUTPUT, LOW);
-
+	
 	m_SpiFd = wiringPiSPISetup(m_Config.spiChannel, m_Config.spiSpeed);
 	if (m_SpiFd < 0)
 	{
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
 					 "wiringPiSPISetup failed: errno=%d (%s)", errno, std::strerror(errno));
 	}
+
+	m_GpioChip = detectBoard();
+	m_Revision = checkRevision();
 
 	return true;
 }
