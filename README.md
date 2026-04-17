@@ -1,9 +1,13 @@
+![Platform](https://img.shields.io/badge/Raspberry%20Pi-4%20%7C%205-green)
+![INDI](https://img.shields.io/badge/INDI-2.1.3+-blue)
+![License](https://img.shields.io/badge/license-GPL--3.0-orange)
+
 # 🚀 AstroLink 4 Pi
 
 AstroLink 4 Pi is an INDI driver for AstroLink hardware, designed to simplify and integrate astrophotography setups.  
 It provides control over power distribution, focuser operation, environmental monitoring, and device telemetry — all in a single compact system.
 
-🔗 [Product page](https://shop.astrojolo.com/product/astrolink-4-pi/)  
+🛒 [Product page](https://shop.astrojolo.com/product/astrolink-4-pi/) <br>
 🔗 [INDI Library](https://indilib.org/)
 
 ---
@@ -31,7 +35,7 @@ make -j4
 sudo make install
 ```
 
-🔗 [For StellarMate OS 2.0 specific steps check this section](#-stellarmate-os-20-setup)  
+🔗 [For StellarMate OS 2.0 specific steps check this section](#-stellarmate-os-20-setup)<br>
 🔗 [For AstroArch specific steps check this section](#-astroarch-setup)
 
 After installation, the driver will appear in:
