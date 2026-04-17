@@ -132,18 +132,18 @@ int BoardIO::checkRevision()
 	initializePin(MOTOR_PWM, INPUT, LOW);
 	initializePin(CHK_IN_PIN, INPUT, LOW);
 
-	setDacHold(1, 0);
+	setDacHold(0);
 	if (read(MOTOR_PWM) == 0)
 	{
-		setDacHold(1, 255);
+		setDacHold(255);
 		if (read(MOTOR_PWM) == 1)
 			rev = 2;
 	}
 
-	setDacHold(1, 0);
+	setDacHold(0);
 	if (read(CHK_IN_PIN) == 0)
 	{
-		setDacHold(1, 255);
+		setDacHold(255);
 		if (read(CHK_IN_PIN) == 1)
 			rev = 3;
 	}
@@ -162,7 +162,7 @@ int BoardIO::checkRevision()
 	}
 	initializePin(MOTOR_PWM, INPUT, LOW);
 
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
+	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;
 }
 
