@@ -2,7 +2,7 @@
 ![INDI](https://img.shields.io/badge/INDI-2.1.3+-blue)
 ![License](https://img.shields.io/badge/license-GPL--3.0-orange)
 
-# 🚀 AstroLink 4 Pi
+# 🔭 AstroLink 4 Pi
 
 ## 📚 Table of Contents
 
