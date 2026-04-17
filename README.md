@@ -31,6 +31,9 @@ make -j4
 sudo make install
 ```
 
+[For StellarMate OS 2.0 specific steps check this section](#-stellarmate-os-20-setup)
+[For AstroArch specific steps check this section](#-astroarch-setup)
+
 After installation, the driver will appear in:
 ```
 INDI → Auxiliary devices → AstroLink 4 Pi
@@ -170,10 +173,8 @@ sudo reboot
 
 ## ⚠️ Compatibility Notes
 
-- This driver uses **lgpio**, required for Raspberry Pi 5
-- Designed for **Bookworm-based systems**
+- This driver uses **wiringPi**, works correctly for Raspberry Pi 5 and 4
 - Older INDI versions may not work correctly
-
 
 ---
 
@@ -204,6 +205,10 @@ AstroLink 4 Pi combines:
 - ⚙️ Full INDI integration  
 
 ➡️ All in one compact astrophotography controller
+
+---
+
+## 🧪 StellarMate OS 2.0 Setup
 
 ---
 
