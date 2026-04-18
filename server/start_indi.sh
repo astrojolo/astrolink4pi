@@ -14,6 +14,8 @@ ensure_profile_conf() {
 # Lines starting with # are ignored
 
 indi_astrolink4pi
+indi_simulator_ccd
+indi_simulator_telescope
 EOF
         echo "Created default profile.conf"
     fi
