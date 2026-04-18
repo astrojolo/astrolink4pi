@@ -7,12 +7,20 @@ PROFILE_CONF="$SCRIPT_DIR/profile.conf"
 PID_FILE="$SCRIPT_DIR/indiserver.pid"
 LOG_FILE="$SCRIPT_DIR/indiserver.log"
 
-load_drivers() {
+ensure_profile_conf() {
     if [[ ! -f "$PROFILE_CONF" ]]; then
-        echo "Missing $PROFILE_CONF"
-        echo "Create it and list INDI drivers (one per line)."
-        exit 1
+        cat <<EOF > "$PROFILE_CONF"
+# List INDI drivers (one per line)
+# Lines starting with # are ignored
+
+indi_astrolink4pi
+EOF
+        echo "Created default profile.conf"
     fi
+}
+
+load_drivers() {
+    ensure_profile_conf
 
     mapfile -t DRIVERS < <(grep -vE '^\s*#|^\s*$' "$PROFILE_CONF")
 
@@ -70,7 +78,6 @@ start_log() {
     echo "Starting INDI server in debug mode (live logs)..."
     echo "Press Ctrl+C to stop."
 
-    # run in foreground and mirror output to log + console
     indiserver -v "${DRIVERS[@]}" 2>&1 | tee "$LOG_FILE"
 }
 
