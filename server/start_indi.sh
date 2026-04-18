@@ -58,6 +58,22 @@ start_server() {
     fi
 }
 
+start_log() {
+    if is_running; then
+        echo "INDI server already running (PID: $(cat "$PID_FILE"))"
+        echo "Stop it using: $0 stop"
+        exit 0
+    fi
+
+    load_drivers
+
+    echo "Starting INDI server in debug mode (live logs)..."
+    echo "Press Ctrl+C to stop."
+
+    # run in foreground and mirror output to log + console
+    indiserver -v "${DRIVERS[@]}" 2>&1 | tee "$LOG_FILE"
+}
+
 stop_server() {
     if is_running; then
         PID="$(cat "$PID_FILE")"
@@ -87,6 +103,9 @@ case "${1:-}" in
     start)
         start_server
         ;;
+    startlog)
+        start_log
+        ;;
     stop)
         stop_server
         ;;
@@ -97,7 +116,7 @@ case "${1:-}" in
         status_server
         ;;
     *)
-        echo "Usage: $0 {start|stop|restart|status}"
+        echo "Usage: $0 {start|startlog|stop|restart|status}"
         exit 1
         ;;
 esac
