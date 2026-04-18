@@ -41,7 +41,6 @@ It provides control over power distribution, focuser operation, environmental mo
 - wiringPi https://github.com/WiringPi/WiringPi/tree/master?tab=readme-ov-file#installing
 
 **Basic installation** 
-([see Prerequisites section below for full installation path](#-prerequisites))
 ```bash
 git clone https://github.com/astrojolo/astrolink4pi.git
 cd astrolink4pi
@@ -51,6 +50,7 @@ make -j4
 sudo make install
 ```
 
+🔗 [Steps described in Prerequisities section must be applied](#-prerequisites)<br>
 🔗 [For StellarMate OS 2.0 specific steps check this section](#-stellarmate-os-20-setup)<br>
 🔗 [For AstroArch specific steps check this section](#-astroarch-setup)
 
@@ -58,8 +58,9 @@ After installation, the driver will appear in:
 ```
 INDI → Auxiliary devices → AstroLink 4 Pi
 ```
-> [!IMPORTANT]
+> **⚠️ Important**<br>
 > Once connected to the driver, configure the settings to match your requirements - mostly focusing motor settings and also adjust polling interval, so sensors will be updated more often than default 60 seconds.
+
 
 ---
 
@@ -229,6 +230,38 @@ AstroLink 4 Pi combines:
 ---
 
 ## 🧪 StellarMate OS 2.0 Setup
+
+Pacman **core** and **extra** repositories must be enabled:
+```bash
+sudo nano /etc/pacman.conf
+```
+and uncomment sections **core** and **extra**. Then install required packages:
+```bash
+sudo pacman -Syu
+sudo pacman -Syu git
+sudo pacman -Syu cmake
+sudo pacman -Syu base-devel
+```
+Create rules set for **gpiomem** devices:
+```bash
+sudo nano /etc/udev/rules.d/99-zzz-astrolink4pi.rules
+```
+and put the line into this file:
+```bash
+KERNEL=="gpiomem*", GROUP="uucp", MODE="0660"
+```
+then reboot.<br><br>
+**👉 Now you can install AstroLink 4 Pi INDI driver as described in the [Prerequisities section](#-prerequisites)**
+
+**⚠️ Important**<br>
+Since StellarMate 2.0 introduced Flatpak software containers, Kstars+Ekos now runs in isolated environment and cannot access INDI drivers from local system.<br>
+Possible solutions are:
+- install Kstars from regular distribution
+- use Flatpak Kstars and run your own indiserver
+
+
+**📦 Running own indiserver**
+
 
 ---
 
