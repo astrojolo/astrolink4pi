@@ -184,7 +184,6 @@ Then reboot:
 sudo reboot
 ```
 
-
 ---
 ## 🧰 INDI Server Helper Script
 
@@ -204,6 +203,8 @@ Edit `profile.conf` to change the list of INDI drivers. In Ekos, use a **Remote*
 ---
 
 ## 🧪 StellarMate OS 2.0 Setup
+<details>
+<summary>Click to expand</summary>
 
 Pacman **core** and **extra** repositories must be enabled:
 ```bash
@@ -234,12 +235,12 @@ Possible solutions are:
 - use Flatpak Kstars and run your own indiserver
 
 👉 [Check INDI Server helper script](#-indi-server-helper-script)
-
+<details>
 ---
 
 ## 🧪 AstroArch Setup
 <details>
-<summary>🔽 Click to expand</summary>
+<summary>Click to expand</summary>
 
 If you are using **AstroArch Linux**, additional steps may be required.
 
