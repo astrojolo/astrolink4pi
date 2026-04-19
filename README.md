@@ -184,35 +184,11 @@ Then reboot:
 sudo reboot
 ```
 
----
-
-## ⚠️ Compatibility Notes
-
-- This driver uses **wiringPi**, works correctly for Raspberry Pi 5 and 4
-- Older INDI versions may not work correctly
-
----
-
-
-## 🤝 Contributing
-
-Contributions, bug reports, and suggestions are welcome!
-
-If you find an issue:
-- open a GitHub issue
-- include logs and hardware revision
-- describe your setup (Pi version, OS, INDI version)
-
----
-
-## 📄 License
-
-This project is released under the terms specified in the repository.
 
 ---
 ## 🧰 INDI Server Helper Script
 
-This script simplifies running a local INDI server by loading driver names from a configurable `profile.conf` file. It supports background execution, live debugging mode with real-time logs, and basic process management (start/stop/status/restart). If the configuration file does not exist, it is automatically created with a default setup.
+This script (located in `server` folder) simplifies running a local INDI server by loading driver names from a configurable `profile.conf` file. It supports background execution, live debugging mode with real-time logs, and basic process management (start/stop/status/restart). If the configuration file does not exist, it is automatically created with a default setup.
 
 ## 🚀 Usage
 
@@ -223,7 +199,7 @@ This script simplifies running a local INDI server by loading driver names from 
 ./start_indi.sh status      # check if running
 ./start_indi.sh restart     # restart the server
 ```
-Edit profile.conf to change the list of INDI drivers. In Ekos, use a **Remote** profile and connect to *localhost:7624*.
+Edit `profile.conf` to change the list of INDI drivers. In Ekos, use a **Remote** profile and connect to *localhost:7624*.
 
 ---
 
@@ -262,6 +238,8 @@ Possible solutions are:
 ---
 
 ## 🧪 AstroArch Setup
+<details>
+<summary>🔽 Click to expand</summary>
 
 If you are using **AstroArch Linux**, additional steps may be required.
 
@@ -310,3 +288,28 @@ SUBSYSTEM=="spidev", KERNEL=="spidev*", GROUP:="spi", MODE:="0660"
 ```
 
 Then you may go directly to AstroLink 4 Pi INDI driver installation.
+<details>
+---
+
+## ⚠️ Compatibility Notes
+
+- This driver uses **wiringPi**, works correctly for Raspberry Pi 5 and 4
+- Older INDI versions may not work correctly
+
+---
+
+
+## 🤝 Contributing
+
+Contributions, bug reports, and suggestions are welcome!
+
+If you find an issue:
+- open a GitHub issue
+- include logs and hardware revision
+- describe your setup (Pi version, OS, INDI version)
+
+---
+
+## 📄 License
+
+This project is released under the terms specified in the repository.
