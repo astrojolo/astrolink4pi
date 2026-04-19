@@ -238,7 +238,9 @@ Possible solutions are:
 👉 [Check INDI Server helper script](#-indi-server-helper-script)
 </details>
 
+
 ---
+
 
 ## 🧪 AstroArch Setup
 
