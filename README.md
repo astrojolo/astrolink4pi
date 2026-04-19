@@ -90,18 +90,6 @@ INDI → Auxiliary devices → AstroLink 4 Pi
 
 ---
 
-## 📊 Compatibility Matrix
-
-| Device Revision | Raspberry Pi | Driver Branch | Notes |
-|----------------|-------------|--------------|------|
-| Rev 4 | Pi 4 / Pi 5 | `main` | Full support |
-| Rev 3 | Pi 4 / Pi 5 | `main` | Full support |
-| Rev 2 | Pi 4 only | `main` | Legacy hardware |
-| Rev 1 | Pi 4 only | `main` | Limited support |
-
-
----
-
 ## 🔧 Installation
 
 ### 📦 Prerequisites
@@ -295,6 +283,18 @@ SUBSYSTEM=="spidev", KERNEL=="spidev*", GROUP:="spi", MODE:="0660"
 
 Then you may go directly to AstroLink 4 Pi INDI driver installation.
 </details>
+
+
+---
+
+## 📊 Compatibility Matrix
+
+| Device Revision | Raspberry Pi | Driver Branch | Notes |
+|----------------|-------------|--------------|------|
+| Rev 4 | Pi 4 / Pi 5 | `main` | Full support |
+| Rev 3 | Pi 4 / Pi 5 | `main` | Full support |
+| Rev 2 | Pi 4 only | `main` | Legacy hardware |
+| Rev 1 | Pi 4 only | `main` | Limited support |
 
 
 ---
