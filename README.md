@@ -235,7 +235,7 @@ Possible solutions are:
 - use Flatpak Kstars and run your own indiserver
 
 👉 [Check INDI Server helper script](#-indi-server-helper-script)
-<details>
+</details>
 ---
 
 ## 🧪 AstroArch Setup
@@ -289,7 +289,7 @@ SUBSYSTEM=="spidev", KERNEL=="spidev*", GROUP:="spi", MODE:="0660"
 ```
 
 Then you may go directly to AstroLink 4 Pi INDI driver installation.
-<details>
+</details>
 ---
 
 ## ⚠️ Compatibility Notes
