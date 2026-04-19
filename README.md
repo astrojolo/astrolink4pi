@@ -295,6 +295,7 @@ SUBSYSTEM=="spidev", KERNEL=="spidev*", GROUP:="spi", MODE:="0660"
 
 Then you may go directly to AstroLink 4 Pi INDI driver installation.
 </details>
+
 ---
 
 ## ⚠️ Compatibility Notes
@@ -303,7 +304,6 @@ Then you may go directly to AstroLink 4 Pi INDI driver installation.
 - Older INDI versions may not work correctly
 
 ---
-
 
 ## 🤝 Contributing
 
