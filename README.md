@@ -1,4 +1,7 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+
+![Platform](https://img.shields.io/badge/Raspberry%20Pi-4%20%7C%205-green)
+![INDI](https://img.shields.io/badge/INDI-2.1.3+-blue)
+![License](https://img.shields.io/badge/license-GPL--3.0-orange)
 
 - [⚡ Features](#-features)
 - [⚡ Quick Start](#-quick-start)
@@ -12,19 +15,15 @@
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-![Platform](https://img.shields.io/badge/Raspberry%20Pi-4%20%7C%205-green)
-![INDI](https://img.shields.io/badge/INDI-2.1.3+-blue)
-![License](https://img.shields.io/badge/license-GPL--3.0-orange)
-
 # 🔭 AstroLink 4 Pi
 
 AstroLink 4 Pi is an INDI driver for AstroLink hardware, designed to simplify and integrate astrophotography setups.  
 It provides control over power distribution, focuser operation, environmental monitoring, and device telemetry — all in a single compact system.
 
+<sub>
 🛒 [Product page](https://shop.astrojolo.com/product/astrolink-4-pi/) <br>
 🔗 [INDI Library](https://indilib.org/)
+</sub>
 
 ---
 ## ⚡ Features
