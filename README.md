@@ -13,6 +13,14 @@ It provides control over power distribution, focuser operation, environmental mo
 ---
 ## ⚡ Features
 
+AstroLink 4 Pi combines:
+- 🔌 Power management  
+- 🔭 Focuser control  
+- 🌡️ Environmental sensing  
+- ⚙️ Full INDI integration  
+
+➡️ All in one compact astrophotography controller
+
 ### 🔭 Focuser
 - Stepper motor control
 - Absolute and relative positioning
@@ -69,6 +77,7 @@ sudo make install
 
 🔗 [Steps described in Prerequisities section must be applied](#-prerequisites)<br>
 🔗 [For StellarMate OS 2.0 specific steps check this section](#-stellarmate-os-20-setup)<br>
+🔗 [INDI Server helper script](#-indi-server-helper-script)<br>
 🔗 [For AstroArch specific steps check this section](#-astroarch-setup)
 
 After installation, the driver will appear in:
@@ -201,16 +210,20 @@ If you find an issue:
 This project is released under the terms specified in the repository.
 
 ---
+## 🧰 INDI Server Helper Script
 
-## ⭐ Summary
+This script simplifies running a local INDI server by loading driver names from a configurable `profile.conf` file. It supports background execution, live debugging mode with real-time logs, and basic process management (start/stop/status/restart). If the configuration file does not exist, it is automatically created with a default setup.
 
-AstroLink 4 Pi combines:
-- 🔌 Power management  
-- 🔭 Focuser control  
-- 🌡️ Environmental sensing  
-- ⚙️ Full INDI integration  
+## 🚀 Usage
 
-➡️ All in one compact astrophotography controller
+```bash
+./start_indi.sh start       # start INDI server in background
+./start_indi.sh startlog    # start in foreground with live logs
+./start_indi.sh stop        # stop the server
+./start_indi.sh status      # check if running
+./start_indi.sh restart     # restart the server
+```
+Edit profile.conf to change the list of INDI drivers. In Ekos, use a **Remote** profile and connect to *localhost:7624*.
 
 ---
 
@@ -244,7 +257,7 @@ Possible solutions are:
 - install Kstars from regular distribution
 - use Flatpak Kstars and run your own indiserver
 
-
+👉 [Check INDI Server helper script](#-indi-server-helper-script)
 
 ---
 
