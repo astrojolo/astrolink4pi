@@ -4,26 +4,43 @@
 
 # 🔭 AstroLink 4 Pi
 
-## 📚 Table of Contents
-
-- [Quick Start](#-quick-start)
-- [Compatibility Matrix](#-compatibility-matrix)
-- [Features](#-features)
-- [Installation](#-installation)
-  - [Prerequisites](#-prerequisites)
-  - [Build & Install](#-build--install)
-  - [Enable Interfaces](#-enable-interfaces)
-  - [RTC Setup](#-rtc-setup-if-applicable)
-- [INDI / Ekos Setup](#-indi--ekos-setup)
-- [Permissions](#-permissions)
-- [Troubleshooting](#-troubleshooting)
-- [Summary](#-summary)
-
 AstroLink 4 Pi is an INDI driver for AstroLink hardware, designed to simplify and integrate astrophotography setups.  
 It provides control over power distribution, focuser operation, environmental monitoring, and device telemetry — all in a single compact system.
 
 🛒 [Product page](https://shop.astrojolo.com/product/astrolink-4-pi/) <br>
 🔗 [INDI Library](https://indilib.org/)
+
+---
+## ⚡ Features
+
+### 🔭 Focuser
+- Stepper motor control
+- Absolute and relative positioning
+- DRV8825 driver support for Moonlite / Robofocus / AstroLink geared unipolar steppers and bipolar microstepping up to 1/32
+- Forward / Reverse direction configuration
+- Customizable maximum absolute position (steps)
+- Customizable maximum focuser travel (mm)
+- Backlash compensation
+- Speed/current/hold torque control
+- Focuser info including: critical focus zone in μm, step size in μm, steps per critical focus zone
+- Automatic temperature compensation based on temperature sensor
+
+### 🔌 Power Outputs
+- Two switchable 12V DC outputs, 5A max each
+- One permanent 12V DC output
+- Two PWM-regulated RCA outputs, 3A max each
+- One adjustable DC output 3-10V, 1.5A max
+- Configurable labels
+
+### 🌡️ Sensors & Monitoring
+- I2C environmental sensors
+- Humidity / dew point / sky temperature / cloud coverage / sky brightness sensors support *(depending on revision)*
+- Voltage and current monitoring *(depending on revision)*
+
+### 🧠 System Integration
+- Fully integrated with INDI ecosystem
+- Works with NINA, KStars, Ekos, and other INDI clients
+
 
 ---
 
@@ -73,38 +90,6 @@ INDI → Auxiliary devices → AstroLink 4 Pi
 | Rev 2 | Pi 4 only | `main` | Legacy hardware |
 | Rev 1 | Pi 4 only | `main` | Limited support |
 
-
----
-
-## ⚡ Features
-
-### 🔭 Focuser
-- Stepper motor control
-- Absolute and relative positioning
-- DRV8825 driver support for Moonlite / Robofocus / AstroLink geared unipolar steppers and bipolar microstepping up to 1/32
-- Forward / Reverse direction configuration
-- Customizable maximum absolute position (steps)
-- Customizable maximum focuser travel (mm)
-- Backlash compensation
-- Speed control
-- Focuser info including: critical focus zone in μm, step size in μm, steps per critical focus zone
-- Automatic temperature compensation based on temperature sensor
-
-### 🔌 Power Outputs
-- Two switchable 12V DC outputs, 5A max each
-- One permanent 12V DC output
-- Two PWM-regulated RCA outputs, 3A max each
-- One adjustable DC output 3-10V, 1.5A max
-- Configurable labels
-
-### 🌡️ Sensors & Monitoring
-- I2C environmental sensors
-- Humidity / dew point / sky temperature / cloud coverage / sky brightness sensors support *(depending on revision)*
-- Voltage and current monitoring *(depending on revision)*
-
-### 🧠 System Integration
-- Fully integrated with INDI ecosystem
-- Works with NINA, KStars, Ekos, and other INDI clients
 
 ---
 
@@ -259,8 +244,6 @@ Possible solutions are:
 - install Kstars from regular distribution
 - use Flatpak Kstars and run your own indiserver
 
-
-**📦 Running own indiserver**
 
 
 ---
