@@ -20,10 +20,8 @@
 AstroLink 4 Pi is an INDI driver for AstroLink hardware, designed to simplify and integrate astrophotography setups.  
 It provides control over power distribution, focuser operation, environmental monitoring, and device telemetry — all in a single compact system.
 
-<sub>
 🛒 [Product page](https://shop.astrojolo.com/product/astrolink-4-pi/) <br>
 🔗 [INDI Library](https://indilib.org/)
-</sub>
 
 ---
 ## ⚡ Features
@@ -90,13 +88,10 @@ make -j4
 sudo make install
 ```
 
-<sub>
 🔗 [Steps described in Prerequisities section must be applied](#-prerequisites)<br>
 🔗 [For StellarMate OS 2.0 specific steps check this section](#-stellarmate-os-20-setup)<br>
 🔗 [INDI Server helper script](#-indi-server-helper-script)<br>
 🔗 [For AstroArch specific steps check this section](#-astroarch-setup)
-</sub
-<br>
 
 
 After installation, the driver will appear in:
