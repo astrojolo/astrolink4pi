@@ -1,3 +1,30 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [🔭 AstroLink 4 Pi](#-astrolink-4-pi)
+  - [⚡ Features](#-features)
+    - [🔭 Focuser](#-focuser)
+    - [🔌 Power Outputs](#-power-outputs)
+    - [🌡️ Sensors & Monitoring](#-sensors--monitoring)
+    - [🧠 System Integration](#-system-integration)
+  - [⚡ Quick Start](#-quick-start)
+  - [🔧 Installation](#-installation)
+    - [📦 Prerequisites](#-prerequisites)
+    - [🛠️ Build & Install](#-build--install)
+    - [🔌 Enable Interfaces](#-enable-interfaces)
+    - [⏱️ RTC Setup (if applicable)](#-rtc-setup-if-applicable)
+  - [🧰 INDI Server Helper Script](#-indi-server-helper-script)
+  - [🚀 Usage](#-usage)
+  - [🧪 StellarMate OS 2.0 Setup](#-stellarmate-os-20-setup)
+  - [🧪 AstroArch Setup](#-astroarch-setup)
+  - [📊 Compatibility Matrix](#-compatibility-matrix)
+  - [⚠️ Compatibility Notes](#-compatibility-notes)
+  - [🤝 Contributing](#-contributing)
+  - [📄 License](#-license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ![Platform](https://img.shields.io/badge/Raspberry%20Pi-4%20%7C%205-green)
 ![INDI](https://img.shields.io/badge/INDI-2.1.3+-blue)
 ![License](https://img.shields.io/badge/license-GPL--3.0-orange)
