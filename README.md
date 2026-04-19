@@ -203,6 +203,7 @@ Edit `profile.conf` to change the list of INDI drivers. In Ekos, use a **Remote*
 ---
 
 ## 🧪 StellarMate OS 2.0 Setup
+
 <details>
 <summary>Click to expand</summary>
 
@@ -236,9 +237,11 @@ Possible solutions are:
 
 👉 [Check INDI Server helper script](#-indi-server-helper-script)
 </details>
+
 ---
 
 ## 🧪 AstroArch Setup
+
 <details>
 <summary>Click to expand</summary>
 
