@@ -95,7 +95,8 @@ sudo make install
 🔗 [For StellarMate OS 2.0 specific steps check this section](#-stellarmate-os-20-setup)<br>
 🔗 [INDI Server helper script](#-indi-server-helper-script)<br>
 🔗 [For AstroArch specific steps check this section](#-astroarch-setup)
-</sub>
+</sub
+<br>
 
 
 After installation, the driver will appear in:
