@@ -3,6 +3,19 @@
 ![INDI](https://img.shields.io/badge/INDI-2.1.3+-blue)
 ![License](https://img.shields.io/badge/license-GPL--3.0-orange)
 
+  - [⚡ Features](#-features)
+  - [⚡ Quick Start](#-quick-start)
+  - [🔧 Installation](#-installation)
+    - [📦 Prerequisites](#-prerequisites)
+    - [🚀 Other prerequisities](#-other-prerequisities)
+    - [🛠️ Build & Install](#-build--install)
+  - [🧰 INDI Server Helper Script](#-indi-server-helper-script)
+  - [🧪 AstroArch Setup](#-astroarch-setup)
+  - [📊 Compatibility Matrix](#-compatibility-matrix)
+  - [⚠️ Compatibility Notes](#-compatibility-notes)
+  - [🤝 Contributing](#-contributing)
+  - [📄 License](#-license)
+
 
 # 🔭 AstroLink 4 Pi
 
