@@ -3,18 +3,19 @@
 ![INDI](https://img.shields.io/badge/INDI-2.1.3+-blue)
 ![License](https://img.shields.io/badge/license-GPL--3.0-orange)
 
-  - [⚡ Features](#-features)
-  - [⚡ Quick Start](#-quick-start)
-  - [🔧 Installation](#-installation)
-    - [📦 Prerequisites](#-prerequisites)
-    - [🚀 Other prerequisities](#-other-prerequisities)
-    - [🛠️ Build & Install](#-build--install)
-  - [🧰 INDI Server Helper Script](#-indi-server-helper-script)
-  - [🧪 AstroArch Setup](#-astroarch-setup)
-  - [📊 Compatibility Matrix](#-compatibility-matrix)
-  - [⚠️ Compatibility Notes](#-compatibility-notes)
-  - [🤝 Contributing](#-contributing)
-  - [📄 License](#-license)
+- [⚡ Features](#-features)
+- [⚡ Quick Start](#-quick-start)
+- [🔧 Installation](#-installation)
+  - [📦 Prerequisites](#-prerequisites)
+  - [🧪 StellarMate 1.9 / Astroberry - Raspbian - click to expand...](#-stellarmate-19--astroberry---raspbian---click-to-expand)
+  - [🧪 StellarMate 2.0 / AstroArch - Archlinux + Flatpak - click to expand...](#-stellarmate-20--astroarch---archlinux--flatpak---click-to-expand)
+  - [🚀 Other prerequisities](#-other-prerequisities)
+  - [🛠️ Build & Install](#-build--install)
+- [🧰 INDI Server Helper Script](#-indi-server-helper-script)
+- [📊 Compatibility Matrix](#-compatibility-matrix)
+- [⚠️ Compatibility Notes](#-compatibility-notes)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
 
 
 # 🔭 AstroLink 4 Pi
@@ -113,7 +114,7 @@ INDI → Auxiliary devices → AstroLink 4 Pi
 ---
 
 <details>
-<summary><h3>🧪 StellarMate 1.9 - Raspbian - click to expand...</h3></summary>
+<summary><h3>🧪 StellarMate 1.9 / Astroberry - Raspbian - click to expand...</h3></summary>
 
 Install required packages:
 
@@ -157,7 +158,7 @@ echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
 
 
 <details>
-<summary><h3>🧪 StellarMate 2.0 - Archlinux + Flatpak - click to expand...</h3></summary>
+<summary><h3>🧪 StellarMate 2.0 / AstroArch - Archlinux + Flatpak - click to expand...</h3></summary>
 
 Pacman **core** and **extra** repositories must be enabled:
 ```bash
@@ -168,10 +169,11 @@ and uncomment sections **core** and **extra**. Then install required packages:
 sudo pacman -Syu
 sudo pacman -Syu git
 sudo pacman -Syu cmake
+sudo pacman -Syu python3
+sudo pacman -Syu python-setuptools
+sudo pacman -Syu swig
 sudo pacman -Syu base-devel
 ```
-
-**👉 Now you can install AstroLink 4 Pi INDI driver as described in the [Prerequisities section](#-prerequisites)**
 
 **⚠️ Important**<br>
 Since StellarMate 2.0 introduced Flatpak software containers, Kstars+Ekos now runs in isolated environment and cannot access INDI drivers from local system.<br>
