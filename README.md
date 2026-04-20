@@ -108,14 +108,8 @@ INDI → Auxiliary devices → AstroLink 4 Pi
 
 ### 📦 Prerequisites
 
-<table>
-<tr>
-<td>**StellarMate 1.9**<br>*Raspbian*</td>
-<td>**StellarMate 2.0**<br>*Arch Linux + Flatpak*</td>
-</tr>
-
-</table>
-
+<details>
+<summary><b>🧪 StellarMate 1.9 - Raspbian - click to expand...</b></summary>
 
 Install required packages:
 
@@ -124,39 +118,6 @@ sudo apt update
 sudo apt install -y \
   git cmake build-essential \
   libindi-dev 
-```
-**Wiring Pi installation**
-
-```bash
-git clone https://github.com/WiringPi/WiringPi.git
-cd WiringPi
-./build
-```
-
-**Adding current user access to SPI and I2C devices**
-
-Check the group the devices are in:
-```bash
-ls -al /dev/spi*
-ls -al /dev/i2c*
-```
-The group can be uucp, spi, or another. Add current user to the listed groups:
-```bash  
-sudo usermod -aG uucp $USER
-```
-Then reboot.
-
----
-
-### 🛠️ Build & Install
-
-```bash
-git clone https://github.com/astrojolo/astrolink4pi.git
-cd astrolink4pi
-mkdir build && cd build
-cmake ..
-make -j4
-sudo make install
 ```
 
 ---
@@ -189,10 +150,72 @@ Add at the end:
 echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
 ```
 
-Then reboot:
+</details>
+
+<details>
+<summary><b>🧪 StellarMate 2.0 - Archlinux + Flatpak - click to expand...</b></summary>
+
+Pacman **core** and **extra** repositories must be enabled:
+```bash
+sudo nano /etc/pacman.conf
+```
+and uncomment sections **core** and **extra**. Then install required packages:
+```bash
+sudo pacman -Syu
+sudo pacman -Syu git
+sudo pacman -Syu cmake
+sudo pacman -Syu base-devel
+```
+
+**👉 Now you can install AstroLink 4 Pi INDI driver as described in the [Prerequisities section](#-prerequisites)**
+
+**⚠️ Important**<br>
+Since StellarMate 2.0 introduced Flatpak software containers, Kstars+Ekos now runs in isolated environment and cannot access INDI drivers from local system.<br>
+Possible solutions are:
+- install Kstars from regular distribution
+- use Flatpak Kstars and run your own indiserver
+
+👉 [Check INDI Server helper script](#-indi-server-helper-script)
+
+</details>
+
+Create rules set for **gpiomem** devices:
+```bash
+sudo nano /etc/udev/rules.d/99-zzz-astrolink4pi.rules
+```
+and put the line into this file:
+```bash
+KERNEL=="gpiomem*", GROUP="uucp", MODE="0660"
+KERNEL=="i2c-[0-9]*", GROUP="uucp", MODE="0660"
+KERNEL=="spidev*", GROUP="uucp", MODE="0660"
+```
+Add current user to the listed group:
+```bash  
+sudo usermod -aG uucp $USER
+```
+Then reboot.<br><br>
+
+---
+
+### 🛠️ Build & Install
 
 ```bash
-sudo reboot
+git clone https://github.com/astrojolo/astrolink4pi.git
+cd astrolink4pi
+mkdir build && cd build
+cmake ..
+make -j4
+sudo make install
+```
+
+---
+
+**Wiring Pi installation**
+
+```bash
+git clone https://github.com/WiringPi/WiringPi.git
+cd WiringPi
+./build
 ```
 
 ---
@@ -210,44 +233,6 @@ This script (located in `server` folder) simplifies running a local INDI server 
 ./start_indi.sh restart     # restart the server
 ```
 Edit `profile.conf` to change the list of INDI drivers. In Ekos, use a **Remote** profile and connect to *localhost:7624*.
-
----
-
-## 🧪 StellarMate OS 2.0 Setup
-
-<details>
-<summary>Click to expand</summary>
-
-Pacman **core** and **extra** repositories must be enabled:
-```bash
-sudo nano /etc/pacman.conf
-```
-and uncomment sections **core** and **extra**. Then install required packages:
-```bash
-sudo pacman -Syu
-sudo pacman -Syu git
-sudo pacman -Syu cmake
-sudo pacman -Syu base-devel
-```
-Create rules set for **gpiomem** devices:
-```bash
-sudo nano /etc/udev/rules.d/99-zzz-astrolink4pi.rules
-```
-and put the line into this file:
-```bash
-KERNEL=="gpiomem*", GROUP="uucp", MODE="0660"
-```
-then reboot.<br><br>
-**👉 Now you can install AstroLink 4 Pi INDI driver as described in the [Prerequisities section](#-prerequisites)**
-
-**⚠️ Important**<br>
-Since StellarMate 2.0 introduced Flatpak software containers, Kstars+Ekos now runs in isolated environment and cannot access INDI drivers from local system.<br>
-Possible solutions are:
-- install Kstars from regular distribution
-- use Flatpak Kstars and run your own indiserver
-
-👉 [Check INDI Server helper script](#-indi-server-helper-script)
-</details>
 
 
 ---
