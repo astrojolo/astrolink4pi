@@ -272,22 +272,22 @@ Then you may go directly to AstroLink 4 Pi INDI driver installation.
 
 ## 🔧 Troubleshooting
 
-### Driver is not appearing in Ekos driver selector
+#### Driver is not appearing in Ekos driver selector
 - make sure driver installation went correct including `sudo make install` command
 - if Kstars in Flatpak is used, the drivers can be accessed only remotely
 
-### SPI / I2C permission denied
+#### SPI / I2C permission denied
 - make sure the file with rules was created for `/dev/gpiomem*` `/dev/spidev*` `/dev/i2c*`
 - make sure these interfaces were enabled in `raspi-config`
 
-### wiringPi not found by CMake
+#### wiringPi not found by CMake
 - install wiringPi - from package or sources
 
-### Flatpak KStars cannot see locally installed driver
+#### Flatpak KStars cannot see locally installed driver
 - use driver started from the external INDI server
 - install KStars locally from the official repository and disable Flatpak version 
 
-### Sensors not updating
+#### Sensors not updating
 - default polling period in INDI driver is 60s, adjust it to 3-5s to have readings more often
 
 ---
