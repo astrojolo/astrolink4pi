@@ -108,6 +108,15 @@ INDI → Auxiliary devices → AstroLink 4 Pi
 
 ### 📦 Prerequisites
 
+<table>
+<tr>
+<td>**StellarMate 1.9**<br>*Raspbian*</td>
+<td>**StellarMate 2.0**<br>*Arch Linux + Flatpak*</td>
+</tr>
+
+</table>
+
+
 Install required packages:
 
 ```bash
