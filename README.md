@@ -3,16 +3,6 @@
 ![INDI](https://img.shields.io/badge/INDI-2.1.3+-blue)
 ![License](https://img.shields.io/badge/license-GPL--3.0-orange)
 
-- [⚡ Features](#-features)
-- [⚡ Quick Start](#-quick-start)
-- [🔧 Installation](#-installation)
-- [🧰 INDI Server Helper Script](#-indi-server-helper-script)
-- [🧪 StellarMate OS 2.0 Setup](#-stellarmate-os-20-setup)
-- [🧪 AstroArch Setup](#-astroarch-setup)
-- [📊 Compatibility Matrix](#-compatibility-matrix)
-- [⚠️ Compatibility Notes](#-compatibility-notes)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
 
 # 🔭 AstroLink 4 Pi
 
@@ -109,7 +99,7 @@ INDI → Auxiliary devices → AstroLink 4 Pi
 ### 📦 Prerequisites
 
 <details>
-<summary><b>🧪 StellarMate 1.9 - Raspbian - click to expand...</b></summary>
+<summary><h3>🧪 StellarMate 1.9 - Raspbian - click to expand...</h3></summary>
 
 Install required packages:
 
@@ -122,7 +112,7 @@ sudo apt install -y \
 
 ---
 
-### 🔌 Enable Interfaces
+#### 🔌 Enable Interfaces
 
 Make sure required interfaces are enabled:
 
@@ -136,7 +126,7 @@ Enable:
 
 ---
 
-### ⏱️ RTC Setup (if applicable)
+#### ⏱️ RTC Setup (if applicable)
 
 If your device revision includes RTC:
 
@@ -153,7 +143,7 @@ echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
 </details>
 
 <details>
-<summary><b>🧪 StellarMate 2.0 - Archlinux + Flatpak - click to expand...</b></summary>
+<summary><h3>🧪 StellarMate 2.0 - Archlinux + Flatpak - click to expand...</h3></summary>
 
 Pacman **core** and **extra** repositories must be enabled:
 ```bash
@@ -178,6 +168,8 @@ Possible solutions are:
 👉 [Check INDI Server helper script](#-indi-server-helper-script)
 
 </details>
+
+### 🚀 Other prerequisities
 
 Create rules set for **gpiomem** devices:
 ```bash
