@@ -55,6 +55,9 @@ AstroLink 4 Pi provides:
 - Fully integrated with INDI ecosystem
 - Works with NINA, KStars, Ekos, and other INDI clients
 
+<p align="center">
+  <img src="images/driver1.jpg">
+</p>
 
 ---
 
@@ -104,10 +107,6 @@ INDI → Auxiliary devices → AstroLink 4 Pi
 ```
 > **⚠️ Important**<br>
 > Once connected to the driver, configure the settings to match your requirements - mostly focusing motor settings and also adjust polling interval, so sensors will be updated more often than default 60 seconds.
-
-<p align="center">
-  <img src="images/driver1.jpg">
-</p>
 
 ---
 
