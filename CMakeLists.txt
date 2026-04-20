@@ -53,7 +53,7 @@ target_include_directories(indi_astrolink4pi PRIVATE
     ${INDI_INCLUDE_DIR}
 )
 
-target_compile_features(indi_astrolink4pi PRIVATE cxx_std_11)
+target_compile_features(indi_astrolink4pi PRIVATE cxx_std_17)
 
 target_link_libraries(indi_astrolink4pi PRIVATE
     ${INDI_LIBRARIES}

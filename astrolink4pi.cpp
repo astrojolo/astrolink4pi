@@ -582,9 +582,9 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 				if (!m_BoardIO.setOut2(1))
 				{
 					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #2");
-					Switch1SP.s = IPS_ALERT;
-					Switch1S[S1_ON].s = ISS_OFF;
-					IDSetSwitch(&Switch1SP, NULL);
+					Switch2SP.s = IPS_ALERT;
+					Switch2S[S1_ON].s = ISS_OFF;
+					IDSetSwitch(&Switch2SP, NULL);
 					return false;
 				}
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #2 set to ON");
@@ -598,9 +598,9 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 				if (!m_BoardIO.setOut2(0))
 				{
 					DEBUG(INDI::Logger::DBG_ERROR, "Error setting AstroLink Relay #2");
-					Switch1SP.s = IPS_ALERT;
-					Switch1S[S1_ON].s = ISS_OFF;
-					IDSetSwitch(&Switch1SP, NULL);
+					Switch2SP.s = IPS_ALERT;
+					Switch2S[S1_ON].s = ISS_OFF;
+					IDSetSwitch(&Switch2SP, NULL);
 					return false;
 				}
 				DEBUG(INDI::Logger::DBG_SESSION, "AstroLink Relays #2 set to OFF");
@@ -616,6 +616,7 @@ bool AstroLink4Pi::ISNewSwitch(const char *dev, const char *name, ISState *state
 		{
 			IUUpdateSwitch(&FocusHoldSP, states, names, n);
 			FocusHoldSP.s = IPS_OK;
+			m_Focuser.setHoldPowerPercent(20 * getHoldPower());
 			IDSetSwitch(&FocusHoldSP, nullptr);
 			return true;
 		}
@@ -768,8 +769,17 @@ bool AstroLink4Pi::AbortFocuser()
 
 IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
 {
-	uint32_t targetTicks = FocusAbsPosNP[0].getValue() + ((int32_t)ticks * (dir == FOCUS_INWARD ? -1 : 1));
-	return MoveAbsFocuser(targetTicks);
+    int32_t current = (int32_t)FocusAbsPosNP[0].getValue();
+    int32_t delta = (dir == FOCUS_INWARD ? -1 : 1) * (int32_t)ticks;
+
+    int32_t target = current + delta;
+
+    if (target < 0)
+        target = 0;
+    if (target > (int32_t)FocusAbsPosNP[0].getMax())
+        target = (int32_t)FocusAbsPosNP[0].getMax();
+
+    return MoveAbsFocuser((uint32_t)target);
 }
 
 IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
@@ -823,7 +833,7 @@ bool AstroLink4Pi::SetFocuserBacklash(int32_t steps)
 
 bool AstroLink4Pi::SetFocuserMaxPosition(uint32_t ticks)
 {
-	// m_Focuser.setFocuserMaxPosition(ticks);
+	m_Focuser.setFocuserMaxPosition(ticks);
 	DEBUGF(INDI::Logger::DBG_SESSION, "Max position set to %i steps", ticks);
 	return true;
 }

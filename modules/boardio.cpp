@@ -127,7 +127,7 @@ int BoardIO::detectBoard()
 
 int BoardIO::checkRevision()
 {
-	int rev = 4;
+	int rev = 1;
 
 	initializePin(MOTOR_PWM, INPUT, LOW);
 	initializePin(CHK_IN_PIN, INPUT, LOW);
