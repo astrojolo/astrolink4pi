@@ -92,7 +92,6 @@ sudo make install
 ```
 
 🔗 [Steps described in Prerequisities section must be applied](#-prerequisites)<br>
-🔗 [For StellarMate OS 2.0 specific steps check this section](#-stellarmate-os-20-setup)<br>
 🔗 [INDI Server helper script](#-indi-server-helper-script)<br>
 🔗 [For AstroArch specific steps check this section](#-astroarch-setup)
 
