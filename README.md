@@ -2,22 +2,6 @@
 ![INDI](https://img.shields.io/badge/INDI-2.1.3+-blue)
 ![License](https://img.shields.io/badge/license-GPL--3.0-orange)
 
-  - [⚡ Features](#-features)
-  - [⚡ Quick Start](#-quick-start)
-  - [🔧 Installation](#-installation)
-    - [📦 Prerequisites](#-prerequisites)
-    - [🧪 StellarMate 1.9 / Astroberry - Raspbian - click to expand...](#-stellarmate-19--astroberry---raspbian---click-to-expand)
-    - [🧪 StellarMate 2.0 / AstroArch - Archlinux + Flatpak - click to expand...](#-stellarmate-20--astroarch---archlinux--flatpak---click-to-expand)
-    - [🚀 Other prerequisities](#-other-prerequisities)
-    - [🛠️ Driver Build & Install](#-driver-build--install)
-  - [🧰 INDI Server Helper Script](#-indi-server-helper-script)
-  - [🧪 AstroArch Setup](#-astroarch-setup)
-  - [📊 Compatibility Matrix](#-compatibility-matrix)
-  - [⚠️ Compatibility Notes](#-compatibility-notes)
-  - [🤝 Contributing](#-contributing)
-  - [📄 License](#-license)
-
-
 # 🔭 AstroLink 4 Pi
 
 AstroLink 4 Pi is an INDI driver for AstroLink hardware, designed to simplify and integrate astrophotography setups.  
@@ -70,19 +54,30 @@ AstroLink 4 Pi combines:
 
 ## ⚡ Quick Start
 
-**Supported hardware**
-- AstroLink 4 Pi
+### ⚡ Minimal Quick Start (5 min)
 
-**Supported platforms**
-- Raspberry Pi 4  
-- Raspberry Pi 5 *AstroLink 4 Pi versions 3 and later*
+```bash
+# install dependencies
+sudo apt update
+sudo apt install -y git cmake build-essential libindi-dev
 
-**Required software**
-- INDI **2.1.3 or newer**
-- wiringPi https://github.com/WiringPi/WiringPi/tree/master?tab=readme-ov-file#installing
+# install wiringPi
+git clone https://github.com/WiringPi/WiringPi.git
+cd WiringPi && ./build
 
+# build driver
+git clone https://github.com/astrojolo/astrolink4pi.git
+cd astrolink4pi
+mkdir build && cd build
+git checkout gpio-5
+git pull
+cmake ..
+make -j4
+sudo make install
+```
 
-🔗 [Steps described in Prerequisities section must be applied](#-prerequisites)<br>
+> ⚠️ wiringPi is deprecated but still required by this driver. New driver version without wiringPi dependency is planned for 2026 Q4.
+
 🔗 [INDI Server helper script](#-indi-server-helper-script)<br>
 🔗 [For AstroArch specific steps check this section](#-astroarch-setup)
 
