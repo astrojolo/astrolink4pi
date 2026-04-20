@@ -109,7 +109,7 @@ indiserver -vv indi_astrolink4pi
 > ⚠️ wiringPi is deprecated but still required by this driver. New driver version without wiringPi dependency is planned for 2026 Q4.
 
 👉 [INDI Server helper script](#-indi-server-helper-script)<br>
-👉 [Additional steps for StellarMate 2.0](#-stellarmate-20--astroarch---archlinux--flatpak---click-to-expand)<br>
+👉 [Additional steps for StellarMate 2.0](#-stellarmate-20-setup)<br>
 👉 [Additional steps for AstroArch](#-astroarch-setup)
 
 
