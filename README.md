@@ -105,15 +105,8 @@ INDI → Auxiliary devices → AstroLink 4 Pi
 > **⚠️ Important**<br>
 > Once connected to the driver, configure the settings to match your requirements - mostly focusing motor settings and also adjust polling interval, so sensors will be updated more often than default 60 seconds.
 
-
 <p align="center">
-  <a href="images/driver1.jpg" target="_blank">
-    <img src="images/driver1.jpg" width="250">
-  </a>
-  &nbsp;&nbsp;
-  <a href="images/driver1.jpg" target="_blank">
-    <img src="images/driver1.jpg" width="250">
-  </a>
+  <img src="images/driver1.jpg" width="500">
 </p>
 
 ---
@@ -133,6 +126,10 @@ This script (located in `server` folder) simplifies running a local INDI server 
 ```
 Edit `profile.conf` to configure which INDI drivers are loaded. In Ekos, use a **Remote** profile and connect to *localhost:7624*.
 
+
+<p align="center">
+  <img src="images/driver2.jpg" width="500">
+</p>
 
 ---
 
