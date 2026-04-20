@@ -164,22 +164,21 @@ Pacman **core** and **extra** repositories must be enabled:
 ```bash
 sudo nano /etc/pacman.conf
 ```
-and uncomment sections **core** and **extra**. Then install required packages:
+and uncomment sections **core** and **extra**. Then install required packages (first install after enabling core/extra may take significand amount of time and number of packages):
 ```bash
 sudo pacman -Syu
-sudo pacman -Syu git
-sudo pacman -Syu cmake
-sudo pacman -Syu python3
-sudo pacman -Syu python-setuptools
-sudo pacman -Syu swig
-sudo pacman -Syu base-devel
+sudo pacman -Syu git cmake python3 python-setuptools swig base-devel
 ```
 
 **⚠️ Important**<br>
-Since StellarMate 2.0 introduced Flatpak software containers, Kstars+Ekos now runs in isolated environment and cannot access INDI drivers from local system.<br>
+Since StellarMate 2.0 introduced Flatpak software containers, Kstars+Ekos by default now runs in isolated environment and cannot access INDI drivers or antyhing else from the local system.<br>
 Possible solutions are:
-- install Kstars from regular distribution
-- use Flatpak Kstars and run your own indiserver
+- install Kstars+Ekos from official distribution and disable Flatpak KStars autorestart 
+```bash
+sudo pacman -Syu kstars
+systemctl --user disable --now org.kde.kstars.service
+```
+- or use Flatpak Kstars and run your own indiserver
 
 👉 [Check INDI Server helper script](#-indi-server-helper-script)
 
