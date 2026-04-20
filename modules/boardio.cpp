@@ -153,12 +153,9 @@ int BoardIO::checkRevision()
 	initializePin(MOTOR_PWM, OUTPUT, LOW);
 	if (rev == 1)
 	{
-		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Rev 1 to check if 4");
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "CHK 0 %d", read(CHK_IN_PIN));
 		if (read(CHK_IN_PIN) == 0)
 		{
 			write(MOTOR_PWM, 1);		 	// pin38
-			DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "CHK 1 %d", read(CHK_IN_PIN));
 			if (read(CHK_IN_PIN) == 1) 		// pin36
 			{
 				rev = 4;
