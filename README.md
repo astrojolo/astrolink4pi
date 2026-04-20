@@ -2,6 +2,10 @@
 ![INDI](https://img.shields.io/badge/INDI-2.1.3+-blue)
 ![License](https://img.shields.io/badge/license-GPL--3.0-orange)
 
+<p align="center">
+  <img src="images/astrolink4pi-banner.jpg" width="500">
+</p>
+
 # 🔭 AstroLink 4 Pi
 
 AstroLink 4 Pi is an INDI driver for AstroLink hardware, designed to simplify and integrate astrophotography setups.  
