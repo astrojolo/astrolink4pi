@@ -81,17 +81,6 @@ AstroLink 4 Pi combines:
 - INDI **2.1.3 or newer**
 - wiringPi https://github.com/WiringPi/WiringPi/tree/master?tab=readme-ov-file#installing
 
-**Basic installation** 
-```bash
-git clone https://github.com/astrojolo/astrolink4pi.git
-cd astrolink4pi
-mkdir build && cd build
-git checkout gpio-5
-git pull
-cmake ..
-make -j4
-sudo make install
-```
 
 🔗 [Steps described in Prerequisities section must be applied](#-prerequisites)<br>
 🔗 [INDI Server helper script](#-indi-server-helper-script)<br>
