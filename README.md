@@ -54,7 +54,10 @@ AstroLink 4 Pi combines:
 
 ## ⚡ Quick Start
 
-### ⚡ Minimal Quick Start (5 min)
+### ⚡ Minimal Quick Start
+
+The steps below are valid for astroberry and StellarMate 1.9.x.<br>
+For other astro distribution additional prerequisites see the links below the bash code.
 
 ```bash
 # install dependencies
@@ -74,12 +77,19 @@ git pull
 cmake ..
 make -j4
 sudo make install
+
+# enable SPI, I2C
+sudo raspi-config
+# enable SPI and I2C interfaces
+# then reboot
+sudo reboot
 ```
 
 > ⚠️ wiringPi is deprecated but still required by this driver. New driver version without wiringPi dependency is planned for 2026 Q4.
 
-🔗 [INDI Server helper script](#-indi-server-helper-script)<br>
-🔗 [For AstroArch specific steps check this section](#-astroarch-setup)
+👉 [Additional steps for StellarMate 2.0]<br>
+👉 [INDI Server helper script](#-indi-server-helper-script)<br>
+👉 [For AstroArch specific steps check this section](#-astroarch-setup)
 
 
 After installation, the driver will appear in:
