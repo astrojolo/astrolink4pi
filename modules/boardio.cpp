@@ -154,11 +154,11 @@ int BoardIO::checkRevision()
 		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Rev 1 to check if 4");
 		if (read(CHK_IN_PIN) == 0)
 		{
-			DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "CHK 0");
+			DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "CHK 0 %d", read(CHK_IN_PIN));
 			write(MOTOR_PWM, 1);		 	// pin38
 			if (read(CHK_IN_PIN) == 1) 		// pin36
 			{
-				DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "CHK 1");
+				DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "CHK 1 %d", read(CHK_IN_PIN));
 				rev = 4;
 			}
 		}
