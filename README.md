@@ -208,6 +208,15 @@ Then reboot.<br><br>
 
 ### 🛠️ Build & Install
 
+**Wiring Pi installation**
+
+```bash
+git clone https://github.com/WiringPi/WiringPi.git
+cd WiringPi
+./build
+```
+
+**Driver installation**
 ```bash
 git clone https://github.com/astrojolo/astrolink4pi.git
 cd astrolink4pi
@@ -215,16 +224,6 @@ mkdir build && cd build
 cmake ..
 make -j4
 sudo make install
-```
-
----
-
-**Wiring Pi installation**
-
-```bash
-git clone https://github.com/WiringPi/WiringPi.git
-cd WiringPi
-./build
 ```
 
 ---
