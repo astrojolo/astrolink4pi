@@ -13,7 +13,7 @@ It provides control over power distribution, focuser operation, environmental mo
 ---
 ## ⚡ Features
 
-AstroLink 4 Pi combines:
+AstroLink 4 Pi provides:
 - 🔌 Power management  
 - 🔭 Focuser control  
 - 🌡️ Environmental sensing  
@@ -41,9 +41,11 @@ AstroLink 4 Pi combines:
 - Configurable labels
 
 ### 🌡️ Sensors & Monitoring
+
+*(availability depends on hardware revision)*
 - I2C environmental sensors
-- Humidity / dew point / sky temperature / cloud coverage / sky brightness sensors support *(depending on revision)*
-- Voltage and current monitoring *(depending on revision)*
+- Humidity / dew point / sky temperature / cloud coverage / sky brightness sensors support
+- Voltage and current monitoring
 
 ### 🧠 System Integration
 - Fully integrated with INDI ecosystem
@@ -56,7 +58,7 @@ AstroLink 4 Pi combines:
 
 ### ⚡ Minimal Quick Start
 
-The steps below are valid for astroberry and StellarMate 1.9.x.<br>
+The steps below are valid for **astroberry** and **StellarMate 1.9.x**.<br>
 For other astro distribution additional prerequisites see the links below the bash code.
 
 ```bash
@@ -87,9 +89,9 @@ sudo reboot
 
 > ⚠️ wiringPi is deprecated but still required by this driver. New driver version without wiringPi dependency is planned for 2026 Q4.
 
-👉 [Additional steps for StellarMate 2.0]<br>
 👉 [INDI Server helper script](#-indi-server-helper-script)<br>
-👉 [For AstroArch specific steps check this section](#-astroarch-setup)
+👉 [Additional steps for StellarMate 2.0](#-stellarmate-20--astroarch---archlinux--flatpak---click-to-expand)<br>
+👉 [Additional steps for AstroArch](#-astroarch-setup)
 
 
 After installation, the driver will appear in:
@@ -102,97 +104,39 @@ INDI → Auxiliary devices → AstroLink 4 Pi
 
 ---
 
-## 🔧 Installation
+## 🧰 INDI Server Helper Script
 
+This script (located in `server` folder) simplifies running a local INDI server by loading driver names from a configurable `profile.conf` file. It supports background execution, live debugging mode with real-time logs, and basic process management (start/stop/status/restart). If the configuration file does not exist, it is automatically created with a default setup.
 
-### 📦 Prerequisites
-
----
-
-<details>
-<summary><h3>🧪 StellarMate 1.9 / Astroberry - Raspbian - click to expand...</h3></summary>
-
-Install required packages:
+### 🚀 Usage
 
 ```bash
-sudo apt update
-sudo apt install -y \
-  git cmake build-essential \
-  libindi-dev 
+./start_indi.sh start       # start INDI server in background
+./start_indi.sh startlog    # start in foreground with live logs
+./start_indi.sh stop        # stop the server
+./start_indi.sh status      # check if running
+./start_indi.sh restart     # restart the server
 ```
+Edit `profile.conf` to configure which INDI drivers are loaded. In Ekos, use a **Remote** profile and connect to *localhost:7624*.
 
-#### 🔌 Enable Interfaces
-
-Make sure required interfaces are enabled:
-
-```bash
-sudo raspi-config
-```
-
-Enable:
-- I2C  
-- SPI *(if required by your revision)*  
-
-
-#### ⏱️ RTC Setup (if applicable)
-
-If your device revision includes RTC:
-
-```bash
-sudo nano /etc/rc.local
-```
-
-Add at the end:
-
-```
-echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
-```
-
-</details>
 
 ---
 
 
+### 🧪 StellarMate 2.0 - Archlinux + Flatpak - click to expand...
+
 <details>
-<summary><h3>🧪 StellarMate 2.0 / AstroArch - Archlinux + Flatpak - click to expand...</h3></summary>
+<summary>Click to expand</summary>
 
 Pacman **core** and **extra** repositories must be enabled:
 ```bash
 sudo nano /etc/pacman.conf
 ```
-and uncomment sections **core** and **extra**. Then install required packages (first install after enabling core/extra may take significand amount of time and number of packages):
+and uncomment sections **core** and **extra**. Then install required packages (first install after enabling core/extra may take significant amount of time and number of packages):
 ```bash
 sudo pacman -Syu
 sudo pacman -Syu git cmake python3 python-setuptools swig base-devel
 ```
-
-**⚠️ Important**<br>
-Since StellarMate 2.0 introduced Flatpak software containers, Kstars+Ekos by default now runs in isolated environment and cannot access INDI drivers or antyhing else from the local system.<br>
-Possible solutions are:
-- install Kstars+Ekos from official distribution and disable Flatpak KStars autorestart 
-```bash
-sudo pacman -Syu kstars
-systemctl --user disable --now org.kde.kstars.service
-```
-- or use Flatpak Kstars and run your own indiserver
-
-👉 [Check INDI Server helper script](#-indi-server-helper-script)
-
-</details>
-
----
-
-### 🚀 Other prerequisities
-
-Wiring Pi installation:
-
-```bash
-git clone https://github.com/WiringPi/WiringPi.git
-cd WiringPi
-./build
-```
-
-**Astroberry 3.x does not need the following device rules adjustments, so you can jump directly to [Driver Build & Install](#️-driver-build--install)**<br>
 
 Create rules set for **gpiomem, SPI and I2C** devices:
 ```bash
@@ -208,42 +152,25 @@ Add current user to the listed group:
 ```bash  
 sudo usermod -aG uucp $USER
 ```
-Then reboot.<br><br>
+Then reboot.<br>
 
----
+**⚠️ Important**<br>
+⚠️ StellarMate 2.0 uses Flatpak (sandboxed environment)
 
-### 🛠️ Driver Build & Install
+Problem:
+KStars cannot access local INDI drivers
 
+Solutions:
+1. Install native KStars (recommended)
 ```bash
-git clone https://github.com/astrojolo/astrolink4pi.git
-cd astrolink4pi
-mkdir build && cd build
-git checkout gpio-5
-git pull
-cmake ..
-make -j4
-sudo make install
+sudo pacman -Syu kstars
+systemctl --user disable --now org.kde.kstars.service
 ```
+2. Use Flatpak KStars + external indiserver
+👉 [Check INDI Server helper script](#-indi-server-helper-script)
+</details>
 
 ---
-## 🧰 INDI Server Helper Script
-
-This script (located in `server` folder) simplifies running a local INDI server by loading driver names from a configurable `profile.conf` file. It supports background execution, live debugging mode with real-time logs, and basic process management (start/stop/status/restart). If the configuration file does not exist, it is automatically created with a default setup.
-
-### 🚀 Usage
-
-```bash
-./start_indi.sh start       # start INDI server in background
-./start_indi.sh startlog    # start in foreground with live logs
-./start_indi.sh stop        # stop the server
-./start_indi.sh status      # check if running
-./start_indi.sh restart     # restart the server
-```
-Edit `profile.conf` to change the list of INDI drivers. In Ekos, use a **Remote** profile and connect to *localhost:7624*.
-
-
----
-
 
 ## 🧪 AstroArch Setup
 
@@ -299,7 +226,6 @@ SUBSYSTEM=="spidev", KERNEL=="spidev*", GROUP:="spi", MODE:="0660"
 Then you may go directly to AstroLink 4 Pi INDI driver installation.
 </details>
 
-
 ---
 
 ## 📊 Compatibility Matrix
@@ -316,7 +242,8 @@ Then you may go directly to AstroLink 4 Pi INDI driver installation.
 
 ## ⚠️ Compatibility Notes
 
-- This driver uses **wiringPi**, works correctly for Raspberry Pi 5 and 4
+- Requires **wiringPi** 
+- Tested on Raspberry Pi 4 and 5
 - Older INDI versions may not work correctly
 
 ---
