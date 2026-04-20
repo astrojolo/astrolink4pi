@@ -123,7 +123,7 @@ Edit `profile.conf` to configure which INDI drivers are loaded. In Ekos, use a *
 ---
 
 
-### 🧪 StellarMate 2.0 - Archlinux + Flatpak - click to expand...
+## 🧪 StellarMate 2.0 - Archlinux + Flatpak - click to expand...
 
 <details>
 <summary>Click to expand</summary>
@@ -154,8 +154,7 @@ sudo usermod -aG uucp $USER
 ```
 Then reboot.<br>
 
-**⚠️ Important**<br>
-⚠️ StellarMate 2.0 uses Flatpak (sandboxed environment)
+**⚠️ Important - StellarMate 2.0 uses Flatpak (sandboxed environment)**
 
 Problem:
 KStars cannot access local INDI drivers
@@ -166,7 +165,7 @@ Solutions:
 sudo pacman -Syu kstars
 systemctl --user disable --now org.kde.kstars.service
 ```
-2. Use Flatpak KStars + external indiserver
+2. Use Flatpak KStars + external indiserver<br>
 👉 [Check INDI Server helper script](#-indi-server-helper-script)
 </details>
 
