@@ -44,6 +44,7 @@ bool BoardIO::connect()
 					 "wiringPiSPISetup failed: errno=%d (%s)", errno, std::strerror(errno));
 	}
 
+	m_Connected = true;
 	m_GpioChip = detectBoard();
 	m_Revision = checkRevision();
 
@@ -55,11 +56,12 @@ void BoardIO::disconnect()
 	m_SpiFd = -1;
 	m_Revision = 0;
 	m_GpioChip = RP_UNKNOWN;
+	m_Connected = false;
 }
 
 bool BoardIO::isConnected() const
 {
-	return m_Revision > 0;
+	return m_Connected;
 }
 
 int BoardIO::revision() const

@@ -58,6 +58,7 @@ private:
     Config m_Config;
     int m_SpiFd = -1;
 
+    bool m_Connected = false;
     int m_Revision = 0;
     int m_GpioChip = RP_UNKNOWN;
 };
