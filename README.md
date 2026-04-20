@@ -7,7 +7,6 @@
 - [⚡ Quick Start](#-quick-start)
 - [🔧 Installation](#-installation)
 - [🧰 INDI Server Helper Script](#-indi-server-helper-script)
-- [🚀 Usage](#-usage)
 - [🧪 StellarMate OS 2.0 Setup](#-stellarmate-os-20-setup)
 - [🧪 AstroArch Setup](#-astroarch-setup)
 - [📊 Compatibility Matrix](#-compatibility-matrix)
