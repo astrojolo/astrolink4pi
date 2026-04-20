@@ -98,6 +98,8 @@ INDI → Auxiliary devices → AstroLink 4 Pi
 
 ### 📦 Prerequisites
 
+---
+
 <details>
 <summary><h3>🧪 StellarMate 1.9 - Raspbian - click to expand...</h3></summary>
 
@@ -109,8 +111,6 @@ sudo apt install -y \
   git cmake build-essential \
   libindi-dev 
 ```
-
----
 
 #### 🔌 Enable Interfaces
 
@@ -124,7 +124,6 @@ Enable:
 - I2C  
 - SPI *(if required by your revision)*  
 
----
 
 #### ⏱️ RTC Setup (if applicable)
 
@@ -141,6 +140,9 @@ echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
 ```
 
 </details>
+
+---
+
 
 <details>
 <summary><h3>🧪 StellarMate 2.0 - Archlinux + Flatpak - click to expand...</h3></summary>
@@ -168,6 +170,8 @@ Possible solutions are:
 👉 [Check INDI Server helper script](#-indi-server-helper-script)
 
 </details>
+
+---
 
 ### 🚀 Other prerequisities
 
