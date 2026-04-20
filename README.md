@@ -188,6 +188,14 @@ systemctl --user disable --now org.kde.kstars.service
 
 ### 🚀 Other prerequisities
 
+Wiring Pi installation:
+
+```bash
+git clone https://github.com/WiringPi/WiringPi.git
+cd WiringPi
+./build
+```
+
 Create rules set for **gpiomem** devices:
 ```bash
 sudo nano /etc/udev/rules.d/99-zzz-astrolink4pi.rules
@@ -206,17 +214,8 @@ Then reboot.<br><br>
 
 ---
 
-### 🛠️ Build & Install
+### 🛠️ Driver Build & Install
 
-**Wiring Pi installation**
-
-```bash
-git clone https://github.com/WiringPi/WiringPi.git
-cd WiringPi
-./build
-```
-
-**Driver installation**
 ```bash
 git clone https://github.com/astrojolo/astrolink4pi.git
 cd astrolink4pi
