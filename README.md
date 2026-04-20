@@ -87,6 +87,7 @@ git clone https://github.com/astrojolo/astrolink4pi.git
 cd astrolink4pi
 mkdir build && cd build
 git checkout gpio-5
+git pull
 cmake ..
 make -j4
 sudo make install
@@ -108,6 +109,7 @@ INDI → Auxiliary devices → AstroLink 4 Pi
 ---
 
 ## 🔧 Installation
+
 
 ### 📦 Prerequisites
 
@@ -196,7 +198,9 @@ cd WiringPi
 ./build
 ```
 
-Create rules set for **gpiomem** devices:
+**Astroberry 3.x does not need the following device rules adjustments, so you can jump directly to [Driver Build & Install](#️-driver-build--install)**<br>
+
+Create rules set for **gpiomem, SPI and I2C** devices:
 ```bash
 sudo nano /etc/udev/rules.d/99-zzz-astrolink4pi.rules
 ```
@@ -220,6 +224,8 @@ Then reboot.<br><br>
 git clone https://github.com/astrojolo/astrolink4pi.git
 cd astrolink4pi
 mkdir build && cd build
+git checkout gpio-5
+git pull
 cmake ..
 make -j4
 sudo make install
