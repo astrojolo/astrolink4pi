@@ -83,6 +83,7 @@ AstroLink 4 Pi combines:
 git clone https://github.com/astrojolo/astrolink4pi.git
 cd astrolink4pi
 mkdir build && cd build
+git checkout gpio-5
 cmake ..
 make -j4
 sudo make install
@@ -191,7 +192,7 @@ sudo reboot
 
 This script (located in `server` folder) simplifies running a local INDI server by loading driver names from a configurable `profile.conf` file. It supports background execution, live debugging mode with real-time logs, and basic process management (start/stop/status/restart). If the configuration file does not exist, it is automatically created with a default setup.
 
-## 🚀 Usage
+### 🚀 Usage
 
 ```bash
 ./start_indi.sh start       # start INDI server in background
