@@ -63,10 +63,19 @@ AstroLink 4 Pi provides:
 
 ## ⚡ Quick Start
 
+### 📊 Requirements
+- Raspberry Pi 5 (highly recommended) or Raspberry Pi 4
+- 4GB RAM and Raspberry Pi approved SD card
+- INDI 2.1 or higher
+- supported distributions - Rasbpian based (StellarMate 1.9.x, astroberry) and Arch linux based (StellarMate 2.x, AstroArch)
+- wiringPi library installed
+- SPI and I2c bus enabled
+
+
 ### ⚡ Minimal Quick Start
 
 The steps below are valid for **astroberry** and **StellarMate 1.9.x**.<br>
-For other astro distribution additional prerequisites see the links below the bash code.
+For other astronomy distributions additional prerequisites see the links below the bash code.
 
 ```bash
 # install dependencies
@@ -92,6 +101,9 @@ sudo raspi-config
 # enable SPI and I2C interfaces
 # then reboot
 sudo reboot
+
+# verify installation
+indiserver -vv indi_astrolink4pi
 ```
 
 > ⚠️ wiringPi is deprecated but still required by this driver. New driver version without wiringPi dependency is planned for 2026 Q4.
@@ -106,17 +118,18 @@ After installation, the driver will appear in:
 INDI → Auxiliary devices → AstroLink 4 Pi
 ```
 > **⚠️ Important**<br>
-> Once connected to the driver, configure the settings to match your requirements - mostly focusing motor settings and also adjust polling interval, so sensors will be updated more often than default 60 seconds.
+> Once connected to the driver, configure the settings to match your requirements. Mostly focusing motor settings and also adjust polling interval, so sensors will be updated more often than default 60 seconds.
 
 ---
 
 ## 🧰 INDI Server Helper Script
 
-This script (located in `server` folder) simplifies running a local INDI server by loading driver names from a configurable `profile.conf` file. It supports background execution, live debugging mode with real-time logs, and basic process management (start/stop/status/restart). If the configuration file does not exist, it is automatically created with a default setup.
+This script (`server/start_indi.sh`) simplifies running a local INDI server by loading driver names from a configurable `profile.conf` file. It supports background execution, live debugging mode with real-time logs, and basic process management (start/stop/status/restart). If the configuration file does not exist, it is automatically created with a default setup.
 
 ### 🚀 Usage
 
 ```bash
+cd server
 ./start_indi.sh start       # start INDI server in background
 ./start_indi.sh startlog    # start in foreground with live logs
 ./start_indi.sh stop        # stop the server
@@ -133,7 +146,7 @@ Edit `profile.conf` to configure which INDI drivers are loaded. In Ekos, use a *
 ---
 
 
-## 🧪 StellarMate 2.0 - Archlinux + Flatpak - click to expand...
+## 🧪 StellarMate 2.0 Setup
 
 <details>
 <summary>Click to expand</summary>
@@ -148,11 +161,11 @@ sudo pacman -Syu
 sudo pacman -Syu git cmake python3 python-setuptools swig base-devel
 ```
 
-Create rules set for **gpiomem, SPI and I2C** devices:
+Create a rules file **gpiomem, SPI and I2C** devices:
 ```bash
 sudo nano /etc/udev/rules.d/99-zzz-astrolink4pi.rules
 ```
-and put the line into this file:
+and add these lines into this file:
 ```bash
 KERNEL=="gpiomem*", GROUP="uucp", MODE="0660"
 KERNEL=="i2c-[0-9]*", GROUP="uucp", MODE="0660"
@@ -256,6 +269,29 @@ Then you may go directly to AstroLink 4 Pi INDI driver installation.
 - Older INDI versions may not work correctly
 
 ---
+
+## 🔧 Troubleshooting
+
+### Driver is not appearing in Ekos driver selector
+- make sure driver installation went correct including `sudo make install` command
+- if Kstars in Flatpak is used, the drivers can be accessed only remotely
+
+### SPI / I2C permission denied
+- make sure the file with rules was created for `/dev/gpiomem*` `/dev/spidev*` `/dev/i2c*`
+- make sure these interfaces were enabled in `raspi-config`
+
+### wiringPi not found by CMake
+- install wiringPi - from package or sources
+
+### Flatpak KStars cannot see locally installed driver
+- use driver started from the external INDI server
+- install KStars locally from the official repository and disable Flatpak version 
+
+### Sensors not updating
+- default polling period in INDI driver is 60s, adjust it to 3-5s to have readings more often
+
+---
+
 
 ## 🤝 Contributing
 
