@@ -106,6 +106,16 @@ INDI → Auxiliary devices → AstroLink 4 Pi
 > Once connected to the driver, configure the settings to match your requirements - mostly focusing motor settings and also adjust polling interval, so sensors will be updated more often than default 60 seconds.
 
 
+<p align="center">
+  <a href="images/driver1.jpg" target="_blank">
+    <img src="images/driver1.jpg" width="250">
+  </a>
+  &nbsp;&nbsp;
+  <a href="images/driver1.jpg" target="_blank">
+    <img src="images/driver1.jpg" width="250">
+  </a>
+</p>
+
 ---
 
 ## 🧰 INDI Server Helper Script
