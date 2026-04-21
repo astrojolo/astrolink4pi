@@ -31,8 +31,8 @@ BoardIO::~BoardIO()
 
 bool BoardIO::connect()
 {
-	// if (isConnected())
-	// 	return true;
+	if (isConnected())
+		return true;
 
 	int wiringPiSetup = wiringPiSetupGpio();
 	if (wiringPiSetup < 0)
