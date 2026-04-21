@@ -31,35 +31,34 @@ BoardIO::~BoardIO()
 
 bool BoardIO::connect()
 {
-	if (isConnected())
-		return true;
+	// if (isConnected())
+	// 	return true;
 
 	int wiringPiSetup = wiringPiSetupGpio();
 	if (wiringPiSetup < 0)
 	{
 		return false;
 	}
+	int pin = 20; // BCM20
+
+	pinMode(pin, OUTPUT);
+
+    while (true)
+    {
+        // HIGH
+        digitalWrite(pin, HIGH);
+        delay(3000); // 3 sekundy
+
+        // LOW
+        digitalWrite(pin, LOW);
+        delay(3000); // 3 sekundy
+    }
+
+    return false;	
+
 	initializePin(OUT1_PIN, OUTPUT, HIGH);
 	initializePin(OUT2_PIN, OUTPUT, LOW);
 
-	initializePin(MOTOR_PWM, OUTPUT, LOW);  // pin38
-	std::this_thread::sleep_for(std::chrono::seconds(3));
-	initializePin(MOTOR_PWM, OUTPUT, HIGH);  // pin38
-	std::this_thread::sleep_for(std::chrono::seconds(3));
-	initializePin(MOTOR_PWM, OUTPUT, LOW);  // pin38
-	std::this_thread::sleep_for(std::chrono::seconds(3));
-	initializePin(MOTOR_PWM, OUTPUT, HIGH);  // pin38
-	std::this_thread::sleep_for(std::chrono::seconds(3));
-	initializePin(MOTOR_PWM, INPUT, LOW);  // pin38
-	std::this_thread::sleep_for(std::chrono::seconds(3));
-
-	int a = mcp4802Setup(100, 0);
-	analogWrite(100, 200); 
-	analogWrite(101, 100); 
-	std::this_thread::sleep_for(std::chrono::seconds(10));
-	analogWrite(100, 0); 
-	analogWrite(101, 0); 
-	std::this_thread::sleep_for(std::chrono::seconds(10));
 
 	m_SpiFd = wiringPiSPISetup(m_Config.spiChannel, m_Config.spiSpeed);
 	if (m_SpiFd < 0)
@@ -71,12 +70,6 @@ bool BoardIO::connect()
 	{
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "wiringPiSPISetup ok SpiFid %d", m_SpiFd);
 	}
-
-	// setDac(m_Config.dacChannelRun, 200);
-	// setDac(m_Config.dacChannelHold, 100);
-	// std::this_thread::sleep_for(std::chrono::seconds(10));
-	// setDac(m_Config.dacChannelRun, 0);
-	// setDac(m_Config.dacChannelHold, 0);
 
 	m_Connected = true;
 	m_GpioChip = detectBoard();
