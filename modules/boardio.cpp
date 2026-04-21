@@ -51,15 +51,30 @@ bool BoardIO::connect()
 					 "wiringPiSPISetup failed: errno=%d (%s)", errno, std::strerror(errno));
 	}
 
-    while (true)
-    {
-		setDacHold(255);
-        delay(2000);
-		setDacHold(0);
-        delay(2000);
-    }
+	while (true)
+	{
+		// setDacHold(255);
+		// delay(2000);
+		// setDacHold(0);
+		// delay(2000);
 
-    return 0;	
+		initializePin(MOTOR_PWM, INPUT, LOW); // pin38
+		// initializePin(CHK_IN_PIN, INPUT, LOW); // pin36
+
+		setDacHold(0);
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG, "Pin 20 %d", read(MOTOR_PWM));
+		if (read(MOTOR_PWM) == 0)
+		{
+			setDacHold(255);
+			DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG, "Pin 20 %d", read(MOTOR_PWM));
+			if (read(MOTOR_PWM) == 1)
+			{
+				// rev = 2;
+			}
+		}
+	}
+
+	return 0;
 
 	m_GpioChip = detectBoard();
 	m_Revision = checkRevision();
