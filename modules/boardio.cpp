@@ -43,7 +43,7 @@ bool BoardIO::connect()
 
 	int pin = 20; // BCM20
 
-	initializePin(20, INPUT, LOW);  // pin38
+	initializePin(pin, OUTPUT, LOW);  // pin38
 
     while (true)
     {
