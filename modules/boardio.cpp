@@ -4,14 +4,19 @@
 #include <sstream>
 #include <stdexcept>
 #include <cstdint>
+#include <iostream>
+#include <thread>
+#include <chrono>
 
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
+#include <mcp4802.h>
+#include <stdio.h>
 
 namespace
 {
-    constexpr int DAC_MAX_VALUE = 288;
-    constexpr int DAC_MIN_VALUE = 0;
+	constexpr int DAC_MAX_VALUE = 255;
+	constexpr int DAC_MIN_VALUE = 0;
 }
 
 BoardIO::BoardIO(const std::string &deviceName)
@@ -29,14 +34,16 @@ bool BoardIO::connect()
 	if (isConnected())
 		return true;
 
-	int wiringPiSetup = wiringPiSetupPinType(WPI_PIN_BCM);
+	int wiringPiSetup = wiringPiSetupGpio();
 	if (wiringPiSetup < 0)
 	{
 		return false;
 	}
-	initializePin(OUT1_PIN, OUTPUT, LOW);
+	m_Connected = true;
+
+	initializePin(OUT1_PIN, OUTPUT, HIGH);
 	initializePin(OUT2_PIN, OUTPUT, LOW);
-	
+
 	m_SpiFd = wiringPiSPISetup(m_Config.spiChannel, m_Config.spiSpeed);
 	if (m_SpiFd < 0)
 	{
@@ -44,7 +51,6 @@ bool BoardIO::connect()
 					 "wiringPiSPISetup failed: errno=%d (%s)", errno, std::strerror(errno));
 	}
 
-	m_Connected = true;
 	m_GpioChip = detectBoard();
 	m_Revision = checkRevision();
 
@@ -85,20 +91,17 @@ void BoardIO::initializePin(int gpio, int mode, int value)
 		pullUpDnControl(gpio, (value == 0) ? PUD_DOWN : PUD_UP);
 }
 
-
 bool BoardIO::setOut1(int value)
 {
 	write(OUT1_PIN, value);
 	return (value == read(OUT1_PIN));
 }
 
-
 bool BoardIO::setOut2(int value)
 {
 	write(OUT2_PIN, value);
 	return (value == read(OUT2_PIN));
 }
-
 
 void BoardIO::write(int gpio, int value)
 {
@@ -131,21 +134,25 @@ int BoardIO::checkRevision()
 {
 	int rev = 1;
 
-	initializePin(MOTOR_PWM, INPUT, LOW);
-	initializePin(CHK_IN_PIN, INPUT, LOW);
+	initializePin(MOTOR_PWM, INPUT, LOW);  // pin38
+	initializePin(CHK_IN_PIN, INPUT, LOW); // pin36
 
 	setDacHold(0);
+	std::this_thread::sleep_for(std::chrono::milliseconds(5));
 	if (read(MOTOR_PWM) == 0)
 	{
 		setDacHold(255);
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		if (read(MOTOR_PWM) == 1)
 			rev = 2;
 	}
 
 	setDacHold(0);
+	std::this_thread::sleep_for(std::chrono::milliseconds(5));
 	if (read(CHK_IN_PIN) == 0)
 	{
 		setDacHold(255);
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		if (read(CHK_IN_PIN) == 1)
 			rev = 3;
 	}
@@ -153,10 +160,12 @@ int BoardIO::checkRevision()
 	initializePin(MOTOR_PWM, OUTPUT, LOW);
 	if (rev == 1)
 	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		if (read(CHK_IN_PIN) == 0)
 		{
-			write(MOTOR_PWM, 1);		 	// pin38
-			if (read(CHK_IN_PIN) == 1) 		// pin36
+			write(MOTOR_PWM, 1);
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+			if (read(CHK_IN_PIN) == 1)
 			{
 				rev = 4;
 			}
@@ -189,33 +198,37 @@ int BoardIO::setDacHold(int value)
 	return setDac(m_Config.dacChannelHold, value);
 }
 
-int BoardIO::setDac(int chan, int value)
+int BoardIO::setDac(int channel, int value)
 {
 	if (m_SpiFd < 0)
 	{
-		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "SPI not available - write error.");		
+		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG, "SPI not available - write error.");
 		return -1;
 	}
 
-	chan = (chan != 0) ? 1 : 0;
-	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE); 
+	channel = (channel != 0) ? 1 : 0;
+	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
 
-	// MCP4802 16-bit frame:
-	// bit15 A/B
-	// bit14 don't care (0)
-	// bit13 GA = 1 (1x)
-	// bit12 SHDN = 1 (active)
-	// bits11..4 = 8-bit DAC data
-	// bits3..0  = don't care (0)
-	uint16_t frame = 0;
-	frame |= (static_cast<uint16_t>(chan) << 15);
-	frame |= (1u << 13);
-	frame |= (1u << 12);
-	frame |= (static_cast<uint16_t>(value & 0xFF) << 4);
+	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG, "Setting DAC chan %d val %d", channel, value);
 
-	unsigned char data[2];
-	data[0] = static_cast<unsigned char>((frame >> 8) & 0xFF);
-	data[1] = static_cast<unsigned char>(frame & 0xFF);
+	uint16_t data = 0;
 
-	return wiringPiSPIDataRW(m_Config.spiChannel, data, 2);
+	// Budowa ramki:
+	// bit15: 0
+	// bit14: channel (0=A, 1=B)
+	// bit13: 1 (aktywny DAC)
+	// bit12: 1 (gain = 1x)
+	// bit11-4: dane (8-bit)
+	// bit3-0: don't care
+
+	data |= (channel & 0x01) << 15; // wybór kanału
+	data |= (1 << 13);				// aktywacja
+	data |= (1 << 12);				// gain = 1x
+	data |= (value << 4);			// dane
+
+	uint8_t buffer[2];
+	buffer[0] = (data >> 8) & 0xFF;
+	buffer[1] = data & 0xFF;
+
+	return wiringPiSPIDataRW(m_Config.spiChannel, buffer, 2);
 }
