@@ -39,6 +39,8 @@ bool BoardIO::connect()
 	{
 		return false;
 	}
+	m_Connected = true;
+
 	int pin = 20; // BCM20
 
 	initializePin(20, INPUT, LOW);  // pin38
@@ -71,7 +73,6 @@ bool BoardIO::connect()
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "wiringPiSPISetup ok SpiFid %d", m_SpiFd);
 	}
 
-	m_Connected = true;
 	m_GpioChip = detectBoard();
 	m_Revision = checkRevision();
 
