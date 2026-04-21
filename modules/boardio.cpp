@@ -51,6 +51,16 @@ bool BoardIO::connect()
 					 "wiringPiSPISetup failed: errno=%d (%s)", errno, std::strerror(errno));
 	}
 
+    while (true)
+    {
+		setDacHold(255);
+        delay(2000);
+		setDacHold(0);
+        delay(2000);
+    }
+
+    return 0;	
+
 	m_GpioChip = detectBoard();
 	m_Revision = checkRevision();
 
