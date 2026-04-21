@@ -62,10 +62,12 @@ bool BoardIO::connect()
 		// initializePin(CHK_IN_PIN, INPUT, LOW); // pin36
 
 		setDacHold(0);
+		delay(1000);
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 20 %d", read(MOTOR_PWM));
 		if (read(MOTOR_PWM) == 0)
 		{
 			setDacHold(255);
+			delay(1000);
 			DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 20 %d", read(MOTOR_PWM));
 			if (read(MOTOR_PWM) == 1)
 			{
@@ -73,8 +75,6 @@ bool BoardIO::connect()
 			}
 		}
 	}
-
-	return 0;
 
 	m_GpioChip = detectBoard();
 	m_Revision = checkRevision();
