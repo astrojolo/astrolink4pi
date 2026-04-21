@@ -245,5 +245,5 @@ int BoardIO::setDac(int chan, int value)
 	buffer[0] = (data >> 8) & 0xFF;
 	buffer[1] = data & 0xFF;
 
-	wiringPiSPIDataRW(SPI_CHANNEL, buffer, 2);
+	wiringPiSPIDataRW(m_Config.spiChannel, buffer, 2);
 }
