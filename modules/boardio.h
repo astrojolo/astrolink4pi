@@ -22,7 +22,7 @@ public:
 
     struct Config
     {
-        int spiChannel = 0;
+        int spiChannel = 1;
         int spiSpeed = 1000000;
 
         int dacChannelRun = 0;
