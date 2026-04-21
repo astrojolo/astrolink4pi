@@ -53,6 +53,7 @@ bool BoardIO::connect()
 
 	while (true)
 	{
+		initializePin(MOTOR_PWM, INPUT, LOW);
 		setDacHold(255);
 		delay(2000);
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 1 20 %d", read(MOTOR_PWM));
