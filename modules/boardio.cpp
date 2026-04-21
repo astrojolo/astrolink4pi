@@ -48,7 +48,7 @@ bool BoardIO::connect()
 	}
 	else
 	{
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "wiringPiSPISetup ok SpiFid %d", m_SpiFid);
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "wiringPiSPISetup ok SpiFid %d", m_SpiFd);
 	}
 
 	setDac(0, 200);
