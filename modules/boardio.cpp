@@ -51,11 +51,11 @@ bool BoardIO::connect()
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "wiringPiSPISetup ok SpiFid %d", m_SpiFd);
 	}
 
-	setDac(0, 200);
-	setDac(1, 100);
+	setDac(m_Config.dacChannelRun, 200);
+	setDac(m_Config.dacChannelHold, 100);
 	std::this_thread::sleep_for(std::chrono::seconds(10));
-	setDac(0, 0);
-	setDac(1, 0);
+	setDac(m_Config.dacChannelRun, 0);
+	setDac(m_Config.dacChannelHold, 0);
 
 	m_Connected = true;
 	m_GpioChip = detectBoard();
@@ -201,33 +201,52 @@ int BoardIO::setDacHold(int value)
 
 int BoardIO::setDac(int chan, int value)
 {
-	if (m_SpiFd < 0)
-	{
-		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SPI not available - write error.");
-		return -1;
-	}
+	unsigned char spiData[2];
+	unsigned char chanBits, dataBits;
 
-	chan = (chan != 0) ? 1 : 0;
-	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
+	if (chan == 0)
+		chanBits = 0x30;
+	else
+		chanBits = 0xB0;
 
-	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Setting DAC chan %d val %d", chan, value);
+	chanBits |= ((value >> 4) & 0x0F);
+	dataBits = ((value << 4) & 0xF0);
 
-	// MCP4802 16-bit frame:
-	// bit15 A/B
-	// bit14 don't care (0)
-	// bit13 GA = 1 (1x)
-	// bit12 SHDN = 1 (active)
-	// bits11..4 = 8-bit DAC data
-	// bits3..0  = don't care (0)
-	uint16_t frame = 0;
-	frame |= (static_cast<uint16_t>(chan) << 15);
-	frame |= (1u << 13);
-	frame |= (1u << 12);
-	frame |= (static_cast<uint16_t>(value & 0xFF) << 4);
+	spiData[0] = chanBits;
+	spiData[1] = dataBits;
 
-	unsigned char data[2];
-	data[0] = static_cast<unsigned char>((frame >> 8) & 0xFF);
-	data[1] = static_cast<unsigned char>(frame & 0xFF);
-
-	return wiringPiSPIDataRW(m_SpiFd, data, 2);
+	wiringPiSPIDataRW(m_Config.spiChannel, spiData, 2);
 }
+
+// int BoardIO::setDac(int chan, int value)
+// {
+// 	if (m_SpiFd < 0)
+// 	{
+// 		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SPI not available - write error.");
+// 		return -1;
+// 	}
+
+// 	chan = (chan != 0) ? 1 : 0;
+// 	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
+
+// 	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Setting DAC chan %d val %d", chan, value);
+
+// 	// MCP4802 16-bit frame:
+// 	// bit15 A/B
+// 	// bit14 don't care (0)
+// 	// bit13 GA = 1 (1x)
+// 	// bit12 SHDN = 1 (active)
+// 	// bits11..4 = 8-bit DAC data
+// 	// bits3..0  = don't care (0)
+// 	uint16_t frame = 0;
+// 	frame |= (static_cast<uint16_t>(chan) << 15);
+// 	frame |= (1u << 13);
+// 	frame |= (1u << 12);
+// 	frame |= (static_cast<uint16_t>(value & 0xFF) << 4);
+
+// 	unsigned char data[2];
+// 	data[0] = static_cast<unsigned char>((frame >> 8) & 0xFF);
+// 	data[1] = static_cast<unsigned char>(frame & 0xFF);
+
+// 	return wiringPiSPIDataRW(m_SpiFd, data, 2);
+// }
