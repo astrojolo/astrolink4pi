@@ -42,7 +42,7 @@ bool BoardIO::connect()
 	initializePin(OUT1_PIN, OUTPUT, LOW);
 	initializePin(OUT2_PIN, OUTPUT, LOW);
 
-	int a = mcp4802setup(100, 0);
+	int a = mcp4802Setup(100, 0);
 	analogWrite(100, 200); 
 	analogWrite(101, 100); 
 	std::this_thread::sleep_for(std::chrono::seconds(10));
