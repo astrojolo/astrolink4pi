@@ -39,7 +39,7 @@ bool BoardIO::connect()
 	{
 		return false;
 	}
-	initializePin(OUT1_PIN, OUTPUT, LOW);
+	initializePin(OUT1_PIN, OUTPUT, HIGH);
 	initializePin(OUT2_PIN, OUTPUT, LOW);
 
 	initializePin(MOTOR_PWM, OUTPUT, LOW);  // pin38
