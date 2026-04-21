@@ -65,12 +65,12 @@ bool BoardIO::connect()
 		// initializePin(CHK_IN_PIN, INPUT, LOW); // pin36
 
 		setDacHold(0);
-		delay(1000);
+		delay(10);
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 0 20 %d", read(MOTOR_PWM));
 		if (read(MOTOR_PWM) == 0)
 		{
 			setDacHold(255);
-			delay(1000);
+			delay(10);
 			DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 1 20 %d", read(MOTOR_PWM));
 			if (read(MOTOR_PWM) == 1)
 			{
