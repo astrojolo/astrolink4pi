@@ -13,7 +13,7 @@
 
 namespace
 {
-	constexpr int DAC_MAX_VALUE = 288;
+	constexpr int DAC_MAX_VALUE = 255;
 	constexpr int DAC_MIN_VALUE = 0;
 }
 
@@ -46,6 +46,16 @@ bool BoardIO::connect()
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
 					 "wiringPiSPISetup failed: errno=%d (%s)", errno, std::strerror(errno));
 	}
+	else
+	{
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "wiringPiSPISetup ok SpiFid %d", m_SpiFid);
+	}
+
+	setDac(0, 200);
+	setDac(1, 100);
+	std::this_thread::sleep_for(std::chrono::seconds(10));
+	setDac(0, 0);
+	setDac(1, 0);
 
 	m_Connected = true;
 	m_GpioChip = detectBoard();
@@ -131,17 +141,6 @@ int BoardIO::checkRevision()
 {
 	int rev = 1;
 
-    for (int i = 0; i < 10; ++i)
-    {
-        setDacHold(0);
-
-        std::this_thread::sleep_for(std::chrono::seconds(3));
-
-        setDacHold(255);
-
-        std::this_thread::sleep_for(std::chrono::seconds(3));
-    }	
-
 	initializePin(MOTOR_PWM, INPUT, LOW);  // pin38
 	initializePin(CHK_IN_PIN, INPUT, LOW); // pin36
 
@@ -204,12 +203,14 @@ int BoardIO::setDac(int chan, int value)
 {
 	if (m_SpiFd < 0)
 	{
-		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "SPI not available - write error.");
+		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SPI not available - write error.");
 		return -1;
 	}
 
 	chan = (chan != 0) ? 1 : 0;
 	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
+
+	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Setting DAC chan %d val %d", chan, value);
 
 	// MCP4802 16-bit frame:
 	// bit15 A/B
