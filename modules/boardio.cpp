@@ -34,7 +34,7 @@ bool BoardIO::connect()
 	if (isConnected())
 		return true;
 
-	int wiringPiSetup = wiringPiSetupPinType(WPI_PIN_BCM);
+	int wiringPiSetup = wiringPiSetupGpio();
 	if (wiringPiSetup < 0)
 	{
 		return false;
