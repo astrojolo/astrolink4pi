@@ -42,6 +42,17 @@ bool BoardIO::connect()
 	initializePin(OUT1_PIN, OUTPUT, LOW);
 	initializePin(OUT2_PIN, OUTPUT, LOW);
 
+	initializePin(MOTOR_PWM, OUTPUT, LOW);  // pin38
+	std::this_thread::sleep_for(std::chrono::seconds(3));
+	initializePin(MOTOR_PWM, OUTPUT, HIGH);  // pin38
+	std::this_thread::sleep_for(std::chrono::seconds(3));
+	initializePin(MOTOR_PWM, OUTPUT, LOW);  // pin38
+	std::this_thread::sleep_for(std::chrono::seconds(3));
+	initializePin(MOTOR_PWM, OUTPUT, HIGH);  // pin38
+	std::this_thread::sleep_for(std::chrono::seconds(3));
+	initializePin(MOTOR_PWM, INPUT, LOW);  // pin38
+	std::this_thread::sleep_for(std::chrono::seconds(3));
+
 	int a = mcp4802Setup(100, 0);
 	analogWrite(100, 200); 
 	analogWrite(101, 100); 
