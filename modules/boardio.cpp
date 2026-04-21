@@ -53,9 +53,9 @@ bool BoardIO::connect()
 
 	setDac(m_Config.dacChannelRun, 200);
 	setDac(m_Config.dacChannelHold, 100);
-	// std::this_thread::sleep_for(std::chrono::seconds(10));
-	// setDac(m_Config.dacChannelRun, 0);
-	// setDac(m_Config.dacChannelHold, 0);
+	std::this_thread::sleep_for(std::chrono::seconds(10));
+	setDac(m_Config.dacChannelRun, 0);
+	setDac(m_Config.dacChannelHold, 0);
 
 	m_Connected = true;
 	m_GpioChip = detectBoard();
