@@ -41,16 +41,16 @@ bool BoardIO::connect()
 	}
 	int pin = 20; // BCM20
 
-	pinMode(pin, OUTPUT);
+	initializePin(20, INPUT, LOW);  // pin38
 
     while (true)
     {
         // HIGH
-        digitalWrite(pin, HIGH);
+        write(pin, HIGH);
         delay(3000); // 3 sekundy
 
         // LOW
-        digitalWrite(pin, LOW);
+        write(pin, LOW);
         delay(3000); // 3 sekundy
     }
 
