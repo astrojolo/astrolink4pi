@@ -50,27 +50,6 @@ bool BoardIO::connect()
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
 					 "wiringPiSPISetup failed: errno=%d (%s)", errno, std::strerror(errno));
 	}
-	else
-	{
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "wiringPiSPISetup ok SpiFid %d", m_SpiFd);
-	}
-
-    while (true)
-    {
-        // MAX (255)
-        setDac(0, 255); // kanał A
-        setDac(1, 255); // kanał B
-
-        delay(2000);
-
-        // MIN (0)
-        setDac(0, 0);
-        setDac(1, 0);
-
-        delay(2000);
-    }
-
-    return 0;	
 
 	m_GpioChip = detectBoard();
 	m_Revision = checkRevision();
@@ -217,14 +196,14 @@ int BoardIO::setDac(int channel, int value)
 {
 	if (m_SpiFd < 0)
 	{
-		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SPI not available - write error.");
+		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG, "SPI not available - write error.");
 		return -1;
 	}
 
 	channel = (channel != 0) ? 1 : 0;
 	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
 
-	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Setting DAC chan %d val %d", channel, value);
+	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG, "Setting DAC chan %d val %d", channel, value);
 
 	uint16_t data = 0;
 
