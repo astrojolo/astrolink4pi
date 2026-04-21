@@ -58,7 +58,7 @@ bool BoardIO::connect()
 		// setDacHold(0);
 		// delay(2000);
 
-		initializePin(MOTOR_PWM, INPUT, LOW); // pin38
+		// initializePin(MOTOR_PWM, INPUT, LOW); // pin38
 		// initializePin(CHK_IN_PIN, INPUT, LOW); // pin36
 
 		setDacHold(0);
