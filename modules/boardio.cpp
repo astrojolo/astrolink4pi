@@ -224,7 +224,7 @@ int BoardIO::setDac(int channel, int value)
 	channel = (channel != 0) ? 1 : 0;
 	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
 
-	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Setting DAC chan %d val %d", chan, value);
+	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Setting DAC chan %d val %d", channel, value);
 
 	uint16_t data = 0;
 
