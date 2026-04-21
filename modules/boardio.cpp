@@ -41,26 +41,8 @@ bool BoardIO::connect()
 	}
 	m_Connected = true;
 
-	int pin = 20; // BCM20
-
-	initializePin(pin, OUTPUT, LOW);  // pin38
-
-    while (true)
-    {
-        // HIGH
-        write(pin, HIGH);
-        delay(3000); // 3 sekundy
-
-        // LOW
-        write(pin, LOW);
-        delay(3000); // 3 sekundy
-    }
-
-    return false;	
-
 	initializePin(OUT1_PIN, OUTPUT, HIGH);
 	initializePin(OUT2_PIN, OUTPUT, LOW);
-
 
 	m_SpiFd = wiringPiSPISetup(m_Config.spiChannel, m_Config.spiSpeed);
 	if (m_SpiFd < 0)
@@ -72,6 +54,23 @@ bool BoardIO::connect()
 	{
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "wiringPiSPISetup ok SpiFid %d", m_SpiFd);
 	}
+
+    while (true)
+    {
+        // MAX (255)
+        setDac(0, 255); // kanał A
+        setDac(1, 255); // kanał B
+
+        delay(2000);
+
+        // MIN (0)
+        setDac(0, 0);
+        setDac(1, 0);
+
+        delay(2000);
+    }
+
+    return 0;	
 
 	m_GpioChip = detectBoard();
 	m_Revision = checkRevision();
@@ -233,35 +232,37 @@ int BoardIO::setDac(int chan, int value)
 	return wiringPiSPIDataRW(m_Config.spiChannel, spiData, 2);
 }
 
-// int BoardIO::setDac(int chan, int value)
-// {
-// 	if (m_SpiFd < 0)
-// 	{
-// 		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SPI not available - write error.");
-// 		return -1;
-// 	}
+int BoardIO::setDac(int chan, int value)
+{
+	if (m_SpiFd < 0)
+	{
+		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SPI not available - write error.");
+		return -1;
+	}
 
-// 	chan = (chan != 0) ? 1 : 0;
-// 	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
+	chan = (chan != 0) ? 1 : 0;
+	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
 
-// 	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Setting DAC chan %d val %d", chan, value);
+	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Setting DAC chan %d val %d", chan, value);
 
-// 	// MCP4802 16-bit frame:
-// 	// bit15 A/B
-// 	// bit14 don't care (0)
-// 	// bit13 GA = 1 (1x)
-// 	// bit12 SHDN = 1 (active)
-// 	// bits11..4 = 8-bit DAC data
-// 	// bits3..0  = don't care (0)
-// 	uint16_t frame = 0;
-// 	frame |= (static_cast<uint16_t>(chan) << 15);
-// 	frame |= (1u << 13);
-// 	frame |= (1u << 12);
-// 	frame |= (static_cast<uint16_t>(value & 0xFF) << 4);
+	uint16_t data = 0;
 
-// 	unsigned char data[2];
-// 	data[0] = static_cast<unsigned char>((frame >> 8) & 0xFF);
-// 	data[1] = static_cast<unsigned char>(frame & 0xFF);
+	// Budowa ramki:
+	// bit15: 0
+	// bit14: channel (0=A, 1=B)
+	// bit13: 1 (aktywny DAC)
+	// bit12: 1 (gain = 1x)
+	// bit11-4: dane (8-bit)
+	// bit3-0: don't care
 
-// 	return wiringPiSPIDataRW(m_SpiFd, data, 2);
-// }
+	data |= (channel & 0x01) << 15; // wybór kanału
+	data |= (1 << 13);				// aktywacja
+	data |= (1 << 12);				// gain = 1x
+	data |= (value << 4);			// dane
+
+	uint8_t buffer[2];
+	buffer[0] = (data >> 8) & 0xFF;
+	buffer[1] = data & 0xFF;
+
+	wiringPiSPIDataRW(SPI_CHANNEL, buffer, 2);
+}
