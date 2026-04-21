@@ -229,5 +229,5 @@ int BoardIO::setDac(int chan, int value)
 	data[0] = static_cast<unsigned char>((frame >> 8) & 0xFF);
 	data[1] = static_cast<unsigned char>(frame & 0xFF);
 
-	return wiringPiSPIDataRW(m_Config.spiChannel, data, 2);
+	return wiringPiSPIDataRW(m_SpiFd, data, 2);
 }
