@@ -10,6 +10,8 @@
 
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
+#include <mcp4802.h>
+#include <stdio.h>
 
 namespace
 {
@@ -40,6 +42,14 @@ bool BoardIO::connect()
 	initializePin(OUT1_PIN, OUTPUT, LOW);
 	initializePin(OUT2_PIN, OUTPUT, LOW);
 
+	int a = mcp4802setup(100, 0);
+	analogWrite(100, 200); 
+	analogWrite(101, 100); 
+	std::this_thread::sleep_for(std::chrono::seconds(10));
+	analogWrite(100, 0); 
+	analogWrite(101, 0); 
+	std::this_thread::sleep_for(std::chrono::seconds(10));
+
 	m_SpiFd = wiringPiSPISetup(m_Config.spiChannel, m_Config.spiSpeed);
 	if (m_SpiFd < 0)
 	{
@@ -51,11 +61,11 @@ bool BoardIO::connect()
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "wiringPiSPISetup ok SpiFid %d", m_SpiFd);
 	}
 
-	setDac(m_Config.dacChannelRun, 200);
-	setDac(m_Config.dacChannelHold, 100);
-	std::this_thread::sleep_for(std::chrono::seconds(10));
-	setDac(m_Config.dacChannelRun, 0);
-	setDac(m_Config.dacChannelHold, 0);
+	// setDac(m_Config.dacChannelRun, 200);
+	// setDac(m_Config.dacChannelHold, 100);
+	// std::this_thread::sleep_for(std::chrono::seconds(10));
+	// setDac(m_Config.dacChannelRun, 0);
+	// setDac(m_Config.dacChannelHold, 0);
 
 	m_Connected = true;
 	m_GpioChip = detectBoard();
