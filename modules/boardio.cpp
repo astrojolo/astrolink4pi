@@ -215,25 +215,6 @@ int BoardIO::setDacHold(int value)
 
 int BoardIO::setDac(int chan, int value)
 {
-	unsigned char spiData[2];
-	unsigned char chanBits, dataBits;
-
-	if (chan == 0)
-		chanBits = 0x30;
-	else
-		chanBits = 0xB0;
-
-	chanBits |= ((value >> 4) & 0x0F);
-	dataBits = ((value << 4) & 0xF0);
-
-	spiData[0] = chanBits;
-	spiData[1] = dataBits;
-
-	return wiringPiSPIDataRW(m_Config.spiChannel, spiData, 2);
-}
-
-int BoardIO::setDac(int chan, int value)
-{
 	if (m_SpiFd < 0)
 	{
 		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "SPI not available - write error.");
