@@ -52,7 +52,7 @@ bool BoardIO::connect()
 	}
 
 	setDac(m_Config.dacChannelRun, 200);
-	// setDac(m_Config.dacChannelHold, 100);
+	setDac(m_Config.dacChannelHold, 100);
 	// std::this_thread::sleep_for(std::chrono::seconds(10));
 	// setDac(m_Config.dacChannelRun, 0);
 	// setDac(m_Config.dacChannelHold, 0);
