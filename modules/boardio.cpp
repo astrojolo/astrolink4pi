@@ -51,33 +51,33 @@ bool BoardIO::connect()
 					 "wiringPiSPISetup failed: errno=%d (%s)", errno, std::strerror(errno));
 	}
 
-	while (true)
-	{
-		// initializePin(MOTOR_PWM, INPUT, LOW);
-		// setDacHold(255);
-		// delay(2000);
-		// DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 1 20 %d", read(MOTOR_PWM));
-		// setDacHold(0);
-		// delay(2000);
-		// DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 0 20 %d", read(MOTOR_PWM));
+	// while (true)
+	// {
+	// 	// initializePin(MOTOR_PWM, INPUT, LOW);
+	// 	// setDacHold(255);
+	// 	// delay(2000);
+	// 	// DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 1 20 %d", read(MOTOR_PWM));
+	// 	// setDacHold(0);
+	// 	// delay(2000);
+	// 	// DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 0 20 %d", read(MOTOR_PWM));
 
-		initializePin(MOTOR_PWM, INPUT, LOW); // pin38
-		// initializePin(CHK_IN_PIN, INPUT, LOW); // pin36
+	// 	initializePin(MOTOR_PWM, INPUT, LOW); // pin38
+	// 	// initializePin(CHK_IN_PIN, INPUT, LOW); // pin36
 
-		setDacHold(0);
-		delay(10);
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 0 20 %d", read(MOTOR_PWM));
-		if (read(MOTOR_PWM) == 0)
-		{
-			setDacHold(255);
-			delay(10);
-			DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 1 20 %d", read(MOTOR_PWM));
-			if (read(MOTOR_PWM) == 1)
-			{
-				// rev = 2;
-			}
-		}
-	}
+	// 	setDacHold(0);
+	// 	delay(10);
+	// 	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 0 20 %d", read(MOTOR_PWM));
+	// 	if (read(MOTOR_PWM) == 0)
+	// 	{
+	// 		setDacHold(255);
+	// 		delay(10);
+	// 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 1 20 %d", read(MOTOR_PWM));
+	// 		if (read(MOTOR_PWM) == 1)
+	// 		{
+	// 			// rev = 2;
+	// 		}
+	// 	}
+	// }
 
 	m_GpioChip = detectBoard();
 	m_Revision = checkRevision();
@@ -166,17 +166,21 @@ int BoardIO::checkRevision()
 	initializePin(CHK_IN_PIN, INPUT, LOW); // pin36
 
 	setDacHold(0);
+	std::this_thread::sleep_for(std::chrono::milliseconds(5));
 	if (read(MOTOR_PWM) == 0)
 	{
 		setDacHold(255);
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		if (read(MOTOR_PWM) == 1)
 			rev = 2;
 	}
 
 	setDacHold(0);
+	std::this_thread::sleep_for(std::chrono::milliseconds(5));
 	if (read(CHK_IN_PIN) == 0)
 	{
 		setDacHold(255);
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		if (read(CHK_IN_PIN) == 1)
 			rev = 3;
 	}
@@ -184,9 +188,11 @@ int BoardIO::checkRevision()
 	initializePin(MOTOR_PWM, OUTPUT, LOW);
 	if (rev == 1)
 	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 		if (read(CHK_IN_PIN) == 0)
 		{
 			write(MOTOR_PWM, 1);
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
 			if (read(CHK_IN_PIN) == 1)
 			{
 				rev = 4;
