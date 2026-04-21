@@ -213,7 +213,7 @@ int BoardIO::setDacHold(int value)
 	return setDac(m_Config.dacChannelHold, value);
 }
 
-int BoardIO::setDac(int chan, int value)
+int BoardIO::setDac(int channel, int value)
 {
 	if (m_SpiFd < 0)
 	{
@@ -221,7 +221,7 @@ int BoardIO::setDac(int chan, int value)
 		return -1;
 	}
 
-	chan = (chan != 0) ? 1 : 0;
+	channel = (channel != 0) ? 1 : 0;
 	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
 
 	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Setting DAC chan %d val %d", chan, value);
@@ -245,5 +245,5 @@ int BoardIO::setDac(int chan, int value)
 	buffer[0] = (data >> 8) & 0xFF;
 	buffer[1] = data & 0xFF;
 
-	wiringPiSPIDataRW(m_Config.spiChannel, buffer, 2);
+	return wiringPiSPIDataRW(m_Config.spiChannel, buffer, 2);
 }
