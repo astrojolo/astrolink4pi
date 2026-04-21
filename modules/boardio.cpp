@@ -53,27 +53,27 @@ bool BoardIO::connect()
 
 	while (true)
 	{
-		// setDacHold(255);
-		// delay(2000);
-		// setDacHold(0);
-		// delay(2000);
+		setDacHold(255);
+		delay(2000);
+		setDacHold(0);
+		delay(2000);
 
 		// initializePin(MOTOR_PWM, INPUT, LOW); // pin38
 		// initializePin(CHK_IN_PIN, INPUT, LOW); // pin36
 
-		setDacHold(0);
-		delay(1000);
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 0 20 %d", read(MOTOR_PWM));
-		if (read(MOTOR_PWM) == 0)
-		{
-			setDacHold(255);
-			delay(1000);
-			DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 1 20 %d", read(MOTOR_PWM));
-			if (read(MOTOR_PWM) == 1)
-			{
-				// rev = 2;
-			}
-		}
+		// setDacHold(0);
+		// delay(1000);
+		// DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 0 20 %d", read(MOTOR_PWM));
+		// if (read(MOTOR_PWM) == 0)
+		// {
+		// 	setDacHold(255);
+		// 	delay(1000);
+		// 	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Pin 1 20 %d", read(MOTOR_PWM));
+		// 	if (read(MOTOR_PWM) == 1)
+		// 	{
+		// 		// rev = 2;
+		// 	}
+		// }
 	}
 
 	m_GpioChip = detectBoard();
