@@ -4,14 +4,17 @@
 #include <sstream>
 #include <stdexcept>
 #include <cstdint>
+#include <iostream>
+#include <thread>
+#include <chrono>
 
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
 
 namespace
 {
-    constexpr int DAC_MAX_VALUE = 288;
-    constexpr int DAC_MIN_VALUE = 0;
+	constexpr int DAC_MAX_VALUE = 288;
+	constexpr int DAC_MIN_VALUE = 0;
 }
 
 BoardIO::BoardIO(const std::string &deviceName)
@@ -36,7 +39,7 @@ bool BoardIO::connect()
 	}
 	initializePin(OUT1_PIN, OUTPUT, LOW);
 	initializePin(OUT2_PIN, OUTPUT, LOW);
-	
+
 	m_SpiFd = wiringPiSPISetup(m_Config.spiChannel, m_Config.spiSpeed);
 	if (m_SpiFd < 0)
 	{
@@ -85,20 +88,17 @@ void BoardIO::initializePin(int gpio, int mode, int value)
 		pullUpDnControl(gpio, (value == 0) ? PUD_DOWN : PUD_UP);
 }
 
-
 bool BoardIO::setOut1(int value)
 {
 	write(OUT1_PIN, value);
 	return (value == read(OUT1_PIN));
 }
 
-
 bool BoardIO::setOut2(int value)
 {
 	write(OUT2_PIN, value);
 	return (value == read(OUT2_PIN));
 }
-
 
 void BoardIO::write(int gpio, int value)
 {
@@ -131,8 +131,19 @@ int BoardIO::checkRevision()
 {
 	int rev = 1;
 
-	initializePin(MOTOR_PWM, INPUT, LOW);
-	initializePin(CHK_IN_PIN, INPUT, LOW);
+    for (int i = 0; i < 10; ++i)
+    {
+        setDacHold(0);
+
+        std::this_thread::sleep_for(std::chrono::seconds(3));
+
+        setDacHold(255);
+
+        std::this_thread::sleep_for(std::chrono::seconds(3));
+    }	
+
+	initializePin(MOTOR_PWM, INPUT, LOW);  // pin38
+	initializePin(CHK_IN_PIN, INPUT, LOW); // pin36
 
 	setDacHold(0);
 	if (read(MOTOR_PWM) == 0)
@@ -155,8 +166,8 @@ int BoardIO::checkRevision()
 	{
 		if (read(CHK_IN_PIN) == 0)
 		{
-			write(MOTOR_PWM, 1);		 	// pin38
-			if (read(CHK_IN_PIN) == 1) 		// pin36
+			write(MOTOR_PWM, 1);
+			if (read(CHK_IN_PIN) == 1)
 			{
 				rev = 4;
 			}
@@ -193,12 +204,12 @@ int BoardIO::setDac(int chan, int value)
 {
 	if (m_SpiFd < 0)
 	{
-		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "SPI not available - write error.");		
+		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "SPI not available - write error.");
 		return -1;
 	}
 
 	chan = (chan != 0) ? 1 : 0;
-	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE); 
+	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
 
 	// MCP4802 16-bit frame:
 	// bit15 A/B
