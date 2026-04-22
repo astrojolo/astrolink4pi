@@ -278,18 +278,18 @@ bool BoardIO::writeDac(uint8_t channel,
 					   const char *device,
 					   uint32_t speedHz)
 {
-	DEBUGDEVICE("SPI DAC", INDI::Logger::DBG_WARNING, "Opening device");	
+	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Opening device");	
 	int fd = ::open(device, O_RDWR);
-	DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_WARNING, "Opening device %d", fd);	
+	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Opening device %d", fd);	
 	if (fd < 0)
 	{
-		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_WARNING,
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
 					 "writeDac open failed: errno=%d (%s)", errno, std::strerror(errno));		
 		return false;
 	}
 	else
 	{
-		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_WARNING, "writeDac open OK: fd=%d", fd);		
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "writeDac open OK: fd=%d", fd);		
 	}	
 
 	// Gwarancja zamknięcia przy KAŻDYM wyjściu z funkcji
@@ -308,21 +308,21 @@ bool BoardIO::writeDac(uint8_t channel,
 
 	if (::ioctl(fd, SPI_IOC_WR_MODE, &mode) < 0)
 	{
-		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_WARNING,
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
 					 "writeDac SPI_IOC_WR_MODE failed: errno=%d (%s)", errno, std::strerror(errno));		
 		return false;
 	}
 
 	if (::ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bitsPerWord) < 0)
 	{
-		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_WARNING,
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
 					 "writeDac SPI_IOC_WR_BITS_PER_WORD failed: errno=%d (%s)", errno, std::strerror(errno));		
 		return false;
 	}
 
 	if (::ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speedHz) < 0)
 	{
-		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_WARNING,
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
 					 "writeDac SPI_IOC_WR_MAX_SPEED_HZ failed: errno=%d (%s)", errno, std::strerror(errno));		
 		return false;
 	}
@@ -356,7 +356,7 @@ bool BoardIO::writeDac(uint8_t channel,
 	// Jeden transfer 2-bajtowy
 	if (::ioctl(fd, SPI_IOC_MESSAGE(1), &tr) < 1)
 	{
-		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_WARNING,
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
 					 "writeDac SPI_IOC_MESSAGE failed: errno=%d (%s)", errno, std::strerror(errno));		
 		return false;
 	}
