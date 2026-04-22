@@ -92,17 +92,17 @@ bool AstroLink4Pi::Connect()
 		DEBUG(INDI::Logger::DBG_ERROR, "Could not access GPIO.");
 		return false;
 	}
-	if (!m_PwmController.connect())
-	{
-		DEBUG(INDI::Logger::DBG_ERROR, "Could not initialize PWM.");
-		return false;
-	}
-	if (!m_Focuser.open())
-	{
-		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize Focuser module.");
-		return false;
-	}
-	m_Focuser.setRevision(m_BoardIO.revision());
+	// if (!m_PwmController.connect())
+	// {
+	// 	DEBUG(INDI::Logger::DBG_ERROR, "Could not initialize PWM.");
+	// 	return false;
+	// }
+	// if (!m_Focuser.open())
+	// {
+	// 	DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize Focuser module.");
+	// 	return false;
+	// }
+	// m_Focuser.setRevision(m_BoardIO.revision());
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi %d, RPi version %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
 
@@ -114,22 +114,22 @@ bool AstroLink4Pi::Connect()
 
 
 	// Optional modules
-	if (!m_PowerMonitor.open())
-	{
-		DEBUG(INDI::Logger::DBG_DEBUG, "Power monitor not detected.");
-	}
-	if (!m_SHTReader.open())
-	{
-		DEBUG(INDI::Logger::DBG_DEBUG, "SHT sensor not detected.");
-	}
-	if (!m_MLXReader.open())
-	{
-		DEBUG(INDI::Logger::DBG_DEBUG, "MLX sensor not detected.");
-	}
-	if (!m_TSLReader.open())
-	{
-		DEBUG(INDI::Logger::DBG_DEBUG, "TSL sensor not detected.");
-	}
+	// if (!m_PowerMonitor.open())
+	// {
+	// 	DEBUG(INDI::Logger::DBG_DEBUG, "Power monitor not detected.");
+	// }
+	// if (!m_SHTReader.open())
+	// {
+	// 	DEBUG(INDI::Logger::DBG_DEBUG, "SHT sensor not detected.");
+	// }
+	// if (!m_MLXReader.open())
+	// {
+	// 	DEBUG(INDI::Logger::DBG_DEBUG, "MLX sensor not detected.");
+	// }
+	// if (!m_TSLReader.open())
+	// {
+	// 	DEBUG(INDI::Logger::DBG_DEBUG, "TSL sensor not detected.");
+	// }
 
 	// Lock Relay Labels setting
 	RelayLabelsTP.s = IPS_BUSY;
@@ -159,8 +159,8 @@ bool AstroLink4Pi::Connect()
 
 bool AstroLink4Pi::Disconnect()
 {
-	m_PwmController.shutdown();
-	m_PowerMonitor.close();
+	// m_PwmController.shutdown();
+	// m_PowerMonitor.close();
 	m_BoardIO.disconnect();
 
 	RelayLabelsTP.s = IPS_IDLE;
@@ -717,47 +717,47 @@ void AstroLink4Pi::TimerHit()
 		return;
 
 	uint64_t timeMillis = m_SystemInfo.millis();
-	readTSL();
-	readPower();
-	focuserUpdate();
+	// readTSL();
+	// readPower();
+	// focuserUpdate();
 
-	if (nextSystemRead < timeMillis)
-	{
-		m_Cycle = next(m_Cycle);
+	// if (nextSystemRead < timeMillis)
+	// {
+	// 	m_Cycle = next(m_Cycle);
 
-		switch (m_Cycle)
-		{
-		case SensorCycle::SHT_T:
-			readSHT(0);
-			break;
-		case SensorCycle::SHT_R:
-			readSHT(1);
-			break;
-		case SensorCycle::MLX:
-			readMLX();
-			break;
-		case SensorCycle::SYS:
-			systemUpdate();
-			break;
-		case SensorCycle::FAN:
-			fanUpdate();
-			break;
-		case SensorCycle::COMP:
-			if (FocusTemperatureNP.s == IPS_OK)
-			{
-				m_Focuser.setTemperature(FocusTemperatureN[0].value);
-				m_Focuser.temperatureCompensation();
-			}
-			break;
-		default:
-			break;
-		}
-		nextSystemRead = timeMillis + SENSOR_READ_PERIOD;
+	// 	switch (m_Cycle)
+	// 	{
+	// 	case SensorCycle::SHT_T:
+	// 		readSHT(0);
+	// 		break;
+	// 	case SensorCycle::SHT_R:
+	// 		readSHT(1);
+	// 		break;
+	// 	case SensorCycle::MLX:
+	// 		readMLX();
+	// 		break;
+	// 	case SensorCycle::SYS:
+	// 		systemUpdate();
+	// 		break;
+	// 	case SensorCycle::FAN:
+	// 		fanUpdate();
+	// 		break;
+	// 	case SensorCycle::COMP:
+	// 		if (FocusTemperatureNP.s == IPS_OK)
+	// 		{
+	// 			m_Focuser.setTemperature(FocusTemperatureN[0].value);
+	// 			m_Focuser.temperatureCompensation();
+	// 		}
+	// 		break;
+	// 	default:
+	// 		break;
+	// 	}
+	// 	nextSystemRead = timeMillis + SENSOR_READ_PERIOD;
 
-		if (FocusTemperatureNP.s == IPS_OK)
-		{
-		}
-	}
+	// 	if (FocusTemperatureNP.s == IPS_OK)
+	// 	{
+	// 	}
+	// }
 
 	SetTimer(POLL_PERIOD);
 }
