@@ -60,12 +60,10 @@ bool SHTReader::read(SHTReader::Readings &out, int mode)
 
     if ((mode % 2) == 0)
     {
-        // Faza 1: start pomiaru
         return startMeasurement();
     }
     else
     {
-        // Faza 2: odczyt poprzednio uruchomionego pomiaru
         return readMeasurement(out);
     }
     // if (!isOpen())
