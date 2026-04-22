@@ -49,16 +49,16 @@ bool BoardIO::connect()
 	}
 	m_Connected = true;
 
-	// initializePin(MOTOR_PWM, INPUT, LOW);  // pin38
-	// while (true)
-	// {
-	// 	setDac(0,255);
-	// 	setDac(1,200);
-	// 	delay(3000);
-	// 	setDac(0,0);
-	// 	setDac(1,0);
-	// 	delay(3000);
-	// }
+	initializePin(MOTOR_PWM, INPUT, LOW);  // pin38
+	while (true)
+	{
+		setDac(0,255);
+		setDac(1,200);
+		delay(3000);
+		setDac(0,0);
+		setDac(1,0);
+		delay(3000);
+	}
 
 	initializePin(OUT1_PIN, OUTPUT, HIGH);
 	initializePin(OUT2_PIN, OUTPUT, LOW);
