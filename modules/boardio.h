@@ -48,6 +48,13 @@ public:
     int setDac(int chan, int value);
     int setDacRun(int value);
     int setDacHold(int value);
+    
+    static bool writeDac(uint8_t channel,
+                         uint8_t value,
+                         bool gain1x = true,
+                         bool active = true,
+                         const char* device = "/dev/spidev0.1",
+                         uint32_t speedHz = 1000000);    
 
 private:
     int detectBoard();

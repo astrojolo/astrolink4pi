@@ -7,11 +7,17 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <stdio.h>
+#include <cstring>
+#include <cerrno>
+#include <string>
+
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <linux/spi/spidev.h>
 
 #include <wiringPi.h>
-#include <wiringPiSPI.h>
-#include <mcp4802.h>
-#include <stdio.h>
 
 namespace
 {
@@ -187,7 +193,8 @@ int BoardIO::setDacRun(int value)
 
 int BoardIO::setDacHold(int value)
 {
-	return setDac(m_Config.dacChannelHold, value);
+	// return setDac(m_Config.dacChannelHold, value);
+	return writeDac(m_Config.dacChannelHold, value);
 }
 
 int BoardIO::setDac(int channel, int value)
@@ -210,7 +217,7 @@ int BoardIO::setDac(int channel, int value)
 		}
 	};
 
-	SpiCloser spiCloser{0, m_Config.spiChannel};	
+	SpiCloser spiCloser{0, m_Config.spiChannel};
 
 	channel = (channel != 0) ? 1 : 0;
 	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
@@ -242,6 +249,77 @@ int BoardIO::setDac(int channel, int value)
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
 					 "wiringPiSPIxDataRW failed: errno=%d (%s)", errno, std::strerror(errno));
 		return -1;
-	}	
+	}
 	return returnValue;
+}
+
+// channel: 0 = DAC A, 1 = DAC B
+// value:   0..255 dla MCP4802 (8-bit)
+// gain1x:  true = 1x, false = 2x
+// active:  true = aktywny DAC, false = shutdown
+bool SpiMcp4802::writeDac(uint8_t channel,
+						  uint8_t value,
+						  bool gain1x = true,
+						  bool active = true,
+						  const char *device = "/dev/spidev0.1",
+						  uint32_t speedHz = 1000000)
+{
+	int fd = ::open(device, O_RDWR);
+	if (fd < 0)
+		return false;
+
+	// Gwarancja zamknięcia przy KAŻDYM wyjściu z funkcji
+	struct FdGuard
+	{
+		int fd_;
+		~FdGuard()
+		{
+			if (fd_ >= 0)
+				::close(fd_);
+		}
+	} guard{fd};
+
+	uint8_t mode = SPI_MODE_0;
+	uint8_t bitsPerWord = 8;
+
+	if (::ioctl(fd, SPI_IOC_WR_MODE, &mode) < 0)
+		return false;
+
+	if (::ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bitsPerWord) < 0)
+		return false;
+
+	if (::ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speedHz) < 0)
+		return false;
+
+	// MCP4802, ramka 16-bit:
+	// bit15    : 0
+	// bit14    : channel (0=A, 1=B)
+	// bit13    : active  (1=active, 0=shutdown)
+	// bit12    : gain    (1=1x, 0=2x)
+	// bit11    : 0
+	// bit10..3 : data D7..D0
+	// bit2..0  : 0
+	uint16_t frame = 0;
+	frame |= (static_cast<uint16_t>(channel ? 1 : 0) << 14);
+	frame |= (static_cast<uint16_t>(active ? 1 : 0) << 13);
+	frame |= (static_cast<uint16_t>(gain1x ? 1 : 0) << 12);
+	frame |= (static_cast<uint16_t>(value) << 4);
+
+	uint8_t tx[2];
+	tx[0] = static_cast<uint8_t>((frame >> 8) & 0xFF); // MSB
+	tx[1] = static_cast<uint8_t>(frame & 0xFF);		   // LSB
+
+	struct spi_ioc_transfer tr;
+	std::memset(&tr, 0, sizeof(tr));
+	tr.tx_buf = reinterpret_cast<unsigned long>(tx);
+	tr.rx_buf = 0;
+	tr.len = sizeof(tx);
+	tr.speed_hz = speedHz;
+	tr.bits_per_word = bitsPerWord;
+
+	// Jeden transfer 2-bajtowy
+	if (::ioctl(fd, SPI_IOC_MESSAGE(1), &tr) < 1)
+		return false;
+
+	return true;
 }
