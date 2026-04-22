@@ -59,7 +59,6 @@ private:
 
 private:
     Config m_Config;
-    std::mutex m_SpiMutex;
 
     bool m_Connected = false;
     int m_Revision = 0;
