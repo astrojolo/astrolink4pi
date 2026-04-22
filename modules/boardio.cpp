@@ -40,7 +40,7 @@ bool BoardIO::connect()
 	}
 	m_Connected = true;
 
-	initializePin(OUT1_PIN, OUTPUT, HIGH);
+	initializePin(OUT1_PIN, OUTPUT, LOW);
 	initializePin(OUT2_PIN, OUTPUT, LOW);
 
 	m_GpioChip = detectBoard();
@@ -51,6 +51,8 @@ bool BoardIO::connect()
 
 void BoardIO::disconnect()
 {
+	initializePin(OUT1_PIN, INPUT, LOW);
+	initializePin(OUT2_PIN, INPUT, LOW);
 	m_Revision = 0;
 	m_GpioChip = RP_UNKNOWN;
 	m_Connected = false;

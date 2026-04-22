@@ -115,10 +115,10 @@ bool AstroLink4Pi::Connect()
 	{
 		DEBUG(INDI::Logger::DBG_DEBUG, "Power monitor not detected.");
 	}
-	// if (!m_SHTReader.open())
-	// {
-	// 	DEBUG(INDI::Logger::DBG_DEBUG, "SHT sensor not detected.");
-	// }
+	if (!m_SHTReader.open())
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "SHT sensor not detected.");
+	}
 	// if (!m_MLXReader.open())
 	// {
 	// 	DEBUG(INDI::Logger::DBG_DEBUG, "MLX sensor not detected.");
