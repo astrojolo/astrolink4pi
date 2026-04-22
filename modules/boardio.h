@@ -1,7 +1,12 @@
 #ifndef BOARDIO_H
 #define BOARDIO_H
 
+#include <atomic>
+#include <cstdint>
+#include <mutex>
 #include <string>
+#include <thread>
+#include <chrono>
 
 #include "basecomponent.h"
 
@@ -54,6 +59,7 @@ private:
 
 private:
     Config m_Config;
+    std::mutex m_SpiMutex;
 
     bool m_Connected = false;
     int m_Revision = 0;

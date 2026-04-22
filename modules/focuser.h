@@ -63,7 +63,7 @@ public:
     Focuser(const Config &config, BoardIO &boardIO, PwmController &pwmController, const std::string &deviceName);
     ~Focuser();
 
-    bool open();
+    bool open(int revision);
     void close();
     bool isOpen() const;
 

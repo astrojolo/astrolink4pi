@@ -19,7 +19,7 @@ namespace
     constexpr int MIN_DRIVER_CURRENT_MA = 0;
 
     constexpr int POSITION_SAVE_MIN_DELTA = 10;
-    constexpr std::chrono::seconds POSITION_SAVE_INTERVAL{10};    
+    constexpr std::chrono::seconds POSITION_SAVE_INTERVAL{10};
 }
 
 Focuser::Focuser(const Config &config, BoardIO &boardIO, PwmController &pwmController, const std::string &deviceName)
@@ -37,10 +37,15 @@ Focuser::~Focuser()
     close();
 }
 
-bool Focuser::open()
+bool Focuser::open(int revision)
 {
     close();
+    m_Revision = revision;
 
+    if (m_Revision == 1)
+    {
+        m_BoardIO.initializePin(HOLD_PIN, OUTPUT, LOW);
+    }
     m_BoardIO.initializePin(EN_PIN, OUTPUT, HIGH); // disabled at startup
     m_BoardIO.initializePin(M0_PIN, OUTPUT, LOW);
     m_BoardIO.initializePin(M1_PIN, OUTPUT, LOW);
@@ -49,7 +54,6 @@ bool Focuser::open()
     m_BoardIO.initializePin(STP_PIN, OUTPUT, LOW);
     m_BoardIO.initializePin(DIR_PIN, OUTPUT, LOW);
     m_BoardIO.initializePin(DECAY_PIN, OUTPUT, LOW);
-    m_BoardIO.initializePin(HOLD_PIN, OUTPUT, LOW);
 
     if (!setResolution(m_State.resolution))
     {
@@ -62,7 +66,7 @@ bool Focuser::open()
     {
         std::lock_guard<std::mutex> lock(m_StateMutex);
         m_State.connected = true;
-        m_State.moving = false;          
+        m_State.moving = false;
     }
 
     return true;
@@ -70,11 +74,22 @@ bool Focuser::open()
 
 void Focuser::close()
 {
-    abortFocuser();
+    if (m_Revision == 1)
+    {
+        m_BoardIO.initializePin(HOLD_PIN, INPUT, LOW);
+    }
+    m_BoardIO.initializePin(EN_PIN, INPUT, LOW);
+    m_BoardIO.initializePin(M0_PIN, INPUT, LOW);
+    m_BoardIO.initializePin(M1_PIN, INPUT, LOW);
+    m_BoardIO.initializePin(M2_PIN, INPUT, LOW);
+    m_BoardIO.initializePin(RST_PIN, INPUT, LOW);
+    m_BoardIO.initializePin(STP_PIN, INPUT, LOW);
+    m_BoardIO.initializePin(DIR_PIN, INPUT, LOW);
+    m_BoardIO.initializePin(DECAY_PIN, INPUT, LOW);    
 
     std::lock_guard<std::mutex> lock(m_StateMutex);
     m_State.connected = false;
-    m_State.moving = false;        
+    m_State.moving = false;
 }
 
 bool Focuser::isOpen() const
@@ -92,7 +107,7 @@ bool Focuser::abortFocuser()
 
     {
         std::lock_guard<std::mutex> lock(m_StateMutex);
-        m_State.moving = false;        
+        m_State.moving = false;
         m_State.targetPosition = m_State.currentPosition;
     }
 
@@ -151,7 +166,7 @@ bool Focuser::moveAbsFocuser(uint32_t targetTicks)
 
         m_State.targetPosition = static_cast<int32_t>(targetTicks);
         m_State.lastDirection = direction;
-        m_State.moving = true;        
+        m_State.moving = true;
     }
 
     if (m_MotionThread.joinable())
@@ -321,7 +336,8 @@ bool Focuser::temperatureCompensation()
     }
 
     const double delta = currentTemperature - previousTemperature;
-    if (std::abs(delta) < COMP_THRESHOLD_DELTA) return true;
+    if (std::abs(delta) < COMP_THRESHOLD_DELTA)
+        return true;
 
     const int correctionSteps = static_cast<int>(delta * coefficient);
 
@@ -334,7 +350,7 @@ bool Focuser::temperatureCompensation()
         return true;
 
     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,
-                    "Temperature compensation applied %d steps", correctionSteps);        
+                 "Temperature compensation applied %d steps", correctionSteps);
 
     return moveRelFocuser(correctionSteps);
 }
@@ -465,7 +481,7 @@ Focuser::State Focuser::getState() const
 std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backlashTicksRemaining)
 {
     return std::thread([this, targetPos, direction, backlashTicksRemaining]()
-    {
+                       {
         int motorDirection = direction;
         int backlashRemaining = backlashTicksRemaining;
 
@@ -521,8 +537,7 @@ std::thread Focuser::getMotorThread(uint32_t targetPos, int direction, int backl
             finalPosition = m_State.currentPosition;
         }
         savePositionIfNeeded(finalPosition, true);
-        setCurrent(true); 
-    });
+        setCurrent(true); });
 }
 
 bool Focuser::loadSavedPosition()
@@ -627,7 +642,7 @@ void Focuser::savePositionIfNeeded(int32_t position, bool force)
 
 std::string Focuser::getSafePositionPath()
 {
-    const char* home = std::getenv("HOME");
+    const char *home = std::getenv("HOME");
 
     if (home)
         return std::string(home) + "/.local/share/astrolink/focuser_position.txt";
@@ -635,4 +650,3 @@ std::string Focuser::getSafePositionPath()
     // fallback (np. daemon bez HOME)
     return "/tmp/astrolink_focuser_position.txt";
 }
-

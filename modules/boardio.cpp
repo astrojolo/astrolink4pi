@@ -216,6 +216,13 @@ int BoardIO::setDacHold(int value)
 
 int BoardIO::setDac(int channel, int value)
 {
+	std::lock_guard<std::mutex> lock(m_SpiMutex);
+
+	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+				"writeDac enter thread=%zu channel=%s",
+				std::hash<std::thread::id>{}(std::this_thread::get_id()),
+				channel);	
+
 	int setupResult = wiringPiSPIxSetupMode(0, m_Config.spiChannel, m_Config.spiSpeed, 0);
 	if (setupResult < 0)
 	{
