@@ -103,7 +103,7 @@ bool AstroLink4Pi::Connect()
 		return false;
 	}
 
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi %d, RPi version %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
+	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi v.%d, RPi module %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
 
 	DEBUGF(INDI::Logger::DBG_SESSION,
 		   "Connected on %s (%s), kernel %s",
@@ -112,11 +112,11 @@ bool AstroLink4Pi::Connect()
 		   m_SystemInfo.getKernelVersion().c_str());
 
 
-	// Optional modules
-	// if (!m_PowerMonitor.open())
-	// {
-	// 	DEBUG(INDI::Logger::DBG_DEBUG, "Power monitor not detected.");
-	// }
+	Optional modules
+	if (!m_PowerMonitor.open())
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "Power monitor not detected.");
+	}
 	// if (!m_SHTReader.open())
 	// {
 	// 	DEBUG(INDI::Logger::DBG_DEBUG, "SHT sensor not detected.");
@@ -160,7 +160,7 @@ bool AstroLink4Pi::Disconnect()
 {
 	m_Focuser.close();
 	m_PwmController.shutdown();
-	// m_PowerMonitor.close();
+	m_PowerMonitor.close();
 	m_BoardIO.disconnect();
 
 	RelayLabelsTP.s = IPS_IDLE;
