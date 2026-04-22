@@ -1,12 +1,11 @@
 #include "pwm.h"
-#include "boardio.h"
 
 #include <fstream>
-#include <sstream>
 #include <thread>
 #include <chrono>
 
 #include <sys/stat.h>
+#include <indilogger.h>
 
 #include <wiringPi.h>
 #include <softPwm.h>

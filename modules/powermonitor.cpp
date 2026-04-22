@@ -1,14 +1,15 @@
 #include "powermonitor.h"
 
-#include <wiringPi.h>
-#include <wiringPiI2C.h>
-#include <ads1115.h>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <string>
 #include <thread>
 #include <unistd.h>
+
+#include <indilogger.h>
+#include <wiringPi.h>
+#include <wiringPiI2C.h>
 
 PowerMonitor::PowerMonitor(const std::string &deviceName)
     : BaseComponent(deviceName, "PowerMonitor")

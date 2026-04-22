@@ -1,9 +1,7 @@
 #pragma once
 
+#include <algorithm>
 #include <string>
-#include <cstdarg>
-#include <cstdio>
-#include <indilogger.h>
 
 class BaseComponent
 {

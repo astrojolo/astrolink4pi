@@ -7,6 +7,7 @@
 #include <memory>
 #include <array>
 
+
 SystemInfoService::SystemInfoService(const std::string &deviceName)
  : BaseComponent(deviceName, "SystemInfo")
 {

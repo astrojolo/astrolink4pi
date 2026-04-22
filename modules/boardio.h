@@ -1,12 +1,8 @@
 #ifndef BOARDIO_H
 #define BOARDIO_H
 
-#include <atomic>
 #include <cstdint>
-#include <mutex>
 #include <string>
-#include <thread>
-#include <chrono>
 
 #include "basecomponent.h"
 

@@ -2,24 +2,15 @@
 
 #include <fstream>
 #include <sstream>
-#include <stdexcept>
 #include <cstdint>
-#include <iostream>
 #include <thread>
 #include <chrono>
-#include <stdio.h>
 #include <cstring>
 #include <cerrno>
-#include <string>
 
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <linux/spi/spidev.h>
-
+#include <indilogger.h>
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
-#include <mcp4802.h>
 
 namespace
 {
@@ -48,22 +39,6 @@ bool BoardIO::connect()
 		return false;
 	}
 	m_Connected = true;
-
-	// initializePin(MOTOR_PWM, INPUT, LOW); // pin38
-	// int i = 2;
-	// while (i > 0)
-	// {
-	// 	setDac(0, 255);
-	// 	setDac(1, 200);
-	// 	delay(2000);
-	// 	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "MOTOR_PWM 1 pin %d", read(MOTOR_PWM));
-		
-	// 	setDac(0, 0);
-	// 	setDac(1, 0);
-	// 	delay(2000);
-	// 	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "MOTOR_PWM 0 pin %d", read(MOTOR_PWM));
-	// 	i--;
-	// }
 
 	initializePin(OUT1_PIN, OUTPUT, HIGH);
 	initializePin(OUT2_PIN, OUTPUT, LOW);
@@ -216,13 +191,6 @@ int BoardIO::setDacHold(int value)
 
 int BoardIO::setDac(int channel, int value)
 {
-	// std::lock_guard<std::mutex> lock(m_SpiMutex);
-
-	// DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-	// 			"writeDac enter thread=%zu channel=%s",
-	// 			std::hash<std::thread::id>{}(std::this_thread::get_id()),
-	// 			channel);	
-
 	int setupResult = wiringPiSPIxSetupMode(0, m_Config.spiChannel, m_Config.spiSpeed, 0);
 	if (setupResult < 0)
 	{
@@ -230,7 +198,6 @@ int BoardIO::setDac(int channel, int value)
 					 "wiringPiSPIxSetupMode failed: errno=%d (%s)", errno, std::strerror(errno));
 		return -1;
 	}
-	// DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Open %d %d", setupResult, wiringPiSPIxGetFd(0, m_Config.spiChannel));
 
 	struct SpiCloser
 	{

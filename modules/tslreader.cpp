@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstring>
 #include <unistd.h>
+#include <indilogger.h>
 
 #include <wiringPi.h>
 #include <wiringPiI2C.h>

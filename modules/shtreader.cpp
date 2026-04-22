@@ -3,6 +3,7 @@
 #include <cerrno>
 #include <cmath>
 #include <cstring>
+#include <indilogger.h>
 
 #include <wiringPi.h>
 #include <wiringPiI2C.h>

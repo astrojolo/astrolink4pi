@@ -10,6 +10,7 @@
 #include <cmath>
 #include <filesystem>
 
+#include <indilogger.h>
 #include <unistd.h>
 #include <wiringPi.h>
 

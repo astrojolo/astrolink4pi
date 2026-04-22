@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <indilogger.h>
+
 DSFileReader::DSFileReader(const std::string &devicePath, const std::string &deviceName)
     : BaseComponent(deviceName, "DSFileReader"), m_DevicePath(devicePath)
 {
