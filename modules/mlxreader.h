@@ -21,6 +21,7 @@ public:
     bool open();
     void close();
     bool isOpen() const;
+    bool ensureOpen();
 
     bool read(Readings &out);
 

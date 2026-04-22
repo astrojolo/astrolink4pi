@@ -732,7 +732,7 @@ void AstroLink4Pi::TimerHit()
 			readSHT(1);
 			break;
 		case SensorCycle::MLX:
-			// readMLX();
+			readMLX();
 			break;
 		case SensorCycle::SYS:
 			systemUpdate();
