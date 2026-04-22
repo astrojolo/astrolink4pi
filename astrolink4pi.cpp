@@ -716,46 +716,46 @@ void AstroLink4Pi::TimerHit()
 
 	uint64_t timeMillis = m_SystemInfo.millis();
 	// readTSL();
-	readPower();
+	// readPower();
 	// focuserUpdate();
 
-	// if (nextSystemRead < timeMillis)
-	// {
-	// 	m_Cycle = next(m_Cycle);
+	if (nextSystemRead < timeMillis)
+	{
+		m_Cycle = next(m_Cycle);
 
-	// 	switch (m_Cycle)
-	// 	{
-	// 	case SensorCycle::SHT_T:
-	// 		readSHT(0);
-	// 		break;
-	// 	case SensorCycle::SHT_R:
-	// 		readSHT(1);
-	// 		break;
-	// 	case SensorCycle::MLX:
-	// 		readMLX();
-	// 		break;
-	// 	case SensorCycle::SYS:
-	// 		systemUpdate();
-	// 		break;
-	// 	case SensorCycle::FAN:
-	// 		fanUpdate();
-	// 		break;
-	// 	case SensorCycle::COMP:
-	// 		if (FocusTemperatureNP.s == IPS_OK)
-	// 		{
-	// 			m_Focuser.setTemperature(FocusTemperatureN[0].value);
-	// 			m_Focuser.temperatureCompensation();
-	// 		}
-	// 		break;
-	// 	default:
-	// 		break;
-	// 	}
-	// 	nextSystemRead = timeMillis + SENSOR_READ_PERIOD;
+		switch (m_Cycle)
+		{
+		case SensorCycle::SHT_T:
+			// readSHT(0);
+			break;
+		case SensorCycle::SHT_R:
+			// readSHT(1);
+			break;
+		case SensorCycle::MLX:
+			// readMLX();
+			break;
+		case SensorCycle::SYS:
+			systemUpdate();
+			break;
+		case SensorCycle::FAN:
+			// fanUpdate();
+			break;
+		case SensorCycle::COMP:
+			// if (FocusTemperatureNP.s == IPS_OK)
+			// {
+			// 	m_Focuser.setTemperature(FocusTemperatureN[0].value);
+			// 	m_Focuser.temperatureCompensation();
+			// }
+			break;
+		default:
+			break;
+		}
+		nextSystemRead = timeMillis + SENSOR_READ_PERIOD;
 
-	// 	if (FocusTemperatureNP.s == IPS_OK)
-	// 	{
-	// 	}
-	// }
+		if (FocusTemperatureNP.s == IPS_OK)
+		{
+		}
+	}
 
 	SetTimer(POLL_PERIOD);
 }
