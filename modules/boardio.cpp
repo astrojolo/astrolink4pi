@@ -350,7 +350,7 @@ bool BoardIO::writeDac(uint8_t channel,
 
 	uint8_t chanBits, dataBits;
 
-	if (chan == 0)
+	if (channel == 0)
 		chanBits = 0x30;
 	else
 		chanBits = 0xB0;
