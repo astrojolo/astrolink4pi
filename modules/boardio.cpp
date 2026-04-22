@@ -49,13 +49,13 @@ bool BoardIO::connect()
 	}
 	m_Connected = true;
 
-	while(true)
+	while (true)
 	{
-		writeDac(0,200);
-		writeDac(1,150);
+		writeDac(0, 200);
+		writeDac(1, 150);
 		delay(3000);
-		writeDac(0,0);
-		writeDac(1,0);
+		writeDac(0, 0);
+		writeDac(1, 0);
 		delay(3000);
 	}
 
@@ -63,7 +63,7 @@ bool BoardIO::connect()
 	initializePin(OUT2_PIN, OUTPUT, LOW);
 
 	m_GpioChip = detectBoard();
-	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Checking rev");	
+	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Checking rev");
 	m_Revision = checkRevision();
 
 	return true;
@@ -148,7 +148,7 @@ int BoardIO::checkRevision()
 	initializePin(MOTOR_PWM, INPUT, LOW);  // pin38
 	initializePin(CHK_IN_PIN, INPUT, LOW); // pin36
 
-	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Set DAC");	
+	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Set DAC");
 	setDacHold(0);
 	std::this_thread::sleep_for(std::chrono::milliseconds(5));
 	if (read(MOTOR_PWM) == 0)
@@ -278,19 +278,22 @@ bool BoardIO::writeDac(uint8_t channel,
 					   const char *device,
 					   uint32_t speedHz)
 {
-	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Opening device");	
+	channel = (channel != 0) ? 1 : 0;
+	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
+
+	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Opening device");
 	int fd = ::open(device, O_RDWR);
-	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Opening device %d", fd);	
+	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Opening device %d", fd);
 	if (fd < 0)
 	{
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-					 "writeDac open failed: errno=%d (%s)", errno, std::strerror(errno));		
+					 "writeDac open failed: errno=%d (%s)", errno, std::strerror(errno));
 		return false;
 	}
 	else
 	{
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "writeDac open OK: fd=%d", fd);		
-	}	
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "writeDac open OK: fd=%d", fd);
+	}
 
 	// Gwarancja zamknięcia przy KAŻDYM wyjściu z funkcji
 	struct FdGuard
@@ -309,21 +312,21 @@ bool BoardIO::writeDac(uint8_t channel,
 	if (::ioctl(fd, SPI_IOC_WR_MODE, &mode) < 0)
 	{
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-					 "writeDac SPI_IOC_WR_MODE failed: errno=%d (%s)", errno, std::strerror(errno));		
+					 "writeDac SPI_IOC_WR_MODE failed: errno=%d (%s)", errno, std::strerror(errno));
 		return false;
 	}
 
 	if (::ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bitsPerWord) < 0)
 	{
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-					 "writeDac SPI_IOC_WR_BITS_PER_WORD failed: errno=%d (%s)", errno, std::strerror(errno));		
+					 "writeDac SPI_IOC_WR_BITS_PER_WORD failed: errno=%d (%s)", errno, std::strerror(errno));
 		return false;
 	}
 
 	if (::ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speedHz) < 0)
 	{
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-					 "writeDac SPI_IOC_WR_MAX_SPEED_HZ failed: errno=%d (%s)", errno, std::strerror(errno));		
+					 "writeDac SPI_IOC_WR_MAX_SPEED_HZ failed: errno=%d (%s)", errno, std::strerror(errno));
 		return false;
 	}
 
@@ -335,15 +338,29 @@ bool BoardIO::writeDac(uint8_t channel,
 	// bit11    : 0
 	// bit10..3 : data D7..D0
 	// bit2..0  : 0
-	uint16_t frame = 0;
-	frame |= (static_cast<uint16_t>(channel ? 1 : 0) << 14);
-	frame |= (static_cast<uint16_t>(active ? 1 : 0) << 13);
-	frame |= (static_cast<uint16_t>(gain1x ? 1 : 0) << 12);
-	frame |= (static_cast<uint16_t>(value) << 4);
+	// uint16_t frame = 0;
+	// frame |= (static_cast<uint16_t>(channel ? 1 : 0) << 14);
+	// frame |= (static_cast<uint16_t>(active ? 1 : 0) << 13);
+	// frame |= (static_cast<uint16_t>(gain1x ? 1 : 0) << 12);
+	// frame |= (static_cast<uint16_t>(value) << 4);
+
+	// uint8_t tx[2];
+	// tx[0] = static_cast<uint8_t>((frame >> 8) & 0xFF); // MSB
+	// tx[1] = static_cast<uint8_t>(frame & 0xFF);		   // LSB
+
+	uint8_t chanBits, dataBits;
+
+	if (chan == 0)
+		chanBits = 0x30;
+	else
+		chanBits = 0xB0;
+
+	chanBits |= ((value >> 4) & 0x0F);
+	dataBits = ((value << 4) & 0xF0);
 
 	uint8_t tx[2];
-	tx[0] = static_cast<uint8_t>((frame >> 8) & 0xFF); // MSB
-	tx[1] = static_cast<uint8_t>(frame & 0xFF);		   // LSB
+	tx[0] = chanBits;
+	tx[1] = dataBits;
 
 	struct spi_ioc_transfer tr;
 	std::memset(&tr, 0, sizeof(tr));
@@ -357,7 +374,7 @@ bool BoardIO::writeDac(uint8_t channel,
 	if (::ioctl(fd, SPI_IOC_MESSAGE(1), &tr) < 1)
 	{
 		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-					 "writeDac SPI_IOC_MESSAGE failed: errno=%d (%s)", errno, std::strerror(errno));		
+					 "writeDac SPI_IOC_MESSAGE failed: errno=%d (%s)", errno, std::strerror(errno));
 		return false;
 	}
 
