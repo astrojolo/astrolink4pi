@@ -49,6 +49,16 @@ bool BoardIO::connect()
 	}
 	m_Connected = true;
 
+	while(true)
+	{
+		writeDac(0,200);
+		writeDac(1,150);
+		delay(3000);
+		writeDac(0,0);
+		writeDac(1,0);
+		delay(3000);
+	}
+
 	initializePin(OUT1_PIN, OUTPUT, HIGH);
 	initializePin(OUT2_PIN, OUTPUT, LOW);
 
