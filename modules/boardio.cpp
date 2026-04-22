@@ -268,7 +268,11 @@ bool BoardIO::writeDac(uint8_t channel,
 {
 	int fd = ::open(device, O_RDWR);
 	if (fd < 0)
+	{
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DGB_SESSION,
+					 "writeDac open failed: errno=%d (%s)", errno, std::strerror(errno));		
 		return false;
+	}
 
 	// Gwarancja zamknięcia przy KAŻDYM wyjściu z funkcji
 	struct FdGuard
@@ -285,13 +289,25 @@ bool BoardIO::writeDac(uint8_t channel,
 	uint8_t bitsPerWord = 8;
 
 	if (::ioctl(fd, SPI_IOC_WR_MODE, &mode) < 0)
+	{
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DGB_SESSION,
+					 "writeDac SPI_IOC_WR_MODE failed: errno=%d (%s)", errno, std::strerror(errno));		
 		return false;
+	}
 
 	if (::ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bitsPerWord) < 0)
+	{
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DGB_SESSION,
+					 "writeDac SPI_IOC_WR_BITS_PER_WORD failed: errno=%d (%s)", errno, std::strerror(errno));		
 		return false;
+	}
 
 	if (::ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speedHz) < 0)
+	{
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DGB_SESSION,
+					 "writeDac SPI_IOC_WR_MAX_SPEED_HZ failed: errno=%d (%s)", errno, std::strerror(errno));		
 		return false;
+	}
 
 	// MCP4802, ramka 16-bit:
 	// bit15    : 0
@@ -321,7 +337,11 @@ bool BoardIO::writeDac(uint8_t channel,
 
 	// Jeden transfer 2-bajtowy
 	if (::ioctl(fd, SPI_IOC_MESSAGE(1), &tr) < 1)
+	{
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DGB_SESSION,
+					 "writeDac SPI_IOC_MESSAGE failed: errno=%d (%s)", errno, std::strerror(errno));		
 		return false;
+	}
 
 	return true;
 }
