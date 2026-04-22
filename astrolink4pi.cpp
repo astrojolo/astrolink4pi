@@ -92,11 +92,11 @@ bool AstroLink4Pi::Connect()
 		DEBUG(INDI::Logger::DBG_ERROR, "Could not access GPIO.");
 		return false;
 	}
-	// if (!m_PwmController.connect())
-	// {
-	// 	DEBUG(INDI::Logger::DBG_ERROR, "Could not initialize PWM.");
-	// 	return false;
-	// }
+	if (!m_PwmController.connect())
+	{
+		DEBUG(INDI::Logger::DBG_ERROR, "Could not initialize PWM.");
+		return false;
+	}
 	// if (!m_Focuser.open())
 	// {
 	// 	DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize Focuser module.");
@@ -159,7 +159,7 @@ bool AstroLink4Pi::Connect()
 
 bool AstroLink4Pi::Disconnect()
 {
-	// m_PwmController.shutdown();
+	m_PwmController.shutdown();
 	// m_PowerMonitor.close();
 	m_BoardIO.disconnect();
 

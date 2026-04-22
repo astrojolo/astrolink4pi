@@ -153,7 +153,6 @@ int BoardIO::checkRevision()
 	initializePin(MOTOR_PWM, INPUT, LOW);  // pin38
 	initializePin(CHK_IN_PIN, INPUT, LOW); // pin36
 
-	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Set DAC");
 	setDacHold(0);
 	std::this_thread::sleep_for(std::chrono::milliseconds(5));
 	if (read(MOTOR_PWM) == 0)
