@@ -49,27 +49,26 @@ bool BoardIO::connect()
 	}
 	m_Connected = true;
 
-	initializePin(MOTOR_PWM, INPUT, LOW); // pin38
-	int i = 2;
-	while (i > 0)
-	{
-		setDac(0, 255);
-		setDac(1, 200);
-		delay(2000);
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "MOTOR_PWM 1 pin %d", read(MOTOR_PWM));
+	// initializePin(MOTOR_PWM, INPUT, LOW); // pin38
+	// int i = 2;
+	// while (i > 0)
+	// {
+	// 	setDac(0, 255);
+	// 	setDac(1, 200);
+	// 	delay(2000);
+	// 	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "MOTOR_PWM 1 pin %d", read(MOTOR_PWM));
 		
-		setDac(0, 0);
-		setDac(1, 0);
-		delay(2000);
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "MOTOR_PWM 0 pin %d", read(MOTOR_PWM));
-		i--;
-	}
+	// 	setDac(0, 0);
+	// 	setDac(1, 0);
+	// 	delay(2000);
+	// 	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "MOTOR_PWM 0 pin %d", read(MOTOR_PWM));
+	// 	i--;
+	// }
 
 	initializePin(OUT1_PIN, OUTPUT, HIGH);
 	initializePin(OUT2_PIN, OUTPUT, LOW);
 
 	m_GpioChip = detectBoard();
-	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Checking rev");
 	m_Revision = checkRevision();
 
 	return true;
@@ -191,7 +190,7 @@ int BoardIO::checkRevision()
 	}
 	initializePin(MOTOR_PWM, INPUT, LOW);
 
-	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "AstroLink 4 Pi revision %d detected", rev);
+	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;
 }
 
@@ -214,7 +213,6 @@ int BoardIO::setDacRun(int value)
 int BoardIO::setDacHold(int value)
 {
 	return setDac(m_Config.dacChannelHold, value);
-	// return writeDac(m_Config.dacChannelHold, value);
 }
 
 int BoardIO::setDac(int channel, int value)
@@ -222,11 +220,11 @@ int BoardIO::setDac(int channel, int value)
 	int setupResult = wiringPiSPIxSetupMode(0, m_Config.spiChannel, m_Config.spiSpeed, 0);
 	if (setupResult < 0)
 	{
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
 					 "wiringPiSPIxSetupMode failed: errno=%d (%s)", errno, std::strerror(errno));
 		return -1;
 	}
-	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Open %d %d", setupResult, wiringPiSPIxGetFd(0, m_Config.spiChannel));
+	// DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Open %d %d", setupResult, wiringPiSPIxGetFd(0, m_Config.spiChannel));
 
 	struct SpiCloser
 	{
@@ -244,7 +242,7 @@ int BoardIO::setDac(int channel, int value)
 	channel = (channel != 0) ? 1 : 0;
 	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
 
-	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Setting DAC chan %d val %d", channel, value);
+	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG, "Setting DAC chan %d val %d", channel, value);
 
 	uint16_t data = 0;
 
@@ -268,109 +266,9 @@ int BoardIO::setDac(int channel, int value)
 	int returnValue = wiringPiSPIxDataRW(0, m_Config.spiChannel, buffer, 2);
 	if (returnValue < 0)
 	{
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
 					 "wiringPiSPIxDataRW failed: errno=%d (%s)", errno, std::strerror(errno));
 		return -1;
 	}
 	return returnValue;
-}
-
-// channel: 0 = DAC A, 1 = DAC B
-// value:   0..255 dla MCP4802 (8-bit)
-// gain1x:  true = 1x, false = 2x
-// active:  true = aktywny DAC, false = shutdown
-bool BoardIO::writeDac(uint8_t channel,
-					   uint8_t value,
-					   bool gain1x,
-					   bool active,
-					   const char *device,
-					   uint32_t speedHz)
-{
-	channel = (channel != 0) ? 1 : 0;
-	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
-
-	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Opening device");
-	int fd = ::open(device, O_RDWR);
-	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Opening device %d", fd);
-	if (fd < 0)
-	{
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-					 "writeDac open failed: errno=%d (%s)", errno, std::strerror(errno));
-		return false;
-	}
-	else
-	{
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "writeDac open OK: fd=%d", fd);
-	}
-
-	// Gwarancja zamknięcia przy KAŻDYM wyjściu z funkcji
-	struct FdGuard
-	{
-		int fd_;
-		~FdGuard()
-		{
-			if (fd_ >= 0)
-				::close(fd_);
-		}
-	} guard{fd};
-
-	uint8_t mode = SPI_MODE_0;
-	uint8_t bitsPerWord = 8;
-
-	if (::ioctl(fd, SPI_IOC_WR_MODE, &mode) < 0)
-	{
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-					 "writeDac SPI_IOC_WR_MODE failed: errno=%d (%s)", errno, std::strerror(errno));
-		return false;
-	}
-
-	if (::ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bitsPerWord) < 0)
-	{
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-					 "writeDac SPI_IOC_WR_BITS_PER_WORD failed: errno=%d (%s)", errno, std::strerror(errno));
-		return false;
-	}
-
-	if (::ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speedHz) < 0)
-	{
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-					 "writeDac SPI_IOC_WR_MAX_SPEED_HZ failed: errno=%d (%s)", errno, std::strerror(errno));
-		return false;
-	}
-
-	// MCP4802, ramka 16-bit:
-	// bit15    : 0
-	// bit14    : channel (0=A, 1=B)
-	// bit13    : active  (1=active, 0=shutdown)
-	// bit12    : gain    (1=1x, 0=2x)
-	// bit11    : 0
-	// bit10..3 : data D7..D0
-	// bit2..0  : 0
-	uint16_t frame = 0;
-	frame |= (static_cast<uint16_t>(channel ? 1 : 0) << 15);
-	frame |= (static_cast<uint16_t>(gain1x ? 1 : 0) << 13);
-	frame |= (static_cast<uint16_t>(active ? 1 : 0) << 12);
-	frame |= (static_cast<uint16_t>(value) << 4);
-
-	uint8_t tx[2];
-	tx[0] = static_cast<uint8_t>((frame >> 8) & 0xFF);
-	tx[1] = static_cast<uint8_t>(frame & 0xFF);
-
-	struct spi_ioc_transfer tr;
-	std::memset(&tr, 0, sizeof(tr));
-	tr.tx_buf = reinterpret_cast<unsigned long>(tx);
-	tr.rx_buf = 0;
-	tr.len = sizeof(tx);
-	tr.speed_hz = speedHz;
-	tr.bits_per_word = bitsPerWord;
-
-	// Jeden transfer 2-bajtowy
-	if (::ioctl(fd, SPI_IOC_MESSAGE(1), &tr) < 1)
-	{
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-					 "writeDac SPI_IOC_MESSAGE failed: errno=%d (%s)", errno, std::strerror(errno));
-		return false;
-	}
-
-	return true;
 }

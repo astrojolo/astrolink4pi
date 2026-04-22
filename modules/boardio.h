@@ -47,13 +47,6 @@ public:
     int setDacRun(int value);
     int setDacHold(int value);
 
-    bool writeDac(uint8_t channel,
-                  uint8_t value,
-                  bool gain1x = true,
-                  bool active = true,
-                  const char *device = "/dev/spidev0.1",
-                  uint32_t speedHz = 1000000);
-
 private:
     int detectBoard();
     int checkRevision();
