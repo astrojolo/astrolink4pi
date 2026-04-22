@@ -112,7 +112,7 @@ bool AstroLink4Pi::Connect()
 		   m_SystemInfo.getKernelVersion().c_str());
 
 
-	Optional modules
+	// Optional modules
 	if (!m_PowerMonitor.open())
 	{
 		DEBUG(INDI::Logger::DBG_DEBUG, "Power monitor not detected.");
