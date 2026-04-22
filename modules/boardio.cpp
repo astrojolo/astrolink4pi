@@ -208,8 +208,8 @@ int BoardIO::setDacRun(int value)
 
 int BoardIO::setDacHold(int value)
 {
-	// return setDac(m_Config.dacChannelHold, value);
-	return writeDac(m_Config.dacChannelHold, value);
+	return setDac(m_Config.dacChannelHold, value);
+	// return writeDac(m_Config.dacChannelHold, value);
 }
 
 int BoardIO::setDac(int channel, int value)
@@ -217,10 +217,11 @@ int BoardIO::setDac(int channel, int value)
 	int setupResult = wiringPiSPIxSetupMode(0, m_Config.spiChannel, m_Config.spiSpeed, 0);
 	if (setupResult < 0)
 	{
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
 					 "wiringPiSPIxSetupMode failed: errno=%d (%s)", errno, std::strerror(errno));
 		return -1;
 	}
+	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Open %d %d", setupResult, wiringPiSPIxGetFd(0, m_Config.spiChannel));
 
 	struct SpiCloser
 	{
@@ -228,7 +229,8 @@ int BoardIO::setDac(int channel, int value)
 		int channel;
 		~SpiCloser()
 		{
-			wiringPiSPIxClose(controller, channel);
+			int close = wiringPiSPIxClose(controller, channel);
+			DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Closer %d", close);
 		}
 	};
 
@@ -237,7 +239,7 @@ int BoardIO::setDac(int channel, int value)
 	channel = (channel != 0) ? 1 : 0;
 	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
 
-	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG, "Setting DAC chan %d val %d", channel, value);
+	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Setting DAC chan %d val %d", channel, value);
 
 	uint16_t data = 0;
 
@@ -261,7 +263,7 @@ int BoardIO::setDac(int channel, int value)
 	int returnValue = wiringPiSPIxDataRW(0, m_Config.spiChannel, buffer, 2);
 	if (returnValue < 0)
 	{
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
 					 "wiringPiSPIxDataRW failed: errno=%d (%s)", errno, std::strerror(errno));
 		return -1;
 	}
