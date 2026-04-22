@@ -49,13 +49,14 @@ bool BoardIO::connect()
 	}
 	m_Connected = true;
 
+	initializePin(MOTOR_PWM, INPUT, LOW);  // pin38
 	while (true)
 	{
-		writeDac(0, 200);
-		writeDac(1, 150);
+		writeDac(0, 100,   true, true, "/dev/spidev0.1", 1000000);
+		writeDac(1, 200,   true, true, "/dev/spidev0.1", 1000000);
 		delay(3000);
-		writeDac(0, 0);
-		writeDac(1, 0);
+		writeDac(0, 0,   true, true, "/dev/spidev0.1", 1000000);
+		writeDac(1, 0,   true, true, "/dev/spidev0.1", 1000000);
 		delay(3000);
 	}
 
@@ -338,29 +339,15 @@ bool BoardIO::writeDac(uint8_t channel,
 	// bit11    : 0
 	// bit10..3 : data D7..D0
 	// bit2..0  : 0
-	// uint16_t frame = 0;
-	// frame |= (static_cast<uint16_t>(channel ? 1 : 0) << 14);
-	// frame |= (static_cast<uint16_t>(active ? 1 : 0) << 13);
-	// frame |= (static_cast<uint16_t>(gain1x ? 1 : 0) << 12);
-	// frame |= (static_cast<uint16_t>(value) << 4);
-
-	// uint8_t tx[2];
-	// tx[0] = static_cast<uint8_t>((frame >> 8) & 0xFF); // MSB
-	// tx[1] = static_cast<uint8_t>(frame & 0xFF);		   // LSB
-
-	uint8_t chanBits, dataBits;
-
-	if (channel == 0)
-		chanBits = 0x30;
-	else
-		chanBits = 0xB0;
-
-	chanBits |= ((value >> 4) & 0x0F);
-	dataBits = ((value << 4) & 0xF0);
+	uint16_t frame = 0;
+	frame |= (static_cast<uint16_t>(channel ? 1 : 0) << 15);
+	frame |= (static_cast<uint16_t>(gain1x ? 1 : 0) << 13);
+	frame |= (static_cast<uint16_t>(active ? 1 : 0) << 12);
+	frame |= (static_cast<uint16_t>(value) << 4);
 
 	uint8_t tx[2];
-	tx[0] = chanBits;
-	tx[1] = dataBits;
+	tx[0] = static_cast<uint8_t>((frame >> 8) & 0xFF);
+	tx[1] = static_cast<uint8_t>(frame & 0xFF);
 
 	struct spi_ioc_transfer tr;
 	std::memset(&tr, 0, sizeof(tr));
