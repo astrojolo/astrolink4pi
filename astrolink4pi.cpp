@@ -103,8 +103,6 @@ bool AstroLink4Pi::Connect()
 		return false;
 	}
 
-	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi v.%d, RPi module %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
-
 	DEBUGF(INDI::Logger::DBG_SESSION,
 		   "Connected on %s (%s), kernel %s",
 		   m_SystemInfo.getHostname().c_str(),
@@ -718,7 +716,7 @@ void AstroLink4Pi::TimerHit()
 
 	uint64_t timeMillis = m_SystemInfo.millis();
 	// readTSL();
-	// readPower();
+	readPower();
 	// focuserUpdate();
 
 	// if (nextSystemRead < timeMillis)
