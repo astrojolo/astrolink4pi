@@ -52,11 +52,11 @@ bool BoardIO::connect()
 	initializePin(MOTOR_PWM, INPUT, LOW);  // pin38
 	while (true)
 	{
-		writeDac(0, 100,   true, true, "/dev/spidev0.1", 1000000);
-		writeDac(1, 200,   true, true, "/dev/spidev0.1", 1000000);
+		setDac(0,255);
+		setDac(1,200);
 		delay(3000);
-		writeDac(0, 0,   true, true, "/dev/spidev0.1", 1000000);
-		writeDac(1, 0,   true, true, "/dev/spidev0.1", 1000000);
+		setDac(0,0);
+		setDac(1,0);
 		delay(3000);
 	}
 
