@@ -279,8 +279,7 @@ bool BoardIO::writeDac(uint8_t channel,
 	}
 	else
 	{
-		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_WARNING,
-					 "writeDac open OK: errno=%d (%s)", errno, std::strerror(errno));		
+		DEBUGDEVICE("SPI DAC", INDI::Logger::DBG_WARNING, "writeDac open OK: fd=%d", fd);		
 	}	
 
 	// Gwarancja zamknięcia przy KAŻDYM wyjściu z funkcji
