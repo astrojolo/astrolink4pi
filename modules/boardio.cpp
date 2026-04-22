@@ -53,7 +53,7 @@ bool BoardIO::connect()
 	initializePin(OUT2_PIN, OUTPUT, LOW);
 
 	m_GpioChip = detectBoard();
-	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Checking rev");	
+	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Checking rev");	
 	m_Revision = checkRevision();
 
 	return true;
@@ -138,7 +138,7 @@ int BoardIO::checkRevision()
 	initializePin(MOTOR_PWM, INPUT, LOW);  // pin38
 	initializePin(CHK_IN_PIN, INPUT, LOW); // pin36
 
-	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Set DAC");	
+	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Set DAC");	
 	setDacHold(0);
 	std::this_thread::sleep_for(std::chrono::milliseconds(5));
 	if (read(MOTOR_PWM) == 0)
@@ -175,7 +175,7 @@ int BoardIO::checkRevision()
 	}
 	initializePin(MOTOR_PWM, INPUT, LOW);
 
-	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "AstroLink 4 Pi revision %d detected", rev);
+	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "AstroLink 4 Pi revision %d detected", rev);
 	return rev;
 }
 
@@ -268,18 +268,18 @@ bool BoardIO::writeDac(uint8_t channel,
 					   const char *device,
 					   uint32_t speedHz)
 {
-	DEBUGDEVICE("SPI DAC", INDI::Logger::DBG_SESSION, "Opening device");	
+	DEBUGDEVICE("SPI DAC", INDI::Logger::DBG_WARNING, "Opening device");	
 	int fd = ::open(device, O_RDWR);
-	DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_SESSION, "Opening device %d", fd);	
+	DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_WARNING, "Opening device %d", fd);	
 	if (fd < 0)
 	{
-		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_SESSION,
+		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_WARNING,
 					 "writeDac open failed: errno=%d (%s)", errno, std::strerror(errno));		
 		return false;
 	}
 	else
 	{
-		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_SESSION,
+		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_WARNING,
 					 "writeDac open OK: errno=%d (%s)", errno, std::strerror(errno));		
 	}	
 
@@ -299,21 +299,21 @@ bool BoardIO::writeDac(uint8_t channel,
 
 	if (::ioctl(fd, SPI_IOC_WR_MODE, &mode) < 0)
 	{
-		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_SESSION,
+		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_WARNING,
 					 "writeDac SPI_IOC_WR_MODE failed: errno=%d (%s)", errno, std::strerror(errno));		
 		return false;
 	}
 
 	if (::ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bitsPerWord) < 0)
 	{
-		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_SESSION,
+		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_WARNING,
 					 "writeDac SPI_IOC_WR_BITS_PER_WORD failed: errno=%d (%s)", errno, std::strerror(errno));		
 		return false;
 	}
 
 	if (::ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speedHz) < 0)
 	{
-		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_SESSION,
+		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_WARNING,
 					 "writeDac SPI_IOC_WR_MAX_SPEED_HZ failed: errno=%d (%s)", errno, std::strerror(errno));		
 		return false;
 	}
@@ -347,7 +347,7 @@ bool BoardIO::writeDac(uint8_t channel,
 	// Jeden transfer 2-bajtowy
 	if (::ioctl(fd, SPI_IOC_MESSAGE(1), &tr) < 1)
 	{
-		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_SESSION,
+		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_WARNING,
 					 "writeDac SPI_IOC_MESSAGE failed: errno=%d (%s)", errno, std::strerror(errno));		
 		return false;
 	}
