@@ -3,7 +3,9 @@
 #include <cerrno>
 #include <cmath>
 #include <cstring>
+#include <cstdint>
 #include <unistd.h>
+
 #include <indilogger.h>
 
 #include <wiringPi.h>
@@ -26,18 +28,15 @@ bool TSLReader::open()
     m_Fd = wiringPiI2CSetup(m_TslAddress);
     if (m_Fd < 0)
     {
+        const int err = errno;
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-                     "TSL I2C setup failed: errno=%d (%s)",
-                     errno, std::strerror(errno));
+                     "TSL I2C setup failed: addr=0x%02X errno=%d (%s)",
+                     m_TslAddress, err, std::strerror(err));
         return false;
     }
 
+    resetAcquisitionState();
     m_Mode = TSLState::NotAvailable;
-    m_AdcStartTime = 0;
-    m_NIter = 0;
-    m_FullCumulative = 0;
-    m_IrCumulative = 0;
-    m_LastReadings = Readings{};
 
     return true;
 }
@@ -50,7 +49,12 @@ void TSLReader::close()
         m_Fd = -1;
     }
 
+    resetAcquisitionState();
     m_Mode = TSLState::NotAvailable;
+}
+
+void TSLReader::resetAcquisitionState()
+{
     m_AdcStartTime = 0;
     m_NIter = 0;
     m_FullCumulative = 0;
@@ -60,6 +64,72 @@ void TSLReader::close()
 bool TSLReader::isOpen() const
 {
     return m_Fd >= 0;
+}
+
+bool TSLReader::ensureOpen()
+{
+    if (isOpen())
+        return true;
+
+    return open();
+}
+
+bool TSLReader::readReg8(uint8_t reg, uint8_t &value)
+{
+    if (!ensureOpen())
+        return false;
+
+    const int ret = wiringPiI2CReadReg8(m_Fd, reg);
+    if (ret < 0)
+    {
+        const int err = errno;
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                     "TSL read reg8 0x%02X failed: fd=%d errno=%d (%s)",
+                     reg, m_Fd, err, std::strerror(err));
+        close();
+        return false;
+    }
+
+    value = static_cast<uint8_t>(ret);
+    return true;
+}
+
+bool TSLReader::writeReg8(uint8_t reg, uint8_t value)
+{
+    if (!ensureOpen())
+        return false;
+
+    if (wiringPiI2CWriteReg8(m_Fd, reg, value) < 0)
+    {
+        const int err = errno;
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                     "TSL write reg8 0x%02X failed: fd=%d errno=%d (%s)",
+                     reg, m_Fd, err, std::strerror(err));
+        close();
+        return false;
+    }
+
+    return true;
+}
+
+bool TSLReader::readReg16(uint8_t reg, uint16_t &value)
+{
+    if (!ensureOpen())
+        return false;
+
+    const int ret = wiringPiI2CReadReg16(m_Fd, reg);
+    if (ret < 0)
+    {
+        const int err = errno;
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                     "TSL read reg16 0x%02X failed: fd=%d errno=%d (%s)",
+                     reg, m_Fd, err, std::strerror(err));
+        close();
+        return false;
+    }
+
+    value = static_cast<uint16_t>(ret);
+    return true;
 }
 
 bool TSLReader::probeSensor()
@@ -79,95 +149,48 @@ bool TSLReader::probeSensor()
 
 bool TSLReader::initializeSensor()
 {
-    int rc = 0;
-
-    rc |= (wiringPiI2CWriteReg8(
-               m_Fd,
-               TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE,
-               TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN) < 0);
-
-    // Enable device - power down mode on boot
-    rc |= (wiringPiI2CWriteReg8(
-               m_Fd,
-               TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL,
-               0x05 | 0x30) < 0);
-
-    rc |= (wiringPiI2CWriteReg8(
-               m_Fd,
-               TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE,
-               TSL2591_ENABLE_POWEROFF) < 0);
-
-    if (rc != 0)
-    {
-        int err = errno;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
-                     "TSL init failed: fd=%d errno=%d (%s)",
-                     m_Fd, err, std::strerror(err));
+    if (!writeReg8(
+            TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE,
+            TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN))
         return false;
-    }
+
+    if (!writeReg8(
+            TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL,
+            0x05 | 0x30))
+        return false;
+
+    if (!writeReg8(
+            TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE,
+            TSL2591_ENABLE_POWEROFF))
+        return false;
 
     return true;
 }
 
 bool TSLReader::startIntegration()
 {
-    int rc = wiringPiI2CWriteReg8(
-        m_Fd,
+    return writeReg8(
         TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE,
         TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);
-
-    if (rc < 0)
-    {
-        int err = errno;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
-                     "TSL start integration failed: fd=%d errno=%d (%s)",
-                     m_Fd, err, std::strerror(err));
-        return false;
-    }
-
-    return true;
 }
 
 bool TSLReader::stopIntegration()
 {
-    int rc = wiringPiI2CWriteReg8(
-        m_Fd,
+    return writeReg8(
         TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE,
         TSL2591_ENABLE_POWEROFF);
-
-    if (rc < 0)
-    {
-        int err = errno;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
-                     "TSL stop integration failed: fd=%d errno=%d (%s)",
-                     m_Fd, err, std::strerror(err));
-        return false;
-    }
-
-    return true;
 }
 
-bool TSLReader::readChannels(int &full, int &ir)
+bool TSLReader::readChannels(uint16_t &full, uint16_t &ir)
 {
-    int irRaw = wiringPiI2CReadReg16(m_Fd, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN1_LOW);
-    if (irRaw < 0)
-    {
-        int err = errno;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
-                     "TSL read CH1 failed: fd=%d errno=%d (%s)",
-                     m_Fd, err, std::strerror(err));
-        return false;
-    }
+    uint16_t irRaw = 0;
+    uint16_t fullRaw = 0;
 
-    int fullRaw = wiringPiI2CReadReg16(m_Fd, TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN0_LOW);
-    if (fullRaw < 0)
-    {
-        int err = errno;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
-                     "TSL read CH0 failed: fd=%d errno=%d (%s)",
-                     m_Fd, err, std::strerror(err));
+    if (!readReg16(TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN1_LOW, irRaw))
         return false;
-    }
+
+    if (!readReg16(TSL2591_COMMAND_BIT | TSL2591_REGISTER_CHAN0_LOW, fullRaw))
+        return false;
 
     ir = irRaw;
     full = fullRaw;
@@ -176,119 +199,121 @@ bool TSLReader::readChannels(int &full, int &ir)
 
 bool TSLReader::read(TSLReader::Readings &out)
 {
-    if (!isOpen())
+    out = m_LastReadings;
+
+    if (!ensureOpen())
     {
-        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "I2C not available - read error.");
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                    "TSL I2C not available.");
         return false;
     }
 
-    out = m_LastReadings;
-    bool available = false;
-
     if (m_Mode == TSLState::NotAvailable)
     {
-        if (probeSensor())
+        if (!probeSensor())
         {
-            m_Mode = TSLState::Available;
-            available = true;
-        }
-        else
-        {
-            m_Mode = TSLState::NotAvailable;
+            close();
             return false;
         }
+
+        m_Mode = TSLState::Available;
+        out = m_LastReadings;
+        return true;
     }
-    else if (m_Mode == TSLState::Available)
+
+    if (m_Mode == TSLState::Available)
     {
-        if (initializeSensor())
+        if (!initializeSensor())
         {
-            m_Mode = TSLState::Initialized;
-            available = true;
-        }
-        else
-        {
-            m_Mode = TSLState::NotAvailable;
+            close();
             return false;
         }
+
+        m_Mode = TSLState::Initialized;
+        out = m_LastReadings;
+        return true;
     }
-    else if (m_Mode == TSLState::Initialized)
+
+    if (m_Mode != TSLState::Initialized)
+        return false;
+
+    if (m_AdcStartTime == 0)
     {
-        if (m_AdcStartTime == 0)
+        if (!startIntegration())
         {
-            if (startIntegration())
-            {
-                m_AdcStartTime = millis();
-                available = true;
-            }
-            else
-            {
-                m_Mode = TSLState::NotAvailable;
-                return false;
-            }
+            close();
+            return false;
         }
-        else if (millis() > (m_AdcStartTime + TSL2591_ADC_TIME))
+
+        m_AdcStartTime = millis();
+        out = m_LastReadings;
+        return true;
+    }
+
+    if (static_cast<uint32_t>(millis() - m_AdcStartTime) < TSL2591_ADC_TIME)
+    {
+        out = m_LastReadings;
+        return true;
+    }
+
+    uint16_t full = 0;
+    uint16_t ir = 0;
+
+    const bool readOk = readChannels(full, ir);
+    const bool stopOk = stopIntegration();
+
+    m_AdcStartTime = 0;
+
+    if (!readOk || !stopOk)
+    {
+        close();
+        return false;
+    }
+
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                 "TSL sample: full=%u ir=%u", full, ir);
+
+    if (full < ir)
+    {
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                     "TSL invalid sample: full < ir (%u < %u)", full, ir);
+        out = m_LastReadings;
+        return true;
+    }
+
+    const uint32_t nextFull = m_FullCumulative + static_cast<uint32_t>(full);
+    const uint32_t nextIr = m_IrCumulative + static_cast<uint32_t>(ir);
+    const uint32_t nextVisible = nextFull - nextIr;
+
+    if (m_NIter < 5 || (nextVisible < 500 && m_NIter < 150))
+    {
+        ++m_NIter;
+        m_FullCumulative = nextFull;
+        m_IrCumulative = nextIr;
+        out = m_LastReadings;
+        return true;
+    }
+
+    const uint32_t visible = m_FullCumulative - m_IrCumulative;
+
+    if (visible > 0 && m_NIter > 0)
+    {
+        const double visNorm = static_cast<double>(visible) / (29628.0 * static_cast<double>(m_NIter));
+
+        if (visNorm > 0.0)
         {
-            int ir = 0;
-            int full = 0;
+            const double mpsas =
+                12.6 - 1.086 * std::log(visNorm) + m_SQMOffset + m_FilterCoeff;
 
-            bool readOk = readChannels(full, ir);
-            bool stopOk = stopIntegration();
-
-            m_AdcStartTime = 0;
-
-            if (!readOk || !stopOk)
-            {
-                m_Mode = TSLState::NotAvailable;
-                return false;
-            }
-
-            const int visCumulative = m_FullCumulative - m_IrCumulative;
-
-
-            if (full < ir)
-            {
-                out = m_LastReadings;
-                return true;
-            }
-
-            if (m_NIter < 5 || (visCumulative < 500 && m_NIter < 150))
-            {
-                ++m_NIter;
-                m_FullCumulative += full;
-                m_IrCumulative += ir;
-            }
-            else
-            {
-                const int visible = m_FullCumulative - m_IrCumulative;
-
-                if (visible > 0 && m_NIter > 0)
-                {
-                    const double VIS = static_cast<double>(visible) / (29628.0 * m_NIter);
-                    const double mpsas =
-                        12.6 - 1.086 * std::log(VIS) + m_SQMOffset + m_FilterCoeff;
-
-                    m_LastReadings.mpsas = mpsas;
-                    m_LastReadings.full = full;
-                    m_LastReadings.ir = ir;
-                    m_LastReadings.visible = visible;
-                    m_LastReadings.valid = true;
-
-                    out = m_LastReadings;
-                }
-
-                m_NIter = 0;
-                m_IrCumulative = 0;
-                m_FullCumulative = 0;
-            }
-
-            available = true;
-        }
-        else
-        {
-            available = true;
+            m_LastReadings.mpsas = mpsas;
+            m_LastReadings.full = static_cast<int>(m_FullCumulative / m_NIter);
+            m_LastReadings.ir = static_cast<int>(m_IrCumulative / m_NIter);
+            m_LastReadings.visible = static_cast<int>(visible / m_NIter);
+            m_LastReadings.valid = true;
         }
     }
 
+    resetAcquisitionState();
     out = m_LastReadings;
-    return available;
+    return true;
 }

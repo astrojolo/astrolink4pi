@@ -23,6 +23,7 @@ public:
     bool open();
     void close();
     bool isOpen() const;
+    bool ensureOpen();
 
     bool read(Readings &out);
 
@@ -53,6 +54,10 @@ private:
     bool stopIntegration();
     bool readChannels(int &full, int &ir);
 
+    bool readReg8(uint8_t reg, uint8_t &value);
+    bool writeReg8(uint8_t reg, uint8_t value);
+    bool readReg16(uint8_t reg, uint16_t &value);
+
 private:
     int m_Fd = -1;
     uint8_t m_TslAddress = 0x29;
@@ -68,4 +73,7 @@ private:
     double m_FilterCoeff = -1.2;
 
     Readings m_LastReadings;
+
+    void resetAcquisitionState();
+
 };
