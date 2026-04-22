@@ -52,13 +52,6 @@ bool BoardIO::connect()
 
 void BoardIO::disconnect()
 {
-    if (m_SpiFd >= 0)
-    {
-        setDacRun(0);
-        setDacHold(0);
-        wiringPiSPIClose(m_Config.spiChannel);
-        m_SpiFd = -1;
-    }
 	m_Revision = 0;
 	m_GpioChip = RP_UNKNOWN;
 	m_Connected = false;
