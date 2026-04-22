@@ -230,7 +230,7 @@ int BoardIO::setDac(int channel, int value)
 		~SpiCloser()
 		{
 			int close = wiringPiSPIxClose(controller, channel);
-			DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "Closer %d", close);
+			DEBUGFDEVICE("SPI closer", INDI::Logger::DBG_WARNING, "Closer %d", close);
 		}
 	};
 
