@@ -159,9 +159,9 @@ bool AstroLink4Pi::Connect()
 
 bool AstroLink4Pi::Disconnect()
 {
-	m_BoardIO.disconnect();
 	m_PwmController.shutdown();
 	m_PowerMonitor.close();
+	m_BoardIO.disconnect();
 
 	RelayLabelsTP.s = IPS_IDLE;
 	IDSetText(&RelayLabelsTP, nullptr);
