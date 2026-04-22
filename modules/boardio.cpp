@@ -273,6 +273,11 @@ bool BoardIO::writeDac(uint8_t channel,
 					 "writeDac open failed: errno=%d (%s)", errno, std::strerror(errno));		
 		return false;
 	}
+	else
+	{
+		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_SESSION,
+					 "writeDac open OK: errno=%d (%s)", errno, std::strerror(errno));		
+	}	
 
 	// Gwarancja zamknięcia przy KAŻDYM wyjściu z funkcji
 	struct FdGuard
