@@ -44,13 +44,6 @@ bool BoardIO::connect()
 	initializePin(OUT1_PIN, OUTPUT, HIGH);
 	initializePin(OUT2_PIN, OUTPUT, LOW);
 
-	m_SpiFd = wiringPiSPISetup(m_Config.spiChannel, m_Config.spiSpeed);
-	if (m_SpiFd < 0)
-	{
-		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
-					 "wiringPiSPISetup failed: errno=%d (%s)", errno, std::strerror(errno));
-	}
-
 	m_GpioChip = detectBoard();
 	m_Revision = checkRevision();
 
@@ -206,11 +199,25 @@ int BoardIO::setDacHold(int value)
 
 int BoardIO::setDac(int channel, int value)
 {
-	if (m_SpiFd < 0)
+	int setupResult = wiringPiSPIxSetupMode(0, m_Config.spiChannel, m_Config.spiSpeed, 0);
+	if (setupResult < 0)
 	{
-		DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG, "SPI not available - write error.");
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+					 "wiringPiSPIxSetupMode failed: errno=%d (%s)", errno, std::strerror(errno));
 		return -1;
 	}
+
+	struct SpiCloser
+	{
+		int controller;
+		int channel;
+		~SpiCloser()
+		{
+			wiringPiSPIxClose(controller, channel);
+		}
+	};
+
+	SpiCloser spiCloser{0, m_Config.spiChannel};	
 
 	channel = (channel != 0) ? 1 : 0;
 	value = clampInt(value, DAC_MIN_VALUE, DAC_MAX_VALUE);
@@ -219,7 +226,7 @@ int BoardIO::setDac(int channel, int value)
 
 	uint16_t data = 0;
 
-	// Budowa ramki:
+	// Frame:
 	// bit15: 0
 	// bit14: channel (0=A, 1=B)
 	// bit13: 1 (aktywny DAC)
@@ -236,5 +243,12 @@ int BoardIO::setDac(int channel, int value)
 	buffer[0] = (data >> 8) & 0xFF;
 	buffer[1] = data & 0xFF;
 
-	return wiringPiSPIDataRW(m_Config.spiChannel, buffer, 2);
+	int returnValue = wiringPiSPIxDataRW(0, m_Config.spiChannel, buffer, 2);
+	if (returnValue < 0)
+	{
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+					 "wiringPiSPIxDataRW failed: errno=%d (%s)", errno, std::strerror(errno));
+		return -1;
+	}	
+	return returnValue;
 }
