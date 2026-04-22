@@ -123,10 +123,10 @@ bool AstroLink4Pi::Connect()
 	{
 		DEBUG(INDI::Logger::DBG_DEBUG, "MLX sensor not detected.");
 	}
-	// if (!m_TSLReader.open())
-	// {
-	// 	DEBUG(INDI::Logger::DBG_DEBUG, "TSL sensor not detected.");
-	// }
+	if (!m_TSLReader.open())
+	{
+		DEBUG(INDI::Logger::DBG_DEBUG, "TSL sensor not detected.");
+	}
 
 	// Lock Relay Labels setting
 	RelayLabelsTP.s = IPS_BUSY;
@@ -715,7 +715,7 @@ void AstroLink4Pi::TimerHit()
 		return;
 
 	uint64_t timeMillis = m_SystemInfo.millis();
-	// readTSL();
+	readTSL();
 	// readPower();
 	// focuserUpdate();
 
@@ -751,10 +751,6 @@ void AstroLink4Pi::TimerHit()
 			break;
 		}
 		nextSystemRead = timeMillis + SENSOR_READ_PERIOD;
-
-		if (FocusTemperatureNP.s == IPS_OK)
-		{
-		}
 	}
 
 	SetTimer(POLL_PERIOD);
