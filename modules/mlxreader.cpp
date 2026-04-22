@@ -10,13 +10,13 @@
 
 namespace
 {
-    static constexpr uint8_t MLX90614_REG_TA = 0x06;
-    static constexpr uint8_t MLX90614_REG_TOBJ1 = 0x07;
+static constexpr uint8_t MLX90614_REG_TA    = 0x06;
+static constexpr uint8_t MLX90614_REG_TOBJ1 = 0x07;
 
-    static double mlxRawToCelsius(uint16_t raw)
-    {
-        return static_cast<double>(raw) * 0.02 - 273.15;
-    }
+static double mlxRawToCelsius(uint16_t raw)
+{
+    return static_cast<double>(raw) * 0.02 - 273.15;
+}
 }
 
 MLXReader::MLXReader(const std::string &deviceName)
@@ -45,26 +45,25 @@ bool MLXReader::open()
     return true;
 }
 
+bool MLXReader::ensureOpen()
+{
+    if (isOpen())
+        return true;
+    return open();
+}
+
 void MLXReader::close()
 {
     if (m_Fd >= 0)
     {
         ::close(m_Fd);
         m_Fd = -1;
-        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG, "MLX I2C closed.");        
     }
 }
 
 bool MLXReader::isOpen() const
 {
     return m_Fd >= 0;
-}
-
-bool MLXReader::ensureOpen()
-{
-    if (isOpen())
-        return true;
-    return open();
 }
 
 bool MLXReader::readWord(uint8_t reg, uint16_t &value)
@@ -76,11 +75,9 @@ bool MLXReader::readWord(uint8_t reg, uint16_t &value)
     const int ret = wiringPiI2CReadReg16(m_Fd, reg);
     if (ret < 0)
     {
-        const int err = errno;
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                      "MLX read word reg 0x%02X failed: fd=%d errno=%d (%s)",
-                     reg, m_Fd, err, std::strerror(err));
-        close();
+                     reg, m_Fd, errno, std::strerror(errno));
         return false;
     }
 
@@ -91,10 +88,16 @@ bool MLXReader::readWord(uint8_t reg, uint16_t &value)
 
 bool MLXReader::read(MLXReader::Readings &out)
 {
+    if (!ensureOpen())
+    {
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "I2C not available - read error.");
+        return false;
+    }
+
     out = m_LastReadings;
 
     uint16_t rawAmbient = 0;
-    uint16_t rawObject = 0;
+    uint16_t rawObject  = 0;
 
     if (!readWord(MLX90614_REG_TA, rawAmbient))
         return false;
@@ -106,21 +109,9 @@ bool MLXReader::read(MLXReader::Readings &out)
                  "MLX raw ambient=0x%04X object=0x%04X",
                  rawAmbient, rawObject);
 
-    const double ambient = mlxRawToCelsius(rawAmbient);
-    const double object = mlxRawToCelsius(rawObject);
-
-    if (ambient < -70.0 || ambient > 150.0 ||
-        object < -70.0 || object > 500.0)
-    {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-                     "MLX invalid temperature values: ambient=%.2fC object=%.2fC",
-                     ambient, object);
-        return false;
-    }
-
-    out.ambientTemperature = ambient;
-    out.objectTemperature = object;
-    out.tempDifference = ambient - object;
+    out.ambientTemperature = mlxRawToCelsius(rawAmbient);
+    out.objectTemperature  = mlxRawToCelsius(rawObject);
+    out.tempDifference = out.ambientTemperature - out.objectTemperature;
 
     m_LastReadings = out;
 
