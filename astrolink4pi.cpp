@@ -97,12 +97,11 @@ bool AstroLink4Pi::Connect()
 		DEBUG(INDI::Logger::DBG_ERROR, "Could not initialize PWM.");
 		return false;
 	}
-	if (!m_Focuser.open())
+	if (!m_Focuser.open(m_BoardIO.revision()))
 	{
 		DEBUG(INDI::Logger::DBG_SESSION, "Could not initialize Focuser module.");
 		return false;
 	}
-	m_Focuser.setRevision(m_BoardIO.revision());
 
 	DEBUGF(INDI::Logger::DBG_SESSION, "AstroLink 4 Pi %d, RPi version %d\n", m_BoardIO.revision(), m_BoardIO.gpioChip());
 
