@@ -726,10 +726,10 @@ void AstroLink4Pi::TimerHit()
 		switch (m_Cycle)
 		{
 		case SensorCycle::SHT_T:
-			// readSHT(0);
+			readSHT(0);
 			break;
 		case SensorCycle::SHT_R:
-			// readSHT(1);
+			readSHT(1);
 			break;
 		case SensorCycle::MLX:
 			// readMLX();
