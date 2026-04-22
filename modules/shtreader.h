@@ -22,7 +22,11 @@ public:
     void close();
     bool isOpen() const;
     bool read(Readings &out, int mode);
-
+    bool ensureOpen();
+    bool startMeasurement();
+    bool readMeasurement(Readings &out);
+    uint8_t crc8(const uint8_t *data, size_t len) const;
+    
 private:
     int m_Fd = -1;
     uint8_t m_ShtAddress = 0x44;
