@@ -259,12 +259,12 @@ int BoardIO::setDac(int channel, int value)
 // value:   0..255 dla MCP4802 (8-bit)
 // gain1x:  true = 1x, false = 2x
 // active:  true = aktywny DAC, false = shutdown
-bool SpiMcp4802::writeDac(uint8_t channel,
-						  uint8_t value,
-						  bool gain1x = true,
-						  bool active = true,
-						  const char *device = "/dev/spidev0.1",
-						  uint32_t speedHz = 1000000)
+bool BoardIO::writeDac(uint8_t channel,
+					   uint8_t value,
+					   bool gain1x = true,
+					   bool active = true,
+					   const char *device = "/dev/spidev0.1",
+					   uint32_t speedHz = 1000000)
 {
 	int fd = ::open(device, O_RDWR);
 	if (fd < 0)
