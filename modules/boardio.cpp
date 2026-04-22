@@ -53,6 +53,7 @@ bool BoardIO::connect()
 	initializePin(OUT2_PIN, OUTPUT, LOW);
 
 	m_GpioChip = detectBoard();
+	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Checking rev");	
 	m_Revision = checkRevision();
 
 	return true;
@@ -137,6 +138,7 @@ int BoardIO::checkRevision()
 	initializePin(MOTOR_PWM, INPUT, LOW);  // pin38
 	initializePin(CHK_IN_PIN, INPUT, LOW); // pin36
 
+	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Set DAC");	
 	setDacHold(0);
 	std::this_thread::sleep_for(std::chrono::milliseconds(5));
 	if (read(MOTOR_PWM) == 0)
@@ -266,7 +268,9 @@ bool BoardIO::writeDac(uint8_t channel,
 					   const char *device,
 					   uint32_t speedHz)
 {
+	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Opening device");	
 	int fd = ::open(device, O_RDWR);
+	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Opening device %d", fd);	
 	if (fd < 0)
 	{
 		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_SESSION,
