@@ -52,7 +52,7 @@ private:
     bool initializeSensor();
     bool startIntegration();
     bool stopIntegration();
-    bool readChannels(int &full, int &ir);
+    bool readChannels(uint16_t &full, uint16_t &ir);
 
     bool readReg8(uint8_t reg, uint8_t &value);
     bool writeReg8(uint8_t reg, uint8_t value);
