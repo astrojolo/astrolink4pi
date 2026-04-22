@@ -261,10 +261,10 @@ int BoardIO::setDac(int channel, int value)
 // active:  true = aktywny DAC, false = shutdown
 bool BoardIO::writeDac(uint8_t channel,
 					   uint8_t value,
-					   bool gain1x = true,
-					   bool active = true,
-					   const char *device = "/dev/spidev0.1",
-					   uint32_t speedHz = 1000000)
+					   bool gain1x,
+					   bool active,
+					   const char *device,
+					   uint32_t speedHz)
 {
 	int fd = ::open(device, O_RDWR);
 	if (fd < 0)
