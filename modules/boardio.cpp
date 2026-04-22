@@ -50,15 +50,18 @@ bool BoardIO::connect()
 	m_Connected = true;
 
 	initializePin(MOTOR_PWM, INPUT, LOW); // pin38
-	int i = 5;
+	int i = 2;
 	while (i > 0)
 	{
 		setDac(0, 255);
 		setDac(1, 200);
 		delay(2000);
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "MOTOR_PWM 1 pin %d", read(MOTOR_PWM));
+		
 		setDac(0, 0);
 		setDac(1, 0);
 		delay(2000);
+		DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING, "MOTOR_PWM 0 pin %d", read(MOTOR_PWM));
 		i--;
 	}
 
