@@ -268,9 +268,9 @@ bool BoardIO::writeDac(uint8_t channel,
 					   const char *device,
 					   uint32_t speedHz)
 {
-	DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Opening device");	
+	DEBUGDEVICE("SPI DAC", INDI::Logger::DBG_SESSION, "Opening device");	
 	int fd = ::open(device, O_RDWR);
-	DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION, "Opening device %d", fd);	
+	DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_SESSION, "Opening device %d", fd);	
 	if (fd < 0)
 	{
 		DEBUGFDEVICE("SPI DAC", INDI::Logger::DBG_SESSION,
