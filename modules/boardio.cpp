@@ -18,6 +18,7 @@
 #include <linux/spi/spidev.h>
 
 #include <wiringPi.h>
+#include <wiringPiSPI.h>
 
 namespace
 {
