@@ -33,6 +33,7 @@ private:
     uint8_t powerIndex = 0;
     float energyAs = 0.0;
     float energyWs = 0.0;
+    bool m_warnLogged = false;
 
     Readings m_LastReadings;
 };

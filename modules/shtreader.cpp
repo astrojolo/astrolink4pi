@@ -36,7 +36,7 @@ bool SHTReader::open()
     if (m_Fd < 0)
     {
         const int err = errno;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "SHT I2C setup failed: addr=0x%02X errno=%d (%s)",
                      m_ShtAddress, err, std::strerror(err));
         return false;
@@ -114,7 +114,7 @@ bool SHTReader::startMeasurement()
     if (ret != 2)
     {
         const int err = errno;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "SHT raw write failed: fd=%d errno=%d (%s)",
                      m_Fd, err, std::strerror(err));
         close();
@@ -141,7 +141,7 @@ bool SHTReader::readMeasurement(Readings &out)
     if (ret != 6)
     {
         const int err = errno;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "SHT raw read failed: fd=%d errno=%d (%s)",
                      m_Fd, err, std::strerror(err));
         close();
@@ -153,7 +153,7 @@ bool SHTReader::readMeasurement(Readings &out)
 
     if (tempCrc != buf[2] || humCrc != buf[5])
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "SHT CRC error: temp_crc=0x%02X expected=0x%02X, hum_crc=0x%02X expected=0x%02X",
                      buf[2], tempCrc, buf[5], humCrc);
 
@@ -208,11 +208,12 @@ bool SHTReader::read(SHTReader::Readings &out)
 
     if (!ensureOpen())
     {
-        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                     "SHT I2C not available.");
         return false;
     }
 
+    m_warnLogged = false;
     if (m_State == State::Idle)
     {
         return startMeasurement();

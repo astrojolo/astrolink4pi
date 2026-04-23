@@ -33,4 +33,5 @@ private:
     int m_Fd = -1;
     uint8_t m_MlxAddress = 0x5A;
     Readings m_LastReadings;
+    bool m_warnLogged = false;
 };

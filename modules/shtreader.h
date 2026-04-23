@@ -46,5 +46,7 @@ private:
     State m_State = State::Idle;
     uint32_t m_MeasurementStartMs = 0;
 
+    bool m_warnLogged = false;
+
     Readings m_LastReadings{};
 };

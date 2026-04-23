@@ -40,7 +40,7 @@ bool MLXReader::open()
     if (m_Fd < 0)
     {
         const int err = errno;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "MLX I2C setup failed: addr=0x%02X errno=%d (%s)",
                      m_MlxAddress, err, std::strerror(err));
         return false;
@@ -100,7 +100,7 @@ bool MLXReader::readWord(uint8_t reg, uint16_t &value)
     if (ret < 0)
     {
         const int err = errno;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "MLX read word reg 0x%02X failed: fd=%d errno=%d (%s)",
                      reg, m_Fd, err, std::strerror(err));
         close();
@@ -118,7 +118,7 @@ bool MLXReader::read(MLXReader::Readings &out)
 
     if (!ensureOpen())
     {
-        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                     "MLX I2C not available.");
         return false;
     }
@@ -154,6 +154,7 @@ bool MLXReader::read(MLXReader::Readings &out)
     out.tempDifference = ambient - object;
 
     m_LastReadings = out;
+    m_warnLogged = false;
 
     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                  "MLX read OK: ambient=%.2fC object=%.2fC diff=%.2fC",
