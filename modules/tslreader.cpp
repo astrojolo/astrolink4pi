@@ -14,11 +14,9 @@
 namespace
 {
     static constexpr uint8_t TSL2591_REG_ID = 0x12;
-
-    // Jeśli znasz pewną oczekiwaną wartość ID, możesz tu ją wpisać.
-    // Zostawiam jako opcjonalną walidację.
     static constexpr uint8_t TSL2591_EXPECTED_ID_MASK = 0xF0;
-    // np. static constexpr uint8_t TSL2591_EXPECTED_ID = 0x50;
+    // Jeśli chcesz, możesz odkomentować dokładną walidację:
+    // static constexpr uint8_t TSL2591_EXPECTED_ID = 0x50;
 }
 
 TSLReader::TSLReader(const std::string &deviceName)
@@ -53,6 +51,7 @@ bool TSLReader::open()
 
     resetAcquisitionState();
     m_Mode = TSLState::NotAvailable;
+    m_LastReadings.valid = false;
 
     return true;
 }
@@ -70,6 +69,7 @@ void TSLReader::close()
 
     resetAcquisitionState();
     m_Mode = TSLState::NotAvailable;
+    m_LastReadings.valid = false;
 }
 
 bool TSLReader::isOpen() const
@@ -163,7 +163,7 @@ bool TSLReader::probeSensor()
     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                  "TSL probe OK, sensor ID=0x%02X", id);
 
-    // Opcjonalnie: jeśli znasz dokładny ID, odblokuj walidację:
+    // Opcjonalnie, jeśli chcesz twardą walidację ID:
     // if ((id & TSL2591_EXPECTED_ID_MASK) != TSL2591_EXPECTED_ID)
     // {
     //     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
@@ -175,9 +175,27 @@ bool TSLReader::probeSensor()
     return true;
 }
 
+bool TSLReader::sensorAlive()
+{
+    uint8_t id = 0;
+    if (!readReg8(TSL2591_COMMAND_BIT | TSL2591_REG_ID, id))
+        return false;
+
+    // Jeśli chcesz tylko sprawdzać odpowiedź, to sam readReg8 wystarczy.
+    // Jeśli chcesz lekką walidację:
+    if ((id & TSL2591_EXPECTED_ID_MASK) == 0x00)
+    {
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                     "TSL sensor responded with suspicious ID=0x%02X", id);
+        close();
+        return false;
+    }
+
+    return true;
+}
+
 bool TSLReader::initializeSensor()
 {
-    // Enable device
     if (!writeReg8(
             TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE,
             TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN))
@@ -185,7 +203,6 @@ bool TSLReader::initializeSensor()
         return false;
     }
 
-    // Integration time + gain
     if (!writeReg8(
             TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL,
             0x05 | 0x30))
@@ -193,7 +210,6 @@ bool TSLReader::initializeSensor()
         return false;
     }
 
-    // Back to power off until explicit integration start
     if (!writeReg8(
             TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE,
             TSL2591_ENABLE_POWEROFF))
@@ -226,6 +242,9 @@ bool TSLReader::startIntegration()
 
 bool TSLReader::stopIntegration()
 {
+    if (!isOpen())
+        return false;
+
     if (!writeReg8(
             TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE,
             TSL2591_ENABLE_POWEROFF))
@@ -253,67 +272,93 @@ bool TSLReader::readChannels(uint16_t &full, uint16_t &ir)
     return true;
 }
 
+bool TSLReader::recoverIfNeeded()
+{
+    if (!ensureOpen())
+        return false;
+
+    if (!sensorAlive())
+        return false;
+
+    return true;
+}
+
 bool TSLReader::read(TSLReader::Readings &out)
 {
     out = m_LastReadings;
 
-    if (!ensureOpen())
+    if (!recoverIfNeeded())
     {
-        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-                    "TSL I2C not available.");
+        out.valid = false;
         return false;
     }
 
     if (m_Mode == TSLState::NotAvailable)
     {
         if (!probeSensor())
+        {
+            out.valid = false;
             return false;
+        }
 
         m_Mode = TSLState::Available;
+        out.valid = false;
         return true;
     }
 
     if (m_Mode == TSLState::Available)
     {
         if (!initializeSensor())
+        {
+            out.valid = false;
             return false;
+        }
 
         m_Mode = TSLState::Initialized;
+        out.valid = false;
         return true;
     }
 
     if (m_Mode != TSLState::Initialized)
     {
         close();
+        out.valid = false;
         return false;
     }
 
     if (m_AdcStartTime == 0)
     {
-        return startIntegration();
+        if (!startIntegration())
+        {
+            out.valid = false;
+            return false;
+        }
+
+        out.valid = false;
+        return true;
     }
 
     const uint32_t elapsed = static_cast<uint32_t>(millis() - m_AdcStartTime);
     if (elapsed < TSL2591_ADC_TIME)
     {
-        // Integracja trwa, zwracamy ostatnie poprawne dane
-        return true;
+        return m_LastReadings.valid;
     }
 
     uint16_t full = 0;
     uint16_t ir = 0;
 
     const bool readOk = readChannels(full, ir);
-    const bool stopOk = stopIntegration();
+
+    bool stopOk = false;
+    if (readOk)
+        stopOk = stopIntegration();
 
     m_AdcStartTime = 0;
 
     if (!readOk || !stopOk)
     {
-        // readReg/writeReg już zrobiły close() przy błędzie,
-        // ale zostawiamy tę ścieżkę dla czytelności logiki.
-        if (isOpen())
-            close();
+        close();
+        out.valid = false;
         return false;
     }
 
@@ -329,28 +374,31 @@ bool TSLReader::read(TSLReader::Readings &out)
                      static_cast<unsigned>(full),
                      static_cast<unsigned>(ir));
 
-        // Odrzucamy próbkę, ale nie wywalamy całego sensora.
-        return true;
+        out = m_LastReadings;
+        return m_LastReadings.valid;
     }
 
     const uint32_t nextFull = m_FullCumulative + static_cast<uint32_t>(full);
     const uint32_t nextIr = m_IrCumulative + static_cast<uint32_t>(ir);
     const uint32_t nextVisible = nextFull - nextIr;
+    const uint32_t nextNIter = m_NIter + 1;
 
     if (m_NIter < 5 || (nextVisible < 500 && m_NIter < 150))
     {
-        ++m_NIter;
+        m_NIter = nextNIter;
         m_FullCumulative = nextFull;
         m_IrCumulative = nextIr;
-        return true;
+
+        out = m_LastReadings;
+        return m_LastReadings.valid;
     }
 
-    const uint32_t visible = m_FullCumulative - m_IrCumulative;
+    const uint32_t visible = nextVisible;
 
-    if (visible > 0 && m_NIter > 0)
+    if (visible > 0 && nextNIter > 0)
     {
         const double visNorm =
-            static_cast<double>(visible) / (29628.0 * static_cast<double>(m_NIter));
+            static_cast<double>(visible) / (29628.0 * static_cast<double>(nextNIter));
 
         if (visNorm > 0.0)
         {
@@ -358,9 +406,9 @@ bool TSLReader::read(TSLReader::Readings &out)
                 12.6 - 1.086 * std::log(visNorm) + m_SQMOffset + m_FilterCoeff;
 
             m_LastReadings.mpsas = mpsas;
-            m_LastReadings.full = static_cast<int>(m_FullCumulative / m_NIter);
-            m_LastReadings.ir = static_cast<int>(m_IrCumulative / m_NIter);
-            m_LastReadings.visible = static_cast<int>(visible / m_NIter);
+            m_LastReadings.full = static_cast<int>(nextFull / nextNIter);
+            m_LastReadings.ir = static_cast<int>(nextIr / nextNIter);
+            m_LastReadings.visible = static_cast<int>(visible / nextNIter);
             m_LastReadings.valid = true;
 
             out = m_LastReadings;
@@ -371,10 +419,10 @@ bool TSLReader::read(TSLReader::Readings &out)
                          m_LastReadings.full,
                          m_LastReadings.ir,
                          m_LastReadings.visible,
-                         static_cast<unsigned>(m_NIter));
+                         static_cast<unsigned>(nextNIter));
         }
     }
 
     resetAcquisitionState();
-    return true;
+    return m_LastReadings.valid;
 }

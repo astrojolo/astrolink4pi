@@ -59,6 +59,8 @@ private:
     bool writeReg8(uint8_t reg, uint8_t value);
     bool readReg16(uint8_t reg, uint16_t &value);
 
+    bool sensorAlive();
+    bool recoverIfNeeded();
     void resetAcquisitionState();
 
     int m_Fd = -1;
