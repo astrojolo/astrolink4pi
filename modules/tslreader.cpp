@@ -296,7 +296,7 @@ bool TSLReader::read(TSLReader::Readings &out)
         // Integracja właśnie wystartowała.
         // Jeśli nie ma jeszcze żadnych poprawnych danych historycznych,
         // out.valid ma pozostać false.
-        out = m_LastReadings;
+        out = m_LastReadings;        
         return true;
     }
 
@@ -306,6 +306,7 @@ bool TSLReader::read(TSLReader::Readings &out)
         // Integracja trwa, komunikacja jest poprawna.
         // Zwracamy ostatnie znane dane (jeśli były).
         out = m_LastReadings;
+        m_warnLogged = false;
         return true;
     }
 
@@ -398,8 +399,6 @@ bool TSLReader::read(TSLReader::Readings &out)
     // Zachowujemy poprzednie dane, jeśli są.
     out = m_LastReadings;
     m_warnLogged = false;
-    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,
-                 "WARN set to %d", m_warnLogged);    
     resetAcquisitionState();
     return true;
 }
