@@ -11,9 +11,21 @@
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
 
+namespace
+{
+    static constexpr uint8_t TSL2591_REG_ID = 0x12;
+
+    // Jeśli znasz pewną oczekiwaną wartość ID, możesz tu ją wpisać.
+    // Zostawiam jako opcjonalną walidację.
+    static constexpr uint8_t TSL2591_EXPECTED_ID_MASK = 0xF0;
+    // np. static constexpr uint8_t TSL2591_EXPECTED_ID = 0x50;
+}
+
 TSLReader::TSLReader(const std::string &deviceName)
     : BaseComponent(deviceName, "TSLReader")
 {
+    resetAcquisitionState();
+    m_Mode = TSLState::NotAvailable;
 }
 
 TSLReader::~TSLReader()
@@ -35,6 +47,10 @@ bool TSLReader::open()
         return false;
     }
 
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                 "TSL I2C opened: fd=%d addr=0x%02X",
+                 m_Fd, m_TslAddress);
+
     resetAcquisitionState();
     m_Mode = TSLState::NotAvailable;
 
@@ -47,18 +63,13 @@ void TSLReader::close()
     {
         ::close(m_Fd);
         m_Fd = -1;
+
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                    "TSL I2C closed.");
     }
 
     resetAcquisitionState();
     m_Mode = TSLState::NotAvailable;
-}
-
-void TSLReader::resetAcquisitionState()
-{
-    m_AdcStartTime = 0;
-    m_NIter = 0;
-    m_FullCumulative = 0;
-    m_IrCumulative = 0;
 }
 
 bool TSLReader::isOpen() const
@@ -71,7 +82,18 @@ bool TSLReader::ensureOpen()
     if (isOpen())
         return true;
 
+    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                "TSL attempting I2C reopen.");
+
     return open();
+}
+
+void TSLReader::resetAcquisitionState()
+{
+    m_AdcStartTime = 0;
+    m_NIter = 0;
+    m_FullCumulative = 0;
+    m_IrCumulative = 0;
 }
 
 bool TSLReader::readReg8(uint8_t reg, uint8_t &value)
@@ -134,51 +156,84 @@ bool TSLReader::readReg16(uint8_t reg, uint16_t &value)
 
 bool TSLReader::probeSensor()
 {
-    int rc = wiringPiI2CWrite(m_Fd, 0x80 | 0x20 | 0x12);
-    if (rc < 0)
-    {
-        int err = errno;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
-                     "TSL probe failed: fd=%d errno=%d (%s)",
-                     m_Fd, err, std::strerror(err));
+    uint8_t id = 0;
+    if (!readReg8(TSL2591_COMMAND_BIT | TSL2591_REG_ID, id))
         return false;
-    }
+
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                 "TSL probe OK, sensor ID=0x%02X", id);
+
+    // Opcjonalnie: jeśli znasz dokładny ID, odblokuj walidację:
+    // if ((id & TSL2591_EXPECTED_ID_MASK) != TSL2591_EXPECTED_ID)
+    // {
+    //     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+    //                  "TSL unexpected sensor ID: 0x%02X", id);
+    //     close();
+    //     return false;
+    // }
 
     return true;
 }
 
 bool TSLReader::initializeSensor()
 {
+    // Enable device
     if (!writeReg8(
             TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE,
             TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN))
+    {
         return false;
+    }
 
+    // Integration time + gain
     if (!writeReg8(
             TSL2591_COMMAND_BIT | TSL2591_REGISTER_CONTROL,
             0x05 | 0x30))
+    {
         return false;
+    }
 
+    // Back to power off until explicit integration start
     if (!writeReg8(
             TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE,
             TSL2591_ENABLE_POWEROFF))
+    {
         return false;
+    }
+
+    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                "TSL sensor initialized.");
 
     return true;
 }
 
 bool TSLReader::startIntegration()
 {
-    return writeReg8(
-        TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE,
-        TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN);
+    if (!writeReg8(
+            TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE,
+            TSL2591_ENABLE_POWERON | TSL2591_ENABLE_AEN | TSL2591_ENABLE_AIEN))
+    {
+        return false;
+    }
+
+    m_AdcStartTime = millis();
+
+    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                "TSL integration started.");
+
+    return true;
 }
 
 bool TSLReader::stopIntegration()
 {
-    return writeReg8(
-        TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE,
-        TSL2591_ENABLE_POWEROFF);
+    if (!writeReg8(
+            TSL2591_COMMAND_BIT | TSL2591_REGISTER_ENABLE,
+            TSL2591_ENABLE_POWEROFF))
+    {
+        return false;
+    }
+
+    return true;
 }
 
 bool TSLReader::readChannels(uint16_t &full, uint16_t &ir)
@@ -194,6 +249,7 @@ bool TSLReader::readChannels(uint16_t &full, uint16_t &ir)
 
     ir = irRaw;
     full = fullRaw;
+
     return true;
 }
 
@@ -211,48 +267,36 @@ bool TSLReader::read(TSLReader::Readings &out)
     if (m_Mode == TSLState::NotAvailable)
     {
         if (!probeSensor())
-        {
-            close();
             return false;
-        }
 
         m_Mode = TSLState::Available;
-        out = m_LastReadings;
         return true;
     }
 
     if (m_Mode == TSLState::Available)
     {
         if (!initializeSensor())
-        {
-            close();
             return false;
-        }
 
         m_Mode = TSLState::Initialized;
-        out = m_LastReadings;
         return true;
     }
 
     if (m_Mode != TSLState::Initialized)
+    {
+        close();
         return false;
+    }
 
     if (m_AdcStartTime == 0)
     {
-        if (!startIntegration())
-        {
-            close();
-            return false;
-        }
-
-        m_AdcStartTime = millis();
-        out = m_LastReadings;
-        return true;
+        return startIntegration();
     }
 
-    if (static_cast<uint32_t>(millis() - m_AdcStartTime) < TSL2591_ADC_TIME)
+    const uint32_t elapsed = static_cast<uint32_t>(millis() - m_AdcStartTime);
+    if (elapsed < TSL2591_ADC_TIME)
     {
-        out = m_LastReadings;
+        // Integracja trwa, zwracamy ostatnie poprawne dane
         return true;
     }
 
@@ -266,18 +310,26 @@ bool TSLReader::read(TSLReader::Readings &out)
 
     if (!readOk || !stopOk)
     {
-        close();
+        // readReg/writeReg już zrobiły close() przy błędzie,
+        // ale zostawiamy tę ścieżkę dla czytelności logiki.
+        if (isOpen())
+            close();
         return false;
     }
 
     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
-                 "TSL sample: full=%u ir=%u", full, ir);
+                 "TSL sample: full=%u ir=%u",
+                 static_cast<unsigned>(full),
+                 static_cast<unsigned>(ir));
 
     if (full < ir)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
-                     "TSL invalid sample: full < ir (%u < %u)", full, ir);
-        out = m_LastReadings;
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                     "TSL invalid sample: full < ir (%u < %u)",
+                     static_cast<unsigned>(full),
+                     static_cast<unsigned>(ir));
+
+        // Odrzucamy próbkę, ale nie wywalamy całego sensora.
         return true;
     }
 
@@ -290,7 +342,6 @@ bool TSLReader::read(TSLReader::Readings &out)
         ++m_NIter;
         m_FullCumulative = nextFull;
         m_IrCumulative = nextIr;
-        out = m_LastReadings;
         return true;
     }
 
@@ -298,7 +349,8 @@ bool TSLReader::read(TSLReader::Readings &out)
 
     if (visible > 0 && m_NIter > 0)
     {
-        const double visNorm = static_cast<double>(visible) / (29628.0 * static_cast<double>(m_NIter));
+        const double visNorm =
+            static_cast<double>(visible) / (29628.0 * static_cast<double>(m_NIter));
 
         if (visNorm > 0.0)
         {
@@ -310,10 +362,19 @@ bool TSLReader::read(TSLReader::Readings &out)
             m_LastReadings.ir = static_cast<int>(m_IrCumulative / m_NIter);
             m_LastReadings.visible = static_cast<int>(visible / m_NIter);
             m_LastReadings.valid = true;
+
+            out = m_LastReadings;
+
+            DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                         "TSL reading OK: mpsas=%.3f full=%d ir=%d vis=%d n=%u",
+                         m_LastReadings.mpsas,
+                         m_LastReadings.full,
+                         m_LastReadings.ir,
+                         m_LastReadings.visible,
+                         static_cast<unsigned>(m_NIter));
         }
     }
 
     resetAcquisitionState();
-    out = m_LastReadings;
     return true;
 }

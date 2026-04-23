@@ -54,11 +54,14 @@ private:
     bool stopIntegration();
     bool readChannels(uint16_t &full, uint16_t &ir);
 
+private:
     bool readReg8(uint8_t reg, uint8_t &value);
     bool writeReg8(uint8_t reg, uint8_t value);
     bool readReg16(uint8_t reg, uint16_t &value);
 
-private:
+    bool ensureOpen();
+    void resetAcquisitionState();    
+
     int m_Fd = -1;
     uint8_t m_TslAddress = 0x29;
 
