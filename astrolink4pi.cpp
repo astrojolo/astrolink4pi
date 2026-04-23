@@ -56,15 +56,7 @@ void ISNewNumber(const char *dev, const char *name, double values[], char *names
 	astroLink4Pi->ISNewNumber(dev, name, values, names, num);
 }
 
-AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this)
-, m_BoardIO(getDeviceName())
-, m_PwmController(m_BoardIO, (getDeviceName()))
-, m_SystemInfo(getDeviceName())
-, m_PowerMonitor(getDeviceName())
-, m_SHTReader(getDeviceName())
-, m_MLXReader(getDeviceName())
-, m_TSLReader(getDeviceName())
-, m_Focuser(Focuser::Config{}, m_BoardIO, m_PwmController, getDeviceName())
+AstroLink4Pi::AstroLink4Pi() : FI(this), WI(this), m_BoardIO(getDeviceName()), m_PwmController(m_BoardIO, (getDeviceName())), m_SystemInfo(getDeviceName()), m_PowerMonitor(getDeviceName()), m_SHTReader(getDeviceName()), m_MLXReader(getDeviceName()), m_TSLReader(getDeviceName()), m_Focuser(Focuser::Config{}, m_BoardIO, m_PwmController, getDeviceName())
 {
 	setVersion(VERSION_MAJOR, VERSION_MINOR);
 }
@@ -108,7 +100,6 @@ bool AstroLink4Pi::Connect()
 		   m_SystemInfo.getHostname().c_str(),
 		   m_SystemInfo.getModel().c_str(),
 		   m_SystemInfo.getKernelVersion().c_str());
-
 
 	// Optional modules
 	if (!m_PowerMonitor.open())
@@ -763,17 +754,17 @@ bool AstroLink4Pi::AbortFocuser()
 
 IPState AstroLink4Pi::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
 {
-    int32_t current = (int32_t)FocusAbsPosNP[0].getValue();
-    int32_t delta = (dir == FOCUS_INWARD ? -1 : 1) * (int32_t)ticks;
+	int32_t current = (int32_t)FocusAbsPosNP[0].getValue();
+	int32_t delta = (dir == FOCUS_INWARD ? -1 : 1) * (int32_t)ticks;
 
-    int32_t target = current + delta;
+	int32_t target = current + delta;
 
-    if (target < 0)
-        target = 0;
-    if (target > (int32_t)FocusAbsPosNP[0].getMax())
-        target = (int32_t)FocusAbsPosNP[0].getMax();
+	if (target < 0)
+		target = 0;
+	if (target > (int32_t)FocusAbsPosNP[0].getMax())
+		target = (int32_t)FocusAbsPosNP[0].getMax();
 
-    return MoveAbsFocuser((uint32_t)target);
+	return MoveAbsFocuser((uint32_t)target);
 }
 
 IPState AstroLink4Pi::MoveAbsFocuser(uint32_t targetTicks)
@@ -989,7 +980,8 @@ void AstroLink4Pi::fanUpdate()
 
 bool AstroLink4Pi::readTSL()
 {
-	if(!m_TSLReader.isOpen()) return false;
+	if (!m_TSLReader.isOpen())
+		return false;
 
 	TSLReader::Readings readings;
 	m_TSLReader.setSQMOffset(SQMOffsetN[0].value);
@@ -1004,10 +996,9 @@ bool AstroLink4Pi::readTSL()
 
 bool AstroLink4Pi::readMLX()
 {
-	if(!m_MLXReader.isOpen()) return false;
-
 	MLXReader::Readings readings;
-	bool correct = m_MLXReader.read(readings);
+	const bool correct = m_MLXReader.read(readings);
+
 	if (!correct)
 	{
 		readings = MLXReader::Readings{};
@@ -1047,16 +1038,16 @@ bool AstroLink4Pi::readSHT()
 bool AstroLink4Pi::readPower()
 {
 	PowerMonitor::Readings readings;
-	if(!m_PowerMonitor.isOpen()) return false;
+	if (!m_PowerMonitor.isOpen())
+		return false;
 
 	bool correct = m_PowerMonitor.read(readings);
 
 	if (correct)
 	{
 		PowerReadingsNP.s = IPS_OK;
-
 	}
-	else 
+	else
 	{
 		readings = PowerMonitor::Readings{};
 		PowerReadingsNP.s = IPS_ALERT;

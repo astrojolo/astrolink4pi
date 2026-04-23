@@ -2,10 +2,11 @@
 
 #include <cerrno>
 #include <cstring>
+#include <cstdint>
 #include <unistd.h>
+
 #include <indilogger.h>
 
-#include <wiringPi.h>
 #include <wiringPiI2C.h>
 
 namespace
@@ -22,6 +23,7 @@ namespace
 MLXReader::MLXReader(const std::string &deviceName)
     : BaseComponent(deviceName, "MLXReader")
 {
+    resetState();
 }
 
 MLXReader::~MLXReader()
@@ -36,20 +38,19 @@ bool MLXReader::open()
     m_Fd = wiringPiI2CSetup(m_MlxAddress);
     if (m_Fd < 0)
     {
+        const int err = errno;
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "MLX I2C setup failed: addr=0x%02X errno=%d (%s)",
-                     m_MlxAddress, errno, std::strerror(errno));
+                     m_MlxAddress, err, std::strerror(err));
         return false;
     }
 
-    return true;
-}
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                 "MLX I2C opened: fd=%d addr=0x%02X",
+                 m_Fd, m_MlxAddress);
 
-bool MLXReader::ensureOpen()
-{
-    if (isOpen())
-        return true;
-    return open();
+    resetState();
+    return true;
 }
 
 void MLXReader::close()
@@ -58,7 +59,12 @@ void MLXReader::close()
     {
         ::close(m_Fd);
         m_Fd = -1;
+
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                    "MLX I2C closed.");
     }
+
+    resetState();
 }
 
 bool MLXReader::isOpen() const
@@ -66,11 +72,29 @@ bool MLXReader::isOpen() const
     return m_Fd >= 0;
 }
 
+void MLXReader::resetState()
+{
+    // Na razie nie ma specjalnego stanu akwizycji,
+    // ale zostawiamy metodę dla spójności i rozbudowy.
+}
+
+bool MLXReader::ensureOpen()
+{
+    if (isOpen())
+        return true;
+
+    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                "MLX attempting I2C reopen.");
+
+    return open();
+}
+
 bool MLXReader::readWord(uint8_t reg, uint16_t &value)
 {
     if (!ensureOpen())
         return false;
 
+    errno = 0;
     const int ret = wiringPiI2CReadReg16(m_Fd, reg);
     if (ret < 0)
     {
@@ -91,6 +115,13 @@ bool MLXReader::read(MLXReader::Readings &out)
 {
     out = m_LastReadings;
 
+    if (!ensureOpen())
+    {
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                    "MLX I2C not available.");
+        return false;
+    }
+
     uint16_t rawAmbient = 0;
     uint16_t rawObject = 0;
 
@@ -107,6 +138,7 @@ bool MLXReader::read(MLXReader::Readings &out)
     const double ambient = mlxRawToCelsius(rawAmbient);
     const double object = mlxRawToCelsius(rawObject);
 
+    // Opcjonalna walidacja sensownych zakresów
     if (ambient < -70.0 || ambient > 150.0 ||
         object < -70.0 || object > 500.0)
     {
@@ -121,6 +153,10 @@ bool MLXReader::read(MLXReader::Readings &out)
     out.tempDifference = ambient - object;
 
     m_LastReadings = out;
+
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                 "MLX read OK: ambient=%.2fC object=%.2fC diff=%.2fC",
+                 out.ambientTemperature, out.objectTemperature, out.tempDifference);
 
     return true;
 }

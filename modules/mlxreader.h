@@ -21,11 +21,12 @@ public:
     bool open();
     void close();
     bool isOpen() const;
-    bool ensureOpen();
 
     bool read(Readings &out);
 
 private:
+    bool ensureOpen();
+    void resetState();
     bool readWord(uint8_t reg, uint16_t &value);
 
 private:
