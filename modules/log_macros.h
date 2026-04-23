@@ -11,7 +11,7 @@
 #define DEBUGDEVICE_LOG_ONCE(flag, dev, level, fmt) \
     do { \
         if (!(flag)) { \
-            DEBUGFDEVICE(dev, level, fmt); \
+            DEBUGDEVICE(dev, level, fmt); \
             (flag) = true; \
         } \
     } while (0)    
