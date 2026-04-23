@@ -73,5 +73,7 @@ private:
     double m_SQMOffset = 0.0;
     double m_FilterCoeff = -1.2;
 
+    bool m_warnLogged = false;
+
     Readings m_LastReadings;
 };

@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <unistd.h>
 
-#include <indilogger.h>
+#include "log_macros.h"
 
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
@@ -52,7 +52,7 @@ bool TSLReader::open()
     if (m_Fd < 0)
     {
         const int err = errno;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "TSL I2C setup failed: addr=0x%02X errno=%d (%s)",
                      m_TslAddress, err, std::strerror(err));
         m_Fd = -1;
@@ -106,7 +106,7 @@ bool TSLReader::readReg8(uint8_t reg, uint8_t &value)
     if (ret < 0)
     {
         const int err = errno;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "TSL read reg8 0x%02X failed: fd=%d errno=%d (%s)",
                      reg, m_Fd, err, std::strerror(err));
         close();
@@ -125,7 +125,7 @@ bool TSLReader::writeReg8(uint8_t reg, uint8_t value)
     if (wiringPiI2CWriteReg8(m_Fd, reg, value) < 0)
     {
         const int err = errno;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "TSL write reg8 0x%02X failed: fd=%d errno=%d (%s)",
                      reg, m_Fd, err, std::strerror(err));
         close();
@@ -144,7 +144,7 @@ bool TSLReader::readReg16(uint8_t reg, uint16_t &value)
     if (ret < 0)
     {
         const int err = errno;
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "TSL read reg16 0x%02X failed: fd=%d errno=%d (%s)",
                      reg, m_Fd, err, std::strerror(err));
         close();
@@ -335,7 +335,7 @@ bool TSLReader::read(TSLReader::Readings &out)
 
     if (full < ir)
     {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                      "TSL invalid sample: full < ir (%u < %u)",
                      static_cast<unsigned>(full),
                      static_cast<unsigned>(ir));
@@ -397,6 +397,7 @@ bool TSLReader::read(TSLReader::Readings &out)
     // Komunikacja była poprawna, ale z tej serii nie udało się wyliczyć nowego wyniku.
     // Zachowujemy poprzednie dane, jeśli są.
     out = m_LastReadings;
+    m_warnLogged = false;
     resetAcquisitionState();
     return true;
 }

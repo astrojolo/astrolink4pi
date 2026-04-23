@@ -31,6 +31,7 @@ MLXReader::~MLXReader()
     close();
 }
 
+
 bool MLXReader::open()
 {
     close();
