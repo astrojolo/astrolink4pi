@@ -118,7 +118,7 @@ bool MLXReader::read(MLXReader::Readings &out)
 
     if (!ensureOpen())
     {
-        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+        DEBUGDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                     "MLX I2C not available.");
         return false;
     }
