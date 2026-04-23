@@ -59,8 +59,7 @@ private:
     bool writeReg8(uint8_t reg, uint8_t value);
     bool readReg16(uint8_t reg, uint16_t &value);
 
-    bool ensureOpen();
-    void resetAcquisitionState();    
+    void resetAcquisitionState();
 
     int m_Fd = -1;
     uint8_t m_TslAddress = 0x29;
@@ -77,6 +76,5 @@ private:
 
     Readings m_LastReadings;
 
-    void resetAcquisitionState();
 
 };
