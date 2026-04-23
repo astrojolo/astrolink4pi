@@ -13,8 +13,8 @@
 
 namespace
 {
-    static constexpr uint8_t SHT_CMD_MEAS_HIGHREP_NO_STRETCH[2] = {0x24, 0x00};
-    static constexpr uint32_t SHT_MEASUREMENT_TIME_MS = 20; // bezpieczny zapas dla ~15 ms
+static constexpr uint8_t SHT_CMD_MEAS_HIGHREP_NO_STRETCH[2] = {0x24, 0x00};
+static constexpr uint32_t SHT_MEASUREMENT_TIME_MS = 20; // bezpieczny zapas dla ~15 ms
 }
 
 SHTReader::SHTReader(const std::string &deviceName)
@@ -28,52 +28,14 @@ SHTReader::~SHTReader()
     close();
 }
 
-bool SHTReader::probeSensor()
-{
-    errno = 0;
-    const int ret = wiringPiI2CRawWrite(m_Fd, SHT_CMD_MEAS_HIGHREP_NO_STRETCH, 2);
-    if (ret != 2)
-        return false;
-
-    return true;
-}
-
-void SHTReader::handleSensorMissing(const char *reason, int err)
-{
-    if (m_HasEverBeenDetected && !m_MissingWarningLogged)
-    {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-                     "SHT sensor disconnected (%s): errno=%d (%s)",
-                     reason, err, std::strerror(err));
-        m_MissingWarningLogged = true;
-    }
-    else
-    {
-        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
-                     "SHT sensor not available (%s): errno=%d (%s)",
-                     reason, err, std::strerror(err));
-    }
-
-    if (m_Fd >= 0)
-    {
-        ::close(m_Fd);
-        m_Fd = -1;
-    }
-
-    resetState();
-}
-
 bool SHTReader::open()
 {
     close();
 
-    errno = 0;
     m_Fd = wiringPiI2CSetup(m_ShtAddress);
     if (m_Fd < 0)
     {
         const int err = errno;
-
-        // To raczej problem z I2C/systemem niż samym czujnikiem.
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "SHT I2C setup failed: addr=0x%02X errno=%d (%s)",
                      m_ShtAddress, err, std::strerror(err));
@@ -83,19 +45,6 @@ bool SHTReader::open()
     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                  "SHT I2C opened: fd=%d addr=0x%02X", m_Fd, m_ShtAddress);
 
-    // Sprawdzenie obecności czujnika już na starcie.
-    if (!probeSensor())
-    {
-        const int err = errno;
-        handleSensorMissing("probe after open", err);
-
-        // Brak czujnika przy starcie nie jest błędem obowiązkowym.
-        // Nie logujemy WARNING, jeśli nigdy wcześniej go nie było.
-        return false;
-    }
-
-    m_HasEverBeenDetected = true;
-    m_MissingWarningLogged = false;
     resetState();
     return true;
 }
@@ -161,17 +110,16 @@ bool SHTReader::startMeasurement()
     if (!ensureOpen())
         return false;
 
-    errno = 0;
     const int ret = wiringPiI2CRawWrite(m_Fd, SHT_CMD_MEAS_HIGHREP_NO_STRETCH, 2);
     if (ret != 2)
     {
         const int err = errno;
-        handleSensorMissing("measurement start", err);
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                     "SHT raw write failed: fd=%d errno=%d (%s)",
+                     m_Fd, err, std::strerror(err));
+        close();
         return false;
     }
-
-    m_HasEverBeenDetected = true;
-    m_MissingWarningLogged = false;
 
     m_MeasurementStartMs = millis();
     m_State = State::Measuring;
@@ -189,17 +137,19 @@ bool SHTReader::readMeasurement(Readings &out)
 
     uint8_t buf[6] = {0};
 
-    errno = 0;
     const int ret = wiringPiI2CRawRead(m_Fd, buf, 6);
     if (ret != 6)
     {
         const int err = errno;
-        handleSensorMissing("measurement read", err);
+        DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                     "SHT raw read failed: fd=%d errno=%d (%s)",
+                     m_Fd, err, std::strerror(err));
+        close();
         return false;
     }
 
     const uint8_t tempCrc = crc8(buf, 2);
-    const uint8_t humCrc = crc8(buf + 3, 2);
+    const uint8_t humCrc  = crc8(buf + 3, 2);
 
     if (tempCrc != buf[2] || humCrc != buf[5])
     {
@@ -207,7 +157,7 @@ bool SHTReader::readMeasurement(Readings &out)
                      "SHT CRC error: temp_crc=0x%02X expected=0x%02X, hum_crc=0x%02X expected=0x%02X",
                      buf[2], tempCrc, buf[5], humCrc);
 
-        // CRC error nie oznacza od razu odłączenia czujnika.
+        // Nie zamykam I2C po samym CRC, ale resetuję sekwencję pomiaru.
         m_State = State::Idle;
         m_MeasurementStartMs = 0;
         return false;
@@ -245,9 +195,6 @@ bool SHTReader::readMeasurement(Readings &out)
     m_State = State::Idle;
     m_MeasurementStartMs = 0;
 
-    m_HasEverBeenDetected = true;
-    m_MissingWarningLogged = false;
-
     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                  "SHT measurement read OK: T=%.2fC RH=%.2f%% DP=%.2fC",
                  out.temperature, out.humidity, out.dewPoint);
@@ -261,9 +208,8 @@ bool SHTReader::read(SHTReader::Readings &out)
 
     if (!ensureOpen())
     {
-        // Brak warninga tutaj.
-        // Jeśli czujnik był wcześniej i zniknął, warning został już zalogowany raz
-        // w handleSensorMissing(). Jeśli nigdy go nie było, pozostajemy cicho.
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                    "SHT I2C not available.");
         return false;
     }
 
