@@ -8,3 +8,11 @@
         } \
     } while (0)
     
+#define DEBUGDEVICE_LOG_ONCE(flag, dev, level, fmt) \
+    do { \
+        if (!(flag)) { \
+            DEBUGFDEVICE(dev, level, fmt); \
+            (flag) = true; \
+        } \
+    } while (0)    
+    

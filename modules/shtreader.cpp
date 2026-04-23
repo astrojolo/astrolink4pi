@@ -208,8 +208,8 @@ bool SHTReader::read(SHTReader::Readings &out)
 
     if (!ensureOpen())
     {
-        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-                    "SHT I2C not available.");
+        DEBUGDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                    "SHT I2C not available");
         return false;
     }
 
