@@ -84,7 +84,7 @@ protected:
 private:
 	virtual bool Connect();
 	virtual bool Disconnect();
-	virtual bool readSHT(int mode);
+	virtual bool readSHT();
 	virtual bool readMLX();
 	virtual bool readTSL();
 	virtual bool readPower();

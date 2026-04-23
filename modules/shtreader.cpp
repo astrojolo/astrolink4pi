@@ -3,14 +3,24 @@
 #include <cerrno>
 #include <cmath>
 #include <cstring>
+#include <cstdint>
+#include <unistd.h>
+
 #include <indilogger.h>
 
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
 
+namespace
+{
+static constexpr uint8_t SHT_CMD_MEAS_HIGHREP_NO_STRETCH[2] = {0x24, 0x00};
+static constexpr uint32_t SHT_MEASUREMENT_TIME_MS = 20; // bezpieczny zapas dla ~15 ms
+}
+
 SHTReader::SHTReader(const std::string &deviceName)
     : BaseComponent(deviceName, "SHTReader")
 {
+    resetState();
 }
 
 SHTReader::~SHTReader()
@@ -25,15 +35,17 @@ bool SHTReader::open()
     m_Fd = wiringPiI2CSetup(m_ShtAddress);
     if (m_Fd < 0)
     {
+        const int err = errno;
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
-                     "SHT I2C setup failed: errno=%d (%s)",
-                     errno, std::strerror(errno));
+                     "SHT I2C setup failed: addr=0x%02X errno=%d (%s)",
+                     m_ShtAddress, err, std::strerror(err));
         return false;
     }
 
     DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
                  "SHT I2C opened: fd=%d addr=0x%02X", m_Fd, m_ShtAddress);
 
+    resetState();
     return true;
 }
 
@@ -43,9 +55,12 @@ void SHTReader::close()
     {
         ::close(m_Fd);
         m_Fd = -1;
-        m_MeasurementPending = false;
-        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG, "SHT I2C closed.");
+
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                    "SHT I2C closed.");
     }
+
+    resetState();
 }
 
 bool SHTReader::isOpen() const
@@ -53,25 +68,26 @@ bool SHTReader::isOpen() const
     return m_Fd >= 0;
 }
 
-bool SHTReader::read(SHTReader::Readings &out, int mode)
+bool SHTReader::ensureOpen()
 {
-    out = m_LastReadings;
+    if (isOpen())
+        return true;
 
-    if ((mode % 2) == 0)
-    {
-        return startMeasurement();
-    }
-    else
-    {
-        return readMeasurement(out);
-    }
+    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                "SHT attempting I2C reopen.");
+
+    return open();
+}
+
+void SHTReader::resetState()
+{
+    m_State = State::Idle;
+    m_MeasurementStartMs = 0;
 }
 
 uint8_t SHTReader::crc8(const uint8_t *data, size_t len) const
 {
-    // SHT3x CRC-8:
-    // polynomial: 0x31 (x^8 + x^5 + x^4 + 1)
-    // init: 0xFF
+    // SHT3x CRC-8, polynomial 0x31, init 0xFF
     uint8_t crc = 0xFF;
 
     for (size_t i = 0; i < len; ++i)
@@ -89,49 +105,33 @@ uint8_t SHTReader::crc8(const uint8_t *data, size_t len) const
     return crc;
 }
 
-bool SHTReader::ensureOpen()
-{
-    if (isOpen())
-        return true;
-
-    return open();
-}
-
 bool SHTReader::startMeasurement()
 {
-    // Single shot, high repeatability, clock stretching disabled
-    const uint8_t cmd[2] = {0x24, 0x00};
-
     if (!ensureOpen())
         return false;
 
-    const int ret = wiringPiI2CRawWrite(m_Fd, cmd, 2);
+    const int ret = wiringPiI2CRawWrite(m_Fd, SHT_CMD_MEAS_HIGHREP_NO_STRETCH, 2);
     if (ret != 2)
     {
         const int err = errno;
-
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "SHT raw write failed: fd=%d errno=%d (%s)",
                      m_Fd, err, std::strerror(err));
-
         close();
         return false;
     }
 
-    m_MeasurementPending = true;
+    m_MeasurementStartMs = millis();
+    m_State = State::Measuring;
+
+    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                "SHT measurement started.");
+
     return true;
 }
 
 bool SHTReader::readMeasurement(Readings &out)
 {
-    if (!m_MeasurementPending)
-    {
-        // No measurement was started (e.g. sensor was disconnected).
-        // Kick off a new one and wait for the next read cycle.
-        startMeasurement();
-        return false;
-    }
-
     if (!ensureOpen())
         return false;
 
@@ -141,23 +141,25 @@ bool SHTReader::readMeasurement(Readings &out)
     if (ret != 6)
     {
         const int err = errno;
-
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "SHT raw read failed: fd=%d errno=%d (%s)",
                      m_Fd, err, std::strerror(err));
-
         close();
         return false;
     }
 
     const uint8_t tempCrc = crc8(buf, 2);
-    const uint8_t humCrc = crc8(buf + 3, 2);
+    const uint8_t humCrc  = crc8(buf + 3, 2);
 
     if (tempCrc != buf[2] || humCrc != buf[5])
     {
         DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
                      "SHT CRC error: temp_crc=0x%02X expected=0x%02X, hum_crc=0x%02X expected=0x%02X",
                      buf[2], tempCrc, buf[5], humCrc);
+
+        // Nie zamykam I2C po samym CRC, ale resetuję sekwencję pomiaru.
+        m_State = State::Idle;
+        m_MeasurementStartMs = 0;
         return false;
     }
 
@@ -190,6 +192,47 @@ bool SHTReader::readMeasurement(Readings &out)
     out.dewPoint = dewPoint;
 
     m_LastReadings = out;
-    m_MeasurementPending = false;
+    m_State = State::Idle;
+    m_MeasurementStartMs = 0;
+
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                 "SHT measurement read OK: T=%.2fC RH=%.2f%% DP=%.2fC",
+                 out.temperature, out.humidity, out.dewPoint);
+
     return true;
+}
+
+bool SHTReader::read(SHTReader::Readings &out)
+{
+    out = m_LastReadings;
+
+    if (!ensureOpen())
+    {
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                    "SHT I2C not available.");
+        return false;
+    }
+
+    if (m_State == State::Idle)
+    {
+        return startMeasurement();
+    }
+
+    if (m_State == State::Measuring)
+    {
+        const uint32_t elapsed =
+            static_cast<uint32_t>(millis() - m_MeasurementStartMs);
+
+        if (elapsed < SHT_MEASUREMENT_TIME_MS)
+        {
+            // Pomiar jeszcze trwa; zostawiamy ostatnie poprawne dane.
+            return true;
+        }
+
+        return readMeasurement(out);
+    }
+
+    // Awaryjnie: nieznany stan
+    resetState();
+    return false;
 }

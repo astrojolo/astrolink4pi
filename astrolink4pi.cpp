@@ -726,10 +726,10 @@ void AstroLink4Pi::TimerHit()
 		switch (m_Cycle)
 		{
 		case SensorCycle::SHT_T:
-			readSHT(0);
+			readSHT();
 			break;
 		case SensorCycle::SHT_R:
-			readSHT(1);
+			readSHT();
 			break;
 		case SensorCycle::MLX:
 			readMLX();
@@ -1020,10 +1020,9 @@ bool AstroLink4Pi::readMLX()
 
 bool AstroLink4Pi::readSHT(int mode)
 {
-	if(!m_SHTReader.isOpen()) return false;
-
 	SHTReader::Readings readings;
-	bool correct = m_SHTReader.read(readings, mode);
+	const bool correct = m_SHTReader.read(readings);
+
 	if (correct)
 	{
 		FocusTemperatureN[0].value = readings.temperature;
@@ -1035,12 +1034,12 @@ bool AstroLink4Pi::readSHT(int mode)
 		FocusTemperatureN[0].value = 0.0;
 		FocusTemperatureNP.s = IPS_ALERT;
 	}
+
 	IDSetNumber(&FocusTemperatureNP, nullptr);
 
 	setParameterValue("WEATHER_TEMPERATURE", readings.temperature);
 	setParameterValue("WEATHER_HUMIDITY", readings.humidity);
 	setParameterValue("WEATHER_DEWPOINT", readings.dewPoint);
-
 
 	return correct;
 }
