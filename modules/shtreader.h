@@ -40,6 +40,12 @@ private:
     uint8_t crc8(const uint8_t *data, size_t len) const;
 
 private:
+    bool m_HasEverBeenDetected = false;
+    bool m_MissingWarningLogged = false;
+
+    bool probeSensor();
+    void handleSensorMissing(const char *reason, int err);
+
     int m_Fd = -1;
     int m_ShtAddress = 0x44; // albo Twoja wartość
 
