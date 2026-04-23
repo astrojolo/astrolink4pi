@@ -1018,7 +1018,7 @@ bool AstroLink4Pi::readMLX()
 	return correct;
 }
 
-bool AstroLink4Pi::readSHT(int mode)
+bool AstroLink4Pi::readSHT()
 {
 	SHTReader::Readings readings;
 	const bool correct = m_SHTReader.read(readings);
