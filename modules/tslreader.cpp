@@ -398,6 +398,8 @@ bool TSLReader::read(TSLReader::Readings &out)
     // Zachowujemy poprzednie dane, jeśli są.
     out = m_LastReadings;
     m_warnLogged = false;
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_SESSION,
+                 "WARN set to %d", m_warnLogged);    
     resetAcquisitionState();
     return true;
 }
