@@ -30,14 +30,7 @@ public:
     void setSQMOffset(double offset) { m_SQMOffset = offset; }
 
 private:
-    enum class TSLState
-    {
-        NotAvailable,
-        Available,
-        Initialized
-    };
-
-    static constexpr int TSL2591_ADC_TIME = 750; // ms
+    static constexpr int TSL2591_ADC_TIME = 750;         // ms
     static constexpr uint8_t TSL2591_COMMAND_BIT = 0xA0; // bits 7 and 5
     static constexpr uint8_t TSL2591_ENABLE_POWERON = 0x01;
     static constexpr uint8_t TSL2591_ENABLE_POWEROFF = 0x00;
@@ -63,10 +56,14 @@ private:
     bool recoverIfNeeded();
     void resetAcquisitionState();
 
+    void invalidateSensorState();
+    bool configureSensor();
+    bool ensureConfigured();
+
     int m_Fd = -1;
     uint8_t m_TslAddress = 0x29;
 
-    TSLState m_Mode = TSLState::NotAvailable;
+    bool m_Configured = false;
     unsigned int m_AdcStartTime = 0;
 
     int m_NIter = 0;
@@ -77,6 +74,4 @@ private:
     double m_FilterCoeff = -1.2;
 
     Readings m_LastReadings;
-
-
 };
