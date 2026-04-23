@@ -31,4 +31,5 @@ private:
     int m_Fd = -1;
     uint8_t m_ShtAddress = 0x44;
     Readings m_LastReadings;
+    bool m_MeasurementPending = false;
 };

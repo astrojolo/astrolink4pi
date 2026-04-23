@@ -43,6 +43,7 @@ void SHTReader::close()
     {
         ::close(m_Fd);
         m_Fd = -1;
+        m_MeasurementPending = false;
         DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG, "SHT I2C closed.");
     }
 }
@@ -117,11 +118,20 @@ bool SHTReader::startMeasurement()
         return false;
     }
 
+    m_MeasurementPending = true;
     return true;
 }
 
 bool SHTReader::readMeasurement(Readings &out)
 {
+    if (!m_MeasurementPending)
+    {
+        // No measurement was started (e.g. sensor was disconnected).
+        // Kick off a new one and wait for the next read cycle.
+        startMeasurement();
+        return false;
+    }
+
     if (!ensureOpen())
         return false;
 
@@ -180,5 +190,6 @@ bool SHTReader::readMeasurement(Readings &out)
     out.dewPoint = dewPoint;
 
     m_LastReadings = out;
+    m_MeasurementPending = false;
     return true;
 }
