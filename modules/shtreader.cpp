@@ -213,7 +213,6 @@ bool SHTReader::read(SHTReader::Readings &out)
         return false;
     }
 
-    m_warnLogged = false;
     if (m_State == State::Idle)
     {
         return startMeasurement();
@@ -229,7 +228,8 @@ bool SHTReader::read(SHTReader::Readings &out)
             // Pomiar jeszcze trwa; zostawiamy ostatnie poprawne dane.
             return true;
         }
-
+        
+        m_warnLogged = false;
         return readMeasurement(out);
     }
 
