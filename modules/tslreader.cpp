@@ -272,31 +272,41 @@ bool TSLReader::readChannels(uint16_t &full, uint16_t &ir)
 
 bool TSLReader::read(TSLReader::Readings &out)
 {
+    // Domyślnie zwracamy ostatnie znane dane.
     out = m_LastReadings;
 
+    // Brak komunikacji z sensorem.
     if (!ensureConfigured())
     {
+        out = TSLReader::Readings{};
         out.valid = false;
         return false;
     }
 
+    // Komunikacja jest OK, ale integracja jeszcze nie została uruchomiona.
     if (m_AdcStartTime == 0)
     {
         if (!startIntegration())
         {
+            out = TSLReader::Readings{};
             out.valid = false;
             return false;
         }
 
-        out.valid = false;
-        return false;
+        // Integracja właśnie wystartowała.
+        // Jeśli nie ma jeszcze żadnych poprawnych danych historycznych,
+        // out.valid ma pozostać false.
+        out = m_LastReadings;
+        return true;
     }
 
     const uint32_t elapsed = static_cast<uint32_t>(millis() - m_AdcStartTime);
     if (elapsed < TSL2591_ADC_TIME)
     {
+        // Integracja trwa, komunikacja jest poprawna.
+        // Zwracamy ostatnie znane dane (jeśli były).
         out = m_LastReadings;
-        return m_LastReadings.valid;
+        return true;
     }
 
     uint16_t full = 0;
@@ -313,6 +323,7 @@ bool TSLReader::read(TSLReader::Readings &out)
     if (!readOk || !stopOk)
     {
         close();
+        out = TSLReader::Readings{};
         out.valid = false;
         return false;
     }
@@ -329,8 +340,11 @@ bool TSLReader::read(TSLReader::Readings &out)
                      static_cast<unsigned>(full),
                      static_cast<unsigned>(ir));
 
+        // Komunikacja działa, ale próbka jest błędna logicznie.
+        // Nie traktujemy tego jako brak komunikacji.
+        // Zwracamy ostatnie poprawne dane, jeśli istnieją.
         out = m_LastReadings;
-        return m_LastReadings.valid;
+        return true;
     }
 
     const uint32_t nextFull = m_FullCumulative + static_cast<uint32_t>(full);
@@ -342,10 +356,11 @@ bool TSLReader::read(TSLReader::Readings &out)
     m_IrCumulative = nextIr;
     m_NIter = nextNIter;
 
+    // Nadal zbieramy próbki - komunikacja OK, ale nowego pełnego wyniku jeszcze nie ma.
     if (m_NIter < 5 || (nextVisible < 500 && m_NIter < 150))
     {
         out = m_LastReadings;
-        return m_LastReadings.valid;
+        return true;
     }
 
     const uint32_t visible = nextVisible;
@@ -373,9 +388,15 @@ bool TSLReader::read(TSLReader::Readings &out)
                          m_LastReadings.ir,
                          m_LastReadings.visible,
                          static_cast<unsigned>(m_NIter));
+
+            resetAcquisitionState();
+            return true;
         }
     }
 
+    // Komunikacja była poprawna, ale z tej serii nie udało się wyliczyć nowego wyniku.
+    // Zachowujemy poprzednie dane, jeśli są.
+    out = m_LastReadings;
     resetAcquisitionState();
-    return m_LastReadings.valid;
+    return true;
 }
