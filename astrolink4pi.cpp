@@ -708,7 +708,7 @@ void AstroLink4Pi::TimerHit()
 	uint64_t timeMillis = m_SystemInfo.millis();
 	readTSL();
 	readPower();
-	// focuserUpdate();
+	focuserUpdate();
 
 	if (nextSystemRead < timeMillis)
 	{
@@ -732,11 +732,11 @@ void AstroLink4Pi::TimerHit()
 			// fanUpdate();
 			break;
 		case SensorCycle::COMP:
-			// if (FocusTemperatureNP.s == IPS_OK)
-			// {
-			// 	m_Focuser.setTemperature(FocusTemperatureN[0].value);
-			// 	m_Focuser.temperatureCompensation();
-			// }
+			if (FocusTemperatureNP.s == IPS_OK)
+			{
+				m_Focuser.setTemperature(FocusTemperatureN[0].value);
+				m_Focuser.temperatureCompensation();
+			}
 			break;
 		default:
 			break;
