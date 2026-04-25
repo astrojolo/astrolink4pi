@@ -113,11 +113,11 @@ bool AstroLink4Pi::Connect()
   {
     DEBUG(INDI::Logger::DBG_DEBUG, "SHT sensor not detected.");
   }
-  if (m_BoardIO.revision() >= 3 !m_MLXReader.open())
+  if (m_BoardIO.revision() >= 3 && !m_MLXReader.open())
   {
     DEBUG(INDI::Logger::DBG_DEBUG, "MLX sensor not detected.");
   }
-  if (m_BoardIO.revision() >= 3 !m_TSLReader.open())
+  if (m_BoardIO.revision() >= 3 && !m_TSLReader.open())
   {
     DEBUG(INDI::Logger::DBG_DEBUG, "TSL sensor not detected.");
   }
