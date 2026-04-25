@@ -707,7 +707,7 @@ void AstroLink4Pi::TimerHit()
 
 	uint64_t timeMillis = m_SystemInfo.millis();
 	readTSL();
-	// readPower();
+	readPower();
 	// focuserUpdate();
 
 	if (nextSystemRead < timeMillis)
