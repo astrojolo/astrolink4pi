@@ -262,7 +262,7 @@ Then you may go directly to AstroLink 4 Pi INDI driver installation.
 | Rev 2 | Pi 4 only | `main` | Legacy hardware |
 
 
-⚠️ Version 1 is supported in a [v1 branch](https://github.com/astrojolo/astrolink4pi/tree/v1)
+⚠️ Revision 1 is supported in a [v1 branch](https://github.com/astrojolo/astrolink4pi/tree/v1)
 
 ---
 
