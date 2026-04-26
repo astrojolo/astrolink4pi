@@ -72,12 +72,7 @@ AstroLink4Pi::AstroLink4Pi()
 
 AstroLink4Pi::~AstroLink4Pi()
 {
-  // if (_motionThread.joinable())
-  // {
-  // 	//_abort = true;
-  // 	_abort.store(true, std::memory_order_relaxed);
-  // 	_motionThread.join();
-  // }
+
 }
 
 const char* AstroLink4Pi::getDefaultName() { return (char*)"AstroLink 4 Pi"; }
