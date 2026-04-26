@@ -1,0 +1,18 @@
+#include <indilogger.h>
+
+#define DEBUGFDEVICE_LOG_ONCE(flag, dev, level, fmt, ...) \
+    do { \
+        if (!(flag)) { \
+            DEBUGFDEVICE(dev, level, fmt, ##__VA_ARGS__); \
+            (flag) = true; \
+        } \
+    } while (0)
+    
+#define DEBUGDEVICE_LOG_ONCE(flag, dev, level, fmt) \
+    do { \
+        if (!(flag)) { \
+            DEBUGDEVICE(dev, level, fmt); \
+            (flag) = true; \
+        } \
+    } while (0)    
+    

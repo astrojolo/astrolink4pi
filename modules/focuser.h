@@ -1,0 +1,127 @@
+#pragma once
+
+#include <atomic>
+#include <cstdint>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <chrono>
+
+
+#include "basecomponent.h"
+#include "boardio.h"
+#include "pwm.h"
+
+static constexpr int DECAY_PIN = 14;		// pin 8
+static constexpr int EN_PIN = 15;			// pin 10
+static constexpr int M0_PIN = 17;			// pin 11
+static constexpr int M1_PIN = 18;			// pin 12
+static constexpr int M2_PIN = 27;			// pin 13
+static constexpr int RST_PIN = 22;			// pin 15
+static constexpr int STP_PIN = 24;			// pin 18
+static constexpr int DIR_PIN = 23;			// pin 16
+static constexpr int MOTOR_PWM = 20;		// pin 38 VOUT
+static constexpr int CHK_IN_PIN = 16;		// pin 36
+static constexpr int CHK2_IN_PIN = 21;		// pin 40
+static constexpr int HOLD_PIN = 10;			// pin 19 EN 
+
+class Focuser : public BaseComponent
+{
+public:
+    struct Config
+    {
+        int maxResolution = 32;
+        int defaultResolution = 1;
+        int defaultStepDelayUs = 2000;
+        int defaultCurrentmA = 600;
+        int defaultMaxPosition = 100000;
+    };
+
+    struct State
+    {
+        bool connected = false;
+        bool moving = false;
+        bool reverse = false;
+        bool temperatureCompEnabled = false;
+
+        int resolution = 1;
+        int holdPowerPercent = 0;
+        int stepDelayUs = 2000;
+        int currentmA = 600;
+
+        int32_t currentPosition = 0;
+        int32_t targetPosition = 0;
+        int32_t maxPosition = 100000;
+        int32_t backlashSteps = 0;
+        int32_t lastDirection = 0;
+
+        double focuserTemperature = -1000.0;
+        double lastCompTemperature = -1000.0;
+        double temperatureCoefficient = 0.0;
+    };
+
+    Focuser(const Config &config, BoardIO &boardIO, PwmController &pwmController, const std::string &deviceName);
+    ~Focuser();
+
+    bool open(int revision);
+    void close();
+    bool isOpen() const;
+
+    bool abortFocuser();
+    bool moveRelFocuser(int32_t ticks);
+    bool moveAbsFocuser(uint32_t targetTicks);
+
+    bool setResolution(int res);
+    bool reverseFocuser(bool enabled);
+    bool syncFocuser(uint32_t ticks);
+    bool setFocuserBacklash(int32_t steps);
+    bool setFocuserMaxPosition(uint32_t ticks);
+
+    bool setTemperature(double temperatureC);
+    bool setTemperatureCompensation(bool tempCompEnabled);
+    bool setTemperatureCoefficient(double stepsPerC);
+    bool temperatureCompensation();
+
+    int getHoldPower() const;
+    bool setHoldPowerPercent(int percent);
+
+    bool setCurrent(int currentmA);
+    void setCurrent(bool standby);
+    int getMotorPWM(int currentmA) const;
+    int setDac(int chan, int value);
+
+    void setRevision(int revision);
+
+    bool setStepDelayUs(int stepDelayUs);
+
+    State getState() const;
+
+private:
+    std::thread getMotorThread(uint32_t targetPos, int direction, int backlashTicksRemaining);
+
+    bool loadSavedPosition();
+    void savePositionAtomic(int32_t position);
+    void savePositionIfNeeded(int32_t position, bool force = false);    
+    std::string getSafePositionPath();
+
+    BoardIO &m_BoardIO;
+    PwmController &m_PwmController;
+    Config m_Config;
+    mutable std::mutex m_StateMutex;
+    State m_State;
+
+    static constexpr auto COM_THRESHOLD_PERIOD = std::chrono::seconds(30);
+    static constexpr double COMP_THRESHOLD_DELTA = 0.5;
+
+    std::chrono::steady_clock::time_point m_LastTemperatureCompensationTime =
+        std::chrono::steady_clock::now() - COM_THRESHOLD_PERIOD;   
+    
+    std::thread m_MotionThread;    
+    std::atomic<bool> m_Abort{false};
+
+    int m_Revision = 0;
+
+    std::mutex m_PositionSaveMutex;
+    int32_t m_LastSavedPosition = 0;
+    std::chrono::steady_clock::time_point m_LastSaveTime = std::chrono::steady_clock::now();
+};

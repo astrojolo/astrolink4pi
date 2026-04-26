@@ -1,56 +1,29 @@
-# 🚀 AstroLink 4 Pi
+![Platform](https://img.shields.io/badge/Raspberry%20Pi-4%20%7C%205-green)
+![INDI](https://img.shields.io/badge/INDI-2.1.3+-blue)
+![License](https://img.shields.io/badge/license-GPL--3.0-orange)
+
+<p align="center">
+  <img src="images/astrolink4pi-banner.jpg" width="500">
+</p>
+
+# 🔭 AstroLink 4 Pi
 
 AstroLink 4 Pi is an INDI driver for AstroLink hardware, designed to simplify and integrate astrophotography setups.  
 It provides control over power distribution, focuser operation, environmental monitoring, and device telemetry — all in a single compact system.
 
-🔗 [Product page](https://shop.astrojolo.com/product/astrolink-4-pi/)  
+🛒 [Product page](https://shop.astrojolo.com/product/astrolink-4-pi/) <br>
 🔗 [INDI Library](https://indilib.org/)
 
 ---
-
-## ⚡ Quick Start
-
-**Supported hardware**
-- AstroLink 4 Pi
-
-**Supported platforms**
-- Raspberry Pi 4  
-- Raspberry Pi 5 *(Bookworm recommended)* - revisions 3 and newer
-
-**Required software**
-- INDI **2.1.3 or newer**
-- lgpio https://abyz.me.uk/lg/download.html
-
-**Basic installation**
-```bash
-git clone https://github.com/astrojolo/astrolink4pi.git
-cd astrolink4pi
-mkdir build && cd build
-cmake ..
-make -j4
-sudo make install
-```
-
-After installation, the driver will appear in:
-```
-INDI → Auxiliary devices → AstroLink 4 Pi
-```
-
----
-
-## 📊 Compatibility Matrix
-
-| Device Revision | Raspberry Pi | Driver Branch | Notes |
-|----------------|-------------|--------------|------|
-| Rev 4 | Pi 4 / Pi 5 | `main` | Full support |
-| Rev 3 | Pi 4 / Pi 5 | `main` | Full support |
-| Rev 2 | Pi 4 only | `main` | Legacy hardware |
-| Rev 1 | Pi 4 only | `main` | Limited support |
-
-
----
-
 ## ⚡ Features
+
+AstroLink 4 Pi provides:
+- 🔌 Power management  
+- 🔭 Focuser control  
+- 🌡️ Environmental sensing  
+- ⚙️ Full INDI integration  
+
+➡️ All in one compact astrophotography controller
 
 ### 🔭 Focuser
 - Stepper motor control
@@ -60,7 +33,7 @@ INDI → Auxiliary devices → AstroLink 4 Pi
 - Customizable maximum absolute position (steps)
 - Customizable maximum focuser travel (mm)
 - Backlash compensation
-- Speed control
+- Speed/current/hold torque control
 - Focuser info including: critical focus zone in μm, step size in μm, steps per critical focus zone
 - Automatic temperature compensation based on temperature sensor
 
@@ -72,120 +45,162 @@ INDI → Auxiliary devices → AstroLink 4 Pi
 - Configurable labels
 
 ### 🌡️ Sensors & Monitoring
+
+*(availability depends on hardware revision)*
 - I2C environmental sensors
-- Humidity / dew point / sky temperature / cloud coverage / sky brightness sensors support *(depending on revision)*
-- Voltage and current monitoring *(depending on revision)*
+- Humidity / dew point / sky temperature / cloud coverage / sky brightness sensors support
+- Voltage and current monitoring
 
 ### 🧠 System Integration
 - Fully integrated with INDI ecosystem
 - Works with NINA, KStars, Ekos, and other INDI clients
 
+<p align="center">
+  <img src="images/driver1.jpg">
+</p>
+
 ---
 
-## 🔧 Installation
+## ⚡ Quick Start
 
-### 📦 Prerequisites
+### 📊 Requirements
+- AstroLink 4 Pi device version 2 or higher (version 1 is supported in a [v1 branch](https://github.com/astrojolo/astrolink4pi/tree/v1))
+- Raspberry Pi 5 (highly recommended) or Raspberry Pi 4
+- 4GB RAM and Raspberry Pi approved SD card
+- INDI 2.1 or higher
+- supported distributions - Rasbpian based (StellarMate 1.9.x, astroberry) and Arch linux based (StellarMate 2.x, AstroArch)
+- wiringPi library installed
+- SPI and I2c bus enabled
 
-Install required packages:
+
+### ⚡ Minimal Quick Start
+
+The steps below are valid for **astroberry 3.x** and **StellarMate 1.9.x**.<br>
+For other astronomy distributions additional prerequisites see the links below the bash code.
 
 ```bash
+# install dependencies
 sudo apt update
-sudo apt install -y \
-  git cmake build-essential \
-  libindi-dev 
-```
+sudo apt install -y git cmake build-essential libindi-dev
 
----
+# install wiringPi
+cd $HOME
+git clone https://github.com/WiringPi/WiringPi.git
+cd WiringPi && ./build
 
-### 🛠️ Build & Install
-
-```bash
+# build driver
+cd $HOME
 git clone https://github.com/astrojolo/astrolink4pi.git
 cd astrolink4pi
 mkdir build && cd build
+git checkout gpio-5
+git pull
 cmake ..
 make -j4
 sudo make install
-```
 
----
-
-### 🔌 Enable Interfaces
-
-Make sure required interfaces are enabled:
-
-```bash
+# enable SPI, I2C
 sudo raspi-config
-```
-
-Enable:
-- I2C  
-- SPI *(if required by your revision)*  
-
----
-
-### ⏱️ RTC Setup (if applicable)
-
-If your device revision includes RTC:
-
-```bash
-sudo nano /etc/rc.local
-```
-
-Add at the end:
-
-```
-echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
-```
-
-Then reboot:
-
-```bash
+# enable SPI and I2C interfaces
+# then reboot
 sudo reboot
+
+# verify installation
+indiserver -v indi_astrolink4pi
 ```
 
----
+> ⚠️ wiringPi is deprecated but still required by this driver. New driver version without wiringPi dependency is planned for 2026 Q4.
 
-## ⚠️ Compatibility Notes
-
-- This driver uses **lgpio**, required for Raspberry Pi 5
-- Designed for **Bookworm-based systems**
-- Older INDI versions may not work correctly
+👉 [INDI Server helper script](#-indi-server-helper-script)<br>
+👉 [Additional steps for StellarMate 2.0](#-stellarmate-20-setup)<br>
+👉 [Additional steps for AstroArch](#-astroarch-setup)
 
 
----
-
-
-## 🤝 Contributing
-
-Contributions, bug reports, and suggestions are welcome!
-
-If you find an issue:
-- open a GitHub issue
-- include logs and hardware revision
-- describe your setup (Pi version, OS, INDI version)
+After installation, the driver will appear in:
+```
+INDI → Auxiliary devices → AstroLink 4 Pi
+```
+> **⚠️ Important**<br>
+> Once connected to the driver, configure the settings to match your requirements. Mostly focusing motor settings and also adjust polling interval, so sensors will be updated more often than default 60 seconds.
 
 ---
 
-## 📄 License
+## 🧰 INDI Server Helper Script
 
-This project is released under the terms specified in the repository.
+This script (`server/start_indi.sh`) simplifies running a local INDI server by loading driver names from a configurable `profile.conf` file. It supports background execution, live debugging mode with real-time logs, and basic process management (start/stop/status/restart). If the configuration file does not exist, it is automatically created with a default setup.
+
+### 🚀 Usage
+
+```bash
+cd server
+./start_indi.sh start       # start INDI server in background
+./start_indi.sh startlog    # start in foreground with live logs
+./start_indi.sh stop        # stop the server
+./start_indi.sh status      # check if running
+./start_indi.sh restart     # restart the server
+```
+Edit `profile.conf` to configure which INDI drivers are loaded. In Ekos, use a **Remote** profile and connect to *localhost:7624*.
+
+
+<p align="center">
+  <img src="images/driver2.jpg">
+</p>
 
 ---
 
-## ⭐ Summary
 
-AstroLink 4 Pi combines:
-- 🔌 Power management  
-- 🔭 Focuser control  
-- 🌡️ Environmental sensing  
-- ⚙️ Full INDI integration  
+## 🧪 StellarMate 2.0 Setup
 
-➡️ All in one compact astrophotography controller
+<details>
+<summary>Click to expand</summary>
+
+Pacman **core** and **extra** repositories must be enabled:
+```bash
+sudo nano /etc/pacman.conf
+```
+and uncomment sections **core** and **extra**. Then install required packages (first install after enabling core/extra may take significant amount of time and number of packages):
+```bash
+sudo pacman -Syu
+sudo pacman -Syu git cmake python3 python-setuptools swig base-devel
+```
+
+Create a rules file **gpiomem, SPI and I2C** devices:
+```bash
+sudo nano /etc/udev/rules.d/99-zzz-astrolink4pi.rules
+```
+and add these lines into this file:
+```bash
+KERNEL=="gpiomem*", GROUP="uucp", MODE="0660"
+KERNEL=="i2c-[0-9]*", GROUP="uucp", MODE="0660"
+KERNEL=="spidev*", GROUP="uucp", MODE="0660"
+```
+Add current user to the listed group:
+```bash  
+sudo usermod -aG uucp $USER
+```
+Then reboot.<br>
+
+**⚠️ Important - StellarMate 2.0 uses Flatpak (sandboxed environment)**
+
+Problem:
+KStars cannot access local INDI drivers
+
+Solutions:
+1. Install native KStars (recommended)
+```bash
+sudo pacman -Syu kstars
+systemctl --user disable --now org.kde.kstars.service
+```
+2. Use Flatpak KStars + external indiserver<br>
+👉 [Check INDI Server helper script](#-indi-server-helper-script)
+</details>
 
 ---
 
 ## 🧪 AstroArch Setup
+
+<details>
+<summary>Click to expand</summary>
 
 If you are using **AstroArch Linux**, additional steps may be required.
 
@@ -216,18 +231,6 @@ and modify
 dtoverlay=i2c-rtc,ds1307
 ```
 
-Before compiling lgpio find the following line in Makefile file:
-
-```bash
-prefix ?= /usr/local
-```
-
-and update to
-
-```bash
-prefix ?= /usr
-```
-
 Create additional groups and add user astronaut to them:
 
 ```bash
@@ -246,3 +249,65 @@ SUBSYSTEM=="spidev", KERNEL=="spidev*", GROUP:="spi", MODE:="0660"
 ```
 
 Then you may go directly to AstroLink 4 Pi INDI driver installation.
+</details>
+
+---
+
+## 📊 Compatibility Matrix
+
+| Device Revision | Raspberry Pi | Driver Branch | Notes |
+|----------------|-------------|--------------|------|
+| Rev 4 | Pi 4 / Pi 5 | `main` | Full support |
+| Rev 3 | Pi 4 / Pi 5 | `main` | Full support |
+| Rev 2 | Pi 4 only | `main` | Legacy hardware |
+
+
+⚠️ Revision 1 is supported in a [v1 branch](https://github.com/astrojolo/astrolink4pi/tree/v1)
+
+---
+
+## ⚠️ Compatibility Notes
+
+- Requires **wiringPi** 
+- Tested on Raspberry Pi 4 and 5
+- Older INDI versions may not work correctly
+
+---
+
+## 🔧 Troubleshooting
+
+#### Driver is not appearing in Ekos driver selector
+- make sure driver installation went correct including `sudo make install` command
+- if Kstars in Flatpak is used, the drivers can be accessed only remotely
+
+#### SPI / I2C permission denied
+- make sure the file with rules was created for `/dev/gpiomem*` `/dev/spidev*` `/dev/i2c*`
+- make sure these interfaces were enabled in `raspi-config`
+
+#### wiringPi not found by CMake
+- install wiringPi - from package or sources
+
+#### Flatpak KStars cannot see locally installed driver
+- use driver started from the external INDI server
+- install KStars locally from the official repository and disable Flatpak version 
+
+#### Sensors not updating
+- default polling period in INDI driver is 60s, adjust it to 3-5s to have readings more often
+
+---
+
+
+## 🤝 Contributing
+
+Contributions, bug reports, and suggestions are welcome!
+
+If you find an issue:
+- open a GitHub issue
+- include logs and hardware revision
+- describe your setup (Pi version, OS, INDI version)
+
+---
+
+## 📄 License
+
+This project is released under the terms specified in the repository.

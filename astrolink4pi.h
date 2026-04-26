@@ -20,29 +20,28 @@
 #ifndef ASTROLINK4PI_H
 #define ASTROLINK4PI_H
 
-#include <atomic>
 #include <cstdio>
-#include <mutex>
-#include <chrono>
 #include <iostream>
 #include <fstream>
-#include <cstdio>
 #include <string>
 #include <algorithm>
 #include <memory>
 #include <cmath>
 #include <ctime>
-#include <thread>
-#include <chrono>
-#include <algorithm>
-
-#include <dirent.h>
-#include <fcntl.h>
-#include <unistd.h>
+#include <cstdint>
 
 #include "config.h"
 
-#include <lgpio.h>
+#include "basecomponent.h"
+#include "boardio.h"
+#include "pwm.h"
+#include "systeminfo.h"
+#include "powermonitor.h"
+#include "shtreader.h"
+#include "mlxreader.h"
+#include "tslreader.h"
+#include "dsreader.h"
+#include "focuser.h"
 
 #include <defaultdevice.h>
 #include <indifocuserinterface.h>
@@ -85,15 +84,43 @@ protected:
 private:
 	virtual bool Connect();
 	virtual bool Disconnect();
-	virtual void SetResolution(int res);
-	virtual int savePosition(int pos);
 	virtual bool readSHT();
 	virtual bool readMLX();
-	virtual bool readSQM(bool triggerOldSensor);
 	virtual bool readTSL();
-	virtual bool readOLD();
 	virtual bool readPower();
 	virtual bool readDS18B20();
+
+	BoardIO m_BoardIO;
+	PwmController m_PwmController;
+	SystemInfoService m_SystemInfo;
+	PowerMonitor m_PowerMonitor;
+	SHTReader m_SHTReader;
+	MLXReader m_MLXReader;
+	TSLReader m_TSLReader;
+	// DSFileReader m_DSReader;
+	Focuser::Config m_FocuserConfig;
+	Focuser m_Focuser;
+
+	enum class SensorCycle
+	{
+		SHT_T = 1,
+		SHT_R,
+		MLX,
+		SYS,
+		FAN,
+		COMP,
+		IDLE
+	};
+	inline SensorCycle next(SensorCycle c)
+	{
+		if (c == SensorCycle::IDLE)
+			return SensorCycle::SHT_T;
+
+		return static_cast<SensorCycle>(static_cast<int>(c) + 1);
+	}
+
+	SensorCycle m_Cycle = SensorCycle::IDLE;
+	uint64_t nextSystemRead = 0;
 
 	ISwitch FocusResolutionS[6];
 	ISwitchVectorProperty FocusResolutionSP;
@@ -185,8 +212,7 @@ private:
 		SYSI_UPTIME,
 		SYSI_LOAD,
 		SYSI_HOST,
-		SYSI_LOCALIP,
-		SYSI_PUBIP
+		SYSI_LOCALIP
 	};
 
 	IText RelayLabelsT[4];
@@ -219,62 +245,15 @@ private:
 	INumber PWM2N[1];
 	INumberVectorProperty PWM2NP;
 
-	INumber PWMcycleN[1];
-	INumberVectorProperty PWMcycleNP;
-
 	INumber StepperCurrentN[1];
 	INumberVectorProperty StepperCurrentNP;
-
-	int revision = 1;
-	int gpioType = 0;
-	int gpioChip = -1;
-	int lgpioHandle = -1;
-
-	int resolution = 1;
-
-	float lastTemperature = -1000.0;
-	float focuserTemperature = -1000.0;
-	bool SHTavailable = false;
-	bool MLXavailable = false;
-	bool SQMavailable = false;
-	bool DSavailable = false;
-	TSLState TSLmode = TSLState::NotAvailable;
-
-	int backlashTicksRemaining = 0;
-	int lastDirection = 0;
-
-	int pwmState[2] = {0};
-	int relayState[2] = {0};
-
-	uint64_t nextTemperatureRead = 0;
-	uint64_t nextTemperatureCompensation = 0;
-	uint64_t nextSystemRead = 0;
-	uint64_t nextFanUpdate = 0;
-	uint64_t adcStartTime = 0;
-	int niter = 0;
-	uint64_t fullCumulative = 0;
-	uint64_t irCumulative = 0;
-
-	int powerIndex = 0;
-	float energyAs = 0.0;
-	float energyWs = 0.0;
-
-	std::thread _motionThread;
-	// volatile bool _abort;
-	std::atomic<bool> _abort{false};
 
 	int getHoldPower();
 	void getFocuserInfo();
 	void temperatureCompensation();
-	void setCurrent(bool standby);
 	void systemUpdate();
 	void fanUpdate();
-	int getMotorPWM(int current);
-	int setDac(int chan, int value);
-	int checkRevision();
-	uint64_t millis();
-	std::string runCommand(const char* cmd);
-	std::thread getMotorThread(uint32_t targetPos, int direction, int lgpioHandle, int backlashTicksRemaining);
+	void focuserUpdate();
 
 	static constexpr const char *ENVIRONMENT_TAB{"Environment"};
 	static constexpr const char *SYSTEM_TAB{"System"};

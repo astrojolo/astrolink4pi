@@ -1,0 +1,239 @@
+#include "shtreader.h"
+
+#include <cerrno>
+#include <cmath>
+#include <cstring>
+#include <cstdint>
+#include <unistd.h>
+
+#include "log_macros.h"
+
+#include <wiringPi.h>
+#include <wiringPiI2C.h>
+
+namespace
+{
+static constexpr uint8_t SHT_CMD_MEAS_HIGHREP_NO_STRETCH[2] = {0x24, 0x00};
+static constexpr uint32_t SHT_MEASUREMENT_TIME_MS = 20; // bezpieczny zapas dla ~15 ms
+}
+
+SHTReader::SHTReader(const std::string &deviceName)
+    : BaseComponent(deviceName, "SHTReader")
+{
+    resetState();
+}
+
+SHTReader::~SHTReader()
+{
+    close();
+}
+
+bool SHTReader::open()
+{
+    close();
+
+    m_Fd = wiringPiI2CSetup(m_ShtAddress);
+    if (m_Fd < 0)
+    {
+        const int err = errno;
+        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                     "SHT I2C setup failed: addr=0x%02X errno=%d (%s)",
+                     m_ShtAddress, err, std::strerror(err));
+        return false;
+    }
+
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                 "SHT I2C opened: fd=%d addr=0x%02X", m_Fd, m_ShtAddress);
+
+    resetState();
+    return true;
+}
+
+void SHTReader::close()
+{
+    if (m_Fd >= 0)
+    {
+        ::close(m_Fd);
+        m_Fd = -1;
+
+        DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                    "SHT I2C closed.");
+    }
+
+    resetState();
+}
+
+bool SHTReader::isOpen() const
+{
+    return m_Fd >= 0;
+}
+
+bool SHTReader::ensureOpen()
+{
+    if (isOpen())
+        return true;
+
+    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                "SHT attempting I2C reopen.");
+
+    return open();
+}
+
+void SHTReader::resetState()
+{
+    m_State = State::Idle;
+    m_MeasurementStartMs = 0;
+}
+
+uint8_t SHTReader::crc8(const uint8_t *data, size_t len) const
+{
+    // SHT3x CRC-8, polynomial 0x31, init 0xFF
+    uint8_t crc = 0xFF;
+
+    for (size_t i = 0; i < len; ++i)
+    {
+        crc ^= data[i];
+        for (int bit = 0; bit < 8; ++bit)
+        {
+            if (crc & 0x80)
+                crc = static_cast<uint8_t>((crc << 1) ^ 0x31);
+            else
+                crc = static_cast<uint8_t>(crc << 1);
+        }
+    }
+
+    return crc;
+}
+
+bool SHTReader::startMeasurement()
+{
+    if (!ensureOpen())
+        return false;
+
+    const int ret = wiringPiI2CRawWrite(m_Fd, SHT_CMD_MEAS_HIGHREP_NO_STRETCH, 2);
+    if (ret != 2)
+    {
+        const int err = errno;
+        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                     "SHT raw write failed: fd=%d errno=%d (%s)",
+                     m_Fd, err, std::strerror(err));
+        close();
+        return false;
+    }
+
+    m_MeasurementStartMs = millis();
+    m_State = State::Measuring;
+
+    DEBUGDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                "SHT measurement started.");
+
+    return true;
+}
+
+bool SHTReader::readMeasurement(Readings &out)
+{
+    if (!ensureOpen())
+        return false;
+
+    uint8_t buf[6] = {0};
+
+    const int ret = wiringPiI2CRawRead(m_Fd, buf, 6);
+    if (ret != 6)
+    {
+        const int err = errno;
+        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                     "SHT raw read failed: fd=%d errno=%d (%s)",
+                     m_Fd, err, std::strerror(err));
+        close();
+        return false;
+    }
+
+    const uint8_t tempCrc = crc8(buf, 2);
+    const uint8_t humCrc  = crc8(buf + 3, 2);
+
+    if (tempCrc != buf[2] || humCrc != buf[5])
+    {
+        DEBUGFDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                     "SHT CRC error: temp_crc=0x%02X expected=0x%02X, hum_crc=0x%02X expected=0x%02X",
+                     buf[2], tempCrc, buf[5], humCrc);
+
+        // Nie zamykam I2C po samym CRC, ale resetuję sekwencję pomiaru.
+        m_State = State::Idle;
+        m_MeasurementStartMs = 0;
+        return false;
+    }
+
+    const uint16_t rawTemp =
+        (static_cast<uint16_t>(buf[0]) << 8) | static_cast<uint16_t>(buf[1]);
+
+    const uint16_t rawHumidity =
+        (static_cast<uint16_t>(buf[3]) << 8) | static_cast<uint16_t>(buf[4]);
+
+    const double cTemp = -45.0 + 175.0 * static_cast<double>(rawTemp) / 65535.0;
+    double humidity = 100.0 * static_cast<double>(rawHumidity) / 65535.0;
+
+    if (humidity < 0.0)
+        humidity = 0.0;
+    if (humidity > 100.0)
+        humidity = 100.0;
+
+    double dewPoint = cTemp;
+
+    if (humidity > 0.0)
+    {
+        const double a = 17.271;
+        const double b = 237.7;
+        const double tempAux = (a * cTemp) / (b + cTemp) + std::log(humidity * 0.01);
+        dewPoint = (b * tempAux) / (a - tempAux);
+    }
+
+    out.temperature = cTemp;
+    out.humidity = humidity;
+    out.dewPoint = dewPoint;
+
+    m_LastReadings = out;
+    m_State = State::Idle;
+    m_MeasurementStartMs = 0;
+
+    DEBUGFDEVICE(getDeviceName().c_str(), INDI::Logger::DBG_DEBUG,
+                 "SHT measurement read OK: T=%.2fC RH=%.2f%% DP=%.2fC",
+                 out.temperature, out.humidity, out.dewPoint);
+
+    return true;
+}
+
+bool SHTReader::read(SHTReader::Readings &out)
+{
+    out = m_LastReadings;
+
+    if (!ensureOpen())
+    {
+        DEBUGDEVICE_LOG_ONCE(m_warnLogged, getDeviceName().c_str(), INDI::Logger::DBG_WARNING,
+                    "SHT I2C not available");
+        return false;
+    }
+
+    if (m_State == State::Idle)
+    {
+        return startMeasurement();
+    }
+
+    if (m_State == State::Measuring)
+    {
+        const uint32_t elapsed =
+            static_cast<uint32_t>(millis() - m_MeasurementStartMs);
+
+        if (elapsed < SHT_MEASUREMENT_TIME_MS)
+        {
+            // Pomiar jeszcze trwa; zostawiamy ostatnie poprawne dane.
+            return true;
+        }
+        
+        m_warnLogged = false;
+        return readMeasurement(out);
+    }
+
+    // Awaryjnie: nieznany stan
+    resetState();
+    return false;
+}
