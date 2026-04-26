@@ -64,6 +64,7 @@ AstroLink 4 Pi provides:
 ## ⚡ Quick Start
 
 ### 📊 Requirements
+- AstroLink 4 Pi device version 2 or higher (version 1 is supported in a [v1 branch](https://github.com/astrojolo/astrolink4pi/tree/v1))
 - Raspberry Pi 5 (highly recommended) or Raspberry Pi 4
 - 4GB RAM and Raspberry Pi approved SD card
 - INDI 2.1 or higher
@@ -259,8 +260,9 @@ Then you may go directly to AstroLink 4 Pi INDI driver installation.
 | Rev 4 | Pi 4 / Pi 5 | `main` | Full support |
 | Rev 3 | Pi 4 / Pi 5 | `main` | Full support |
 | Rev 2 | Pi 4 only | `main` | Legacy hardware |
-| Rev 1 | Pi 4 only | `main` | Limited support |
 
+
+⚠️ Version 1 is supported in a [v1 branch](https://github.com/astrojolo/astrolink4pi/tree/v1)
 
 ---
 
