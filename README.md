@@ -83,10 +83,12 @@ sudo apt update
 sudo apt install -y git cmake build-essential libindi-dev
 
 # install wiringPi
+cd $HOME
 git clone https://github.com/WiringPi/WiringPi.git
 cd WiringPi && ./build
 
 # build driver
+cd $HOME
 git clone https://github.com/astrojolo/astrolink4pi.git
 cd astrolink4pi
 mkdir build && cd build
@@ -103,7 +105,7 @@ sudo raspi-config
 sudo reboot
 
 # verify installation
-indiserver -vv indi_astrolink4pi
+indiserver -v indi_astrolink4pi
 ```
 
 > ⚠️ wiringPi is deprecated but still required by this driver. New driver version without wiringPi dependency is planned for 2026 Q4.
