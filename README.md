@@ -74,7 +74,7 @@ AstroLink 4 Pi provides:
 
 ### ⚡ Minimal Quick Start
 
-The steps below are valid for **astroberry** and **StellarMate 1.9.x**.<br>
+The steps below are valid for **astroberry 3.x** and **StellarMate 1.9.x**.<br>
 For other astronomy distributions additional prerequisites see the links below the bash code.
 
 ```bash
