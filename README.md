@@ -70,7 +70,7 @@ AstroLink 4 Pi provides:
 - INDI 2.1 or higher
 - supported distributions - Rasbpian based (StellarMate 1.9.x, astroberry) and Arch linux based (StellarMate 2.x, AstroArch)
 - wiringPi library installed
-- SPI and I2c bus enabled
+- SPI and I2C bus enabled
 
 
 ### ⚡ Minimal Quick Start
@@ -93,8 +93,6 @@ cd $HOME
 git clone https://github.com/astrojolo/astrolink4pi.git
 cd astrolink4pi
 mkdir build && cd build
-git checkout gpio-5
-git pull
 cmake ..
 make -j4
 sudo make install
