@@ -657,38 +657,19 @@ bool AstroLink4Pi::ISNewSwitch(const char* dev, const char* name, ISState* state
       if (Switch3S[S3_OFF].s == ISS_ON)
       {
         DEBUG(INDI::Logger::DBG_SESSION, "Auto dew heater changed to OFF.");
-//        Switch3SP.s = IPS_OK;
-//        IDSetSwitch(&Switch3SP, NULL);
-//        return true;
        }
       if (Switch3S[S3_PWM1].s == ISS_ON)
       {
-        DEBUGF(INDI::Logger::DBG_SESSION, "handle_switch3sp: auto dew heater changed to %s", RelayLabelsT[2].text);
-//        Switch3SP.s = IPS_OK;
-//        IDSetSwitch(&Switch3SP, NULL);
-//        return true;
+        DEBUGF(INDI::Logger::DBG_SESSION, "Auto dew heater changed to %s", RelayLabelsT[2].text);
       } 
       if (Switch3S[S3_PWM2].s == ISS_ON)
       {
-        DEBUGF(INDI::Logger::DBG_SESSION, "handle_switch3sp: auto dew heater changed to %s", RelayLabelsT[3].text);
-//        Switch3SP.s = IPS_OK;
-//        IDSetSwitch(&Switch3SP, NULL);
-//        return true;
+        DEBUGF(INDI::Logger::DBG_SESSION, "Auto dew heater changed to %s", RelayLabelsT[3].text);
       }
       if (Switch3S[S3_BOTH].s == ISS_ON)
       {
-        DEBUG(INDI::Logger::DBG_SESSION, "handle_switch3sp: auto dew heater changed to BOTH");
-//        Switch3SP.s = IPS_OK;
-//        IDSetSwitch(&Switch3SP, NULL);
-//        return true;
+        DEBUG(INDI::Logger::DBG_SESSION, "Auto dew heater changed to BOTH");
       } 
-      if ( (Switch3S[S3_OFF].s = ISS_OFF) )
-      {
-        DEBUGF(INDI::Logger::DBG_SESSION, "handle_switch3sp: Dew point is %0.2f", readSHT());
-//        Switch3SP.s = IPS_OK;
-//        IDSetSwitch(&Switch3SP, NULL);
-//        return true;
-      }
       Switch3SP.s = IPS_OK;
       IDSetSwitch(&Switch3SP, NULL);
     }
@@ -1160,7 +1141,6 @@ void AstroLink4Pi::auto_dewUpdate()
                             : PWM1N[0].value = 0;
     (PWM1N[0].value > 100) ? PWM1N[0].value = 100
                            : PWM1N[0].value = PWM1N[0].value;
-    //PWM1NP.s = IPS_OK;
     IDSetNumber(&PWM1NP, nullptr);
     if (PWM1N[0].value > 0)
     {
@@ -1175,7 +1155,6 @@ void AstroLink4Pi::auto_dewUpdate()
     //Auto dew control is set PWMout2 only.
     (DEWMathN[0].value > 0) ? PWM2N[0].value = DEWMathN[0].value
                             : PWM2N[0].value = 0;
-    //PWM2NP.s = IPS_OK;
     IDSetNumber(&PWM2NP, nullptr);
     if (PWM2N[0].value > 0)
     {
@@ -1190,7 +1169,6 @@ void AstroLink4Pi::auto_dewUpdate()
     //Auto dew control is set Both PWMout1 and PWMout2.
     (DEWMathN[0].value > 0) ? PWM1N[0].value = DEWMathN[0].value
                             : PWM1N[0].value = 0;
-    //PWM1NP.s = IPS_OK;
     IDSetNumber(&PWM1NP, nullptr);
     if (PWM1N[0].value > 0)
     {
@@ -1201,7 +1179,6 @@ void AstroLink4Pi::auto_dewUpdate()
 
     (DEWMathN[0].value > 0) ? PWM2N[0].value = DEWMathN[0].value
                             : PWM2N[0].value = 0;
-    //PWM2NP.s = IPS_OK;
     IDSetNumber(&PWM2NP, nullptr);
     if (PWM2N[0].value > 0)
     {
