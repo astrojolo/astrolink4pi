@@ -239,11 +239,27 @@ private:
 		S2_ON,
 		S2_OFF
 	};
+        ISwitch Switch3S[4]; //switch for Auto Dew select
+        ISwitchVectorProperty Switch3SP;
+        enum
+        {
+                S3_OFF,
+                S3_PWM1,
+                S3_PWM2,
+                S3_BOTH
+        };
+
 
 	INumber PWM1N[1];
 	INumberVectorProperty PWM1NP;
 	INumber PWM2N[1];
 	INumberVectorProperty PWM2NP;
+
+        INumber DEWOF[1];
+        INumberVectorProperty DEWOFF;
+        INumber DEWMathN[1];
+        INumberVectorProperty DEWMathNP;
+
 
 	INumber StepperCurrentN[1];
 	INumberVectorProperty StepperCurrentNP;
@@ -254,6 +270,7 @@ private:
 	void systemUpdate();
 	void fanUpdate();
 	void focuserUpdate();
+        void auto_dewUpdate();
 
 	static constexpr const char *ENVIRONMENT_TAB{"Environment"};
 	static constexpr const char *SYSTEM_TAB{"System"};

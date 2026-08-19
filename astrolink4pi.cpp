@@ -288,12 +288,27 @@ bool AstroLink4Pi::initProperties()
   IUFillSwitchVector(&Switch2SP, Switch2S, 2, getDeviceName(), "SWITCH_2", RelayLabelsT[1].text, OUTPUTS_TAB, IP_RW,
                      ISR_1OFMANY, 0, IPS_IDLE);
 
+  IUFillSwitch(&Switch3S[S3_OFF], "S3_OFF", "OFF", ISS_ON);
+  IUFillSwitch(&Switch3S[S3_PWM1], "S3_PWM1", RelayLabelsT[2].text, ISS_OFF);
+  IUFillSwitch(&Switch3S[S3_PWM2], "S3_PWM2", RelayLabelsT[3].text, ISS_OFF);
+  IUFillSwitch(&Switch3S[S3_BOTH], "S3_BOTH", "BOTH", ISS_OFF);
+  IUFillSwitchVector(&Switch3SP, Switch3S, 4, getDeviceName(), "SWITCH_3", "Auto Dew Heater", OUTPUTS_TAB, IP_RW,
+                     ISR_1OFMANY, 0, IPS_IDLE);
+
   IUFillNumber(&PWM1N[0], "PWMout1", "%", "%0.0f", 0, 100, 10, 0);
   IUFillNumberVector(&PWM1NP, PWM1N, 1, getDeviceName(), "PWMOUT1", RelayLabelsT[2].text, OUTPUTS_TAB, IP_RW, 60,
                      IPS_IDLE);
 
   IUFillNumber(&PWM2N[0], "PWMout2", "%", "%0.0f", 0, 100, 10, 0);
   IUFillNumberVector(&PWM2NP, PWM2N, 1, getDeviceName(), "PWMOUT2", RelayLabelsT[3].text, OUTPUTS_TAB, IP_RW, 60,
+                     IPS_IDLE);
+
+  IUFillNumber(&DEWOF[0], "DEWoff1", "Dew point offset [C]", "%0.1f", 0, 10, 0.5, 5);
+  IUFillNumberVector(&DEWOFF, DEWOF, 1, getDeviceName(), "DEWoff1", "Auto Dew Heater", OUTPUTS_TAB, IP_RW, 60,
+                     IPS_IDLE);
+
+  IUFillNumber(&DEWMathN[0], "DEW_MATH", "dp + os", "%0.2f", -50, 50, 0.1, -50);
+  IUFillNumberVector(&DEWMathNP, DEWMathN, 1, getDeviceName(), "DEW_MATH", "dp", OUTPUTS_TAB, IP_RO, 60,
                      IPS_IDLE);
 
   // Power readings
@@ -357,6 +372,8 @@ bool AstroLink4Pi::updateProperties()
     defineProperty(&Switch2SP);
     defineProperty(&PWM1NP);
     defineProperty(&PWM2NP);
+    defineProperty(&Switch3SP);
+    defineProperty(&DEWOFF);
     defineProperty(&StepperCurrentNP);
     defineProperty(&FocusTemperatureNP);
     defineProperty(&TemperatureCoefNP);
@@ -383,6 +400,8 @@ bool AstroLink4Pi::updateProperties()
     deleteProperty(Switch2SP.name);
     deleteProperty(PWM1NP.name);
     deleteProperty(PWM2NP.name);
+    deleteProperty(Switch3SP.name);
+    deleteProperty(DEWOFF.name);
     deleteProperty(StepperCurrentNP.name);
     deleteProperty(PowerReadingsNP.name);
     deleteProperty(FanPowerNP.name);
@@ -485,6 +504,15 @@ bool AstroLink4Pi::ISNewNumber(const char* dev, const char* name, double values[
                            : m_PwmController.disable(PwmController::Channel::P2);
       // pwmState[1] = PWM2N[0].value;
       DEBUGF(INDI::Logger::DBG_SESSION, "PWM 2 set to %0.0f", PWM2N[0].value);
+      return true;
+    }
+
+    // handle DEWoffset
+    if (!strcmp(name, DEWOFF.name))
+    {
+      IUUpdateNumber(&DEWOFF, values, names, n);
+      DEWOFF.s = IPS_OK;
+      IDSetNumber(&DEWOFF, nullptr);
       return true;
     }
 
@@ -622,6 +650,50 @@ bool AstroLink4Pi::ISNewSwitch(const char* dev, const char* name, ISState* state
       }
     }
 
+    // handle auto dew heater
+    if (!strcmp(name, Switch3SP.name))
+    {
+      IUUpdateSwitch(&Switch3SP, states, names, n);
+      if (Switch3S[S3_OFF].s == ISS_ON)
+      {
+        DEBUG(INDI::Logger::DBG_SESSION, "Auto dew heater changed to OFF.");
+//        Switch3SP.s = IPS_OK;
+//        IDSetSwitch(&Switch3SP, NULL);
+//        return true;
+       }
+      if (Switch3S[S3_PWM1].s == ISS_ON)
+      {
+        DEBUGF(INDI::Logger::DBG_SESSION, "handle_switch3sp: auto dew heater changed to %s", RelayLabelsT[2].text);
+//        Switch3SP.s = IPS_OK;
+//        IDSetSwitch(&Switch3SP, NULL);
+//        return true;
+      } 
+      if (Switch3S[S3_PWM2].s == ISS_ON)
+      {
+        DEBUGF(INDI::Logger::DBG_SESSION, "handle_switch3sp: auto dew heater changed to %s", RelayLabelsT[3].text);
+//        Switch3SP.s = IPS_OK;
+//        IDSetSwitch(&Switch3SP, NULL);
+//        return true;
+      }
+      if (Switch3S[S3_BOTH].s == ISS_ON)
+      {
+        DEBUG(INDI::Logger::DBG_SESSION, "handle_switch3sp: auto dew heater changed to BOTH");
+//        Switch3SP.s = IPS_OK;
+//        IDSetSwitch(&Switch3SP, NULL);
+//        return true;
+      } 
+      if ( (Switch3S[S3_OFF].s = ISS_OFF) )
+      {
+        DEBUGF(INDI::Logger::DBG_SESSION, "handle_switch3sp: Dew point is %0.2f", readSHT());
+//        Switch3SP.s = IPS_OK;
+//        IDSetSwitch(&Switch3SP, NULL);
+//        return true;
+      }
+      Switch3SP.s = IPS_OK;
+      IDSetSwitch(&Switch3SP, NULL);
+    }
+
+
     // handle focus motor hold
     if (!strcmp(name, FocusHoldSP.name))
     {
@@ -709,6 +781,8 @@ bool AstroLink4Pi::saveConfigItems(FILE* fp)
   IUSaveConfigText(fp, &RelayLabelsTP);
   IUSaveConfigSwitch(fp, &Switch1SP);
   IUSaveConfigSwitch(fp, &Switch2SP);
+  IUSaveConfigSwitch(fp, &Switch3SP);
+  IUSaveConfigNumber(fp, &DEWOFF);
   IUSaveConfigNumber(fp, &StepperCurrentNP);
   IUSaveConfigNumber(fp, &PWM1NP);
   IUSaveConfigNumber(fp, &PWM2NP);
@@ -1035,6 +1109,11 @@ bool AstroLink4Pi::readSHT()
   setParameterValue("WEATHER_HUMIDITY", readings.humidity);
   setParameterValue("WEATHER_DEWPOINT", readings.dewPoint);
 
+  DEWMathN[0].value = (5-(readings.temperature - (readings.dewPoint+DEWOF[0].value)))*20;
+  DEWMathNP.s = IPS_OK;
+  IDSetNumber(&DEWMathNP, nullptr);
+  auto_dewUpdate();
+
   return correct;
 }
 
@@ -1064,4 +1143,71 @@ bool AstroLink4Pi::readPower()
 
   IDSetNumber(&PowerReadingsNP, nullptr);
   return correct;
+}
+
+void AstroLink4Pi::auto_dewUpdate()
+{
+  if (Switch3S[S3_OFF].s == ISS_ON)
+  {
+    //Auto dew control is off, do nothing.
+    return;
+  }
+
+  if (Switch3S[S3_PWM1].s == ISS_ON)
+  { 
+    //Auto dew control is set PWMout1 only.
+    (DEWMathN[0].value > 0) ? PWM1N[0].value = DEWMathN[0].value
+                            : PWM1N[0].value = 0;
+    (PWM1N[0].value > 100) ? PWM1N[0].value = 100
+                           : PWM1N[0].value = PWM1N[0].value;
+    //PWM1NP.s = IPS_OK;
+    IDSetNumber(&PWM1NP, nullptr);
+    if (PWM1N[0].value > 0)
+    {
+      m_PwmController.setDutyPercent(PwmController::Channel::P1, PWM1N[0].value);
+      (PWM1N[0].value > 0) ? m_PwmController.enable(PwmController::Channel::P1)
+                           : m_PwmController.disable(PwmController::Channel::P1);
+    }
+  }
+
+  if (Switch3S[S3_PWM2].s == ISS_ON)
+  {
+    //Auto dew control is set PWMout2 only.
+    (DEWMathN[0].value > 0) ? PWM2N[0].value = DEWMathN[0].value
+                            : PWM2N[0].value = 0;
+    //PWM2NP.s = IPS_OK;
+    IDSetNumber(&PWM2NP, nullptr);
+    if (PWM2N[0].value > 0)
+    {
+      m_PwmController.setDutyPercent(PwmController::Channel::P2, PWM2N[0].value);
+      (PWM2N[0].value > 0) ? m_PwmController.enable(PwmController::Channel::P2)
+                           : m_PwmController.disable(PwmController::Channel::P2);
+    }
+  }
+
+  if (Switch3S[S3_BOTH].s == ISS_ON)
+  {
+    //Auto dew control is set Both PWMout1 and PWMout2.
+    (DEWMathN[0].value > 0) ? PWM1N[0].value = DEWMathN[0].value
+                            : PWM1N[0].value = 0;
+    //PWM1NP.s = IPS_OK;
+    IDSetNumber(&PWM1NP, nullptr);
+    if (PWM1N[0].value > 0)
+    {
+      m_PwmController.setDutyPercent(PwmController::Channel::P1, PWM1N[0].value);
+      (PWM1N[0].value > 0) ? m_PwmController.enable(PwmController::Channel::P1)
+                           : m_PwmController.disable(PwmController::Channel::P1);
+    }
+
+    (DEWMathN[0].value > 0) ? PWM2N[0].value = DEWMathN[0].value
+                            : PWM2N[0].value = 0;
+    //PWM2NP.s = IPS_OK;
+    IDSetNumber(&PWM2NP, nullptr);
+    if (PWM2N[0].value > 0)
+    {
+      m_PwmController.setDutyPercent(PwmController::Channel::P2, PWM2N[0].value);
+      (PWM2N[0].value > 0) ? m_PwmController.enable(PwmController::Channel::P2)
+                           : m_PwmController.disable(PwmController::Channel::P2);
+    }
+  }
 }
